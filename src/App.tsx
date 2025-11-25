@@ -1,4 +1,4 @@
-import { Component, createSignal, Show } from 'solid-js';
+import { Component, createSignal, Show, For } from 'solid-js';
 import { NurtureApp } from './components/nurture/NurtureApp';
 import { JustInCaseApp } from './components/justincase/JustInCaseApp';
 import { TempoApp } from './components/tempo/TempoApp';
@@ -8,6 +8,7 @@ import { AugmentApp } from './components/augment/AugmentApp';
 import { LolApp } from './components/lol/LolApp';
 
 type AppTab = 'nurture' | 'justincase' | 'tempo' | 'friendly' | 'manifest' | 'augment' | 'lol';
+type Timeline = 'now' | 'next' | 'later';
 
 interface AppInfo {
   id: AppTab;
@@ -15,229 +16,249 @@ interface AppInfo {
   description: string;
   designSystem: string;
   color: string;
+  timeline: Timeline;
 }
 
 const apps: AppInfo[] = [
-  { id: 'nurture', name: 'Nurture', description: 'Relationship CRM', designSystem: 'Biophilic', color: '#2D5A45' },
-  { id: 'justincase', name: 'JustInCase', description: 'Small claims helper', designSystem: 'Daylight Reading', color: '#1C1C1C' },
-  { id: 'tempo', name: 'Tempo', description: 'AI task timer', designSystem: 'Linear-type', color: '#5E6AD2' },
-  { id: 'friendly', name: 'FriendLy', description: 'Friendship calendar', designSystem: 'Liquid', color: '#3B82F6' },
-  { id: 'manifest', name: 'Manifest', description: 'Picky matchmaking', designSystem: 'Brutalistic', color: '#000000' },
-  { id: 'augment', name: 'Augment', description: 'IO psychology jobs', designSystem: 'Maximalist', color: '#9333EA' },
-  { id: 'lol', name: 'LoL', description: 'Gamified chores', designSystem: 'Papermorphic', color: '#2196F3' },
+  // NOW - Active development
+  { id: 'nurture', name: 'Nurture', description: 'Relationship CRM', designSystem: 'Biophilic', color: '#2D5A45', timeline: 'now' },
+  { id: 'justincase', name: 'JustInCase', description: 'Small claims helper', designSystem: 'Daylight Reading', color: '#1C1C1C', timeline: 'now' },
+  { id: 'tempo', name: 'Tempo', description: 'AI task timer', designSystem: 'Dark Mode', color: '#5E6AD2', timeline: 'now' },
+  // NEXT - Coming soon
+  { id: 'friendly', name: 'FriendLy', description: 'Friendship calendar', designSystem: 'Liquid', color: '#3B82F6', timeline: 'next' },
+  { id: 'manifest', name: 'Manifest', description: 'Picky matchmaking', designSystem: 'Brutalistic', color: '#000000', timeline: 'next' },
+  { id: 'augment', name: 'Augment', description: 'IO psychology jobs', designSystem: 'Maximalist', color: '#9333EA', timeline: 'next' },
+  // LATER - Future plans
+  { id: 'lol', name: 'LoL', description: 'Gamified chores', designSystem: 'Papermorphic', color: '#2196F3', timeline: 'later' },
 ];
 
-const AppSelector: Component<{ onSelect: (app: AppTab) => void }> = (props) => {
-  return (
-    <div style={{
-      'min-height': '100vh',
-      background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',
-      padding: '48px 24px',
-      'font-family': "'Inter', system-ui, sans-serif",
-    }}>
-      <div style={{ 'max-width': '1200px', margin: '0 auto' }}>
-        <header style={{ 'text-align': 'center', 'margin-bottom': '64px' }}>
-          <h1 style={{
-            margin: '0 0 16px 0',
-            'font-size': '48px',
-            'font-weight': '700',
-            color: '#FFFFFF',
-            'letter-spacing': '-1px',
-          }}>
-            Thoughtful App Co.
-          </h1>
-          <p style={{
-            margin: 0,
-            'font-size': '18px',
-            color: 'rgba(255, 255, 255, 0.7)',
-          }}>
-            Design System Experiments - 7 Apps, 7 Paradigms
-          </p>
-        </header>
-        
-        <div style={{
-          display: 'grid',
-          'grid-template-columns': 'repeat(auto-fill, minmax(320px, 1fr))',
-          gap: '24px',
-        }}>
-          {apps.map(app => (
-            <button
-              onClick={() => props.onSelect(app.id)}
-              style={{
-                display: 'flex',
-                'flex-direction': 'column',
-                'align-items': 'flex-start',
-                padding: '28px',
-                background: 'rgba(255, 255, 255, 0.05)',
-                'backdrop-filter': 'blur(10px)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-                'border-radius': '16px',
-                cursor: 'pointer',
-                'text-align': 'left',
-                transition: 'all 0.3s ease',
-                position: 'relative',
-                overflow: 'hidden',
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'translateY(-4px)';
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-                e.currentTarget.style.borderColor = app.color;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.transform = 'translateY(0)';
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                e.currentTarget.style.borderColor = 'rgba(255, 255, 255, 0.1)';
-              }}
-            >
-              {/* Color accent */}
-              <div style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                height: '4px',
-                background: app.color,
-              }} />
-              
-              <div style={{
-                display: 'flex',
-                'align-items': 'center',
-                gap: '12px',
-                'margin-bottom': '12px',
-                width: '100%',
-              }}>
-                <div style={{
-                  width: '48px',
-                  height: '48px',
-                  'border-radius': '12px',
-                  background: app.color,
-                  display: 'flex',
-                  'align-items': 'center',
-                  'justify-content': 'center',
-                  color: 'white',
-                  'font-weight': '700',
-                  'font-size': '18px',
-                }}>
-                  {app.name.charAt(0)}
-                </div>
-                <div style={{ flex: 1 }}>
-                  <h2 style={{
-                    margin: 0,
-                    'font-size': '20px',
-                    'font-weight': '600',
-                    color: '#FFFFFF',
-                  }}>
-                    {app.name}
-                  </h2>
-                  <p style={{
-                    margin: 0,
-                    'font-size': '14px',
-                    color: 'rgba(255, 255, 255, 0.6)',
-                  }}>
-                    {app.description}
-                  </p>
-                </div>
-              </div>
-              
-              <div style={{
-                padding: '6px 12px',
-                background: 'rgba(255, 255, 255, 0.1)',
-                'border-radius': '20px',
-                'font-size': '12px',
-                color: 'rgba(255, 255, 255, 0.8)',
-                'font-weight': '500',
-              }}>
-                {app.designSystem} Design
-              </div>
-            </button>
-          ))}
-        </div>
-        
-        <footer style={{
-          'text-align': 'center',
-          'margin-top': '64px',
-          'font-size': '14px',
-          color: 'rgba(255, 255, 255, 0.5)',
-        }}>
-          Select an app to view its wireframe prototype
-        </footer>
-      </div>
-    </div>
-  );
+const timelineLabels: Record<Timeline, { label: string; description: string }> = {
+  now: { label: 'Now', description: 'Active Development' },
+  next: { label: 'Next', description: 'Coming Soon' },
+  later: { label: 'Later', description: 'Future Plans' },
 };
 
-const BackButton: Component<{ onClick: () => void }> = (props) => {
+const TabNavigation: Component<{ 
+  activeTimeline: Timeline;
+  setActiveTimeline: (t: Timeline) => void;
+  activeTab: AppTab | null; 
+  setActiveTab: (tab: AppTab) => void;
+}> = (props) => {
+  const [dropdownOpen, setDropdownOpen] = createSignal(false);
+  const currentApps = () => apps.filter(app => app.timeline === props.activeTimeline);
+  
   return (
-    <button
-      onClick={props.onClick}
-      style={{
-        position: 'fixed',
-        top: '20px',
-        left: '20px',
-        'z-index': 9999,
-        display: 'flex',
-        'align-items': 'center',
-        gap: '8px',
-        padding: '10px 16px',
-        background: 'rgba(0, 0, 0, 0.8)',
-        'backdrop-filter': 'blur(10px)',
-        border: '1px solid rgba(255, 255, 255, 0.2)',
-        'border-radius': '8px',
-        color: 'white',
-        'font-size': '13px',
-        'font-weight': '500',
-        cursor: 'pointer',
-        transition: 'all 0.2s ease',
-      }}
-    >
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M19 12H5M12 19l-7-7 7-7" />
-      </svg>
-      Back to Apps
-    </button>
+    <nav style={{
+      position: 'fixed',
+      top: '20px',
+      left: '50%',
+      transform: 'translateX(-50%)',
+      'z-index': 1000,
+      display: 'flex',
+      'align-items': 'center',
+      gap: '8px',
+      padding: '6px',
+      background: 'rgba(255, 255, 255, 0.95)',
+      'backdrop-filter': 'blur(12px)',
+      'border-radius': '20px',
+      'box-shadow': '0 4px 24px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04)',
+    }}>
+      {/* Timeline Dropdown */}
+      <div style={{ position: 'relative' }}>
+        <button
+          onClick={() => setDropdownOpen(!dropdownOpen())}
+          style={{
+            display: 'flex',
+            'align-items': 'center',
+            gap: '8px',
+            padding: '10px 16px',
+            background: '#1a1a2e',
+            border: 'none',
+            'border-radius': '14px',
+            color: 'white',
+            'font-size': '13px',
+            'font-weight': '600',
+            cursor: 'pointer',
+            'min-width': '100px',
+          }}
+        >
+          <span style={{
+            width: '8px',
+            height: '8px',
+            'border-radius': '50%',
+            background: props.activeTimeline === 'now' ? '#10B981' : props.activeTimeline === 'next' ? '#F59E0B' : '#6B7280',
+          }} />
+          {timelineLabels[props.activeTimeline].label}
+          <svg 
+            width="12" 
+            height="12" 
+            viewBox="0 0 24 24" 
+            fill="none" 
+            stroke="currentColor" 
+            stroke-width="2"
+            style={{
+              transition: 'transform 0.2s',
+              transform: dropdownOpen() ? 'rotate(180deg)' : 'rotate(0deg)',
+            }}
+          >
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </button>
+        
+        {/* Dropdown menu */}
+        <Show when={dropdownOpen()}>
+          <div style={{
+            position: 'absolute',
+            top: 'calc(100% + 8px)',
+            left: 0,
+            background: 'white',
+            'border-radius': '12px',
+            'box-shadow': '0 8px 32px rgba(0, 0, 0, 0.12)',
+            overflow: 'hidden',
+            'min-width': '180px',
+          }}>
+            {(['now', 'next', 'later'] as Timeline[]).map(timeline => (
+              <button
+                onClick={() => {
+                  props.setActiveTimeline(timeline);
+                  // Set first app in new timeline as active
+                  const firstApp = apps.find(a => a.timeline === timeline);
+                  if (firstApp) props.setActiveTab(firstApp.id);
+                  setDropdownOpen(false);
+                }}
+                style={{
+                  display: 'flex',
+                  'align-items': 'center',
+                  gap: '12px',
+                  width: '100%',
+                  padding: '12px 16px',
+                  background: props.activeTimeline === timeline ? '#F3F4F6' : 'transparent',
+                  border: 'none',
+                  'text-align': 'left',
+                  cursor: 'pointer',
+                  transition: 'background 0.15s',
+                }}
+              >
+                <span style={{
+                  width: '10px',
+                  height: '10px',
+                  'border-radius': '50%',
+                  background: timeline === 'now' ? '#10B981' : timeline === 'next' ? '#F59E0B' : '#6B7280',
+                }} />
+                <div>
+                  <div style={{ 'font-size': '14px', 'font-weight': '600', color: '#1F2937' }}>
+                    {timelineLabels[timeline].label}
+                  </div>
+                  <div style={{ 'font-size': '12px', color: '#6B7280' }}>
+                    {timelineLabels[timeline].description}
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </Show>
+      </div>
+      
+      {/* Divider */}
+      <div style={{
+        width: '1px',
+        height: '24px',
+        background: '#E5E7EB',
+        margin: '0 4px',
+      }} />
+      
+      {/* App Tabs */}
+      <For each={currentApps()}>
+        {(app) => (
+          <button
+            onClick={() => props.setActiveTab(app.id)}
+            style={{
+              display: 'flex',
+              'align-items': 'center',
+              gap: '8px',
+              padding: '10px 16px',
+              border: 'none',
+              'border-radius': '14px',
+              background: props.activeTab === app.id ? app.color : 'transparent',
+              color: props.activeTab === app.id ? 'white' : '#6B7280',
+              'font-size': '13px',
+              'font-weight': '500',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <div style={{
+              width: '20px',
+              height: '20px',
+              'border-radius': '6px',
+              background: props.activeTab === app.id ? 'rgba(255,255,255,0.2)' : `${app.color}20`,
+              display: 'flex',
+              'align-items': 'center',
+              'justify-content': 'center',
+              'font-size': '11px',
+              'font-weight': '700',
+              color: props.activeTab === app.id ? 'white' : app.color,
+            }}>
+              {app.name.charAt(0)}
+            </div>
+            {app.name}
+          </button>
+        )}
+      </For>
+    </nav>
   );
 };
 
 export const App: Component = () => {
-  const [activeApp, setActiveApp] = createSignal<AppTab | null>(null);
+  const [activeTimeline, setActiveTimeline] = createSignal<Timeline>('now');
+  const [activeTab, setActiveTab] = createSignal<AppTab>('nurture');
+  
+  // When timeline changes, ensure activeTab is valid for that timeline
+  const handleTimelineChange = (timeline: Timeline) => {
+    setActiveTimeline(timeline);
+    const firstApp = apps.find(a => a.timeline === timeline);
+    if (firstApp) setActiveTab(firstApp.id);
+  };
   
   return (
     <div style={{ 'min-height': '100vh' }}>
-      <Show when={activeApp() === null}>
-        <AppSelector onSelect={setActiveApp} />
-      </Show>
+      <TabNavigation 
+        activeTimeline={activeTimeline()} 
+        setActiveTimeline={handleTimelineChange}
+        activeTab={activeTab()} 
+        setActiveTab={setActiveTab} 
+      />
       
-      <Show when={activeApp() !== null}>
-        <BackButton onClick={() => setActiveApp(null)} />
-      </Show>
-      
-      <Show when={activeApp() === 'nurture'}>
-        <NurtureApp />
-      </Show>
-      
-      <Show when={activeApp() === 'justincase'}>
-        <JustInCaseApp />
-      </Show>
-      
-      <Show when={activeApp() === 'tempo'}>
-        <TempoApp />
-      </Show>
-      
-      <Show when={activeApp() === 'friendly'}>
-        <FriendlyApp />
-      </Show>
-      
-      <Show when={activeApp() === 'manifest'}>
-        <ManifestApp />
-      </Show>
-      
-      <Show when={activeApp() === 'augment'}>
-        <AugmentApp />
-      </Show>
-      
-      <Show when={activeApp() === 'lol'}>
-        <LolApp />
-      </Show>
+      {/* App content with top padding for nav */}
+      <div style={{ 'padding-top': '80px' }}>
+        <Show when={activeTab() === 'nurture'}>
+          <NurtureApp />
+        </Show>
+        
+        <Show when={activeTab() === 'justincase'}>
+          <JustInCaseApp />
+        </Show>
+        
+        <Show when={activeTab() === 'tempo'}>
+          <TempoApp />
+        </Show>
+        
+        <Show when={activeTab() === 'friendly'}>
+          <FriendlyApp />
+        </Show>
+        
+        <Show when={activeTab() === 'manifest'}>
+          <ManifestApp />
+        </Show>
+        
+        <Show when={activeTab() === 'augment'}>
+          <AugmentApp />
+        </Show>
+        
+        <Show when={activeTab() === 'lol'}>
+          <LolApp />
+        </Show>
+      </div>
     </div>
   );
 };

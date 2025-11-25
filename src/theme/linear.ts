@@ -1,6 +1,6 @@
 import { Theme } from './types';
 
-// TEMPO - Linear-Type Design System
+// TEMPO - Dark Mode Design System
 // Clean, focused, minimal with precision typography
 // Inspired by: Linear app, command line interfaces, IDE aesthetics
 export const linear: Theme = {
