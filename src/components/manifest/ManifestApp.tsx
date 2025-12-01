@@ -1,506 +1,669 @@
-import { Component, For, createSignal } from 'solid-js';
+import { Component, For, createSignal, Show } from 'solid-js';
 import { Profile, Match, SelfDiscovery } from '../../schemas/manifest.schema';
-import { brutalist, brutalScale, brutalAccents } from '../../theme/brutalist';
+
+// --- DATA: DEEP CONNECTION FOCUS ---
 
 const sampleProfile: Profile = {
   id: '1',
-  displayName: 'USER_001',
+  displayName: 'Alex',
   age: 28,
   location: 'Brooklyn, NY',
-  bio: 'I build things. I break things. Looking for someone who gets it.',
+  bio: 'Seeking someone who walks the same path.',
   photos: ['/avatar.jpg'],
-  commitmentScore: 72,
+  commitmentScore: 85,
 };
 
-const sampleMatches: Match[] = [
-  { id: '1', userId: '1', matchedUserId: '2', compatibilityScore: 87, sharedValues: ['creativity', 'adventure'], matchedAt: new Date(), status: 'pending' },
-  { id: '2', userId: '1', matchedUserId: '3', compatibilityScore: 74, sharedValues: ['career', 'stability'], matchedAt: new Date(), status: 'accepted' },
+const sampleMatches: (Match & { loveLanguage: string; lifePath: string; coreValue: string; redFlags: string[] })[] = [
+  { 
+    id: '1', 
+    userId: '1', 
+    matchedUserId: '2', 
+    compatibilityScore: 92, 
+    sharedValues: ['Growth', 'Authenticity'], 
+    matchedAt: new Date(), 
+    status: 'pending',
+    loveLanguage: 'Acts of Service',
+    lifePath: 'Creative Builder',
+    coreValue: 'Radical Honesty',
+    redFlags: ['Strictly Dates Tall Men (>6\'2")', 'Prefers Latino Men', 'Talks During Movies']
+  },
+  { 
+    id: '2', 
+    userId: '1', 
+    matchedUserId: '3', 
+    compatibilityScore: 78, 
+    sharedValues: ['Stability', 'Family'], 
+    matchedAt: new Date(), 
+    status: 'accepted',
+    loveLanguage: 'Quality Time',
+    lifePath: 'Nurturing Guardian',
+    coreValue: 'Loyalty',
+    redFlags: ['Only Dates Asian Women', 'Needs 2h Alone Time Daily', 'Hates Dogs']
+  },
 ];
 
-const sampleQuestions: SelfDiscovery[] = [
-  { id: '1', userId: '1', question: 'What does a successful relationship look like to you?', answer: '', category: 'relationship', completedAt: new Date() },
-  { id: '2', userId: '1', question: 'Describe your ideal weekend.', answer: '', category: 'lifestyle', completedAt: new Date() },
+const journalPrompts: SelfDiscovery[] = [
+  { id: '1', userId: '1', question: 'When do you feel most understood?', answer: '', category: 'emotional_intelligence', completedAt: new Date() },
+  { id: '2', userId: '1', question: 'What is a "dealbreaker" that actually protects your peace?', answer: '', category: 'boundaries', completedAt: new Date() },
 ];
 
-const BrutalButton: Component<{ children: any; primary?: boolean; onClick?: () => void }> = (props) => {
+// --- THEME: DUOTONE (CHARCOAL & LOVE) ---
+
+const duotone = {
+  base: '#1a1a1a',     // Charcoal - The Deep Self
+  accent: '#D32F2F',   // Love/Crimson - The Passion/Connection
+  paper: '#F5F5F5',    // Off-white - The Canvas
+  text: '#1a1a1a',
+  textMuted: '#757575',
+};
+
+// "Hard Stick" Shadows - crisp, high contrast
+const shadows = {
+  lifted: `8px 8px 0px ${duotone.base}`,
+  floating: `4px 4px 0px ${duotone.base}`,
+  flat: `2px 2px 0px ${duotone.accent}`,
+};
+
+const styles = {
+  container: {
+    'min-height': '100vh',
+    background: duotone.paper,
+    color: duotone.text,
+    'font-family': "'Courier New', Courier, monospace",
+    padding: '40px',
+    'overflow-x': 'hidden',
+    position: 'relative' as const,
+    // Subtle noise/grain could be added here, but staying clean for Duotone impact
+  },
+  title: {
+    'font-family': "'Courier New', Courier, monospace",
+    'font-weight': 'bold',
+    'font-size': '4rem',
+    'text-transform': 'uppercase' as const,
+    'letter-spacing': '-0.05em',
+    'margin-bottom': '0.5rem',
+    'position': 'relative' as const,
+    'z-index': 10,
+    color: duotone.base,
+    'text-shadow': `4px 4px 0px ${duotone.accent}`, // Duotone shadow
+  }
+};
+
+// --- COMPONENTS ---
+
+// Geometric Cutouts - Now STRICTLY Duotone
+const DuotoneCutout: Component<{ 
+  color: 'base' | 'accent'; 
+  shape: 'circle' | 'square' | 'triangle'; 
+  size: string; 
+  style?: any; 
+}> = (props) => {
+  const bg = props.color === 'base' ? duotone.base : duotone.accent;
+  
+  // CSS Clip Paths for shapes
+  const clipPath = props.shape === 'circle' ? 'circle(50% at 50% 50%)' :
+                   props.shape === 'triangle' ? 'polygon(50% 0%, 0% 100%, 100% 100%)' :
+                   'none'; // Square is default
+
   return (
-    <button
-      onClick={props.onClick}
-      style={{
-        padding: '16px 32px',
-        background: props.primary ? brutalist.colors.primary : brutalist.colors.background,
-        color: props.primary ? brutalist.colors.background : brutalist.colors.primary,
-        border: `3px solid ${brutalist.colors.primary}`,
-        'border-radius': '0',
-        'font-family': brutalist.fonts.heading,
-        'font-size': '14px',
-        'font-weight': '900',
-        'text-transform': 'uppercase',
-        'letter-spacing': '2px',
-        cursor: 'pointer',
-        'box-shadow': props.primary ? brutalist.shadows.sm : 'none',
-        transition: 'transform 0.1s, box-shadow 0.1s',
-      }}
-    >
-      {props.children}
-    </button>
+    <div style={{
+      position: 'absolute',
+      width: props.size,
+      height: props.size,
+      background: bg,
+      'clip-path': clipPath,
+      opacity: 0.15, // Subtle background presence
+      'z-index': 0,
+      'pointer-events': 'none',
+      ...props.style
+    }} />
   );
 };
 
-const MatchCard: Component<{ match: Match }> = (props) => {
-  const [isHovered, setIsHovered] = createSignal(false);
-  
+const JournalCard: Component<{ children: any; style?: any; accent?: boolean }> = (props) => {
   return (
-    <div
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+    <div 
       style={{
-        background: brutalist.colors.background,
-        border: `3px solid ${brutalist.colors.primary}`,
-        padding: '0',
-        'box-shadow': isHovered() ? brutalist.shadows.md : brutalist.shadows.sm,
-        transform: isHovered() ? 'translate(-4px, -4px)' : 'none',
-        transition: 'transform 0.1s, box-shadow 0.1s',
-        cursor: 'pointer',
+        background: '#fff',
+        padding: '32px',
+        position: 'relative',
+        border: `2px solid ${duotone.base}`,
+        'box-shadow': props.accent ? `8px 8px 0px ${duotone.accent}` : shadows.floating,
+        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+        'z-index': 1,
+        ...props.style
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = 'translate(-2px, -2px)';
+        e.currentTarget.style.boxShadow = props.accent ? `12px 12px 0px ${duotone.accent}` : shadows.lifted;
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'none';
+        e.currentTarget.style.boxShadow = props.accent ? `8px 8px 0px ${duotone.accent}` : shadows.floating;
       }}
     >
-      {/* Header stripe */}
+      {/* Decorative Corner Fold or Accent */}
       <div style={{
-        background: brutalist.colors.primary,
-        color: brutalist.colors.background,
-        padding: '12px 16px',
-        'font-family': brutalist.fonts.body,
-        'font-size': '12px',
-        display: 'flex',
-        'justify-content': 'space-between',
-        'align-items': 'center',
-      }}>
-        <span>MATCH #{props.match.id}</span>
-        <span style={{ color: props.match.status === 'accepted' ? brutalAccents.success : brutalAccents.warning }}>
-          [{props.match.status.toUpperCase()}]
-        </span>
-      </div>
+        position: 'absolute',
+        top: '0',
+        right: '0',
+        width: '20px',
+        height: '20px',
+        background: props.accent ? duotone.accent : duotone.base,
+        'clip-path': 'polygon(0 0, 100% 0, 100% 100%)'
+      }} />
       
-      <div style={{ padding: '24px' }}>
-        {/* Compatibility score - brutally large */}
+      {props.children}
+    </div>
+  );
+};
+
+const Tag: Component<{ label: string; invert?: boolean }> = (props) => (
+  <span style={{
+    display: 'inline-block',
+    background: props.invert ? duotone.base : duotone.accent,
+    color: '#fff',
+    padding: '6px 12px',
+    'font-size': '0.75rem',
+    'font-weight': 'bold',
+    'text-transform': 'uppercase',
+    'margin-right': '8px',
+    'margin-bottom': '8px',
+    'box-shadow': '2px 2px 0px rgba(0,0,0,0.2)'
+  }}>
+    {props.label}
+  </span>
+);
+
+const RedFlagReveal: Component<{ flags: string[] }> = (props) => {
+  const [isOpen, setIsOpen] = createSignal(false);
+
+  return (
+    <div style={{ position: 'relative', display: 'inline-block' }}>
+      {/* Trigger Badge */}
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          setIsOpen(!isOpen());
+        }}
+        style={{
+          background: 'transparent',
+          border: `1px solid ${duotone.accent}`,
+          color: duotone.accent,
+          padding: '4px 8px',
+          'font-size': '0.75rem',
+          'font-weight': 'bold',
+          'text-transform': 'uppercase',
+          cursor: 'pointer',
+          display: 'flex',
+          'align-items': 'center',
+          gap: '6px',
+          transition: 'all 0.2s',
+          'box-shadow': '2px 2px 0px rgba(0,0,0,0.1)'
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.background = duotone.accent;
+          e.currentTarget.style.color = '#fff';
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.background = 'transparent';
+          e.currentTarget.style.color = duotone.accent;
+        }}
+      >
+        <span>🚩</span>
+        <span>{props.flags.length} WARNINGS</span>
+      </button>
+
+      {/* Popover */}
+      <Show when={isOpen()}>
         <div style={{
-          'font-family': brutalist.fonts.heading,
-          'font-size': brutalScale.display,
-          'font-weight': '900',
-          'line-height': '1',
-          'margin-bottom': '16px',
+          position: 'absolute',
+          bottom: '100%',
+          left: '0',
+          'margin-bottom': '12px',
+          width: '240px',
+          background: '#fff',
+          border: `2px solid ${duotone.accent}`,
+          'box-shadow': `4px 4px 0px ${duotone.accent}`,
+          'z-index': 100,
+          padding: '0'
+        }}>
+          {/* Popover Header */}
+          <div style={{
+            background: duotone.accent,
+            color: '#fff',
+            padding: '6px 12px',
+            'font-size': '0.7rem',
+            'font-weight': 'bold',
+            'text-transform': 'uppercase',
+            display: 'flex',
+            'justify-content': 'space-between',
+            'align-items': 'center'
+          }}>
+            <span>Confidential</span>
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsOpen(false);
+              }}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#fff',
+                cursor: 'pointer',
+                'font-weight': 'bold'
+              }}
+            >
+              ×
+            </button>
+          </div>
+          
+          {/* List */}
+          <ul style={{
+            'list-style-type': 'none',
+            padding: '12px',
+            margin: 0,
+            'font-size': '0.8rem',
+            color: duotone.base
+          }}>
+            <For each={props.flags}>
+              {flag => (
+                <li style={{ 
+                  'margin-bottom': '8px', 
+                  'border-bottom': '1px dashed #eee',
+                  'padding-bottom': '4px'
+                }}>
+                  • {flag}
+                </li>
+              )}
+            </For>
+          </ul>
+          
+          {/* Decorative Arrow */}
+          <div style={{
+            position: 'absolute',
+            bottom: '-6px',
+            left: '20px',
+            width: '10px',
+            height: '10px',
+            background: '#fff',
+            'border-right': `2px solid ${duotone.accent}`,
+            'border-bottom': `2px solid ${duotone.accent}`,
+            transform: 'rotate(45deg)'
+          }} />
+        </div>
+      </Show>
+    </div>
+  );
+};
+
+const MatchProfile: Component<{ match: typeof sampleMatches[0] }> = (props) => {
+  return (
+    <JournalCard style={{ height: '100%', display: 'flex', 'flex-direction': 'column', 'justify-content': 'space-between' }}>
+      <div>
+        <div style={{ 
+          display: 'flex', 
+          'justify-content': 'space-between', 
+          'align-items': 'center', 
+          'border-bottom': `2px solid ${duotone.base}`,
+          'padding-bottom': '12px',
+          'margin-bottom': '20px'
+        }}>
+          <span style={{ 'font-weight': 'bold', 'font-size': '1.2rem', color: duotone.base }}>
+            #{props.match.id.padStart(3, '0')}
+          </span>
+          <div style={{ display: 'flex', gap: '12px', 'align-items': 'center' }}>
+            <RedFlagReveal flags={props.match.redFlags} />
+            <span style={{ 
+              color: props.match.status === 'accepted' ? duotone.accent : duotone.textMuted,
+              'font-weight': 'bold',
+              'font-size': '0.9rem'
+            }}>
+              {props.match.status.toUpperCase()}
+            </span>
+          </div>
+        </div>
+
+        <div style={{ 'margin-bottom': '24px' }}>
+          <div style={{ 'font-size': '0.8rem', color: duotone.textMuted, 'margin-bottom': '4px', 'text-transform': 'uppercase' }}>Love Language</div>
+          <div style={{ 'font-size': '1.2rem', 'font-weight': 'bold', 'margin-bottom': '16px', color: duotone.accent }}>{props.match.loveLanguage}</div>
+          
+          <div style={{ 'font-size': '0.8rem', color: duotone.textMuted, 'margin-bottom': '4px', 'text-transform': 'uppercase' }}>Life Path</div>
+          <div style={{ 'font-size': '1.1rem', 'font-weight': 'bold', 'margin-bottom': '12px' }}>{props.match.lifePath}</div>
+        </div>
+
+        <div style={{ 'margin-bottom': '20px' }}>
+          <For each={props.match.sharedValues}>
+            {val => <Tag label={val} invert />}
+          </For>
+        </div>
+      </div>
+
+      <div style={{ 'text-align': 'center', 'border-top': `1px dashed ${duotone.textMuted}`, 'padding-top': '20px' }}>
+        <div style={{ 
+          'font-size': '3.5rem', 
+          'font-weight': 'bold', 
+          color: duotone.base,
+          'line-height': 1,
+          'letter-spacing': '-2px'
         }}>
           {props.match.compatibilityScore}%
         </div>
-        
-        <div style={{
-          'font-family': brutalist.fonts.body,
-          'font-size': '14px',
-          color: brutalist.colors.textMuted,
-          'margin-bottom': '16px',
-        }}>
-          COMPATIBILITY SCORE
-        </div>
-        
-        {/* Shared values - exposed as raw data */}
-        <div style={{
-          'font-family': brutalist.fonts.body,
-          'font-size': '12px',
-          'margin-bottom': '24px',
-        }}>
-          <div style={{ color: brutalist.colors.textMuted, 'margin-bottom': '8px' }}>
-            SHARED_VALUES: [
-          </div>
-          <For each={props.match.sharedValues}>
-            {(value, i) => (
-              <span style={{
-                display: 'inline-block',
-                padding: '4px 8px',
-                background: brutalist.colors.surface,
-                'margin-right': '8px',
-                'margin-bottom': '8px',
-                border: `1px solid ${brutalist.colors.border}`,
-              }}>
-                "{value}"{i() < props.match.sharedValues.length - 1 ? ',' : ''}
-              </span>
-            )}
-          </For>
-          <div style={{ color: brutalist.colors.textMuted }}>]</div>
-        </div>
-        
-        <div style={{ display: 'flex', gap: '12px' }}>
-          <BrutalButton primary>VIEW PROFILE</BrutalButton>
-          <BrutalButton>PASS</BrutalButton>
-        </div>
+        <div style={{ 'font-size': '0.8rem', color: duotone.textMuted, 'text-transform': 'uppercase', 'letter-spacing': '1px' }}>Resonance</div>
       </div>
-    </div>
+
+      <button style={{
+        'margin-top': '24px',
+        background: 'transparent',
+        color: duotone.base,
+        border: `2px solid ${duotone.base}`,
+        padding: '12px',
+        'font-family': 'inherit',
+        'font-weight': 'bold',
+        'text-transform': 'uppercase',
+        cursor: 'pointer',
+        transition: 'all 0.2s',
+        display: 'flex',
+        'justify-content': 'center',
+        'align-items': 'center',
+        gap: '8px'
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.background = duotone.base;
+        e.currentTarget.style.color = '#fff';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.background = 'transparent';
+        e.currentTarget.style.color = duotone.base;
+      }}
+      >
+        <span>Open Journal</span>
+        <span>→</span>
+      </button>
+    </JournalCard>
   );
 };
 
-const QuestionBlock: Component<{ question: SelfDiscovery; index: number }> = (props) => {
-  return (
+const JournalEntry: Component<{ prompt: SelfDiscovery; index: number }> = (props) => (
+  <div style={{
+    position: 'relative',
+    'margin-bottom': '60px',
+    'padding-left': '20px',
+    'border-left': `4px solid ${duotone.accent}`
+  }}>
     <div style={{
-      background: brutalist.colors.surface,
-      border: `3px solid ${brutalist.colors.primary}`,
-      'margin-bottom': '24px',
+      'font-size': '0.8rem',
+      'text-transform': 'uppercase',
+      color: duotone.textMuted,
+      'margin-bottom': '12px',
+      'letter-spacing': '2px',
+      'font-weight': 'bold'
     }}>
-      {/* Question number - visible structure */}
-      <div style={{
-        background: brutalist.colors.primary,
-        color: brutalist.colors.background,
-        padding: '8px 16px',
-        'font-family': brutalist.fonts.body,
-        'font-size': '12px',
-      }}>
-        QUESTION_{String(props.index + 1).padStart(3, '0')} // {props.question.category.toUpperCase()}
-      </div>
-      
-      <div style={{ padding: '24px' }}>
-        <h3 style={{
-          margin: '0 0 24px 0',
-          'font-family': brutalist.fonts.heading,
-          'font-size': brutalScale.h2,
-          'font-weight': '900',
-          'line-height': '1.2',
-          color: brutalist.colors.text,
-        }}>
-          {props.question.question}
-        </h3>
-        
-        <textarea
-          placeholder="TYPE YOUR ANSWER HERE..."
-          style={{
-            width: '100%',
-            'min-height': '120px',
-            padding: '16px',
-            background: brutalist.colors.background,
-            border: `2px solid ${brutalist.colors.border}`,
-            'font-family': brutalist.fonts.body,
-            'font-size': '14px',
-            'line-height': '1.6',
-            resize: 'vertical',
-          }}
-        />
-      </div>
+      /// Entry {String(props.index + 1).padStart(2, '0')}
     </div>
-  );
-};
+
+    <h3 style={{
+      'font-size': '1.5rem',
+      'line-height': '1.3',
+      'margin-bottom': '20px',
+      'font-weight': 'bold',
+      color: duotone.base
+    }}>
+      {props.prompt.question}
+    </h3>
+
+    <div style={{
+      position: 'relative',
+      background: '#fff',
+      padding: '0 24px',
+      border: `2px solid ${duotone.base}`,
+      'box-shadow': shadows.flat
+    }}>
+      <textarea
+        placeholder="Type your truth here..."
+        style={{
+          width: '100%',
+          'min-height': '150px',
+          border: 'none',
+          background: 'transparent',
+          'font-family': "'Courier New', Courier, monospace",
+          'font-size': '1.1rem',
+          'line-height': '2rem',
+          'background-image': `repeating-linear-gradient(transparent, transparent 31px, #E0E0E0 31px, #E0E0E0 32px)`,
+          'background-attachment': 'local',
+          padding: '16px 0',
+          outline: 'none',
+          resize: 'vertical',
+          color: duotone.base
+        }}
+      />
+    </div>
+  </div>
+);
+
+// --- MAIN LAYOUT ---
 
 export const ManifestApp: Component = () => {
-  const [activeSection, setActiveSection] = createSignal<'matches' | 'discover' | 'criteria'>('matches');
-  
+  const [activeTab, setActiveTab] = createSignal<'journal' | 'connections'>('connections');
+
   return (
-    <div style={{
-      'min-height': '100vh',
-      background: brutalist.colors.background,
-      'font-family': brutalist.fonts.body,
-    }}>
-      {/* Brutalist header - visible grid lines */}
-      <header style={{
-        'border-bottom': `3px solid ${brutalist.colors.primary}`,
-        padding: '0',
+    <div style={styles.container}>
+      {/* Duotone Background Accents */}
+      <DuotoneCutout color="accent" shape="circle" size="400px" style={{ top: '-100px', right: '-100px' }} />
+      <DuotoneCutout color="base" shape="triangle" size="300px" style={{ bottom: '50px', left: '-100px', transform: 'rotate(15deg)' }} />
+      
+      <header style={{ 
+        'max-width': '900px', 
+        margin: '0 auto 80px', 
+        'text-align': 'center',
+        position: 'relative' 
       }}>
-        <div style={{
-          display: 'flex',
-          'align-items': 'stretch',
-          'max-width': '1400px',
-          margin: '0 auto',
-        }}>
-          {/* Logo block */}
+        <div style={{ display: 'inline-block', position: 'relative' }}>
+          <h1 style={styles.title}>Manifest.</h1>
           <div style={{
-            padding: '24px 32px',
-            'border-right': `3px solid ${brutalist.colors.primary}`,
+            position: 'absolute',
+            bottom: '15px',
+            right: '-70px',
+            background: duotone.accent,
+            color: '#fff',
+            padding: '4px 8px',
+            'font-size': '0.9rem',
+            'font-weight': 'bold',
+            transform: 'rotate(-10deg)',
+            'box-shadow': '4px 4px 0px rgba(0,0,0,0.2)'
           }}>
-            <h1 style={{
-              margin: 0,
-              'font-family': brutalist.fonts.heading,
-              'font-size': brutalScale.h1,
-              'font-weight': '900',
-              'letter-spacing': '-2px',
-              color: brutalist.colors.text,
-            }}>
-              MANIFEST
-            </h1>
-            <div style={{
-              'font-size': '11px',
-              color: brutalist.colors.textMuted,
-              'letter-spacing': '1px',
-              'margin-top': '4px',
-            }}>
-              QUALITY {'>'} QUANTITY
-            </div>
-          </div>
-          
-          {/* Navigation - exposed structure */}
-          <nav style={{
-            display: 'flex',
-            flex: 1,
-          }}>
-            {(['matches', 'discover', 'criteria'] as const).map((section) => (
-              <button
-                onClick={() => setActiveSection(section)}
-                style={{
-                  flex: 1,
-                  padding: '24px 32px',
-                  background: activeSection() === section ? brutalist.colors.primary : 'transparent',
-                  color: activeSection() === section ? brutalist.colors.background : brutalist.colors.text,
-                  border: 'none',
-                  'border-right': `3px solid ${brutalist.colors.primary}`,
-                  'font-family': brutalist.fonts.heading,
-                  'font-size': '14px',
-                  'font-weight': '900',
-                  'text-transform': 'uppercase',
-                  'letter-spacing': '2px',
-                  cursor: 'pointer',
-                }}
-              >
-                {section}
-              </button>
-            ))}
-          </nav>
-          
-          {/* Score display - raw number */}
-          <div style={{
-            padding: '16px 32px',
-            display: 'flex',
-            'flex-direction': 'column',
-            'align-items': 'flex-end',
-            'justify-content': 'center',
-          }}>
-            <div style={{
-              'font-family': brutalist.fonts.heading,
-              'font-size': brutalScale.h2,
-              'font-weight': '900',
-            }}>
-              {sampleProfile.commitmentScore}
-            </div>
-            <div style={{
-              'font-size': '10px',
-              color: brutalist.colors.textMuted,
-              'letter-spacing': '1px',
-            }}>
-              COMMITMENT_SCORE
-            </div>
+            VOL. 1
           </div>
         </div>
-      </header>
-      
-      <main style={{ 'max-width': '1400px', margin: '0 auto', padding: '48px 32px' }}>
-        {activeSection() === 'matches' && (
-          <>
-            {/* Section header - brutalist type scale */}
-            <div style={{ 'margin-bottom': '48px' }}>
-              <h2 style={{
-                margin: '0 0 16px 0',
-                'font-family': brutalist.fonts.heading,
-                'font-size': brutalScale.display,
-                'font-weight': '900',
-                'line-height': '0.9',
-                'letter-spacing': '-3px',
-              }}>
-                TODAY'S<br/>MATCHES
-              </h2>
-              <div style={{
-                'font-family': brutalist.fonts.body,
-                'font-size': '14px',
-                color: brutalist.colors.textMuted,
-              }}>
-                // {sampleMatches.length} MATCHES AVAILABLE // EXPIRES IN 23:47:12
-              </div>
-            </div>
-            
-            <div style={{
-              display: 'grid',
-              'grid-template-columns': 'repeat(auto-fill, minmax(400px, 1fr))',
-              gap: '32px',
-            }}>
-              <For each={sampleMatches}>
-                {match => <MatchCard match={match} />}
-              </For>
-            </div>
-            
-            {/* Blind date CTA - stark contrast */}
-            <div style={{
-              'margin-top': '64px',
-              padding: '48px',
-              background: brutalist.colors.primary,
-              color: brutalist.colors.background,
-              display: 'flex',
-              'justify-content': 'space-between',
-              'align-items': 'center',
-            }}>
-              <div>
-                <h3 style={{
-                  margin: '0 0 8px 0',
-                  'font-family': brutalist.fonts.heading,
-                  'font-size': brutalScale.h2,
-                  'font-weight': '900',
-                }}>
-                  LOCK IN A BLIND DATE
-                </h3>
-                <p style={{
-                  margin: 0,
-                  'font-family': brutalist.fonts.body,
-                  'font-size': '14px',
-                  opacity: 0.8,
-                }}>
-                  +25 COMMITMENT POINTS // REAL CONNECTIONS REQUIRE REAL ACTION
-                </p>
-              </div>
-              <button style={{
-                padding: '20px 40px',
-                background: brutalist.colors.background,
-                color: brutalist.colors.primary,
-                border: 'none',
-                'font-family': brutalist.fonts.heading,
-                'font-size': '16px',
-                'font-weight': '900',
-                'letter-spacing': '2px',
-                cursor: 'pointer',
-              }}>
-                I'M IN
-              </button>
-            </div>
-          </>
-        )}
         
-        {activeSection() === 'discover' && (
-          <>
-            <div style={{ 'margin-bottom': '48px' }}>
-              <h2 style={{
-                margin: '0 0 16px 0',
-                'font-family': brutalist.fonts.heading,
-                'font-size': brutalScale.display,
-                'font-weight': '900',
-                'line-height': '0.9',
-                'letter-spacing': '-3px',
-              }}>
-                SELF<br/>DISCOVERY
-              </h2>
-              <div style={{
-                'font-family': brutalist.fonts.body,
-                'font-size': '14px',
-                color: brutalist.colors.textMuted,
-              }}>
-                // KNOW YOURSELF BEFORE YOU SEEK ANOTHER
-              </div>
-            </div>
-            
-            <For each={sampleQuestions}>
-              {(q, i) => <QuestionBlock question={q} index={i()} />}
+        <p style={{ 
+          'font-size': '1.2rem', 
+          color: duotone.base, 
+          'max-width': '600px', 
+          margin: '0 auto',
+          'line-height': '1.6',
+          'border-top': `1px solid ${duotone.base}`,
+          'padding-top': '20px',
+          'margin-top': '20px'
+        }}>
+          Knowing yourself is the prerequisite to <span style={{ color: duotone.accent, 'font-weight': 'bold' }}>true connection</span>.
+        </p>
+
+        <div style={{ 
+          display: 'flex', 
+          'justify-content': 'center', 
+          gap: '0', 
+          'margin-top': '50px',
+          border: `2px solid ${duotone.base}`,
+          'background': '#fff',
+          'width': 'fit-content',
+          'margin-left': 'auto',
+          'margin-right': 'auto',
+          'box-shadow': shadows.floating
+        }}>
+          <button 
+            onClick={() => setActiveTab('connections')}
+            style={{
+              padding: '16px 32px',
+              border: 'none',
+              background: activeTab() === 'connections' ? duotone.base : 'transparent',
+              color: activeTab() === 'connections' ? '#fff' : duotone.base,
+              'font-family': 'inherit',
+              'font-weight': 'bold',
+              'text-transform': 'uppercase',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              'letter-spacing': '1px'
+            }}
+          >
+            Connections
+          </button>
+          <div style={{ width: '2px', background: duotone.base }}></div>
+          <button 
+            onClick={() => setActiveTab('journal')}
+            style={{
+              padding: '16px 32px',
+              border: 'none',
+              background: activeTab() === 'journal' ? duotone.base : 'transparent',
+              color: activeTab() === 'journal' ? '#fff' : duotone.base,
+              'font-family': 'inherit',
+              'font-weight': 'bold',
+              'text-transform': 'uppercase',
+              cursor: 'pointer',
+              transition: 'all 0.2s',
+              'letter-spacing': '1px'
+            }}
+          >
+            Journal
+          </button>
+        </div>
+      </header>
+
+      <main style={{ 'max-width': '1000px', margin: '0 auto', position: 'relative', 'z-index': 1 }}>
+        <Show when={activeTab() === 'connections'}>
+          <div style={{
+            display: 'grid',
+            'grid-template-columns': 'repeat(auto-fit, minmax(340px, 1fr))',
+            gap: '40px',
+            padding: '0 20px'
+          }}>
+            <For each={sampleMatches}>
+              {match => <MatchProfile match={match} />}
             </For>
             
-            <BrutalButton primary>SAVE + CONTINUE</BrutalButton>
-          </>
-        )}
-        
-        {activeSection() === 'criteria' && (
-          <>
-            <div style={{ 'margin-bottom': '48px' }}>
-              <h2 style={{
-                margin: '0 0 16px 0',
-                'font-family': brutalist.fonts.heading,
-                'font-size': brutalScale.display,
-                'font-weight': '900',
-                'line-height': '0.9',
-                'letter-spacing': '-3px',
-              }}>
-                YOUR<br/>CRITERIA
-              </h2>
-              <div style={{
-                'font-family': brutalist.fonts.body,
-                'font-size': '14px',
-                color: brutalist.colors.textMuted,
-              }}>
-                // DEFINE YOUR NON-NEGOTIABLES
-              </div>
-            </div>
-            
-            {/* Criteria form - exposed structure */}
-            <div style={{
-              background: brutalist.colors.surface,
-              border: `3px solid ${brutalist.colors.primary}`,
-              padding: '32px',
+            {/* The "Manifested Date" Card - Accent Style */}
+            <JournalCard accent style={{
+              display: 'flex',
+              'flex-direction': 'column',
+              'justify-content': 'center',
+              'align-items': 'center',
+              'text-align': 'center',
+              padding: '40px'
             }}>
-              <div style={{ 'margin-bottom': '32px' }}>
-                <label style={{
-                  display: 'block',
-                  'font-family': brutalist.fonts.body,
-                  'font-size': '12px',
-                  'margin-bottom': '8px',
-                  color: brutalist.colors.textMuted,
-                }}>
-                  AGE_RANGE:
-                </label>
-                <div style={{ display: 'flex', gap: '16px', 'align-items': 'center' }}>
-                  <input
-                    type="number"
-                    value="25"
-                    style={{
-                      width: '80px',
-                      padding: '12px',
-                      border: `2px solid ${brutalist.colors.border}`,
-                      'font-family': brutalist.fonts.body,
-                      'font-size': '16px',
-                    }}
-                  />
-                  <span style={{ 'font-size': '20px', 'font-weight': '900' }}>-</span>
-                  <input
-                    type="number"
-                    value="35"
-                    style={{
-                      width: '80px',
-                      padding: '12px',
-                      border: `2px solid ${brutalist.colors.border}`,
-                      'font-family': brutalist.fonts.body,
-                      'font-size': '16px',
-                    }}
-                  />
-                </div>
+              <div style={{ 
+                'font-size': '4rem', 
+                color: duotone.accent, 
+                'margin-bottom': '20px' 
+              }}>
+                ♥
               </div>
-              
-              <div style={{ 'margin-bottom': '32px' }}>
-                <label style={{
-                  display: 'block',
-                  'font-family': brutalist.fonts.body,
-                  'font-size': '12px',
-                  'margin-bottom': '8px',
-                  color: brutalist.colors.textMuted,
-                }}>
-                  DEAL_BREAKERS[]:
-                </label>
-                <textarea
-                  placeholder="Enter each dealbreaker on a new line..."
-                  style={{
-                    width: '100%',
-                    'min-height': '100px',
-                    padding: '12px',
-                    border: `2px solid ${brutalist.colors.border}`,
-                    'font-family': brutalist.fonts.body,
-                    'font-size': '14px',
-                    resize: 'vertical',
-                  }}
-                />
-              </div>
-              
-              <BrutalButton primary>UPDATE CRITERIA</BrutalButton>
-            </div>
-          </>
-        )}
+              <h3 style={{ 
+                'font-size': '2rem', 
+                'margin-bottom': '16px', 
+                color: duotone.base,
+                'text-transform': 'uppercase',
+                'letter-spacing': '-1px'
+              }}>
+                The Leap
+              </h3>
+              <p style={{ 'margin-bottom': '32px', 'line-height': '1.6', color: duotone.textMuted }}>
+                We've identified a soul resonance. <br/>
+                <b>Match #882</b> shares your Core Value of <i>"Radical Honesty"</i>.
+              </p>
+              <button style={{
+                background: duotone.accent,
+                color: '#fff',
+                border: 'none',
+                padding: '16px 32px',
+                'font-size': '1.1rem',
+                'font-weight': 'bold',
+                'box-shadow': `4px 4px 0 rgba(0,0,0,0.2)`,
+                cursor: 'pointer',
+                'text-transform': 'uppercase',
+                'letter-spacing': '1px',
+                transition: 'transform 0.1s',
+              }}
+              onMouseDown={(e) => e.currentTarget.style.transform = 'translate(2px, 2px)'}
+              onMouseUp={(e) => e.currentTarget.style.transform = 'translate(0, 0)'}
+              >
+                Manifest Date
+              </button>
+            </JournalCard>
+          </div>
+        </Show>
+
+        <Show when={activeTab() === 'journal'}>
+          <div style={{
+            background: '#fff',
+            padding: '60px',
+            border: `2px solid ${duotone.base}`,
+            'box-shadow': shadows.lifted,
+            position: 'relative',
+            'min-height': '600px',
+          }}>
+             {/* Header */}
+             <div style={{ 
+               'border-bottom': `4px solid ${duotone.base}`, 
+               'padding-bottom': '24px', 
+               'margin-bottom': '60px',
+               display: 'flex',
+               'justify-content': 'space-between',
+               'align-items': 'flex-end'
+             }}>
+               <div>
+                 <h2 style={{ 'font-size': '3rem', margin: 0, 'line-height': 0.8, color: duotone.base }}>SELF<br/>STUDY</h2>
+               </div>
+               <div style={{ 'text-align': 'right' }}>
+                 <div style={{ 'font-size': '0.9rem', 'text-transform': 'uppercase', color: duotone.textMuted, 'margin-bottom': '4px' }}>Clarity Score</div>
+                 <div style={{ 'font-size': '3rem', 'font-weight': 'bold', 'line-height': 0.8, color: duotone.accent }}>{sampleProfile.commitmentScore}</div>
+               </div>
+             </div>
+
+             <For each={journalPrompts}>
+               {(prompt, i) => <JournalEntry prompt={prompt} index={i()} />}
+             </For>
+
+             <div style={{ 'text-align': 'center', 'margin-top': '80px', 'border-top': `1px dashed ${duotone.textMuted}`, 'padding-top': '40px' }}>
+               <button style={{
+                 background: duotone.base,
+                 color: '#fff',
+                 border: 'none',
+                 padding: '16px 48px',
+                 'font-family': 'inherit',
+                 'font-weight': 'bold',
+                 'font-size': '1.2rem',
+                 cursor: 'pointer',
+                 'box-shadow': `4px 4px 0px ${duotone.accent}`,
+                 transition: 'all 0.2s',
+               }}
+               >
+                 COMMIT ENTRY
+               </button>
+             </div>
+          </div>
+        </Show>
       </main>
       
-      {/* Footer - visible technical info */}
       <footer style={{
-        'border-top': `3px solid ${brutalist.colors.primary}`,
-        padding: '16px 32px',
-        'font-family': brutalist.fonts.body,
-        'font-size': '11px',
-        color: brutalist.colors.textMuted,
-        display: 'flex',
-        'justify-content': 'space-between',
+        'text-align': 'center',
+        'margin-top': '120px',
+        padding: '40px',
+        color: duotone.textMuted,
+        'font-size': '0.8rem',
+        'text-transform': 'uppercase',
+        'letter-spacing': '2px'
       }}>
-        <span>MANIFEST v0.1.0 // BUILD 2024.01.15</span>
-        <span>USER: {sampleProfile.displayName} // SESSION: ACTIVE</span>
+        Manifest Vol. 1 — Est. 2024
       </footer>
     </div>
   );
