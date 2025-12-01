@@ -6,14 +6,22 @@ import { Theme } from './types';
 export const maximalist: Theme = {
   name: 'augment',
   colors: {
-    primary: '#9333EA',      // Royal purple
-    secondary: '#EC4899',    // Hot pink
-    accent: '#F59E0B',       // Gold
-    background: '#1E1B4B',   // Deep indigo
-    surface: '#312E81',      // Rich purple
-    text: '#FEFCE8',         // Cream white
-    textMuted: '#C4B5FD',    // Lavender
-    border: '#6366F1',       // Bright indigo
+    primary: '#D946EF',      // Fuchsia 500
+    secondary: '#8B5CF6',    // Violet 500
+    accent: '#FBBF24',       // Amber 400
+    background: '#121212',   // Near Black (Grayscale for pop)
+    surface: '#1E1E1E',      // Dark Grey
+    text: '#F3F4F6',         // Cool Grey 100
+    textMuted: '#9CA3AF',    // Cool Grey 400
+    border: '#374151',       // Cool Grey 700
+  },
+  riasec: {
+    realistic: '#F97316',    // Neon Orange (Hot)
+    investigative: '#8B5CF6', // Neon Purple (Cool)
+    artistic: '#EC4899',     // Hot Pink (Hot)
+    social: '#10B981',       // Emerald Green (Cool)
+    enterprising: '#EAB308', // Electric Yellow (Hot)
+    conventional: '#06B6D4', // Cyan (Cool)
   },
   fonts: {
     body: "'Space Grotesk', system-ui, sans-serif",
@@ -53,9 +61,10 @@ export const maxPalette = {
 // Gradient definitions
 export const maxGradients = {
   primary: `linear-gradient(135deg, ${maximalist.colors.primary}, ${maximalist.colors.secondary})`,
-  sunset: `linear-gradient(135deg, ${maxPalette.coral}, ${maxPalette.gold})`,
-  aurora: `linear-gradient(135deg, ${maxPalette.teal}, ${maximalist.colors.primary})`,
-  luxe: `linear-gradient(135deg, ${maxPalette.gold}, ${maximalist.colors.secondary})`,
+  sunset: `linear-gradient(135deg, #F97316, #EC4899)`, // Hot gradient
+  aurora: `linear-gradient(135deg, #10B981, #06B6D4)`, // Cool gradient
+  luxe: `linear-gradient(135deg, #EAB308, #F97316)`,
+  vapor: `linear-gradient(135deg, #8B5CF6, #06B6D4)`, // Vaporwave
 };
 
 // Pattern SVG backgrounds
