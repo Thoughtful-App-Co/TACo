@@ -244,8 +244,7 @@ const LandingPage: Component<{ onSelectTimeline: (t: Timeline) => void }> = (pro
             color: 'rgba(255,255,255,0.5)',
             'font-style': 'italic',
           }}>
-            Our intent is to use this next seismic shift in code mechanics propelled by LLM code agents 
-            to take back technology for human good.
+            Our intent is to use this seismic shift in code mechanics propelled by LLM code agents, to rapid develop design-first, human-first, local-first applications at scale to take back technology for human good.
           </p>
         </div>
       </header>
