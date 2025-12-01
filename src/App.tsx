@@ -26,9 +26,9 @@ const apps: AppInfo[] = [
   { id: 'tempo', name: 'Tempo', description: 'AI task timer', designSystem: 'Dark Mode', color: '#5E6AD2', timeline: 'now' },
   // NEXT - Coming soon
   { id: 'friendly', name: 'FriendLy', description: 'Friendship calendar', designSystem: 'Liquid', color: '#3B82F6', timeline: 'next' },
-  { id: 'manifest', name: 'Manifest', description: 'Picky matchmaking', designSystem: 'Brutalistic', color: '#000000', timeline: 'next' },
   { id: 'augment', name: 'Augment', description: 'IO psychology jobs', designSystem: 'Maximalist', color: '#9333EA', timeline: 'next' },
   // LATER - Future plans
+  { id: 'manifest', name: 'Manifest', description: 'Picky matchmaking', designSystem: 'Brutalistic', color: '#000000', timeline: 'later' },
   { id: 'lol', name: 'LoL', description: 'Gamified chores', designSystem: 'Papermorphic', color: '#2196F3', timeline: 'later' },
 ];
 
