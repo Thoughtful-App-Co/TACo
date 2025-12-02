@@ -1,5 +1,6 @@
 /* @refresh reload */
 import { render } from 'solid-js/web';
+import { Router } from '@solidjs/router';
 import { App } from './App';
 
 // Global styles
@@ -38,5 +39,9 @@ document.head.appendChild(globalStyles);
 const root = document.getElementById('root');
 
 if (root) {
-  render(() => <App />, root);
+  render(() => (
+    <Router>
+      <App />
+    </Router>
+  ), root);
 }

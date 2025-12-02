@@ -1,4 +1,5 @@
-import { Component, createSignal, Show, For } from 'solid-js';
+import { Component, createSignal, Show, For, createMemo } from 'solid-js';
+import { A, useLocation, useNavigate } from '@solidjs/router';
 import { NurtureApp } from './components/nurture/NurtureApp';
 import { JustInCaseApp } from './components/justincase/JustInCaseApp';
 import { TempoApp } from './components/tempo/TempoApp';
@@ -38,12 +39,25 @@ const timelineLabels: Record<Timeline, { label: string; description: string }> =
   later: { label: 'Later', description: 'Future Plans' },
 };
 
+// First app in each timeline for navigation
+const firstAppByTimeline: Record<Timeline, AppTab> = {
+  now: 'nurture',
+  next: 'friendly',
+  later: 'manifest',
+};
+
+// Get timeline from app id
+const getTimelineFromApp = (appId: AppTab): Timeline => {
+  const app = apps.find(a => a.id === appId);
+  return app?.timeline || 'now';
+};
+
 // TACo Logo Component
-const TacoLogo: Component<{ size?: number; onClick?: () => void }> = (props) => {
+const TacoLogo: Component<{ size?: number }> = (props) => {
   const size = props.size || 36;
   return (
-    <button
-      onClick={props.onClick}
+    <A
+      href="/"
       style={{
         display: 'flex',
         'align-items': 'center',
@@ -56,6 +70,7 @@ const TacoLogo: Component<{ size?: number; onClick?: () => void }> = (props) => 
         cursor: 'pointer',
         transition: 'transform 0.2s ease, box-shadow 0.2s ease',
         'box-shadow': '0 2px 8px rgba(0,0,0,0.1)',
+        'text-decoration': 'none',
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.transform = 'scale(1.05)';
@@ -84,12 +99,19 @@ const TacoLogo: Component<{ size?: number; onClick?: () => void }> = (props) => 
         <circle cx="15" cy="9" r="1.5" fill="#4ECDC4" />
         <circle cx="12" cy="11" r="1" fill="#FFE66D" />
       </svg>
-    </button>
+    </A>
   );
 };
 
 // Main Landing Page with Manifesto
-const LandingPage: Component<{ onSelectTimeline: (t: Timeline) => void }> = (props) => {
+const LandingPage: Component = () => {
+  const navigate = useNavigate();
+  
+  const handleSelectTimeline = (timeline: Timeline) => {
+    const firstApp = firstAppByTimeline[timeline];
+    navigate(`/${firstApp}`);
+  };
+
   const philosophies = [
     {
       category: 'Design Philosophy',
@@ -282,7 +304,7 @@ const LandingPage: Component<{ onSelectTimeline: (t: Timeline) => void }> = (pro
             
             return (
               <button
-                onClick={() => props.onSelectTimeline(timeline)}
+                onClick={() => handleSelectTimeline(timeline)}
                 style={{
                   padding: '24px',
                   background: colors[timeline].bg,
@@ -447,13 +469,17 @@ const LandingPage: Component<{ onSelectTimeline: (t: Timeline) => void }> = (pro
 
 const TabNavigation: Component<{ 
   activeTimeline: Timeline;
-  setActiveTimeline: (t: Timeline) => void;
-  activeTab: AppTab | null; 
-  setActiveTab: (tab: AppTab) => void;
-  onGoHome: () => void;
+  activeTab: AppTab; 
 }> = (props) => {
   const [dropdownOpen, setDropdownOpen] = createSignal(false);
+  const navigate = useNavigate();
   const currentApps = () => apps.filter(app => app.timeline === props.activeTimeline);
+  
+  const handleTimelineChange = (timeline: Timeline) => {
+    const firstApp = firstAppByTimeline[timeline];
+    navigate(`/${firstApp}`);
+    setDropdownOpen(false);
+  };
   
   return (
     <nav style={{
@@ -472,7 +498,7 @@ const TabNavigation: Component<{
       'box-shadow': '0 4px 24px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.04)',
     }}>
       {/* TACo Logo - Home Button */}
-      <TacoLogo size={36} onClick={props.onGoHome} />
+      <TacoLogo size={36} />
       
       {/* Divider */}
       <div style={{
@@ -538,13 +564,7 @@ const TabNavigation: Component<{
           }}>
             {(['now', 'next', 'later'] as Timeline[]).map(timeline => (
               <button
-                onClick={() => {
-                  props.setActiveTimeline(timeline);
-                  // Set first app in new timeline as active
-                  const firstApp = apps.find(a => a.timeline === timeline);
-                  if (firstApp) props.setActiveTab(firstApp.id);
-                  setDropdownOpen(false);
-                }}
+                onClick={() => handleTimelineChange(timeline)}
                 style={{
                   display: 'flex',
                   'align-items': 'center',
@@ -589,8 +609,8 @@ const TabNavigation: Component<{
       {/* App Tabs */}
       <For each={currentApps()}>
         {(app) => (
-          <button
-            onClick={() => props.setActiveTab(app.id)}
+          <A
+            href={`/${app.id}`}
             style={{
               display: 'flex',
               'align-items': 'center',
@@ -604,6 +624,7 @@ const TabNavigation: Component<{
               'font-weight': '500',
               cursor: 'pointer',
               transition: 'all 0.2s ease',
+              'text-decoration': 'none',
             }}
           >
             <div style={{
@@ -621,75 +642,88 @@ const TabNavigation: Component<{
               {app.name.charAt(0)}
             </div>
             {app.name}
-          </button>
+          </A>
         )}
       </For>
     </nav>
   );
 };
 
+// App page wrapper component
+const AppPage: Component<{ appId: AppTab; children: any }> = (props) => {
+  const activeTimeline = createMemo(() => getTimelineFromApp(props.appId));
+  
+  return (
+    <>
+      <TabNavigation 
+        activeTimeline={activeTimeline()} 
+        activeTab={props.appId}
+      />
+      
+      {/* App content with top padding for nav */}
+      <div style={{ 'padding-top': '80px' }}>
+        {props.children}
+      </div>
+    </>
+  );
+};
+
 export const App: Component = () => {
-  const [showHome, setShowHome] = createSignal(true);
-  const [activeTimeline, setActiveTimeline] = createSignal<Timeline>('now');
-  const [activeTab, setActiveTab] = createSignal<AppTab>('nurture');
+  const location = useLocation();
   
-  // When timeline changes, ensure activeTab is valid for that timeline
-  const handleTimelineChange = (timeline: Timeline) => {
-    setActiveTimeline(timeline);
-    const firstApp = apps.find(a => a.timeline === timeline);
-    if (firstApp) setActiveTab(firstApp.id);
-  };
-  
-  const handleSelectTimeline = (timeline: Timeline) => {
-    handleTimelineChange(timeline);
-    setShowHome(false);
-  };
+  // Derive current app from URL path
+  const currentPath = createMemo(() => location.pathname.replace('/', '') || null);
+  const isHome = createMemo(() => currentPath() === null || currentPath() === '');
+  const activeApp = createMemo(() => currentPath() as AppTab | null);
   
   return (
     <div style={{ 'min-height': '100vh' }}>
-      <Show when={showHome()}>
-        <LandingPage onSelectTimeline={handleSelectTimeline} />
+      <Show when={isHome()}>
+        <LandingPage />
       </Show>
       
-      <Show when={!showHome()}>
-        <TabNavigation 
-          activeTimeline={activeTimeline()} 
-          setActiveTimeline={handleTimelineChange}
-          activeTab={activeTab()} 
-          setActiveTab={setActiveTab}
-          onGoHome={() => setShowHome(true)}
-        />
-        
-        {/* App content with top padding for nav */}
-        <div style={{ 'padding-top': '80px' }}>
-          <Show when={activeTab() === 'nurture'}>
+      <Show when={!isHome() && activeApp()}>
+        <Show when={activeApp() === 'nurture'}>
+          <AppPage appId="nurture">
             <NurtureApp />
-          </Show>
-          
-          <Show when={activeTab() === 'justincase'}>
+          </AppPage>
+        </Show>
+        
+        <Show when={activeApp() === 'justincase'}>
+          <AppPage appId="justincase">
             <JustInCaseApp />
-          </Show>
-          
-          <Show when={activeTab() === 'tempo'}>
+          </AppPage>
+        </Show>
+        
+        <Show when={activeApp() === 'tempo'}>
+          <AppPage appId="tempo">
             <TempoApp />
-          </Show>
-          
-          <Show when={activeTab() === 'friendly'}>
+          </AppPage>
+        </Show>
+        
+        <Show when={activeApp() === 'friendly'}>
+          <AppPage appId="friendly">
             <FriendlyApp />
-          </Show>
-          
-          <Show when={activeTab() === 'manifest'}>
+          </AppPage>
+        </Show>
+        
+        <Show when={activeApp() === 'manifest'}>
+          <AppPage appId="manifest">
             <ManifestApp />
-          </Show>
-          
-          <Show when={activeTab() === 'augment'}>
+          </AppPage>
+        </Show>
+        
+        <Show when={activeApp() === 'augment'}>
+          <AppPage appId="augment">
             <AugmentApp />
-          </Show>
-          
-          <Show when={activeTab() === 'lol'}>
+          </AppPage>
+        </Show>
+        
+        <Show when={activeApp() === 'lol'}>
+          <AppPage appId="lol">
             <LolApp />
-          </Show>
-        </div>
+          </AppPage>
+        </Show>
       </Show>
     </div>
   );
