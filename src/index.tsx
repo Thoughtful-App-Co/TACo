@@ -37,6 +37,18 @@ globalStyles.textContent = `
     }
   }
   
+  /* Tooltip animation */
+  @keyframes tooltipFadeIn {
+    from {
+      opacity: 0;
+      transform: translateX(-50%) translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  }
+  
   /* Focus visible for keyboard navigation */
   :focus-visible {
     outline: none;
