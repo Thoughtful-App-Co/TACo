@@ -6,14 +6,14 @@ import { Theme } from './types';
 export const liquid: Theme = {
   name: 'friendly',
   colors: {
-    primary: '#3B82F6',      // Ocean blue
-    secondary: '#06B6D4',    // Cyan stream
-    accent: '#8B5CF6',       // Violet ripple
-    background: '#F0F9FF',   // Light sky
+    primary: '#3B82F6', // Ocean blue
+    secondary: '#06B6D4', // Cyan stream
+    accent: '#8B5CF6', // Violet ripple
+    background: '#F0F9FF', // Light sky
     surface: '#FFFFFF',
-    text: '#0F172A',         // Deep water
-    textMuted: '#64748B',    // Misty gray
-    border: '#E2E8F0',       // Foam white
+    text: '#0F172A', // Deep water
+    textMuted: '#64748B', // Misty gray
+    border: '#E2E8F0', // Foam white
   },
   fonts: {
     body: "'Plus Jakarta Sans', system-ui, sans-serif",

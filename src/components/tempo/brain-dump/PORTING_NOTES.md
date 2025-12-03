@@ -3,6 +3,7 @@
 ## ✅ Successfully Ported (13 files, ~2,300 lines)
 
 ### Components (5 files)
+
 - `components/BrainDump.tsx` - Main simplified Brain Dump component
 - `components/BrainDumpForm.tsx` - Detailed Brain Dump form with extensive features
 - `components/ProcessedStories.tsx` - Displays processed work stories/blocks
@@ -10,15 +11,18 @@
 - `components/DifficultyBadge.tsx` - Task complexity indicator badge
 
 ### Hooks (3 files)
+
 - `hooks/useBrainDump.ts` - Main Brain Dump state management hook
 - `hooks/useTaskProcessing.ts` - Task processing logic hook
 - `hooks/useSessionCreation.ts` - Session creation logic hook
 
 ### Services (2 files)
+
 - `services/brain-dump-services.ts` - Core Brain Dump API service (~548 lines)
 - `services/badge-utils.ts` - Utility functions for difficulty badges
 
 ### Supporting Files (3 files)
+
 - `types.ts` - TypeScript type definitions
 - `rules/brain-dump-rules.ts` - Comprehensive system rules documentation (~313 lines)
 - `index.ts` - Central export file
@@ -26,6 +30,7 @@
 ## 🔄 Automatic Import Conversions Applied
 
 ### Framework Conversions (React → Solid.js)
+
 - ✅ `import { useState }` → `import { createSignal }`
 - ✅ `import { useEffect }` → `import { createEffect }`
 - ✅ `import { useCallback }` → removed (not directly needed in Solid)
@@ -34,6 +39,7 @@
 - ✅ `import Link from "next/link"` → `import { A } from "@solidjs/router"`
 
 ### Path Conversions
+
 - ✅ `@/app/features/brain-dump` → relative paths
 - ✅ `@/components/ui` → `../../ui`
 - ✅ `@/lib/` → `../../lib/`
@@ -42,15 +48,17 @@
 ## ⚠️ Manual Changes Still Required
 
 ### 1. Hook API Conversions
+
 The following React patterns need manual conversion to Solid.js:
 
 #### In all hooks (useBrainDump, useTaskProcessing, useSessionCreation):
+
 ```typescript
 // BEFORE (React):
-const [value, setValue] = useState(initialValue)
+const [value, setValue] = useState(initialValue);
 
 // AFTER (Solid.js):
-const [value, setValue] = createSignal(initialValue)
+const [value, setValue] = createSignal(initialValue);
 
 // Usage changes:
 // React: value
@@ -61,51 +69,55 @@ const [value, setValue] = createSignal(initialValue)
 ```
 
 #### Router usage in hooks:
+
 ```typescript
 // BEFORE (Next.js):
-const router = useRouter()
-router.push('/path')
+const router = useRouter();
+router.push('/path');
 
 // AFTER (Solid.js):
-const navigate = useNavigate()
-navigate('/path')
+const navigate = useNavigate();
+navigate('/path');
 ```
 
 #### useEffect → createEffect:
+
 ```typescript
 // BEFORE (React):
 useEffect(() => {
   // effect code
-}, [dependencies])
+}, [dependencies]);
 
 // AFTER (Solid.js):
 createEffect(() => {
   // effect code
   // Dependencies are tracked automatically
-})
+});
 ```
 
 #### useCallback removal:
+
 ```typescript
 // BEFORE (React):
 const callback = useCallback(() => {
   // code
-}, [deps])
+}, [deps]);
 
 // AFTER (Solid.js):
 // Just use regular function - Solid.js doesn't need useCallback
 const callback = () => {
   // code
-}
+};
 ```
 
 #### useMemo → createMemo:
+
 ```typescript
 // BEFORE (React):
-const value = useMemo(() => computation(), [deps])
+const value = useMemo(() => computation(), [deps]);
 
 // AFTER (Solid.js):
-const value = createMemo(() => computation())
+const value = createMemo(() => computation());
 // Access with: value() not value
 ```
 
@@ -114,6 +126,7 @@ const value = createMemo(() => computation())
 #### Props interfaces - KEEP AS IS (TypeScript interfaces work the same)
 
 #### Component function signatures:
+
 ```typescript
 // BEFORE (React):
 export const Component = ({ prop1, prop2 }: Props) => {
@@ -128,6 +141,7 @@ export const Component = (props: Props) => {
 ```
 
 #### Event handlers:
+
 ```typescript
 // BEFORE (React):
 onChange={(e) => setValue(e.target.value)}
@@ -139,6 +153,7 @@ onInput={(e) => setValue(e.currentTarget.value)}
 ```
 
 #### Conditional rendering:
+
 ```typescript
 // BEFORE (React):
 {condition && <Component />}
@@ -150,6 +165,7 @@ onInput={(e) => setValue(e.currentTarget.value)}
 ```
 
 #### List rendering:
+
 ```typescript
 // BEFORE (React):
 {items.map((item, index) => <Item key={index} {...item} />)}
@@ -163,15 +179,18 @@ onInput={(e) => setValue(e.currentTarget.value)}
 ### 3. Specific File Changes Needed
 
 #### `components/BrainDump.tsx`:
+
 - Convert `useState` calls to `createSignal`
 - Update Link component usage (A instead of Link)
 - Change prop access from destructured to `props.propName`
 
 #### `components/BrainDumpForm.tsx`:
+
 - Same as BrainDump.tsx
 - Add Solid.js Show/For components where needed
 
 #### `hooks/useBrainDump.ts`:
+
 - Convert all React hooks to Solid equivalents
 - Change `router` to `navigate`
 - Update all state accessors to function calls
@@ -179,10 +198,13 @@ onInput={(e) => setValue(e.currentTarget.value)}
 - createMemo for computed values
 
 #### `hooks/useTaskProcessing.ts` & `hooks/useSessionCreation.ts`:
+
 - Same pattern as useBrainDump.ts
 
 ### 4. Missing UI Components
+
 You'll need to ensure these UI components exist in `~/components/tempo/ui/`:
+
 - Badge
 - Button
 - Card, CardContent
@@ -192,11 +214,14 @@ You'll need to ensure these UI components exist in `~/components/tempo/ui/`:
 - Tooltip, TooltipContent, TooltipProvider, TooltipTrigger
 
 If they don't exist, you'll need to:
+
 1. Create them as Solid.js components
 2. Or import from a Solid.js UI library like Kobalte
 
 ### 5. Check Service Dependencies
+
 Verify these services exist and are compatible:
+
 - `../../services/session-storage.service` (SessionStorageService)
 - `../../services/task-persistence.service` (TaskPersistenceService)
 - `../../services/task-rollover.service` (TaskRolloverService)
@@ -204,6 +229,7 @@ Verify these services exist and are compatible:
 ## 📋 Testing Checklist
 
 After manual conversions:
+
 - [ ] All imports resolve correctly
 - [ ] TypeScript compilation passes
 - [ ] Signal accessors use () where needed

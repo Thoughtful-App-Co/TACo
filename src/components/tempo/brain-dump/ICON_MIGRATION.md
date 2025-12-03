@@ -3,23 +3,28 @@
 ## Brain Dump Components Icon Mapping
 
 ### DifficultyBadge.tsx
+
 - `Clock` (lucide) → `Clock` (phosphor-solid)
 
 ### ProcessedStories.tsx
+
 - `InfoIcon` (lucide) → `Info` (phosphor-solid)
 - `Loader2` (lucide) → `CircleNotch` (phosphor-solid) with spin animation
 
 ### StoryCard.tsx
+
 - `Clock` (lucide) → `Clock` (phosphor-solid)
 - `Info` (lucide) → `Info` (phosphor-solid)
 
 ### BrainDump.tsx
+
 - `Loader2` (lucide) → `CircleNotch` (phosphor-solid)
 - `Lock` (lucide) → `Lock` (phosphor-solid)
 - `ChevronRight` (lucide) → `CaretRight` (phosphor-solid)
 - `HelpCircle` (lucide) → `Question` (phosphor-solid)
 
 ### BrainDumpForm.tsx
+
 - `Info` (lucide) → `Info` (phosphor-solid)
 - `Loader2` (lucide) → `CircleNotch` (phosphor-solid)
 - `Lock` (lucide) → `Lock` (phosphor-solid)
@@ -42,6 +47,7 @@ import { Clock, CircleNotch } from "phosphor-solid"
 ```
 
 ## Notes
+
 - Phosphor icons use the same props interface
 - className → class (Solid.js pattern)
 - CircleNotch is the Phosphor equivalent of Loader2 for loading spinners

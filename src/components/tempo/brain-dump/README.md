@@ -5,6 +5,7 @@ A comprehensive task processing and session planning system that helps users org
 ## Overview
 
 The Brain Dump feature allows users to:
+
 1. **Input raw tasks** - Simply dump all tasks without worrying about organization
 2. **AI Processing** - Tasks are analyzed, grouped into stories, and enriched with metadata
 3. **Session Creation** - Processed stories are converted into time-boxed work sessions
@@ -36,6 +37,7 @@ brain-dump/
 ## Key Features
 
 ### 1. Intelligent Task Processing
+
 - **AI-Powered Analysis** - Uses AI to understand task context, priority, and complexity
 - **Smart Grouping** - Groups related tasks into coherent work stories
 - **Duration Estimation** - Suggests realistic time estimates for tasks
@@ -43,6 +45,7 @@ brain-dump/
 - **Difficulty Assessment** - Rates task complexity (low/medium/high)
 
 ### 2. Session Planning
+
 - **Time-Boxing** - Creates focused work blocks with defined durations
 - **Break Management** - Automatically inserts breaks to prevent burnout
 - **Duration Rules** - Enforces productivity-optimized work intervals
@@ -50,6 +53,7 @@ brain-dump/
 - **Retry Logic** - Handles errors gracefully with automatic adjustments
 
 ### 3. User Experience
+
 - **Simple Input** - Just type tasks, one per line
 - **Real-Time Feedback** - Progress indicators during processing
 - **Editable Durations** - Adjust time estimates before creating session
@@ -59,6 +63,7 @@ brain-dump/
 ## Usage
 
 ### Basic Example
+
 ```typescript
 import { BrainDump } from '~/components/tempo/brain-dump'
 
@@ -72,6 +77,7 @@ function MyApp() {
 ```
 
 ### Using the Hook Directly
+
 ```typescript
 import { useBrainDump } from '~/components/tempo/brain-dump'
 
@@ -101,6 +107,7 @@ function CustomBrainDump() {
 ## Task Input Format
 
 ### Basic Tasks
+
 ```
 Update client dashboard
 Review Q1 metrics
@@ -108,6 +115,7 @@ Schedule team meeting
 ```
 
 ### With Time Estimates
+
 ```
 Create landing page mockup - 2h
 Review Q1 metrics - 30m
@@ -115,6 +123,7 @@ Daily standup - 15m
 ```
 
 ### With Priorities
+
 ```
 Fix production bug FROG
 Update documentation
@@ -122,6 +131,7 @@ Complete quarterly report - EOD
 ```
 
 ### Advanced Format
+
 ```
 Create landing page mockup FROG - 2h
 Review Q1 metrics - 30m - due by 3pm
@@ -144,20 +154,19 @@ The system enforces these rules for optimal productivity:
 ## API Endpoints
 
 ### POST /api/tasks/process
+
 Processes raw tasks into structured stories.
 
 **Request:**
+
 ```json
 {
-  "tasks": [
-    "Task 1",
-    "Task 2 FROG",
-    "Task 3 - 30m"
-  ]
+  "tasks": ["Task 1", "Task 2 FROG", "Task 3 - 30m"]
 }
 ```
 
 **Response:**
+
 ```json
 {
   "stories": [
@@ -180,9 +189,11 @@ Processes raw tasks into structured stories.
 ```
 
 ### POST /api/tasks/create-session
+
 Creates a time-boxed session from stories.
 
 **Request:**
+
 ```json
 {
   "stories": [...],
@@ -191,6 +202,7 @@ Creates a time-boxed session from stories.
 ```
 
 **Response:**
+
 ```json
 {
   "storyBlocks": [...],
@@ -203,6 +215,7 @@ Creates a time-boxed session from stories.
 ## State Management
 
 The `useBrainDump` hook manages:
+
 - Task input state
 - Processed stories
 - Duration edits
@@ -213,12 +226,14 @@ The `useBrainDump` hook manages:
 ## Error Handling
 
 The system handles errors at multiple levels:
+
 1. **Validation Errors** - Invalid input, missing fields
 2. **Processing Errors** - AI processing failures
 3. **Duration Errors** - Invalid time constraints
 4. **Session Errors** - Session creation failures
 
 Each error includes:
+
 - Clear message
 - Error code
 - Technical details (for debugging)
@@ -234,6 +249,7 @@ Each error includes:
 ## Contributing
 
 When modifying the Brain Dump feature:
+
 1. Review `rules/brain-dump-rules.ts` for system constraints
 2. Update types in `types.ts`
 3. Test with various task formats

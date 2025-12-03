@@ -1,8 +1,8 @@
-import { type Component, type ComponentProps, splitProps, mergeProps } from "solid-js"
-import { tempoDesign, tempoComponents } from "../theme/tempo-design"
+import { type Component, type ComponentProps, splitProps, mergeProps } from 'solid-js';
+import { tempoDesign, tempoComponents } from '../theme/tempo-design';
 
-export const Card: Component<ComponentProps<"div">> = (props) => {
-  const [local, others] = splitProps(props, ["style"])
+export const Card: Component<ComponentProps<'div'>> = (props) => {
+  const [local, others] = splitProps(props, ['style']);
   return (
     <div
       style={{
@@ -11,11 +11,11 @@ export const Card: Component<ComponentProps<"div">> = (props) => {
       }}
       {...others}
     />
-  )
-}
+  );
+};
 
-export const CardHeader: Component<ComponentProps<"div">> = (props) => {
-  const [local, others] = splitProps(props, ["style"])
+export const CardHeader: Component<ComponentProps<'div'>> = (props) => {
+  const [local, others] = splitProps(props, ['style']);
   return (
     <div
       style={{
@@ -27,11 +27,11 @@ export const CardHeader: Component<ComponentProps<"div">> = (props) => {
       }}
       {...others}
     />
-  )
-}
+  );
+};
 
-export const CardTitle: Component<ComponentProps<"h3">> = (props) => {
-  const [local, others] = splitProps(props, ["style"])
+export const CardTitle: Component<ComponentProps<'h3'>> = (props) => {
+  const [local, others] = splitProps(props, ['style']);
   return (
     <h3
       style={{
@@ -44,11 +44,11 @@ export const CardTitle: Component<ComponentProps<"h3">> = (props) => {
       }}
       {...others}
     />
-  )
-}
+  );
+};
 
-export const CardDescription: Component<ComponentProps<"p">> = (props) => {
-  const [local, others] = splitProps(props, ["style"])
+export const CardDescription: Component<ComponentProps<'p'>> = (props) => {
+  const [local, others] = splitProps(props, ['style']);
   return (
     <p
       style={{
@@ -59,25 +59,25 @@ export const CardDescription: Component<ComponentProps<"p">> = (props) => {
       }}
       {...others}
     />
-  )
-}
+  );
+};
 
-export const CardContent: Component<ComponentProps<"div">> = (props) => {
-  const [local, others] = splitProps(props, ["style"])
+export const CardContent: Component<ComponentProps<'div'>> = (props) => {
+  const [local, others] = splitProps(props, ['style']);
   return (
-    <div 
+    <div
       style={{
         padding: '24px',
         'padding-top': 0,
         ...(local.style as any),
-      }} 
-      {...others} 
+      }}
+      {...others}
     />
-  )
-}
+  );
+};
 
-export const CardFooter: Component<ComponentProps<"div">> = (props) => {
-  const [local, others] = splitProps(props, ["style"])
+export const CardFooter: Component<ComponentProps<'div'>> = (props) => {
+  const [local, others] = splitProps(props, ['style']);
   return (
     <div
       style={{
@@ -89,5 +89,5 @@ export const CardFooter: Component<ComponentProps<"div">> = (props) => {
       }}
       {...others}
     />
-  )
-}
+  );
+};

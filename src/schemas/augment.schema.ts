@@ -3,9 +3,7 @@ import { z } from 'zod';
 export const StrengthSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
-  category: z.enum([
-    'executing', 'influencing', 'relationship-building', 'strategic-thinking'
-  ]),
+  category: z.enum(['executing', 'influencing', 'relationship-building', 'strategic-thinking']),
   score: z.number().min(0).max(100),
   description: z.string(),
   relatedRoles: z.array(z.string()),
@@ -33,11 +31,13 @@ export const JobMatchSchema = z.object({
   company: z.string(),
   role: z.string(),
   location: z.string(),
-  salary: z.object({
-    min: z.number(),
-    max: z.number(),
-    currency: z.string(),
-  }).optional(),
+  salary: z
+    .object({
+      min: z.number(),
+      max: z.number(),
+      currency: z.string(),
+    })
+    .optional(),
   strengthFitScore: z.number().min(0).max(100),
   cultureFitScore: z.number().min(0).max(100),
   overallScore: z.number().min(0).max(100),
@@ -51,11 +51,13 @@ export const AssessmentSchema = z.object({
   id: z.string().uuid(),
   userId: z.string().uuid(),
   type: z.enum(['strengths', 'values', 'work-style', 'personality']),
-  questions: z.array(z.object({
-    id: z.string(),
-    question: z.string(),
-    answer: z.any(),
-  })),
+  questions: z.array(
+    z.object({
+      id: z.string(),
+      question: z.string(),
+      answer: z.any(),
+    })
+  ),
   completedAt: z.date(),
   results: z.record(z.any()),
 });

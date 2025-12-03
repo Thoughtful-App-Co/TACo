@@ -16,6 +16,7 @@
 ## ✅ Completed
 
 ### Core Libraries (8 files, 1,894 lines)
+
 - [x] `lib/types.ts` (224 lines) - All type definitions, interfaces, constants
 - [x] `lib/durationUtils.ts` (137 lines) - Time calculation utilities
 - [x] `lib/utils.ts` (51 lines) - Helper functions (cn, fibonacci)
@@ -26,6 +27,7 @@
 - [x] `lib/replicache-client.ts` (219 lines) - **✅ PORTED** - Replicache client setup (intact for now)
 
 ### Services (5 files, 1,703 lines)
+
 - [x] `services/task-persistence.service.ts` (138 lines) - LocalStorage CRUD
 - [x] `services/brain-dump.service.ts` (548 lines) - Task processing & session creation
 - [x] `services/session-storage.service.ts` (550 lines) - Session management & storage

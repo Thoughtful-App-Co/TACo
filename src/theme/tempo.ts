@@ -6,14 +6,14 @@ import { Theme } from './types';
 export const tempo: Theme = {
   name: 'tempo',
   colors: {
-    primary: '#5E6AD2',      // Linear purple
-    secondary: '#6B7280',    // Slate gray
-    accent: '#F59E0B',       // Amber for active/focus
-    background: '#0D0D0D',   // Near black
-    surface: '#1A1A1A',      // Elevated surface
-    text: '#F9FAFB',         // High contrast white
-    textMuted: '#9CA3AF',    // Muted gray
-    border: '#2D2D2D',       // Subtle border
+    primary: '#5E6AD2', // Linear purple
+    secondary: '#6B7280', // Slate gray
+    accent: '#F59E0B', // Amber for active/focus
+    background: '#0D0D0D', // Near black
+    surface: '#1A1A1A', // Elevated surface
+    text: '#F9FAFB', // High contrast white
+    textMuted: '#9CA3AF', // Muted gray
+    border: '#2D2D2D', // Subtle border
   },
   fonts: {
     body: "'Inter', system-ui, sans-serif",

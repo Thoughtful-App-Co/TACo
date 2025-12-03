@@ -1,8 +1,15 @@
 import { createStore } from 'solid-js/store';
 import { createEffect } from 'solid-js';
-import { 
-  UserProfile, Friend, FriendGroup, Event, HangoutRequest, Booking,
-  Availability, TimeSlot, BADGES 
+import {
+  UserProfile,
+  Friend,
+  FriendGroup,
+  Event,
+  HangoutRequest,
+  Booking,
+  Availability,
+  TimeSlot,
+  BADGES,
 } from '../../schemas/friendly.schema';
 
 // --- INITIAL DATA ---
@@ -10,7 +17,7 @@ const INITIAL_PROFILE: UserProfile = {
   id: crypto.randomUUID(),
   username: 'yourname',
   displayName: 'Your Name',
-  bio: 'Let\'s hang out!',
+  bio: "Let's hang out!",
   availability: [
     { dayOfWeek: 'Mon', period: 'Evening' },
     { dayOfWeek: 'Tue', period: 'Evening' },
@@ -27,28 +34,62 @@ const INITIAL_PROFILE: UserProfile = {
 };
 
 const INITIAL_FRIENDS: Friend[] = [
-  { id: '1', name: 'Maya', availability: [{ dayOfWeek: 'Mon', period: 'Evening' }, { dayOfWeek: 'Sat', period: 'Afternoon' }] },
-  { id: '2', name: 'James', availability: [{ dayOfWeek: 'Tue', period: 'Evening' }, { dayOfWeek: 'Fri', period: 'Evening' }] },
-  { id: '3', name: 'Sophie', availability: [{ dayOfWeek: 'Sun', period: 'Morning' }, { dayOfWeek: 'Wed', period: 'Evening' }] },
+  {
+    id: '1',
+    name: 'Maya',
+    availability: [
+      { dayOfWeek: 'Mon', period: 'Evening' },
+      { dayOfWeek: 'Sat', period: 'Afternoon' },
+    ],
+  },
+  {
+    id: '2',
+    name: 'James',
+    availability: [
+      { dayOfWeek: 'Tue', period: 'Evening' },
+      { dayOfWeek: 'Fri', period: 'Evening' },
+    ],
+  },
+  {
+    id: '3',
+    name: 'Sophie',
+    availability: [
+      { dayOfWeek: 'Sun', period: 'Morning' },
+      { dayOfWeek: 'Wed', period: 'Evening' },
+    ],
+  },
 ];
 
 const INITIAL_GROUPS: FriendGroup[] = [
-  { id: 'g1', name: 'Hiking Crew', emoji: '🥾', members: ['1', '3'], draftIdeas: ['Hike the Greenbelt'] },
+  {
+    id: 'g1',
+    name: 'Hiking Crew',
+    emoji: '🥾',
+    members: ['1', '3'],
+    draftIdeas: ['Hike the Greenbelt'],
+  },
   { id: 'g2', name: 'Board Games', emoji: '🎲', members: ['1', '2'], draftIdeas: [] },
 ];
 
 const INITIAL_REQUESTS: HangoutRequest[] = [
-  { id: 'r1', requesterName: 'Alex', requesterNote: 'Coffee catch-up?', requestedSlot: { dayOfWeek: 'Sat', period: 'Afternoon' }, status: 'pending', createdAt: new Date(), openToGroup: false, isPublic: false },
+  {
+    id: 'r1',
+    requesterName: 'Alex',
+    requesterNote: 'Coffee catch-up?',
+    requestedSlot: { dayOfWeek: 'Sat', period: 'Afternoon' },
+    status: 'pending',
+    createdAt: new Date(),
+    openToGroup: false,
+    isPublic: false,
+  },
 ];
 
 const INITIAL_BOOKINGS: Booking[] = [
-  { 
-    id: 'b1', 
-    slot: { dayOfWeek: 'Mon', period: 'Evening' }, 
+  {
+    id: 'b1',
+    slot: { dayOfWeek: 'Mon', period: 'Evening' },
     title: 'Drinks with Maya',
-    participants: [
-      { name: 'Maya', isHost: false },
-    ],
+    participants: [{ name: 'Maya', isHost: false }],
     openToGroup: true,
     isPublic: true,
     showParticipantNames: true,
@@ -59,12 +100,12 @@ const INITIAL_BOOKINGS: Booking[] = [
 ];
 
 const INITIAL_EVENTS: Event[] = [
-  { 
-    id: 'e1', 
-    title: 'Game Night', 
+  {
+    id: 'e1',
+    title: 'Game Night',
     emoji: '🎮',
-    description: 'Bring snacks!', 
-    date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), 
+    description: 'Bring snacks!',
+    date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000),
     timeSlot: { dayOfWeek: 'Sat', period: 'Evening' },
     location: 'My place',
     hostId: INITIAL_PROFILE.id,
@@ -72,7 +113,7 @@ const INITIAL_EVENTS: Event[] = [
     rsvps: [{ friendId: '1', status: 'going' }],
     visibility: 'circle',
     circleId: 'g2',
-    status: 'upcoming'
+    status: 'upcoming',
   },
 ];
 
@@ -95,22 +136,28 @@ const loadState = (): StoreState => {
       const parsed = JSON.parse(stored);
       // Revive dates
       if (parsed.requests) {
-        parsed.requests = parsed.requests.map((r: any) => ({ ...r, createdAt: new Date(r.createdAt) }));
+        parsed.requests = parsed.requests.map((r: any) => ({
+          ...r,
+          createdAt: new Date(r.createdAt),
+        }));
       }
       if (parsed.events) {
         parsed.events = parsed.events.map((e: any) => ({ ...e, date: new Date(e.date) }));
       }
       if (parsed.bookings) {
-        parsed.bookings = parsed.bookings.map((b: any) => ({ ...b, createdAt: new Date(b.createdAt) }));
+        parsed.bookings = parsed.bookings.map((b: any) => ({
+          ...b,
+          createdAt: new Date(b.createdAt),
+        }));
       }
-      
+
       // Ensure all arrays are initialized (migration for older data)
       if (!parsed.bookings) parsed.bookings = [];
       if (!parsed.requests) parsed.requests = [];
       if (!parsed.events) parsed.events = [];
       if (!parsed.groups) parsed.groups = [];
       if (!parsed.friends) parsed.friends = [];
-      
+
       return parsed;
     } catch (e) {
       console.error('Failed to load state', e);
@@ -137,22 +184,22 @@ createEffect(() => {
 // --- ACTIONS ---
 export const store = {
   state,
-  
+
   // Profile
   updateProfile: (updates: Partial<UserProfile>) => {
-    setState('profile', prev => ({ ...prev, ...updates }));
+    setState('profile', (prev) => ({ ...prev, ...updates }));
   },
 
   toggleAvailability: (slot: TimeSlot) => {
     const exists = state.profile.availability.find(
-      s => s.dayOfWeek === slot.dayOfWeek && s.period === slot.period
+      (s) => s.dayOfWeek === slot.dayOfWeek && s.period === slot.period
     );
     if (exists) {
-      setState('profile', 'availability', current => 
-        current.filter(s => !(s.dayOfWeek === slot.dayOfWeek && s.period === slot.period))
+      setState('profile', 'availability', (current) =>
+        current.filter((s) => !(s.dayOfWeek === slot.dayOfWeek && s.period === slot.period))
       );
     } else {
-      setState('profile', 'availability', current => [...current, slot]);
+      setState('profile', 'availability', (current) => [...current, slot]);
     }
   },
 
@@ -164,8 +211,8 @@ export const store = {
       email,
       availability: [],
     };
-    setState('friends', current => [...current, newFriend]);
-    setState('profile', 'stats', 'friendsMade', n => n + 1);
+    setState('friends', (current) => [...current, newFriend]);
+    setState('profile', 'stats', 'friendsMade', (n) => n + 1);
   },
 
   // Groups
@@ -177,18 +224,23 @@ export const store = {
       members: memberIds,
       draftIdeas: [],
     };
-    setState('groups', current => [...current, newGroup]);
+    setState('groups', (current) => [...current, newGroup]);
   },
 
   addIdeaToGroup: (groupId: string, idea: string) => {
-    setState('groups', g => g.id === groupId, 'draftIdeas', ideas => [...ideas, idea]);
+    setState(
+      'groups',
+      (g) => g.id === groupId,
+      'draftIdeas',
+      (ideas) => [...ideas, idea]
+    );
   },
 
   // Requests (Incoming from public link)
   submitRequest: (
-    name: string, 
-    slot: TimeSlot, 
-    note?: string, 
+    name: string,
+    slot: TimeSlot,
+    note?: string,
     email?: string,
     options?: { openToGroup?: boolean; isPublic?: boolean }
   ) => {
@@ -203,18 +255,23 @@ export const store = {
       openToGroup: options?.openToGroup ?? false,
       isPublic: options?.isPublic ?? false,
     };
-    setState('requests', current => [...current, newRequest]);
+    setState('requests', (current) => [...current, newRequest]);
   },
 
   respondToRequest: (
-    requestId: string, 
+    requestId: string,
     response: 'accepted' | 'declined',
-    bookingOptions?: { openToGroup: boolean; isPublic: boolean; showParticipantNames: boolean; title?: string }
+    bookingOptions?: {
+      openToGroup: boolean;
+      isPublic: boolean;
+      showParticipantNames: boolean;
+      title?: string;
+    }
   ) => {
-    setState('requests', r => r.id === requestId, 'status', response);
-    
+    setState('requests', (r) => r.id === requestId, 'status', response);
+
     if (response === 'accepted') {
-      const request = state.requests.find(r => r.id === requestId);
+      const request = state.requests.find((r) => r.id === requestId);
       if (request) {
         // Create a booking from the accepted request
         const newBooking: Booking = {
@@ -231,9 +288,9 @@ export const store = {
           createdAt: new Date(),
           status: 'confirmed',
         };
-        setState('bookings', current => [...current, newBooking]);
+        setState('bookings', (current) => [...current, newBooking]);
       }
-      setState('profile', 'stats', 'hangoutsAttended', n => n + 1);
+      setState('profile', 'stats', 'hangoutsAttended', (n) => n + 1);
     }
   },
 
@@ -245,43 +302,55 @@ export const store = {
       rsvps: [],
       status: 'upcoming',
     };
-    setState('events', current => [...current, newEvent]);
-    setState('profile', 'stats', 'hangoutsHosted', n => n + 1);
+    setState('events', (current) => [...current, newEvent]);
+    setState('profile', 'stats', 'hangoutsHosted', (n) => n + 1);
   },
 
   rsvpToEvent: (eventId: string, friendId: string, status: 'going' | 'maybe' | 'notGoing') => {
-    setState('events', e => e.id === eventId, 'rsvps', rsvps => {
-      const existing = rsvps.findIndex(r => r.friendId === friendId);
-      if (existing >= 0) {
-        const updated = [...rsvps];
-        updated[existing] = { friendId, status };
-        return updated;
+    setState(
+      'events',
+      (e) => e.id === eventId,
+      'rsvps',
+      (rsvps) => {
+        const existing = rsvps.findIndex((r) => r.friendId === friendId);
+        if (existing >= 0) {
+          const updated = [...rsvps];
+          updated[existing] = { friendId, status };
+          return updated;
+        }
+        return [...rsvps, { friendId, status }];
       }
-      return [...rsvps, { friendId, status }];
-    });
+    );
   },
 
   // Bookings
   joinBooking: (bookingId: string, name: string, email?: string) => {
-    setState('bookings', b => b.id === bookingId, 'participants', participants => [
-      ...participants,
-      { name, email, isHost: false }
-    ]);
+    setState(
+      'bookings',
+      (b) => b.id === bookingId,
+      'participants',
+      (participants) => [...participants, { name, email, isHost: false }]
+    );
   },
 
   updateBooking: (bookingId: string, updates: Partial<Booking>) => {
-    setState('bookings', b => b.id === bookingId, prev => ({ ...prev, ...updates }));
+    setState(
+      'bookings',
+      (b) => b.id === bookingId,
+      (prev) => ({ ...prev, ...updates })
+    );
   },
 
   cancelBooking: (bookingId: string) => {
-    setState('bookings', b => b.id === bookingId, 'status', 'cancelled');
+    setState('bookings', (b) => b.id === bookingId, 'status', 'cancelled');
   },
 
   getBookingForSlot: (slot: TimeSlot): Booking | undefined => {
     return state.bookings.find(
-      b => b.slot.dayOfWeek === slot.dayOfWeek && 
-           b.slot.period === slot.period && 
-           b.status !== 'cancelled'
+      (b) =>
+        b.slot.dayOfWeek === slot.dayOfWeek &&
+        b.slot.period === slot.period &&
+        b.status !== 'cancelled'
     );
   },
 
@@ -294,13 +363,13 @@ export const store = {
   checkBadges: () => {
     const { stats, badges } = state.profile;
     const newBadges: string[] = [...badges];
-    
-    BADGES.forEach(badge => {
+
+    BADGES.forEach((badge) => {
       if (badges.includes(badge.id)) return;
-      
+
       const { type, threshold } = badge.requirement;
       if (type === 'special') return; // Manual award
-      
+
       const statValue = stats[type as keyof typeof stats];
       if (threshold && statValue >= threshold) {
         newBadges.push(badge.id);

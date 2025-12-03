@@ -9,6 +9,7 @@
 ## ✅ COMPLETED (92%)
 
 ### Phase 1: File Porting ✅ COMPLETE
+
 - [x] All 13 files copied from Next.js app
 - [x] Directory structure created
 - [x] Automatic import conversions applied
@@ -17,7 +18,9 @@
 ### Phase 2: Hook Conversions ✅ COMPLETE (714 lines)
 
 #### ✅ useBrainDump.ts (516 lines)
+
 **Signals Created**: 14
+
 - tasks: `createSignal<string>("")`
 - processedStories: `createSignal<ProcessedStory[]>([])`
 - editedDurations: `createSignal<Record<string, number>>({})`
@@ -34,14 +37,17 @@
 - sessionCreationError: `createSignal<ErrorDetails | null>(null)`
 
 **Computed Values**: 3 memos
+
 - currentProcessingStep
 - currentProcessingProgress
 - currentError
 
 **Effects**: 1
+
 - Parent notification effect
 
 **Functions**: 5
+
 - processTasks()
 - handleCreateSession()
 - validateSessionDuration()
@@ -49,6 +55,7 @@
 - handleRetry()
 
 **Conversions**:
+
 - ✅ useState → createSignal
 - ✅ useEffect → createEffect
 - ✅ useMemo → createMemo
@@ -59,7 +66,9 @@
 ---
 
 #### ✅ useTaskProcessing.ts (119 lines)
+
 **Signals Created**: 5
+
 - processedStories: `createSignal<ProcessedStory[]>([])`
 - isProcessing: `createSignal(false)`
 - processingStep: `createSignal<string>("")`
@@ -67,25 +76,31 @@
 - error: `createSignal<ErrorDetails | null>(null)`
 
 **Functions**: 1
+
 - processTasks()
 
 **Conversions**:
+
 - ✅ useState → createSignal
 - ✅ Returns signals directly
 
 ---
 
 #### ✅ useSessionCreation.ts (79 lines)
+
 **Signals Created**: 4
+
 - isCreatingSession: `createSignal(false)`
 - processingStep: `createSignal<string>("")`
 - processingProgress: `createSignal(0)`
 - error: `createSignal<ErrorDetails | null>(null)`
 
 **Functions**: 1
+
 - createSession()
 
 **Conversions**:
+
 - ✅ useState → createSignal
 - ✅ useRouter → useNavigate
 - ✅ router.push() → navigate()
@@ -93,6 +108,7 @@
 ---
 
 ### Services & Supporting Files ✅ (No changes needed)
+
 - [x] types.ts - Framework agnostic
 - [x] services/badge-utils.ts - Pure functions
 - [x] services/brain-dump-services.ts - Framework agnostic
@@ -149,6 +165,7 @@
 ## 🎯 CONVERSION PATTERNS NEEDED
 
 ### 1. Props Pattern
+
 ```typescript
 // BEFORE (React):
 export const Component = ({ prop1, prop2 }: Props) => {
@@ -162,6 +179,7 @@ export const Component = (props: Props) => {
 ```
 
 ### 2. Hook Signal Access
+
 ```typescript
 // BEFORE (React):
 const { tasks, isProcessing } = useBrainDump()
@@ -177,6 +195,7 @@ const { tasks, isProcessing } = useBrainDump()
 ```
 
 ### 3. Conditional Rendering
+
 ```typescript
 // BEFORE (React):
 {condition && <Component />}
@@ -192,6 +211,7 @@ const { tasks, isProcessing } = useBrainDump()
 ```
 
 ### 4. List Rendering
+
 ```typescript
 // BEFORE (React):
 {items.map((item, index) => <Item key={index} {...item} />)}
@@ -203,6 +223,7 @@ const { tasks, isProcessing } = useBrainDump()
 ```
 
 ### 5. Event Handlers
+
 ```typescript
 // BEFORE (React):
 onChange={(e) => setValue(e.target.value)}
@@ -218,9 +239,10 @@ onChange={(e) => setValue(e.target.value)}  // Still works
 ## 📋 CONVERSION CHECKLIST
 
 ### Per Component:
+
 - [ ] Update props to non-destructured pattern
 - [ ] Add Show component imports where needed
-- [ ] Add For component imports where needed  
+- [ ] Add For component imports where needed
 - [ ] Convert conditionals: `&&` → `<Show when={...}>`
 - [ ] Convert ternaries: `? :` → `<Show when={...} fallback={...}>`
 - [ ] Convert .map() → `<For each={...}>`
@@ -234,8 +256,9 @@ onChange={(e) => setValue(e.target.value)}  // Still works
 ## 🔧 REQUIRED IMPORTS
 
 Add to component files as needed:
+
 ```typescript
-import { Show, For } from "solid-js"
+import { Show, For } from 'solid-js';
 ```
 
 ---
@@ -243,6 +266,7 @@ import { Show, For } from "solid-js"
 ## 📦 DEPENDENCIES
 
 All components depend on:
+
 - UI components from `../../ui/` (already ported to Solid)
 - Hooks from `../hooks/` (✅ now Solid.js compatible)
 - Services from `../services/` (✅ framework agnostic)
@@ -263,13 +287,13 @@ All components depend on:
 
 ## 📈 PROGRESS BREAKDOWN
 
-| Category | Files | Lines | Status |
-|----------|-------|-------|--------|
-| Hooks | 3 | 714 | ✅ 100% |
-| Components | 5 | 658 | 🚧 0% |
-| Services | 2 | 591 | ✅ 100% (no changes) |
-| Supporting | 3 | 353 | ✅ 100% (no changes) |
-| **TOTAL** | **13** | **2,316** | **92%** |
+| Category   | Files  | Lines     | Status               |
+| ---------- | ------ | --------- | -------------------- |
+| Hooks      | 3      | 714       | ✅ 100%              |
+| Components | 5      | 658       | 🚧 0%                |
+| Services   | 2      | 591       | ✅ 100% (no changes) |
+| Supporting | 3      | 353       | ✅ 100% (no changes) |
+| **TOTAL**  | **13** | **2,316** | **92%**              |
 
 ---
 

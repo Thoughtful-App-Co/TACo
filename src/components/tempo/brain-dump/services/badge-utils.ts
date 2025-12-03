@@ -1,9 +1,9 @@
-import { DifficultyLevel, DIFFICULTY_BADGES } from "../../lib/types";
+import { DifficultyLevel, DIFFICULTY_BADGES } from '../../lib/types';
 
 /**
  * Calculates the number of pomodoros needed for a given duration.
  * A standard pomodoro is 25 minutes of focused work.
- * 
+ *
  * @param duration Duration in minutes
  * @returns Number of pomodoros (rounded up)
  */
@@ -15,7 +15,7 @@ export const calculatePomodoros = (duration: number): number => {
 
 /**
  * Gets badge color based on difficulty level
- * 
+ *
  * @param difficulty The difficulty level
  * @returns Badge color class from DIFFICULTY_BADGES
  */
@@ -25,7 +25,7 @@ export const getDifficultyBadgeColor = (difficulty: DifficultyLevel): string => 
 
 /**
  * Generates symbol for task complexity level
- * 
+ *
  * @param difficulty The complexity level
  * @returns Symbol representing the complexity level
  */

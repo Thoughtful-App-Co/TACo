@@ -7,16 +7,16 @@ export const zenTouch: Theme = {
   name: 'modernBlueGradient',
   colors: {
     // Duotone Gradient Pair
-    primary: '#3B82F6',      // Electric Blue
-    secondary: '#06B6D4',    // Cyan (Creates gradient with primary)
-    
+    primary: '#3B82F6', // Electric Blue
+    secondary: '#06B6D4', // Cyan (Creates gradient with primary)
+
     // Modern Dark Foundation (Richer, deeper)
-    accent: '#818CF8',       // Soft Indigo (Premium feel)
-    background: '#030712',   // Near Black with blue undertone
-    surface: '#0F172A',      // Elevated surface
-    text: '#F8FAFC',         // Pure white
-    textMuted: '#64748B',    // Balanced gray
-    border: '#1E293B',       // Subtle, modern borders
+    accent: '#818CF8', // Soft Indigo (Premium feel)
+    background: '#030712', // Near Black with blue undertone
+    surface: '#0F172A', // Elevated surface
+    text: '#F8FAFC', // Pure white
+    textMuted: '#64748B', // Balanced gray
+    border: '#1E293B', // Subtle, modern borders
   },
   fonts: {
     body: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
@@ -31,7 +31,7 @@ export const zenTouch: Theme = {
     xxl: '48px',
   },
   radii: {
-    sm: '8px',    // Softer, modern
+    sm: '8px', // Softer, modern
     md: '12px',
     lg: '16px',
     organic: '20px', // Pill shapes
@@ -57,34 +57,34 @@ export const modernTokens = {
       radial-gradient(at 0% 50%, rgba(129, 140, 248, 0.1) 0px, transparent 50%)
     `,
   },
-  
+
   // Glass effect
   glass: {
     background: 'rgba(15, 23, 42, 0.8)',
     border: '1px solid rgba(255, 255, 255, 0.1)',
     backdropFilter: 'blur(20px) saturate(180%)',
   },
-  
+
   // Glow effects
   glow: {
     primary: '0 0 20px rgba(59, 130, 246, 0.5)',
     secondary: '0 0 20px rgba(6, 182, 212, 0.5)',
     text: '0 0 40px rgba(59, 130, 246, 0.3)',
   },
-  
+
   // Typography scale (modular scale 1.25)
   fontSize: {
-    xs: '0.75rem',    // 12px
-    sm: '0.875rem',   // 14px
-    base: '1rem',     // 16px
-    lg: '1.125rem',   // 18px
-    xl: '1.25rem',    // 20px
-    '2xl': '1.5rem',  // 24px
-    '3xl': '2rem',    // 32px
-    '4xl': '2.5rem',  // 40px
-    '5xl': '3rem',    // 48px
+    xs: '0.75rem', // 12px
+    sm: '0.875rem', // 14px
+    base: '1rem', // 16px
+    lg: '1.125rem', // 18px
+    xl: '1.25rem', // 20px
+    '2xl': '1.5rem', // 24px
+    '3xl': '2rem', // 32px
+    '4xl': '2.5rem', // 40px
+    '5xl': '3rem', // 48px
   },
-  
+
   fontWeight: {
     normal: '400',
     medium: '500',
@@ -92,14 +92,14 @@ export const modernTokens = {
     bold: '700',
     extrabold: '800',
   },
-  
+
   lineHeight: {
     tight: '1.1',
     snug: '1.25',
     normal: '1.5',
     relaxed: '1.75',
   },
-  
+
   // Transitions
   transition: {
     fast: '150ms cubic-bezier(0.4, 0, 0.2, 1)',
