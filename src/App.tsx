@@ -1852,9 +1852,22 @@ const TabNavigation: Component<{
                         'font-weight': '700',
                         color: 'white',
                         'box-shadow': `0 8px 24px ${app.color}40`,
+                        padding: app.id === 'tempo' ? '4px' : '0',
                       }}
                     >
-                      {app.name.charAt(0)}
+                      {app.id === 'tempo' ? (
+                        <img
+                          src="/tempo/tempo_logo.png"
+                          alt="Tempo Logo"
+                          style={{
+                            height: '32px',
+                            width: '32px',
+                            'object-fit': 'contain',
+                          }}
+                        />
+                      ) : (
+                        app.name.charAt(0)
+                      )}
                     </div>
 
                     <div
