@@ -1,3 +1,13 @@
+/**
+ * Manifest - Deep Connection & Relationship Discovery App
+ * 
+ * Copyright (c) 2024 Thoughtful App Co. and Erikk Shupp. All rights reserved.
+ * 
+ * This software is proprietary and confidential. Unauthorized copying, modification,
+ * or distribution of this code is strictly prohibited. The frontend logic is local-first
+ * and protected intellectual property. No infringement or unauthorized use is permitted.
+ */
+
 import { Component, For, createSignal, Show } from 'solid-js';
 import { Profile, Match, SelfDiscovery } from '../../schemas/manifest.schema';
 

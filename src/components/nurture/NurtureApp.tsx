@@ -1,3 +1,13 @@
+/**
+ * Nurture - Relationship Cultivation App
+ * 
+ * Copyright (c) 2024 Thoughtful App Co. and Erikk Shupp. All rights reserved.
+ * 
+ * This software is proprietary and confidential. Unauthorized copying, modification,
+ * or distribution of this code is strictly prohibited. The frontend logic is local-first
+ * and protected intellectual property. No infringement or unauthorized use is permitted.
+ */
+
 import { Component, For, createSignal } from 'solid-js';
 import { Contact } from '../../schemas/nurture.schema';
 import { biophilic } from '../../theme/biophilic';

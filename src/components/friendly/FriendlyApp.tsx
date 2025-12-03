@@ -1,3 +1,13 @@
+/**
+ * FriendLy - Social Hangout Scheduling App
+ * 
+ * Copyright (c) 2024 Thoughtful App Co. and Erikk Shupp. All rights reserved.
+ * 
+ * This software is proprietary and confidential. Unauthorized copying, modification,
+ * or distribution of this code is strictly prohibited. The frontend logic is local-first
+ * and protected intellectual property. No infringement or unauthorized use is permitted.
+ */
+
 import { Component, createSignal, For, Show, createMemo } from 'solid-js';
 import { zenTouch, modernTokens, zenAnimations } from '../../theme/zenTouch';
 import { store } from './store';
