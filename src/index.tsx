@@ -25,29 +25,47 @@ globalStyles.textContent = `
     font-family: inherit;
   }
   
-  /* Navigation dropdown animation */
-  @keyframes dropdownFadeIn {
-    from {
-      opacity: 0;
-      transform: translateX(-50%) translateY(-8px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-  }
-  
-  /* Tooltip animation */
-  @keyframes tooltipFadeIn {
-    from {
-      opacity: 0;
-      transform: translateX(-50%) translateY(4px);
-    }
-    to {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-  }
+   /* Navigation dropdown animation */
+   @keyframes dropdownFadeIn {
+     from {
+       opacity: 0;
+       transform: translateX(-50%) translateY(-8px);
+     }
+     to {
+       opacity: 1;
+       transform: translateX(-50%) translateY(0);
+     }
+   }
+   
+   /* Mobile menu slide down animation */
+   @keyframes slideDown {
+     from {
+       opacity: 0;
+       transform: translateY(-8px);
+     }
+     to {
+       opacity: 1;
+       transform: translateY(0);
+     }
+   }
+   
+   /* Fade in animation */
+   @keyframes fadeIn {
+     from { opacity: 0; }
+     to { opacity: 1; }
+   }
+   
+   /* Tooltip animation */
+   @keyframes tooltipFadeIn {
+     from {
+       opacity: 0;
+       transform: translateX(-50%) translateY(4px);
+     }
+     to {
+       opacity: 1;
+       transform: translateX(-50%) translateY(0);
+     }
+   }
   
   /* Focus visible for keyboard navigation */
   :focus-visible {

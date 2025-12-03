@@ -195,6 +195,10 @@ export async function getCareerDetails(code: string): Promise<OnetCareerDetails 
 }
 
 
+export interface OnetCareerMatch extends OnetCareer {
+  fit: number;
+}
+
 export interface OnetCareersResponse {
   start: number;
   end: number;
