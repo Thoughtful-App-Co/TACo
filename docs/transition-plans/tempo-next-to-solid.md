@@ -13,12 +13,14 @@
 ### **DECEMBER 2025 UPDATE**
 
 **✅ Migration Status**: **100% COMPLETE**
+
 - All 35 files successfully ported to Solid.js
 - All 12,858 lines converted and tested
 - Zero TypeScript errors
 - Production-ready build (389.54 KB / 102.59 KB gzipped)
 
 **✅ Phase 8+ Completed**:
+
 - Dark theme verified (Geist fonts, premium design)
 - Responsive layout tested (mobile/tablet/desktop)
 - Accessibility audited (WCAG AA+)
@@ -28,6 +30,7 @@
 - Cloudflare Pages deployment ready
 
 **✅ Documentation Complete**:
+
 - Design system documented
 - Development guide created
 - Linting & CI/CD guide written
@@ -53,6 +56,7 @@
 **🎯 Migration Progress**: **87.5% Complete** (7 of 8 phases done)
 
 **✨ Latest Additions** (Dec 3, 2025):
+
 - ✅ **Phase 5 COMPLETE**: Session Manager components converted to Solid.js (2,380 lines)
   - **useSession.ts** (836 lines) - Complete timer & session state management
   - **session-view.tsx** (1,295 lines) - Main session UI with timer & metrics
@@ -74,6 +78,7 @@
 - 🎯 Next: Phase 8 - Polish & Testing (Final phase!)
 
 **🔑 Important**: These API routes require users to **Bring Your Own API Key** (BYOA)
+
 - Set `ANTHROPIC_API_KEY` environment variable in Cloudflare Pages
 - Users are responsible for their own Claude AI API costs
 - See deployment section for configuration details
@@ -89,18 +94,21 @@
 **Critical Rule**: Do not run ESLint, Prettier, or any code linting/formatting tools until the entire Tempo app has been successfully ported.
 
 **Rationale**:
+
 - We are keeping ALL code intact during the port (including unused imports, Replicache code, etc.)
 - Linters will flag unused variables, imports, and "dead code" that we're intentionally preserving
 - This code will be needed once all components are ported and connected
 - Premature cleanup will cause confusion and potential loss of important references
 
 **What to Run Instead**:
+
 - ✅ TypeScript compiler (`tsc` or `npm run build`) - Catches real type errors
 - ✅ Build process (`npm run build`) - Ensures code compiles
 - ❌ ESLint (`npm run lint`) - **DO NOT RUN**
 - ❌ Prettier format checks - **DO NOT RUN**
 
 **When to Enable Linting**:
+
 - After ALL phases (1-8) are complete
 - After the full app is functional and tested
 - After we've verified all features work end-to-end
@@ -126,19 +134,19 @@
 
 ### Tech Stack Comparison
 
-| Feature | Next.js (Current) | SolidStart (Target) |
-|---------|-------------------|---------------------|
-| Framework | Next.js 15.2.3 | SolidStart |
-| UI Library | React 19 | SolidJS |
-| Routing | App Router | File-based routing |
-| State | useState/useEffect | createSignal/createEffect |
-| Data Fetching | TanStack Query | @tanstack/solid-query |
-| UI Components | Radix UI | Kobalte |
-| Animations | Framer Motion | Motion One / CSS |
-| Styling | Tailwind CSS | Tailwind CSS (keep) |
-| AI | Anthropic Claude | Anthropic Claude (keep) |
-| Sync | Replicache | **LocalStorage** (Replicache removed ✅) |
-| Theme | next-themes | solid-theme (or custom) |
+| Feature       | Next.js (Current)  | SolidStart (Target)                      |
+| ------------- | ------------------ | ---------------------------------------- |
+| Framework     | Next.js 15.2.3     | SolidStart                               |
+| UI Library    | React 19           | SolidJS                                  |
+| Routing       | App Router         | File-based routing                       |
+| State         | useState/useEffect | createSignal/createEffect                |
+| Data Fetching | TanStack Query     | @tanstack/solid-query                    |
+| UI Components | Radix UI           | Kobalte                                  |
+| Animations    | Framer Motion      | Motion One / CSS                         |
+| Styling       | Tailwind CSS       | Tailwind CSS (keep)                      |
+| AI            | Anthropic Claude   | Anthropic Claude (keep)                  |
+| Sync          | Replicache         | **LocalStorage** (Replicache removed ✅) |
+| Theme         | next-themes        | solid-theme (or custom)                  |
 
 ### File Structure (Simplified)
 
@@ -172,6 +180,7 @@ tempo/
 ## Key Dependencies
 
 ### Core (Keep)
+
 - `tailwindcss` - Styling (no changes needed)
 - `@anthropic-ai/sdk` - Claude AI (keep)
 - `date-fns` - Date utilities (keep)
@@ -179,6 +188,7 @@ tempo/
 - `clsx` + `tailwind-merge` - Keep
 
 ### Replace
+
 - `react` + `react-dom` → `solid-js`
 - `next` → `solid-start`
 - `@tanstack/react-query` → `@tanstack/solid-query` (optional)
@@ -188,6 +198,7 @@ tempo/
 - `@hello-pangea/dnd` → `@thisbeyond/solid-dnd`
 
 ### ~~Removed~~
+
 - ~~`replicache`~~ - ✅ Removed in Phase 6 (no longer needed)
 
 ---
@@ -199,7 +210,7 @@ tempo/
 ```typescript
 // Core Entities
 Task, ProcessedTask, TimeBoxTask
-Story, ProcessedStory, StoryBlock  
+Story, ProcessedStory, StoryBlock
 TimeBox, SessionPlan, Session
 
 // Enums
@@ -230,6 +241,7 @@ StoredSession extends SessionPlan {
 **Purpose**: User dumps task list → AI processes → Structured stories
 
 **Components**:
+
 - `BrainDump.tsx` - Main container with textarea
 - `BrainDumpForm.tsx` - Form logic
 - `ProcessedStories.tsx` - Story cards display
@@ -237,6 +249,7 @@ StoredSession extends SessionPlan {
 - `DifficultyBadge.tsx` - Badge component
 
 **Hooks** (React → Solid):
+
 ```typescript
 // React
 const [tasks, setTasks] = useState<string>("")
@@ -252,12 +265,14 @@ const memoValue = createMemo(() => { ... }) // Auto-tracks
 ```
 
 **Services** (Keep logic, adapt API calls):
+
 - `brain-dump-services.ts` - processTasks(), createSession()
   - Uses fetch API (framework-agnostic) ✓
   - Retry logic with error handling ✓
   - Port to Solid Query for better DX
 
 **Key Logic**:
+
 1. User enters tasks (one per line)
 2. `processTasks()` → `/api/tasks/process` → Claude AI
 3. Returns `ProcessedStory[]` with tasks grouped
@@ -272,6 +287,7 @@ const memoValue = createMemo(() => { ... }) // Auto-tracks
 **Purpose**: Active session view with timer, progress, controls
 
 **Components**:
+
 - `session-view.tsx` (1295 lines!) - Main session UI
   - Active timer card
   - Floating timer (when scrolled)
@@ -282,6 +298,7 @@ const memoValue = createMemo(() => { ... }) // Auto-tracks
 - `session-debrief-modal.tsx` - Post-session reflection
 
 **Hooks**:
+
 - `useSession.ts` - Session state, timer logic
   - Timer tick (setInterval)
   - Play/pause/complete controls
@@ -289,6 +306,7 @@ const memoValue = createMemo(() => { ... }) // Auto-tracks
   - Status updates
 
 **Services**:
+
 - `session-storage.service.ts` - CRUD operations
   - LocalStorage fallback
   - Replicache integration
@@ -297,6 +315,7 @@ const memoValue = createMemo(() => { ... }) // Auto-tracks
 - `debrief-storage.service.ts` - Debrief data
 
 **Critical Features**:
+
 - **Timer System**:
   - Countdown timer (minutes:seconds)
   - Play/pause/reset controls
@@ -304,7 +323,6 @@ const memoValue = createMemo(() => { ... }) // Auto-tracks
   - Auto-advance to next timebox
   - Visual urgency (<60s red)
   - Floating timer on scroll
-  
 - **Animations** (Framer Motion → Motion One):
   - Floating timer entrance/exit
   - Progress bar fills
@@ -313,12 +331,14 @@ const memoValue = createMemo(() => { ... }) // Auto-tracks
   - Scroll-triggered visibility
 
 **Conversion Challenges**:
+
 1. Complex animation state (FloatingTimer wrappers)
 2. Scroll intersection observer
 3. Timer persistence on unmount
 4. Optimistic UI updates
 
 **Strategy**:
+
 - Use `createEffect` for timer ticks
 - `onCleanup` for timer intervals
 - Motion One or CSS for animations
@@ -331,12 +351,14 @@ const memoValue = createMemo(() => { ... }) // Auto-tracks
 **Purpose**: LocalStorage persistence
 
 **Services**:
+
 - `task-persistence.service.ts`
   - Save/load tasks from LocalStorage
   - Data validation
   - Simple CRUD operations
 
 **Port Strategy**:
+
 - Simplify: Remove all Replicache code
 - Keep LocalStorage logic only
 - Framework-agnostic service layer
@@ -348,9 +370,11 @@ const memoValue = createMemo(() => { ... }) // Auto-tracks
 **Purpose**: Archive sessions, carry over tasks
 
 **Components**:
+
 - `TaskRollover.tsx` - Rollover UI
 
 **Services**:
+
 - `task-rollover.service.ts`
   - Archive/unarchive sessions
   - Get incomplete tasks
@@ -366,19 +390,19 @@ const memoValue = createMemo(() => { ... }) // Auto-tracks
 
 Current (Radix) → Target (Kobalte):
 
-| Radix Component | Kobalte Component |
-|-----------------|-------------------|
-| @radix-ui/react-accordion | @kobalte/core/accordion |
-| @radix-ui/react-alert-dialog | @kobalte/core/alert-dialog |
-| @radix-ui/react-checkbox | @kobalte/core/checkbox |
-| @radix-ui/react-dialog | @kobalte/core/dialog |
+| Radix Component               | Kobalte Component           |
+| ----------------------------- | --------------------------- |
+| @radix-ui/react-accordion     | @kobalte/core/accordion     |
+| @radix-ui/react-alert-dialog  | @kobalte/core/alert-dialog  |
+| @radix-ui/react-checkbox      | @kobalte/core/checkbox      |
+| @radix-ui/react-dialog        | @kobalte/core/dialog        |
 | @radix-ui/react-dropdown-menu | @kobalte/core/dropdown-menu |
-| @radix-ui/react-label | @kobalte/core/label |
-| @radix-ui/react-progress | @kobalte/core/progress |
-| @radix-ui/react-select | @kobalte/core/select |
-| @radix-ui/react-slider | @kobalte/core/slider |
-| @radix-ui/react-tabs | @kobalte/core/tabs |
-| @radix-ui/react-tooltip | @kobalte/core/tooltip |
+| @radix-ui/react-label         | @kobalte/core/label         |
+| @radix-ui/react-progress      | @kobalte/core/progress      |
+| @radix-ui/react-select        | @kobalte/core/select        |
+| @radix-ui/react-slider        | @kobalte/core/slider        |
+| @radix-ui/react-tabs          | @kobalte/core/tabs          |
+| @radix-ui/react-tooltip       | @kobalte/core/tooltip       |
 
 **Action**: Create Kobalte versions of shadcn components in `taco/src/components/ui/`
 
@@ -416,18 +440,21 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
 ```
 
 **✅ Routes Converted**:
+
 1. ✅ `/api/ai` (137 lines) - Claude integration for task refinement
 2. ✅ `/api/tasks/process` (486 lines) - AI task processing & story grouping
 3. ✅ `/api/tasks/create-session` (1020 lines) - Session creation with scheduling
 4. ❌ `/api/replicache` - **Skipped** (will remove Replicache in Phase 6-7)
 
 **🔑 BYOA (Bring Your Own API Key)**:
+
 - Users must provide their own `ANTHROPIC_API_KEY`
 - Set as environment variable in Cloudflare Pages dashboard
 - Users are responsible for their own AI API costs
 - No shared API key or backend service provided
 
 **Deployment Configuration**:
+
 ```bash
 # In Cloudflare Pages dashboard:
 # Settings > Environment Variables
@@ -442,26 +469,26 @@ ANTHROPIC_API_KEY=sk-ant-api03-xxxx...
 
 ```typescript
 // ❌ React
-const [count, setCount] = useState(0)
-const [user, setUser] = useState<User | null>(null)
+const [count, setCount] = useState(0);
+const [user, setUser] = useState<User | null>(null);
 
 useEffect(() => {
-  console.log('Count changed:', count)
-}, [count])
+  console.log('Count changed:', count);
+}, [count]);
 
-const doubled = useMemo(() => count * 2, [count])
-const increment = useCallback(() => setCount(c => c + 1), [])
+const doubled = useMemo(() => count * 2, [count]);
+const increment = useCallback(() => setCount((c) => c + 1), []);
 
 // ✅ Solid
-const [count, setCount] = createSignal(0)
-const [user, setUser] = createSignal<User | null>(null)
+const [count, setCount] = createSignal(0);
+const [user, setUser] = createSignal<User | null>(null);
 
 createEffect(() => {
-  console.log('Count changed:', count())
-})
+  console.log('Count changed:', count());
+});
 
-const doubled = createMemo(() => count() * 2)
-const increment = () => setCount(c => c + 1) // No wrapper needed
+const doubled = createMemo(() => count() * 2);
+const increment = () => setCount((c) => c + 1); // No wrapper needed
 ```
 
 ### Context Pattern
@@ -521,7 +548,7 @@ export function useMyContext() {
 ### Option 1: Motion One (Recommended)
 
 ```tsx
-import { Motion } from "@motionone/solid"
+import { Motion } from '@motionone/solid';
 
 <Motion
   initial={{ opacity: 0, y: 100 }}
@@ -530,15 +557,21 @@ import { Motion } from "@motionone/solid"
   transition={{ duration: 0.3 }}
 >
   {/* ... */}
-</Motion>
+</Motion>;
 ```
 
 ### Option 2: CSS Animations (Fallback)
 
 ```css
 @keyframes slideUp {
-  from { opacity: 0; transform: translateY(100px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(100px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .animate-slide-up {
@@ -569,16 +602,16 @@ app/layout.tsx                →  src/root.tsx + src/routes/*.tsx
 ```tsx
 // Next.js
 export default function SessionPage({ params }: { params: { date: string } }) {
-  const { date } = params
+  const { date } = params;
   // ...
 }
 
 // SolidStart
-import { useParams } from "@solidjs/router"
+import { useParams } from '@solidjs/router';
 
 export default function SessionPage() {
-  const params = useParams()
-  const date = () => params.date
+  const params = useParams();
+  const date = () => params.date;
   // ...
 }
 ```
@@ -591,24 +624,24 @@ export default function SessionPage() {
 
 ```typescript
 // ❌ React Query
-import { useQuery } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query';
 
 const { data, isLoading, error } = useQuery({
   queryKey: ['session', date],
-  queryFn: () => fetchSession(date)
-})
+  queryFn: () => fetchSession(date),
+});
 
 // ✅ Solid Query
-import { createQuery } from '@tanstack/solid-query'
+import { createQuery } from '@tanstack/solid-query';
 
 const query = createQuery(() => ({
   queryKey: ['session', date()],
-  queryFn: () => fetchSession(date())
-}))
+  queryFn: () => fetchSession(date()),
+}));
 
-const data = () => query.data
-const isLoading = () => query.isLoading
-const error = () => query.error
+const data = () => query.data;
+const isLoading = () => query.isLoading;
+const error = () => query.error;
 ```
 
 ---
@@ -625,46 +658,47 @@ const error = () => query.error
 // Simple LocalStorage persistence
 export const sessionStorage = {
   async saveSession(date: string, session: StoredSession): Promise<void> {
-    const key = `session-${date}`
+    const key = `session-${date}`;
     const data = {
       ...session,
-      lastUpdated: new Date().toISOString()
-    }
-    localStorage.setItem(key, JSON.stringify(data))
+      lastUpdated: new Date().toISOString(),
+    };
+    localStorage.setItem(key, JSON.stringify(data));
   },
 
   async getSession(date: string): Promise<StoredSession | null> {
-    const key = `session-${date}`
-    const data = localStorage.getItem(key)
-    if (!data) return null
-    return JSON.parse(data)
+    const key = `session-${date}`;
+    const data = localStorage.getItem(key);
+    if (!data) return null;
+    return JSON.parse(data);
   },
 
   async getAllSessions(): Promise<StoredSession[]> {
-    const sessions: StoredSession[] = []
+    const sessions: StoredSession[] = [];
     for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i)
+      const key = localStorage.key(i);
       if (key?.startsWith('session-')) {
-        const date = key.replace('session-', '')
-        const session = await this.getSession(date)
-        if (session) sessions.push(session)
+        const date = key.replace('session-', '');
+        const session = await this.getSession(date);
+        if (session) sessions.push(session);
       }
     }
-    return sessions
+    return sessions;
   },
 
   async deleteSession(date: string): Promise<void> {
-    localStorage.removeItem(`session-${date}`)
+    localStorage.removeItem(`session-${date}`);
   },
 
   async clearAllSessions(): Promise<void> {
-    const keys = Object.keys(localStorage).filter(k => k.startsWith('session-'))
-    keys.forEach(key => localStorage.removeItem(key))
-  }
-}
+    const keys = Object.keys(localStorage).filter((k) => k.startsWith('session-'));
+    keys.forEach((key) => localStorage.removeItem(key));
+  },
+};
 ```
 
 **Benefits**:
+
 - ✅ Simple, no dependencies
 - ✅ Works immediately
 - ✅ Easy to debug
@@ -682,6 +716,7 @@ export const sessionStorage = {
 **Commits**: Pending
 
 **Latest Completions** (Dec 3, 2025):
+
 - ✅ **Phase 5 Session Manager Components** (2,380 lines)
   - useSession.ts (836 lines) - Timer & state management
   - session-view.tsx (1,295 lines) - 5 components with 15+ signals
@@ -700,6 +735,7 @@ export const sessionStorage = {
 ---
 
 ### Phase 1: Foundation (Week 1) - ✅ COMPLETE
+
 - [x] Set up SolidStart project structure (using existing TACo structure) ✅
 - [x] Copy `lib/types.ts` (no changes) ✅
 - [x] Port `lib/utils.ts` (pure functions) ✅
@@ -715,6 +751,7 @@ export const sessionStorage = {
 - [x] Install dependencies (Kobalte, CVA, etc.) ✅ **NEW**
 
 ### Phase 2: Services (Week 1-2) - ✅ 100% COMPLETE
+
 - [x] Port `lib/task-manager.ts` ✅
 - [x] Port `lib/sessionStorage.ts` (initially 620 lines, now 559 lines) ✅
   - Initially kept Replicache code intact
@@ -739,6 +776,7 @@ export const sessionStorage = {
   - Kept all localStorage operations intact
 
 ### Phase 3: API Routes (Week 2) - ✅ 100% COMPLETE
+
 - [x] Convert `/api/ai` to Cloudflare Pages Function ✅ (137 lines)
   - Handles Claude AI task refinement and organization
   - Environment: `ANTHROPIC_API_KEY` required
@@ -753,6 +791,7 @@ export const sessionStorage = {
 - [ ] **TODO**: Test all endpoints with real API key
 
 ### Phase 4: Brain Dump Feature (Week 2-3) - ✅ 100% COMPLETE
+
 - [x] Port all Brain Dump files from Next.js (13 files, ~2,316 lines) ✅
   - [x] `types.ts` - Type definitions
   - [x] `services/badge-utils.ts` - Utility functions
@@ -809,8 +848,8 @@ export const sessionStorage = {
 - [ ] Test AI integration (pending integration)
 - [ ] Test session creation flow (pending integration)
 
-
 ### Phase 5: Session Manager (Week 3-4) - ✅ COMPLETE (100%)
+
 - [x] Port `useSession.ts` → Solid signals ✅ (836 lines)
   - [x] Convert 7 useState → createSignal
   - [x] Convert 2 useMemo → createMemo
@@ -840,6 +879,7 @@ export const sessionStorage = {
 - [ ] Test scroll interactions (deferred to integration testing)
 
 ### Phase 6: Persistence & Cleanup (Week 4) - ✅ COMPLETE (100%)
+
 - [x] **Gut Replicache code** from `lib/sessionStorage.ts` ✅ (62 lines removed)
   - [x] Removed replicache-client import
   - [x] Removed setReplicacheClient() function
@@ -854,6 +894,7 @@ export const sessionStorage = {
 - [ ] Add export/import functionality (deferred to future enhancement)
 
 ### Phase 7: Integration & Routing (Week 4) - ✅ COMPLETE (100%)
+
 - [x] **Architectural Decision**: Adapt to TACo's component-based architecture ✅
   - TACo uses single-page app with component switching, not separate routes
   - Simpler and more appropriate for multi-app platform
@@ -871,6 +912,7 @@ export const sessionStorage = {
 - [ ] Navigation between sessions (deferred - modal-based navigation planned)
 
 ### Phase 8: Polish (Week 5)
+
 - [ ] Dark mode (solid-theme or custom)
 - [ ] Test all animations
 - [ ] Performance optimization
@@ -883,16 +925,20 @@ export const sessionStorage = {
 ## Known Challenges & Solutions
 
 ### 1. Complex Timer State
+
 **Challenge**: Timer uses multiple effects, refs, intervals  
 **Solution**: Use `createEffect` with `onCleanup`, leverage Solid's fine-grained reactivity
 
 ### 2. Framer Motion Animations
+
 **Challenge**: 50+ animation instances throughout app  
 **Solution**: Use Motion One for complex, CSS for simple. Phase approach: CSS first, Motion One later
 
 ### 3. Replicache Simplification ✅ **COMPLETE IN PHASE 6**
+
 **Decision**: Removed all Replicache code, simplified to LocalStorage-only  
-**Result**: 
+**Result**:
+
 - ✅ sessionStorage.ts reduced from 621 → 559 lines (62 lines removed)
 - ✅ Removed replicache-client dependency
 - ✅ All CRUD operations now use pure LocalStorage
@@ -900,10 +946,12 @@ export const sessionStorage = {
 - ✅ Simpler, more maintainable codebase
 
 ### 4. React 19's `use()` Pattern
+
 **Challenge**: SessionPage uses `use(params)` for async params  
 **Solution**: SolidStart handles async params differently (use `createAsync`)
 
 ### 5. Large Component Size
+
 **Challenge**: `session-view.tsx` is 1295 lines  
 **Solution**: Break into smaller components, port incrementally
 
@@ -912,17 +960,20 @@ export const sessionStorage = {
 ## Performance Considerations
 
 ### Solid Advantages
+
 1. **Fine-grained reactivity** - Only timer display updates, not full component
 2. **No virtual DOM** - Direct DOM updates
 3. **Smaller bundle** - ~6KB vs React's ~42KB
 4. **Faster hydration** - Compiles to vanilla JS
 
 ### Optimizations to Keep
+
 - Memoization (use `createMemo`)
 - Code splitting (Solid supports lazy)
 - Debouncing (timer updates, scroll events)
 
 ### Optimizations to Add
+
 - `createResource` for async data
 - Lazy-load timeline when scrolled into view
 - Defer non-critical animations
@@ -932,17 +983,20 @@ export const sessionStorage = {
 ## Testing Strategy
 
 ### Unit Tests
+
 - Pure functions (utils, task-manager)
 - Service layer (mock Replicache)
 - Type validation
 
 ### Integration Tests
+
 - Brain dump → Session creation flow
 - Timer play/pause/complete
 - Session persistence
 - Rollover logic
 
 ### E2E Tests (Playwright)
+
 - Full user journey: Dump → Create → Execute → Complete
 - Timer accuracy
 - Offline sync
@@ -963,18 +1017,21 @@ If Solid port encounters blockers:
 ## Success Metrics
 
 ### Functionality
+
 - [ ] All features work (brain dump, timer, persistence, rollover)
 - [ ] No regressions in AI processing
 - [ ] Session data persists correctly in LocalStorage
 - [ ] Data survives page reload
 
 ### Performance
+
 - [ ] Initial load < 2s (vs Next.js ~3s)
 - [ ] Timer updates < 16ms (60fps)
 - [ ] Timeline scroll smooth
 - [ ] Bundle size < 200KB (vs Next.js ~300KB)
 
 ### Code Quality
+
 - [ ] Type safety maintained
 - [ ] Feature modules intact
 - [ ] No `any` types
@@ -985,6 +1042,7 @@ If Solid port encounters blockers:
 ## Resources
 
 ### Documentation
+
 - [SolidJS Docs](https://docs.solidjs.com)
 - [SolidStart](https://start.solidjs.com)
 - [Kobalte](https://kobalte.dev)
@@ -992,10 +1050,12 @@ If Solid port encounters blockers:
 - [Solid Query](https://tanstack.com/query/latest/docs/framework/solid/overview)
 
 ### Examples
+
 - [Solid Hacker News](https://github.com/solidjs/solid-hackernews)
 - [Solid Realworld](https://github.com/solidjs/solid-realworld)
 
 ### Migration Guides
+
 - [React to Solid](https://docs.solidjs.com/guides/comparison#react-to-solid)
 - [TanStack Query Migration](https://tanstack.com/query/latest/docs/framework/solid/quick-start)
 
@@ -1006,6 +1066,7 @@ If Solid port encounters blockers:
 ### ✅ Already Ported (Framework-Agnostic)
 
 **Phase 1: Foundation (7 files, 1,614 lines - updated after Phase 6)**
+
 1. **`lib/types.ts`** (224 lines) ✅ - Central type definitions
 2. **`lib/sessionStorage.ts`** (559 lines) ✅ - Persistence layer (LocalStorage-only after Phase 6)
 3. ~~**`lib/replicache-client.ts`**~~ - ✅ Removed in Phase 6 (no longer needed)
@@ -1015,60 +1076,29 @@ If Solid port encounters blockers:
 7. **`lib/durationUtils.ts`** (137 lines) ✅ - Time calculations
 8. **`lib/transformUtils.ts`** (164 lines) ✅ - Data transformations
 
-**Phase 2: Services (5 files, 1,574 lines - updated after Phase 6)**
-9. **`services/brain-dump.service.ts`** (548 lines) ✅ - Task processing
-10. **`services/session-storage.service.ts`** (550 lines) ✅ - Session management
-11. **`services/task-persistence.service.ts`** (138 lines) ✅ - LocalStorage CRUD
-12. **`services/task-rollover.service.ts`** (209 lines) ✅ - Task rollover
-13. **`services/debrief-storage.service.ts`** (129 lines) ✅ - Debrief storage
+**Phase 2: Services (5 files, 1,574 lines - updated after Phase 6)** 9. **`services/brain-dump.service.ts`** (548 lines) ✅ - Task processing 10. **`services/session-storage.service.ts`** (550 lines) ✅ - Session management 11. **`services/task-persistence.service.ts`** (138 lines) ✅ - LocalStorage CRUD 12. **`services/task-rollover.service.ts`** (209 lines) ✅ - Task rollover 13. **`services/debrief-storage.service.ts`** (129 lines) ✅ - Debrief storage
 
-**Phase 3: API Routes (3 files, ~1,700 lines)**
-14. **`functions/api/ai.ts`** (137 lines) ✅ - Claude AI integration endpoint
-15. **`functions/api/tasks/process.ts`** (486 lines) ✅ - AI task processing & grouping
-16. **`functions/api/tasks/create-session.ts`** (1020 lines) ✅ - Session creation with scheduling
+**Phase 3: API Routes (3 files, ~1,700 lines)** 14. **`functions/api/ai.ts`** (137 lines) ✅ - Claude AI integration endpoint 15. **`functions/api/tasks/process.ts`** (486 lines) ✅ - AI task processing & grouping 16. **`functions/api/tasks/create-session.ts`** (1020 lines) ✅ - Session creation with scheduling
 
 **Phase 4: Brain Dump (13 files, ~4,700 lines)**
-17-29. **Brain Dump Components & Hooks** ✅ - Complete feature module
-    - All components converted to Solid.js
-    - All hooks using Solid primitives (signals, memos, effects)
-    - All Lucide icons → Phosphor icons
+17-29. **Brain Dump Components & Hooks** ✅ - Complete feature module - All components converted to Solid.js - All hooks using Solid primitives (signals, memos, effects) - All Lucide icons → Phosphor icons
 
-**Phase 5: Session Manager (4 files, 2,380 lines)**
-30. **`session-manager/hooks/useSession.ts`** (836 lines) ✅ - Session & timer state management
-    - 7 signals: session, loading, error, activeTimeBox, timeRemaining, isTimerRunning, timerIdRef
-    - 2 memos: completedPercentage, isSessionComplete
-    - 3 effects: timer interval handler, startTime setter, session loader & persistence
-    - Timer controls: start, pause, resume, reset, complete
-    - Progress tracking, timebox management, task updates
-31. **`session-manager/components/session-view.tsx`** (1,295 lines) ✅ - Main session UI
-    - 5 components: TimerDisplay, FloatingTimerContent, FloatingTimerContainer, FloatingTimerWrapper, SessionView
-    - 15+ signals, 3 memos, 10+ effects created
-    - All Lucide icons → Phosphor (CheckCircle, Clock, Play, Pause, CaretRight, etc.)
-    - Framer Motion → CSS transitions (simplified)
-    - Scroll detection with IntersectionObserver
-    - Session metrics dashboard (5 metric cards)
-    - Floating timer with visibility management
-    - Time adjustment controls (+/-1m, +/-5m)
-32. **`ui/progress.tsx`** (33 lines) ✅ - Kobalte progress bar
-33. **`session-manager/components/vertical-timeline.tsx`** (216 lines) ✅ - Timeline UI (functional core)
+**Phase 5: Session Manager (4 files, 2,380 lines)** 30. **`session-manager/hooks/useSession.ts`** (836 lines) ✅ - Session & timer state management - 7 signals: session, loading, error, activeTimeBox, timeRemaining, isTimerRunning, timerIdRef - 2 memos: completedPercentage, isSessionComplete - 3 effects: timer interval handler, startTime setter, session loader & persistence - Timer controls: start, pause, resume, reset, complete - Progress tracking, timebox management, task updates 31. **`session-manager/components/session-view.tsx`** (1,295 lines) ✅ - Main session UI - 5 components: TimerDisplay, FloatingTimerContent, FloatingTimerContainer, FloatingTimerWrapper, SessionView - 15+ signals, 3 memos, 10+ effects created - All Lucide icons → Phosphor (CheckCircle, Clock, Play, Pause, CaretRight, etc.) - Framer Motion → CSS transitions (simplified) - Scroll detection with IntersectionObserver - Session metrics dashboard (5 metric cards) - Floating timer with visibility management - Time adjustment controls (+/-1m, +/-5m) 32. **`ui/progress.tsx`** (33 lines) ✅ - Kobalte progress bar 33. **`session-manager/components/vertical-timeline.tsx`** (216 lines) ✅ - Timeline UI (functional core)
 
 **Phase 6: Persistence Cleanup (62 lines removed)**
+
 - **`lib/sessionStorage.ts`** simplified from 621 → 559 lines ✅
 - All Replicache code removed
 - Pure LocalStorage implementation
 
-**Phase 7: Integration & Routing (1 file, 109 lines)**
-34. **`TempoApp.tsx`** (109 lines) ✅ - Main Tempo app component
-    - Brain Dump integration with stats tracking
-    - Session preview metrics display
-    - Adapted to TACo's component-based architecture (not separate routes)
-    - All Phosphor icons, Solid.js patterns
+**Phase 7: Integration & Routing (1 file, 109 lines)** 34. **`TempoApp.tsx`** (109 lines) ✅ - Main Tempo app component - Brain Dump integration with stats tracking - Session preview metrics display - Adapted to TACo's component-based architecture (not separate routes) - All Phosphor icons, Solid.js patterns
 
 **Grand Total**: 35 files, ~12,858 lines ✅ (All phases 1-7 complete)
 
 ### Remaining Work (Phase 8)
 
 **Phase 8: Polish & Testing** (Final phase)
+
 1. Dark mode integration
 2. Animation polish
 3. Error boundaries
@@ -1104,12 +1134,14 @@ If Solid port encounters blockers:
 ### All Phases Delivered Successfully
 
 **Phase 1-7: Migration** ✅
+
 - 35 files converted from React to Solid.js
 - 12,858 lines successfully ported
 - Zero TypeScript errors
 - All features functional
 
 **Phase 8: Polish** ✅
+
 - Fonts integrated (GeistVF & GeistMonoVF)
 - Responsive design implemented
 - Dark theme verified
@@ -1117,6 +1149,7 @@ If Solid port encounters blockers:
 - Design system documented
 
 **Phase 9: CI/CD Setup** ✅
+
 - ESLint configured (v9 flat config)
 - Prettier formatting setup
 - Husky pre-commit hooks
@@ -1127,6 +1160,7 @@ If Solid port encounters blockers:
   - Cloudflare Pages deployment
 
 **Phase 10: Documentation** ✅
+
 - All docs organized in `/docs` folder
 - Design specifications documented
 - Development guide created
@@ -1188,14 +1222,16 @@ If Solid port encounters blockers:
 This is a **high-quality codebase** with excellent architecture. The feature-based organization and clean separation of concerns make it very portable. By removing Replicache, we've eliminated a major complexity source.
 
 **Main challenges**:
+
 1. **Animations** - Lots of Framer Motion to replace (use Motion One + CSS)
 2. **Timer complexity** - 1295-line session view (break into smaller components)
 3. ~~**API Routes**~~ - ✅ **COMPLETE** (converted to Cloudflare Pages Functions)
 
 **Advantages**:
+
 - ✅ **All core features ported** (35 files, ~12,858 lines)
   - Foundation libraries (7 files)
-  - Business services (5 files)  
+  - Business services (5 files)
   - API routes (3 files)
   - Brain Dump feature (13 files)
   - Session Manager (4 files)
@@ -1217,22 +1253,22 @@ This is a **high-quality codebase** with excellent architecture. The feature-bas
 
 ### Completed Phases (7 of 8)
 
-| Phase | Status | Files | Lines | Highlights |
-|-------|--------|-------|-------|------------|
-| Phase 1: Foundation | ✅ 100% | 7 | 1,614 | All lib files, Replicache removed |
-| Phase 2: Services | ✅ 100% | 5 | 1,574 | All business logic services |
-| Phase 3: API Routes | ✅ 100% | 3 | 1,700 | Cloudflare Functions, BYOA |
-| Phase 4: Brain Dump | ✅ 100% | 13 | 4,700 | Complete feature module |
-| Phase 5: Session Manager | ✅ 100% | 4 | 2,380 | Timer, UI, timeline |
-| Phase 6: Persistence | ✅ 100% | -1 | -62 | Replicache removed |
-| Phase 7: Integration | ✅ 100% | 1 | 109 | TACo component integration |
-| **Total Complete** | **87.5%** | **35** | **12,858** | **Zero TypeScript errors** |
+| Phase                    | Status    | Files  | Lines      | Highlights                        |
+| ------------------------ | --------- | ------ | ---------- | --------------------------------- |
+| Phase 1: Foundation      | ✅ 100%   | 7      | 1,614      | All lib files, Replicache removed |
+| Phase 2: Services        | ✅ 100%   | 5      | 1,574      | All business logic services       |
+| Phase 3: API Routes      | ✅ 100%   | 3      | 1,700      | Cloudflare Functions, BYOA        |
+| Phase 4: Brain Dump      | ✅ 100%   | 13     | 4,700      | Complete feature module           |
+| Phase 5: Session Manager | ✅ 100%   | 4      | 2,380      | Timer, UI, timeline               |
+| Phase 6: Persistence     | ✅ 100%   | -1     | -62        | Replicache removed                |
+| Phase 7: Integration     | ✅ 100%   | 1      | 109        | TACo component integration        |
+| **Total Complete**       | **87.5%** | **35** | **12,858** | **Zero TypeScript errors**        |
 
 ### Remaining Work (1 phase)
 
-| Phase | Status | Estimated | Description |
-|-------|--------|-----------|-------------|
-| Phase 8: Polish | 🔲 0% | 1-2 days | Testing, error handling, optimization |
+| Phase           | Status | Estimated | Description                           |
+| --------------- | ------ | --------- | ------------------------------------- |
+| Phase 8: Polish | 🔲 0%  | 1-2 days  | Testing, error handling, optimization |
 
 ### Key Achievements ✅
 
@@ -1247,6 +1283,7 @@ This is a **high-quality codebase** with excellent architecture. The feature-bas
 ### Next Steps 🎯
 
 **Phase 8 - Polish & Testing (Final Phase)**:
+
 1. Add error boundaries
 2. Implement loading states
 3. Test dark mode
@@ -1262,5 +1299,5 @@ This is a **high-quality codebase** with excellent architecture. The feature-bas
 
 ---
 
-*Document generated from analysis of Tempo Next.js app at `/home/shuppdev/daemon/tempo`*  
-*Last migration update: December 3, 2025*
+_Document generated from analysis of Tempo Next.js app at `/home/shuppdev/daemon/tempo`_  
+_Last migration update: December 3, 2025_

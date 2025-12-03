@@ -39,17 +39,20 @@ npm run validate
 ### Creating a Feature
 
 1. Create a feature branch:
+
    ```bash
    git checkout -b feat/your-feature
    ```
 
 2. Develop your feature
 3. Run validation:
+
    ```bash
    npm run validate
    ```
 
 4. Commit with meaningful message:
+
    ```bash
    git commit -m "feat(component): add new feature"
    ```
@@ -89,18 +92,20 @@ Prettier and ESLint handle this automatically on commit.
 ### Creating a New Component
 
 1. Create component file in appropriate folder:
+
    ```
    src/components/tempo/[section]/ComponentName.tsx
    ```
 
 2. Follow component structure:
+
    ```typescript
    import { Component, JSX } from 'solid-js'
-   
+
    interface ComponentProps {
      // Your props here
    }
-   
+
    export const ComponentName: Component<ComponentProps> = (props) => {
      return (
        <div style={{ /* inline styles */ }}>
@@ -111,12 +116,13 @@ Prettier and ESLint handle this automatically on commit.
    ```
 
 3. Use design tokens from `tempo-design.ts`:
+
    ```typescript
-   import { tempoDesign } from '../../theme/tempo-design'
-   
+   import { tempoDesign } from '../../theme/tempo-design';
+
    // Use tokens
-   color: tempoDesign.colors.primary
-   padding: tempoDesign.spacing.lg
+   color: tempoDesign.colors.primary;
+   padding: tempoDesign.spacing.lg;
    ```
 
 4. Export from index file for easy imports
@@ -142,8 +148,8 @@ npm run test
 ### Console Logging
 
 ```typescript
-console.log('Debug message:', value)  // Will warn in eslint
-console.error('Error:', error)        // Allowed
+console.log('Debug message:', value); // Will warn in eslint
+console.error('Error:', error); // Allowed
 ```
 
 ## Performance Tips
@@ -158,6 +164,7 @@ console.error('Error:', error)        // Allowed
 ### Commit Messages
 
 Follow conventional commits:
+
 ```
 type(scope): subject
 
@@ -167,6 +174,7 @@ type(scope): subject
 ```
 
 **Types:**
+
 - `feat` - New feature
 - `fix` - Bug fix
 - `docs` - Documentation
@@ -177,6 +185,7 @@ type(scope): subject
 - `chore` - Dependencies, configs
 
 **Example:**
+
 ```
 feat(tempo-app): add responsive grid layout
 
@@ -219,6 +228,7 @@ npm run validate        # Run all checks + build
 ### Issue: Changes not reflecting in browser
 
 **Solution:**
+
 - Save file (auto-save should work)
 - Check browser console for errors
 - Hard refresh (Ctrl/Cmd + Shift + R)
@@ -227,6 +237,7 @@ npm run validate        # Run all checks + build
 ### Issue: Build fails locally but passes CI
 
 **Solution:**
+
 ```bash
 # Clear build cache
 rm -rf dist .vite node_modules/.vite
@@ -238,6 +249,7 @@ npm run build
 ### Issue: Type errors in editor but build succeeds
 
 **Solution:**
+
 - Restart IDE
 - Reload TypeScript language service
 - Check `tsconfig.json` is correct

@@ -29,6 +29,7 @@ npm install
 ```
 
 This installs all packages including:
+
 - Solid.js framework
 - Vite build tool
 - TypeScript
@@ -42,6 +43,7 @@ npx husky install
 ```
 
 This enables pre-commit hooks that automatically:
+
 - Run ESLint on staged files
 - Format code with Prettier
 - Prevent commits with linting errors
@@ -59,11 +61,13 @@ Visit `http://localhost:5173` to see the app running.
 ### VS Code
 
 **Recommended Extensions:**
+
 - **ESLint** (`dbaeumer.vscode-eslint`)
 - **Prettier** (`esbenp.prettier-vscode`)
 - **Solid.js Extension Pack** (`theia-ide.solidjs-snippets`)
 
 **VS Code Settings** (`.vscode/settings.json`):
+
 ```json
 {
   "editor.defaultFormatter": "esbenp.prettier-vscode",
@@ -71,12 +75,7 @@ Visit `http://localhost:5173` to see the app running.
   "editor.codeActionsOnSave": {
     "source.fixAll.eslint": true
   },
-  "eslint.validate": [
-    "javascript",
-    "javascriptreact",
-    "typescript",
-    "typescriptreact"
-  ]
+  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"]
 }
 ```
 
@@ -102,6 +101,7 @@ npm run validate
 ```
 
 This runs:
+
 - TypeScript type checking
 - ESLint linting
 - Prettier format checking
@@ -114,6 +114,7 @@ All should pass without errors.
 ### Issue: `npm install` fails
 
 **Solution:**
+
 ```bash
 # Clear npm cache
 npm cache clean --force
@@ -128,6 +129,7 @@ npm install
 ### Issue: Port 5173 is already in use
 
 **Solution:**
+
 ```bash
 # Use a different port
 npm run dev -- --port 3000
@@ -136,6 +138,7 @@ npm run dev -- --port 3000
 ### Issue: Git hooks not working
 
 **Solution:**
+
 ```bash
 # Reinstall Husky
 npx husky uninstall
@@ -145,6 +148,7 @@ npx husky install
 ### Issue: ESLint or Prettier not working in editor
 
 **Solution:**
+
 1. Reload VS Code window (Cmd/Ctrl + K, Cmd/Ctrl + R)
 2. Verify extensions are installed
 3. Check `.vscode/settings.json` is properly configured
@@ -152,6 +156,7 @@ npx husky install
 ### Issue: TypeScript errors in editor but build succeeds
 
 **Solution:**
+
 1. Restart your IDE
 2. Reload TypeScript language service
 3. Delete `.eslintcache` file

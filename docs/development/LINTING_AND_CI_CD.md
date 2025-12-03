@@ -22,11 +22,13 @@ This project uses a comprehensive linting and continuous integration/continuous 
 ### Installation
 
 1. **Install dependencies:**
+
    ```bash
    npm install
    ```
 
 2. **Initialize Git hooks:**
+
    ```bash
    npx husky install
    ```
@@ -38,11 +40,13 @@ This project uses a comprehensive linting and continuous integration/continuous 
 ### Linting
 
 **Run ESLint to check for code quality issues:**
+
 ```bash
 npm run lint
 ```
 
 **Automatically fix linting issues:**
+
 ```bash
 npm run lint:fix
 ```
@@ -50,11 +54,13 @@ npm run lint:fix
 ### Code Formatting
 
 **Format code with Prettier:**
+
 ```bash
 npm run format
 ```
 
 **Check if code is properly formatted (without modifying):**
+
 ```bash
 npm run format:check
 ```
@@ -62,6 +68,7 @@ npm run format:check
 ### Type Checking
 
 **Run TypeScript type checker:**
+
 ```bash
 npm run type-check
 ```
@@ -69,6 +76,7 @@ npm run type-check
 ### Full Validation
 
 **Run all checks (type-check, lint, format-check, and build):**
+
 ```bash
 npm run validate
 ```
@@ -80,6 +88,7 @@ This is the recommended command to run before pushing code.
 ### `.eslintrc.json`
 
 ESLint configuration for Solid.js projects:
+
 - Extends recommended ESLint rules
 - Includes TypeScript support via `@typescript-eslint`
 - Includes Solid.js-specific rules via `eslint-plugin-solid`
@@ -87,6 +96,7 @@ ESLint configuration for Solid.js projects:
 - Ignores `dist`, `node_modules`, `build`, `coverage`, `.vite`
 
 **Key Rules:**
+
 - `prettier/prettier`: Warns on formatting issues
 - `@typescript-eslint/no-explicit-any`: Warns on `any` types
 - `@typescript-eslint/no-unused-vars`: Warns on unused variables (ignores `_` prefixed)
@@ -96,6 +106,7 @@ ESLint configuration for Solid.js projects:
 ### `.prettierrc.json`
 
 Prettier configuration for consistent code formatting:
+
 - 2-space indentation
 - Single quotes
 - 100-character line width
@@ -106,6 +117,7 @@ Prettier configuration for consistent code formatting:
 ### `.editorconfig`
 
 EditorConfig for cross-editor consistency:
+
 - UTF-8 encoding
 - LF line endings
 - 2-space indentation for code files
@@ -114,6 +126,7 @@ EditorConfig for cross-editor consistency:
 ### `package.json` - lint-staged
 
 Lint-staged configuration for pre-commit hooks:
+
 - Runs ESLint and Prettier on staged TypeScript/JavaScript files
 - Runs Prettier on JSON and Markdown files
 - Automatically fixes issues before commit
@@ -133,6 +146,7 @@ When you commit code, Husky automatically runs the pre-commit hook which:
 ### Bypassing Hooks (Not Recommended)
 
 If you need to bypass pre-commit hooks:
+
 ```bash
 git commit --no-verify
 ```
@@ -177,6 +191,7 @@ Runs on push to `main` branch after CI/CD pipeline succeeds.
 **Configuration:**
 
 Requires the following GitHub secrets:
+
 - `CLOUDFLARE_API_TOKEN` - Cloudflare API token
 - `CLOUDFLARE_ACCOUNT_ID` - Cloudflare account ID
 - `CLOUDFLARE_PROJECT_NAME` - Cloudflare Pages project name
@@ -202,6 +217,7 @@ Requires the following GitHub secrets:
 ### Workflow Status
 
 Check workflow status in the GitHub Actions tab:
+
 - Green checkmark: All checks passed
 - Red X: One or more checks failed
 - Yellow circle: Workflow in progress
@@ -211,11 +227,13 @@ Check workflow status in the GitHub Actions tab:
 ### Before Committing
 
 1. **Run local validation:**
+
    ```bash
    npm run validate
    ```
 
 2. **Fix any issues:**
+
    ```bash
    npm run lint:fix
    npm run format
@@ -229,6 +247,7 @@ Check workflow status in the GitHub Actions tab:
 ### Commit Messages
 
 Follow conventional commit format:
+
 ```
 type(scope): description
 
@@ -240,6 +259,7 @@ type(scope): description
 **Types:** `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `chore`
 
 **Example:**
+
 ```
 feat(tempo): add responsive grid layout
 
@@ -264,6 +284,7 @@ Closes #123
 **Problem:** ESLint fails with "Cannot find module" errors
 
 **Solution:**
+
 ```bash
 npm install
 npm run lint:fix
@@ -272,6 +293,7 @@ npm run lint:fix
 **Problem:** ESLint rules are too strict
 
 **Solution:** Modify `.eslintrc.json` to adjust rule severity:
+
 - `"off"` - Disable rule
 - `"warn"` - Warning (doesn't fail build)
 - `"error"` - Error (fails build)
@@ -281,6 +303,7 @@ npm run lint:fix
 **Problem:** Prettier conflicts with ESLint
 
 **Solution:** This is already handled by `eslint-config-prettier`. If issues persist:
+
 ```bash
 npm run format
 npm run lint:fix
@@ -291,6 +314,7 @@ npm run lint:fix
 **Problem:** Pre-commit hook fails but you want to commit anyway
 
 **Solution:** Fix the issues first, then commit:
+
 ```bash
 npm run lint:fix
 npm run format
@@ -303,6 +327,7 @@ git commit -m "message"
 **Problem:** GitHub Actions workflow fails
 
 **Solution:**
+
 1. Check the workflow logs in GitHub Actions tab
 2. Run `npm run validate` locally to reproduce
 3. Fix issues locally
@@ -313,6 +338,7 @@ git commit -m "message"
 ### Faster Linting
 
 For faster linting during development, lint only changed files:
+
 ```bash
 npm run lint -- --fix src/components/tempo/TempoApp.tsx
 ```
@@ -320,6 +346,7 @@ npm run lint -- --fix src/components/tempo/TempoApp.tsx
 ### Caching
 
 GitHub Actions automatically caches npm dependencies. To clear cache:
+
 1. Go to Actions tab
 2. Click "Clear all caches"
 
@@ -328,20 +355,17 @@ GitHub Actions automatically caches npm dependencies. To clear cache:
 ### VS Code
 
 Install extensions:
+
 - **ESLint** - `dbaeumer.vscode-eslint`
 - **Prettier** - `esbenp.prettier-vscode`
 
 Configure `.vscode/settings.json`:
+
 ```json
 {
   "editor.defaultFormatter": "esbenp.prettier-vscode",
   "editor.formatOnSave": true,
-  "eslint.validate": [
-    "javascript",
-    "javascriptreact",
-    "typescript",
-    "typescriptreact"
-  ]
+  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"]
 }
 ```
 
@@ -364,6 +388,7 @@ Configure `.vscode/settings.json`:
 ### Updates
 
 Keep linting tools updated:
+
 ```bash
 npm update eslint prettier @typescript-eslint/eslint-plugin @typescript-eslint/parser eslint-plugin-solid
 ```
@@ -371,6 +396,7 @@ npm update eslint prettier @typescript-eslint/eslint-plugin @typescript-eslint/p
 ### Adding New Rules
 
 To add new ESLint rules:
+
 1. Update `.eslintrc.json`
 2. Run `npm run lint:fix` to apply to existing code
 3. Commit changes
@@ -388,6 +414,7 @@ To add new ESLint rules:
 ## Support
 
 For issues or questions:
+
 1. Check this documentation
 2. Review GitHub Actions logs
 3. Run `npm run validate` locally

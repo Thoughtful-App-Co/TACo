@@ -653,7 +653,7 @@ export const ManifestApp: Component = () => {
           >
             Connections
           </button>
-          <div style={{ width: '2px', background: duotone.base }}></div>
+          <div style={{ width: '2px', background: duotone.base }} />
           <button
             onClick={() => setActiveTab('journal')}
             style={{

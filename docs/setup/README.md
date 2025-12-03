@@ -69,17 +69,20 @@ npm run validate        # Run all checks + build
 ## Common Issues
 
 **Port 5173 already in use?**
+
 ```bash
 npm run dev -- --port 3000
 ```
 
 **Dependencies not installing?**
+
 ```bash
 rm -rf node_modules package-lock.json
 npm install
 ```
 
 **Git hooks not running?**
+
 ```bash
 npx husky install
 ```

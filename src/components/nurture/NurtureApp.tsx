@@ -419,35 +419,39 @@ export const NurtureApp: Component = () => {
             'margin-bottom': '40px',
           }}
         >
-          {[
-            { label: 'Flourishing', value: '1', color: biophilic.colors.primary },
-            { label: 'Growing', value: '1', color: biophilic.colors.secondary },
-            { label: 'Needs Attention', value: '1', color: '#C77A4E' },
-            { label: 'New Seedlings', value: '1', color: biophilic.colors.accent },
-          ].map((stat) => (
-            <div
-              style={{
-                background: `linear-gradient(135deg, ${stat.color}08, ${stat.color}15)`,
-                'border-radius': '20px',
-                padding: '20px 24px',
-                border: `1px solid ${stat.color}20`,
-              }}
-            >
+          <For
+            each={[
+              { label: 'Flourishing', value: '1', color: biophilic.colors.primary },
+              { label: 'Growing', value: '1', color: biophilic.colors.secondary },
+              { label: 'Needs Attention', value: '1', color: '#C77A4E' },
+              { label: 'New Seedlings', value: '1', color: biophilic.colors.accent },
+            ]}
+          >
+            {(stat) => (
               <div
                 style={{
-                  'font-size': '32px',
-                  'font-weight': '700',
-                  color: stat.color,
-                  'margin-bottom': '4px',
+                  background: `linear-gradient(135deg, ${stat.color}08, ${stat.color}15)`,
+                  'border-radius': '20px',
+                  padding: '20px 24px',
+                  border: `1px solid ${stat.color}20`,
                 }}
               >
-                {stat.value}
+                <div
+                  style={{
+                    'font-size': '32px',
+                    'font-weight': '700',
+                    color: stat.color,
+                    'margin-bottom': '4px',
+                  }}
+                >
+                  {stat.value}
+                </div>
+                <div style={{ 'font-size': '14px', color: biophilic.colors.textMuted }}>
+                  {stat.label}
+                </div>
               </div>
-              <div style={{ 'font-size': '14px', color: biophilic.colors.textMuted }}>
-                {stat.label}
-              </div>
-            </div>
-          ))}
+            )}
+          </For>
         </div>
 
         {/* Contact grid */}
