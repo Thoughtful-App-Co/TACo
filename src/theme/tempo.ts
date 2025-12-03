@@ -3,7 +3,7 @@ import { Theme } from './types';
 // TEMPO - Dark Mode Design System
 // Clean, focused, minimal with precision typography
 // Inspired by: Linear app, command line interfaces, IDE aesthetics
-export const linear: Theme = {
+export const tempo: Theme = {
   name: 'tempo',
   colors: {
     primary: '#5E6AD2',      // Linear purple
@@ -49,16 +49,18 @@ export const taskColors = {
   cancelled: '#EF4444',
 };
 
-// CSS custom properties generator
-export const linearCSS = `
+// CSS custom properties generator (defined after theme object)
+export const getTempoCSS = () => `
   :root {
-    --tempo-primary: ${linear.colors.primary};
-    --tempo-secondary: ${linear.colors.secondary};
-    --tempo-accent: ${linear.colors.accent};
-    --tempo-bg: ${linear.colors.background};
-    --tempo-surface: ${linear.colors.surface};
-    --tempo-text: ${linear.colors.text};
-    --tempo-text-muted: ${linear.colors.textMuted};
-    --tempo-border: ${linear.colors.border};
+    --tempo-primary: ${tempo.colors.primary};
+    --tempo-secondary: ${tempo.colors.secondary};
+    --tempo-accent: ${tempo.colors.accent};
+    --tempo-bg: ${tempo.colors.background};
+    --tempo-surface: ${tempo.colors.surface};
+    --tempo-text: ${tempo.colors.text};
+    --tempo-text-muted: ${tempo.colors.textMuted};
+    --tempo-border: ${tempo.colors.border};
   }
 `;
+
+export const tempoCSS = getTempoCSS();

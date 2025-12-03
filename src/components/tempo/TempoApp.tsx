@@ -1,6 +1,6 @@
 import { Component, For, createSignal } from 'solid-js';
 import { Task } from '../../schemas/tempo.schema';
-import { linear, taskColors } from '../../theme/linear';
+import { tempo, taskColors } from '../../theme/tempo';
 
 const sampleTasks: Task[] = [
   { id: '1', title: 'Review Q4 planning doc', estimatedMinutes: 25, status: 'in-progress', priority: 'high', tags: ['work'] },
@@ -77,11 +77,11 @@ const TaskRow: Component<{ task: Task }> = (props) => {
         'align-items': 'center',
         gap: '12px',
         padding: '12px 16px',
-        background: isHovered() ? linear.colors.surface : 'transparent',
-        'border-radius': linear.radii.md,
+        background: isHovered() ? tempo.colors.surface : 'transparent',
+        'border-radius': tempo.radii.md,
         cursor: 'pointer',
         transition: 'background 0.15s ease',
-        'border-left': `2px solid ${isHovered() ? linear.colors.primary : 'transparent'}`,
+        'border-left': `2px solid ${isHovered() ? tempo.colors.primary : 'transparent'}`,
       }}
     >
       <div style={{ 'flex-shrink': 0 }}>
@@ -92,7 +92,7 @@ const TaskRow: Component<{ task: Task }> = (props) => {
         <div style={{
           'font-size': '14px',
           'font-weight': '500',
-          color: props.task.status === 'done' ? linear.colors.textMuted : linear.colors.text,
+          color: props.task.status === 'done' ? tempo.colors.textMuted : tempo.colors.text,
           'text-decoration': props.task.status === 'done' ? 'line-through' : 'none',
           'white-space': 'nowrap',
           overflow: 'hidden',
@@ -110,7 +110,7 @@ const TaskRow: Component<{ task: Task }> = (props) => {
           'align-items': 'center',
           gap: '4px',
           'font-size': '12px',
-          color: linear.colors.textMuted,
+          color: tempo.colors.textMuted,
           'font-family': "'IBM Plex Mono', monospace",
         }}>
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -123,10 +123,10 @@ const TaskRow: Component<{ task: Task }> = (props) => {
         {props.task.tags?.map(tag => (
           <span style={{
             padding: '2px 6px',
-            'background': linear.colors.border,
+            'background': tempo.colors.border,
             'border-radius': '3px',
             'font-size': '11px',
-            color: linear.colors.textMuted,
+            color: tempo.colors.textMuted,
           }}>
             {tag}
           </span>
@@ -144,15 +144,15 @@ const TimerDisplay: Component<{ minutes: number; seconds: number; isRunning: boo
       'align-items': 'center',
       gap: '16px',
       padding: '32px',
-      background: linear.colors.surface,
-      'border-radius': linear.radii.lg,
-      border: `1px solid ${linear.colors.border}`,
+      background: tempo.colors.surface,
+      'border-radius': tempo.radii.lg,
+      border: `1px solid ${tempo.colors.border}`,
     }}>
       <div style={{
         'font-family': "'IBM Plex Mono', monospace",
         'font-size': '64px',
         'font-weight': '300',
-        color: props.isRunning ? linear.colors.accent : linear.colors.text,
+        color: props.isRunning ? tempo.colors.accent : tempo.colors.text,
         'letter-spacing': '-2px',
       }}>
         {String(props.minutes).padStart(2, '0')}:{String(props.seconds).padStart(2, '0')}
@@ -161,10 +161,10 @@ const TimerDisplay: Component<{ minutes: number; seconds: number; isRunning: boo
       <div style={{ display: 'flex', gap: '8px' }}>
         <button style={{
           padding: '10px 24px',
-          background: props.isRunning ? 'transparent' : linear.colors.primary,
-          border: props.isRunning ? `1px solid ${linear.colors.border}` : 'none',
-          'border-radius': linear.radii.md,
-          color: props.isRunning ? linear.colors.textMuted : 'white',
+          background: props.isRunning ? 'transparent' : tempo.colors.primary,
+          border: props.isRunning ? `1px solid ${tempo.colors.border}` : 'none',
+          'border-radius': tempo.radii.md,
+          color: props.isRunning ? tempo.colors.textMuted : 'white',
           'font-size': '13px',
           'font-weight': '500',
           cursor: 'pointer',
@@ -174,9 +174,9 @@ const TimerDisplay: Component<{ minutes: number; seconds: number; isRunning: boo
         <button style={{
           padding: '10px 16px',
           background: 'transparent',
-          border: `1px solid ${linear.colors.border}`,
-          'border-radius': linear.radii.md,
-          color: linear.colors.textMuted,
+          border: `1px solid ${tempo.colors.border}`,
+          'border-radius': tempo.radii.md,
+          color: tempo.colors.textMuted,
           'font-size': '13px',
           cursor: 'pointer',
         }}>
@@ -194,9 +194,9 @@ export const TempoApp: Component = () => {
   return (
     <div style={{
       'min-height': '100vh',
-      background: linear.colors.background,
-      'font-family': linear.fonts.body,
-      color: linear.colors.text,
+      background: tempo.colors.background,
+      'font-family': tempo.fonts.body,
+      color: tempo.colors.text,
     }}>
       {/* Command bar style header */}
       <header style={{
@@ -204,16 +204,41 @@ export const TempoApp: Component = () => {
         'align-items': 'center',
         'justify-content': 'space-between',
         padding: '16px 24px',
-        'border-bottom': `1px solid ${linear.colors.border}`,
+        'border-bottom': `1px solid ${tempo.colors.border}`,
       }}>
         <div style={{ display: 'flex', 'align-items': 'center', gap: '16px' }}>
           <div style={{ display: 'flex', 'align-items': 'center', gap: '8px' }}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="10" stroke={linear.colors.primary} stroke-width="2" />
-              <path d="M12 6v6l4 2" stroke={linear.colors.primary} stroke-width="2" stroke-linecap="round" />
+              <circle cx="12" cy="12" r="10" stroke={tempo.colors.primary} stroke-width="2" />
+              <path d="M12 6v6l4 2" stroke={tempo.colors.primary} stroke-width="2" stroke-linecap="round" />
             </svg>
             <span style={{ 'font-size': '18px', 'font-weight': '600', 'letter-spacing': '-0.3px' }}>
               Tempo
+            </span>
+          </div>
+          
+          {/* Status Banner */}
+          <div style={{
+            padding: '6px 12px',
+            background: `${tempo.colors.primary}15`,
+            border: `1px solid ${tempo.colors.primary}30`,
+            'border-radius': tempo.radii.md,
+            display: 'flex',
+            'align-items': 'center',
+            gap: '8px',
+          }}>
+            <span style={{
+              width: '6px',
+              height: '6px',
+              'border-radius': '50%',
+              background: tempo.colors.accent,
+            }} />
+            <span style={{
+              'font-size': '12px',
+              color: tempo.colors.text,
+              'font-weight': '500',
+            }}>
+              Currently in alpha, launching Q1 2026
             </span>
           </div>
           
@@ -222,24 +247,24 @@ export const TempoApp: Component = () => {
             'align-items': 'center',
             gap: '4px',
             padding: '6px 12px',
-            background: linear.colors.surface,
-            'border-radius': linear.radii.md,
-            border: `1px solid ${linear.colors.border}`,
+            background: tempo.colors.surface,
+            'border-radius': tempo.radii.md,
+            border: `1px solid ${tempo.colors.border}`,
           }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={linear.colors.textMuted} stroke-width="2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={tempo.colors.textMuted} stroke-width="2">
               <circle cx="11" cy="11" r="8" />
               <path d="M21 21l-4.35-4.35" />
             </svg>
-            <span style={{ 'font-size': '13px', color: linear.colors.textMuted }}>
+            <span style={{ 'font-size': '13px', color: tempo.colors.textMuted }}>
               Search tasks...
             </span>
             <span style={{
               'margin-left': '24px',
               padding: '2px 6px',
-              background: linear.colors.border,
+              background: tempo.colors.border,
               'border-radius': '3px',
               'font-size': '11px',
-              color: linear.colors.textMuted,
+              color: tempo.colors.textMuted,
             }}>
               /
             </span>
@@ -250,16 +275,16 @@ export const TempoApp: Component = () => {
           <div style={{
             'font-family': "'IBM Plex Mono', monospace",
             'font-size': '13px',
-            color: linear.colors.textMuted,
+            color: tempo.colors.textMuted,
           }}>
             {Math.floor(totalMinutes / 60)}h {totalMinutes % 60}m scheduled
           </div>
           
           <button style={{
             padding: '8px 16px',
-            background: linear.colors.primary,
+            background: tempo.colors.primary,
             border: 'none',
-            'border-radius': linear.radii.md,
+            'border-radius': tempo.radii.md,
             color: 'white',
             'font-size': '13px',
             'font-weight': '500',
@@ -281,7 +306,7 @@ export const TempoApp: Component = () => {
         <nav style={{
           width: '220px',
           padding: '16px',
-          'border-right': `1px solid ${linear.colors.border}`,
+          'border-right': `1px solid ${tempo.colors.border}`,
         }}>
           {[
             { id: 'tasks', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2', label: 'Tasks' },
@@ -295,10 +320,10 @@ export const TempoApp: Component = () => {
                 gap: '10px',
                 width: '100%',
                 padding: '10px 12px',
-                background: activeView() === item.id ? linear.colors.surface : 'transparent',
+                background: activeView() === item.id ? tempo.colors.surface : 'transparent',
                 border: 'none',
-                'border-radius': linear.radii.md,
-                color: activeView() === item.id ? linear.colors.text : linear.colors.textMuted,
+                'border-radius': tempo.radii.md,
+                color: activeView() === item.id ? tempo.colors.text : tempo.colors.textMuted,
                 'font-size': '14px',
                 'font-weight': activeView() === item.id ? '500' : '400',
                 cursor: 'pointer',
@@ -317,7 +342,7 @@ export const TempoApp: Component = () => {
             <div style={{
               'font-size': '11px',
               'font-weight': '600',
-              color: linear.colors.textMuted,
+              color: tempo.colors.textMuted,
               'text-transform': 'uppercase',
               'letter-spacing': '0.5px',
               'margin-bottom': '8px',
@@ -328,7 +353,7 @@ export const TempoApp: Component = () => {
               <div style={{
                 padding: '8px 0',
                 'font-size': '13px',
-                color: linear.colors.textMuted,
+                color: tempo.colors.textMuted,
                 cursor: 'pointer',
               }}>
                 {filter}
@@ -361,13 +386,13 @@ export const TempoApp: Component = () => {
                   'align-items': 'center',
                   gap: '8px',
                   padding: '6px 12px',
-                  background: linear.colors.surface,
-                  'border-radius': linear.radii.md,
-                  border: `1px solid ${linear.colors.border}`,
+                  background: tempo.colors.surface,
+                  'border-radius': tempo.radii.md,
+                  border: `1px solid ${tempo.colors.border}`,
                 }}>
-                  <span style={{ 'font-size': '13px', color: linear.colors.textMuted }}>Sort:</span>
-                  <span style={{ 'font-size': '13px', color: linear.colors.text }}>Priority</span>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={linear.colors.textMuted} stroke-width="2">
+                  <span style={{ 'font-size': '13px', color: tempo.colors.textMuted }}>Sort:</span>
+                  <span style={{ 'font-size': '13px', color: tempo.colors.text }}>Priority</span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={tempo.colors.textMuted} stroke-width="2">
                     <path d="M6 9l6 6 6-6" />
                   </svg>
                 </div>
@@ -378,7 +403,7 @@ export const TempoApp: Component = () => {
                 <div style={{
                   'font-size': '12px',
                   'font-weight': '600',
-                  color: linear.colors.textMuted,
+                  color: tempo.colors.textMuted,
                   'text-transform': 'uppercase',
                   'letter-spacing': '0.5px',
                   'margin-bottom': '8px',
@@ -395,7 +420,7 @@ export const TempoApp: Component = () => {
                 <div style={{
                   'font-size': '12px',
                   'font-weight': '600',
-                  color: linear.colors.textMuted,
+                  color: tempo.colors.textMuted,
                   'text-transform': 'uppercase',
                   'letter-spacing': '0.5px',
                   'margin-bottom': '8px',
@@ -412,7 +437,7 @@ export const TempoApp: Component = () => {
                 <div style={{
                   'font-size': '12px',
                   'font-weight': '600',
-                  color: linear.colors.textMuted,
+                  color: tempo.colors.textMuted,
                   'text-transform': 'uppercase',
                   'letter-spacing': '0.5px',
                   'margin-bottom': '8px',
@@ -434,7 +459,7 @@ export const TempoApp: Component = () => {
             }}>
               <div style={{
                 'font-size': '14px',
-                color: linear.colors.textMuted,
+                color: tempo.colors.textMuted,
                 'margin-bottom': '8px',
               }}>
                 Currently working on:
@@ -458,17 +483,17 @@ export const TempoApp: Component = () => {
                   <div style={{
                     'text-align': 'center',
                     padding: '16px 24px',
-                    background: i === 0 ? linear.colors.surface : 'transparent',
-                    'border-radius': linear.radii.md,
-                    border: i === 0 ? `1px solid ${linear.colors.primary}` : 'none',
+                    background: i === 0 ? tempo.colors.surface : 'transparent',
+                    'border-radius': tempo.radii.md,
+                    border: i === 0 ? `1px solid ${tempo.colors.primary}` : 'none',
                   }}>
-                    <div style={{ 'font-size': '13px', color: i === 0 ? linear.colors.text : linear.colors.textMuted }}>
+                    <div style={{ 'font-size': '13px', color: i === 0 ? tempo.colors.text : tempo.colors.textMuted }}>
                       {type}
                     </div>
                     <div style={{
                       'font-family': "'IBM Plex Mono', monospace",
                       'font-size': '20px',
-                      color: i === 0 ? linear.colors.accent : linear.colors.textMuted,
+                      color: i === 0 ? tempo.colors.accent : tempo.colors.textMuted,
                       'margin-top': '4px',
                     }}>
                       {i === 0 ? '25:00' : i === 1 ? '5:00' : '15:00'}

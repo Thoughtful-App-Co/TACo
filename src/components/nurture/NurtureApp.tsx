@@ -200,6 +200,33 @@ export const NurtureApp: Component = () => {
             'max-width': '500px',
             'line-height': '1.6',
           }}>Grow meaningful connections. Water your relationships.</p>
+          
+          {/* Status Banner */}
+          <div style={{
+            'margin-top': '20px',
+            padding: '12px 20px',
+            background: `linear-gradient(135deg, ${biophilic.colors.primary}15, ${biophilic.colors.secondary}15)`,
+            border: `1px solid ${biophilic.colors.primary}30`,
+            'border-radius': '12px',
+            display: 'inline-flex',
+            'align-items': 'center',
+            gap: '10px',
+          }}>
+            <span style={{
+              width: '8px',
+              height: '8px',
+              'border-radius': '50%',
+              background: biophilic.colors.secondary,
+              animation: 'pulse 2s infinite',
+            }} />
+            <span style={{
+              'font-size': '14px',
+              color: biophilic.colors.text,
+              'font-weight': '500',
+            }}>
+              Mobile-first alpha coming Q1 2026
+            </span>
+          </div>
         </header>
         
         {/* Stats row */}
