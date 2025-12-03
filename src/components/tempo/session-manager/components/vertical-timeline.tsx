@@ -1,134 +1,177 @@
-import { createSignal, For, Show } from "solid-js"
-import { cn } from "../../lib/utils"
-import { 
-  Clock, 
-  CheckCircle, 
-  Play, 
-  Coffee, 
-  FileText, 
-  ArrowRight,
-  ArrowCounterClockwise,
-  CaretRight
-} from "phosphor-solid"
-import { Badge } from "../../ui/badge"
-import { Progress } from "../../ui/progress"
-import { Button } from "../../ui/button"
-import { format } from "date-fns"
-import type { StoryBlock, TimeBox, TimeBoxTask, TimeBoxStatus } from "../../lib/types"
-import { timeboxTypeConfig, statusColorConfig } from "../config/timeline-config"
+import { createSignal, For, Show } from 'solid-js';
+import { Clock, CheckCircle, Play, Coffee, FileText, ArrowCounterClockwise } from 'phosphor-solid';
+import { Badge } from '../../ui/badge';
+import { Progress } from '../../ui/progress';
+import { Button } from '../../ui/button';
+import type { StoryBlock, TimeBox, TimeBoxTask, TimeBoxStatus } from '../../lib/types';
+import { timeboxTypeConfig, statusColorConfig } from '../config/timeline-config';
+import { tempoDesign } from '../../theme/tempo-design';
 
 // Interface for the vertical timeline component
 export interface VerticalTimelineProps {
-  storyBlocks: StoryBlock[]
-  activeTimeBoxId?: string
-  activeStoryId?: string
-  activeTimeBoxIndex?: number
-  startTime?: string
-  completedPercentage: number
-  onTaskClick?: (storyId: string, timeBoxIndex: number, taskIndex: number, task: TimeBoxTask) => void
-  onTimeBoxClick?: (storyId: string, timeBoxIndex: number) => void
-  onStartTimeBox?: (storyId: string, timeBoxIndex: number, duration: number) => void
-  onCompleteTimeBox?: (storyId: string, timeBoxIndex: number) => void
-  onUndoCompleteTimeBox?: (storyId: string, timeBoxIndex: number) => void
-  onStartSessionDebrief?: (duration: number) => void
-  isCompactView?: boolean
+  storyBlocks: StoryBlock[];
+  activeTimeBoxId?: string;
+  activeStoryId?: string;
+  activeTimeBoxIndex?: number;
+  startTime?: string;
+  completedPercentage: number;
+  onTaskClick?: (
+    storyId: string,
+    timeBoxIndex: number,
+    taskIndex: number,
+    task: TimeBoxTask
+  ) => void;
+  onTimeBoxClick?: (storyId: string, timeBoxIndex: number) => void;
+  onStartTimeBox?: (storyId: string, timeBoxIndex: number, duration: number) => void;
+  onCompleteTimeBox?: (storyId: string, timeBoxIndex: number) => void;
+  onUndoCompleteTimeBox?: (storyId: string, timeBoxIndex: number) => void;
+  onStartSessionDebrief?: (duration: number) => void;
+  isCompactView?: boolean;
 }
 
 export const VerticalTimeline = (props: VerticalTimelineProps) => {
-  const [visibleBoxes, setVisibleBoxes] = createSignal<Set<string>>(new Set())
-  
+  const [visibleBoxes, setVisibleBoxes] = createSignal<Set<string>>(new Set());
+
   // Helper to get timebox icon
   const getTimeBoxIcon = (type: string, status: TimeBoxStatus) => {
-    if (status === 'completed') return <CheckCircle size={20} weight="fill" />
-    
+    if (status === 'completed') return <CheckCircle size={20} weight="fill" />;
+
     switch (type) {
       case 'work':
-        return <Clock size={20} />
+        return <Clock size={20} />;
       case 'short-break':
       case 'long-break':
-        return <Coffee size={20} />
+        return <Coffee size={20} />;
       case 'debrief':
-        return <FileText size={20} />
+        return <FileText size={20} />;
       default:
-        return <Clock size={20} />
+        return <Clock size={20} />;
     }
-  }
-  
-  // Helper to get status colors
-  const getStatusColor = (status: TimeBoxStatus) => {
-    const config = statusColorConfig[status]
-    return config?.bg || ''
-  }
-  
+  };
+
   // Helper to get timebox type label
   const getTypeLabel = (type: string) => {
-    const config = timeboxTypeConfig[type as keyof typeof timeboxTypeConfig]
-    return config?.title || type
-  }
-  
+    const config = timeboxTypeConfig[type as keyof typeof timeboxTypeConfig];
+    return config?.title || type;
+  };
+
   return (
-    <div class="relative">
+    <div style={{ position: 'relative' }}>
       {/* Timeline container */}
-      <div class="space-y-8">
+      <div style={{ display: 'flex', 'flex-direction': 'column', gap: '32px' }}>
         <For each={props.storyBlocks}>
           {(story, storyIdx) => (
-            <div class="relative">
+            <div style={{ position: 'relative' }}>
               {/* Story Header */}
-              <div class="mb-4">
-                <h3 class="text-lg font-semibold">{story.title}</h3>
+              <div style={{ 'margin-bottom': '16px' }}>
+                <h3
+                  style={{
+                    'font-size': tempoDesign.typography.sizes.lg,
+                    'font-weight': tempoDesign.typography.weights.semibold,
+                    margin: 0,
+                  }}
+                >
+                  {story.title}
+                </h3>
               </div>
-              
+
               {/* TimeBoxes for this story */}
-              <div class="space-y-4 ml-8">
+              <div
+                style={{
+                  display: 'flex',
+                  'flex-direction': 'column',
+                  gap: '16px',
+                  'margin-left': '32px',
+                }}
+              >
                 <For each={story.timeBoxes}>
                   {(timeBox, boxIdx) => {
                     const isActive = props.activeTimeBoxId === `${story.id}-box-${boxIdx()}`;
                     const boxId = `${story.id}-box-${boxIdx()}`;
-                    
+
                     return (
-                      <div 
+                      <div
                         data-id={boxId}
-                        class={cn(
-                          "relative p-4 rounded-lg border transition-all",
-                          isActive && "border-primary ring-2 ring-primary ring-opacity-20",
-                          timeBox.status === 'completed' && "bg-muted/50",
-                          timeBox.status === 'in-progress' && "border-primary"
-                        )}
+                        style={{
+                          position: 'relative',
+                          padding: '16px',
+                          'border-radius': tempoDesign.radius.lg,
+                          border: isActive
+                            ? `1px solid ${tempoDesign.colors.primary}`
+                            : timeBox.status === 'in-progress'
+                              ? `1px solid ${tempoDesign.colors.primary}`
+                              : `1px solid ${tempoDesign.colors.border}`,
+                          transition: 'all 0.2s ease',
+                          background:
+                            timeBox.status === 'completed'
+                              ? tempoDesign.colors.muted
+                              : tempoDesign.colors.card,
+                          ...(isActive
+                            ? {
+                                'box-shadow': `0 0 0 2px ${tempoDesign.colors.primary}30`,
+                              }
+                            : {}),
+                        }}
                       >
                         {/* TimeBox Header */}
-                        <div class="flex items-start justify-between mb-3">
-                          <div class="flex items-center gap-3">
-                            <div class={cn(
-                              "p-2 rounded-full",
-                              getStatusColor(timeBox.status || 'todo')
-                            )}>
+                        <div
+                          style={{
+                            display: 'flex',
+                            'align-items': 'flex-start',
+                            'justify-content': 'space-between',
+                            'margin-bottom': '12px',
+                          }}
+                        >
+                          <div style={{ display: 'flex', 'align-items': 'center', gap: '12px' }}>
+                            <div
+                              style={{
+                                padding: '8px',
+                                'border-radius': tempoDesign.radius.full,
+                                display: 'flex',
+                                'align-items': 'center',
+                                'justify-content': 'center',
+                                background:
+                                  timeBox.status === 'completed'
+                                    ? tempoDesign.colors.frogBg
+                                    : tempoDesign.colors.secondary,
+                                color:
+                                  timeBox.status === 'completed'
+                                    ? tempoDesign.colors.frog
+                                    : tempoDesign.colors.foreground,
+                              }}
+                            >
                               {getTimeBoxIcon(timeBox.type, timeBox.status || 'todo')}
                             </div>
                             <div>
-                              <div class="flex items-center gap-2">
-                                <Badge variant="outline">
-                                  {getTypeLabel(timeBox.type)}
-                                </Badge>
-                                <span class="text-sm text-muted-foreground">
+                              <div style={{ display: 'flex', 'align-items': 'center', gap: '8px' }}>
+                                <Badge variant="outline">{getTypeLabel(timeBox.type)}</Badge>
+                                <span
+                                  style={{
+                                    'font-size': tempoDesign.typography.sizes.sm,
+                                    color: tempoDesign.colors.mutedForeground,
+                                  }}
+                                >
                                   {timeBox.duration} min
                                 </span>
                               </div>
                             </div>
                           </div>
-                          
+
                           {/* Action Buttons */}
-                          <div class="flex items-center gap-2">
+                          <div style={{ display: 'flex', 'align-items': 'center', gap: '8px' }}>
                             <Show when={timeBox.status === 'todo'}>
                               <Button
                                 size="sm"
-                                onClick={() => props.onStartTimeBox?.(story.id, boxIdx(), timeBox.duration)}
+                                onClick={() =>
+                                  props.onStartTimeBox?.(story.id, boxIdx(), timeBox.duration)
+                                }
                                 title="Start this timebox"
                               >
-                                <Play size={16} class="mr-1" />
+                                <Play size={16} style={{ 'margin-right': '4px' }} />
                                 Start
                               </Button>
                             </Show>
-                            
+
                             <Show when={timeBox.status === 'in-progress'}>
                               <Button
                                 size="sm"
@@ -136,11 +179,11 @@ export const VerticalTimeline = (props: VerticalTimelineProps) => {
                                 onClick={() => props.onCompleteTimeBox?.(story.id, boxIdx())}
                                 title="Complete this timebox"
                               >
-                                <CheckCircle size={16} class="mr-1" />
+                                <CheckCircle size={16} style={{ 'margin-right': '4px' }} />
                                 Complete
                               </Button>
                             </Show>
-                            
+
                             <Show when={timeBox.status === 'completed'}>
                               <Button
                                 size="sm"
@@ -148,40 +191,85 @@ export const VerticalTimeline = (props: VerticalTimelineProps) => {
                                 onClick={() => props.onUndoCompleteTimeBox?.(story.id, boxIdx())}
                                 title="Undo completion"
                               >
-                                <ArrowCounterClockwise size={16} class="mr-1" />
+                                <ArrowCounterClockwise
+                                  size={16}
+                                  style={{ 'margin-right': '4px' }}
+                                />
                                 Undo
                               </Button>
                             </Show>
                           </div>
                         </div>
-                        
+
                         {/* Tasks */}
                         <Show when={timeBox.tasks && timeBox.tasks.length > 0}>
-                          <div class="space-y-2 mt-3">
+                          <div
+                            style={{
+                              display: 'flex',
+                              'flex-direction': 'column',
+                              gap: '8px',
+                              'margin-top': '12px',
+                            }}
+                          >
                             <For each={timeBox.tasks}>
                               {(task, taskIdx) => (
-                                <div 
-                                  class={cn(
-                                    "flex items-center gap-2 p-2 rounded cursor-pointer hover:bg-muted/50 transition-colors",
-                                    task.status === 'completed' && "opacity-60"
-                                  )}
+                                <div
+                                  style={{
+                                    display: 'flex',
+                                    'align-items': 'center',
+                                    gap: '8px',
+                                    padding: '8px',
+                                    'border-radius': tempoDesign.radius.sm,
+                                    cursor: 'pointer',
+                                    transition: 'background-color 0.2s',
+                                    ...(task.status === 'completed' ? { opacity: 0.6 } : {}),
+                                  }}
                                   onClick={() => {
-                                    const newTask = { ...task, status: task.status === 'completed' ? 'todo' : 'completed' } as TimeBoxTask;
+                                    const newTask = {
+                                      ...task,
+                                      status: task.status === 'completed' ? 'todo' : 'completed',
+                                    } as TimeBoxTask;
                                     props.onTaskClick?.(story.id, boxIdx(), taskIdx(), newTask);
                                   }}
+                                  onMouseEnter={(e) =>
+                                    (e.currentTarget.style.backgroundColor =
+                                      tempoDesign.colors.secondary)
+                                  }
+                                  onMouseLeave={(e) =>
+                                    (e.currentTarget.style.backgroundColor = 'transparent')
+                                  }
                                 >
-                                  <Show 
+                                  <Show
                                     when={task.status === 'completed'}
                                     fallback={
-                                      <div class="w-4 h-4 rounded border border-muted-foreground" />
+                                      <div
+                                        style={{
+                                          width: '16px',
+                                          height: '16px',
+                                          'border-radius': '4px',
+                                          border: `1px solid ${tempoDesign.colors.mutedForeground}`,
+                                        }}
+                                      />
                                     }
                                   >
-                                    <CheckCircle size={16} weight="fill" class="text-green-600" />
+                                    <CheckCircle
+                                      size={16}
+                                      weight="fill"
+                                      style={{ color: tempoDesign.colors.frog }}
+                                    />
                                   </Show>
-                                  <span class={cn(
-                                    "text-sm flex-1",
-                                    task.status === 'completed' && "line-through text-muted-foreground"
-                                  )}>
+                                  <span
+                                    style={{
+                                      'font-size': tempoDesign.typography.sizes.sm,
+                                      flex: 1,
+                                      color:
+                                        task.status === 'completed'
+                                          ? tempoDesign.colors.mutedForeground
+                                          : tempoDesign.colors.foreground,
+                                      'text-decoration':
+                                        task.status === 'completed' ? 'line-through' : 'none',
+                                    }}
+                                  >
                                     {task.title}
                                   </span>
                                 </div>
@@ -189,11 +277,11 @@ export const VerticalTimeline = (props: VerticalTimelineProps) => {
                             </For>
                           </div>
                         </Show>
-                        
+
                         {/* Progress bar for in-progress timeboxes */}
                         <Show when={timeBox.status === 'in-progress'}>
-                          <div class="mt-3">
-                            <Progress value={50} class="h-2" />
+                          <div style={{ 'margin-top': '12px' }}>
+                            <Progress value={50} style={{ height: '8px' }} />
                           </div>
                         </Show>
                       </div>
@@ -205,29 +293,50 @@ export const VerticalTimeline = (props: VerticalTimelineProps) => {
           )}
         </For>
       </div>
-      
+
       {/* Session completion section */}
       <Show when={props.completedPercentage === 100}>
-        <div class="mt-8 p-6 rounded-lg border border-green-200 bg-green-50 dark:bg-green-950/20">
-          <div class="flex items-center justify-between">
+        <div
+          style={{
+            'margin-top': '32px',
+            padding: '24px',
+            'border-radius': tempoDesign.radius.lg,
+            border: `1px solid ${tempoDesign.colors.frog}40`,
+            background: `${tempoDesign.colors.frog}10`,
+          }}
+        >
+          <div
+            style={{ display: 'flex', 'align-items': 'center', 'justify-content': 'space-between' }}
+          >
             <div>
-              <h3 class="text-lg font-semibold text-green-700 dark:text-green-400">
+              <h3
+                style={{
+                  'font-size': tempoDesign.typography.sizes.lg,
+                  'font-weight': tempoDesign.typography.weights.semibold,
+                  color: tempoDesign.colors.frog,
+                  margin: 0,
+                }}
+              >
                 Session Complete! 🎉
               </h3>
-              <p class="text-sm text-green-600 dark:text-green-500 mt-1">
+              <p
+                style={{
+                  'font-size': tempoDesign.typography.sizes.sm,
+                  color: tempoDesign.colors.frog,
+                  opacity: 0.9,
+                  margin: '4px 0 0 0',
+                }}
+              >
                 All tasks have been completed. Time for a debrief!
               </p>
             </div>
-            <Button
-              onClick={() => props.onStartSessionDebrief?.(10)}
-              size="lg"
-            >
-              <FileText size={20} class="mr-2" />
+            <Button onClick={() => props.onStartSessionDebrief?.(10)} size="lg">
+              <FileText size={20} style={{ 'margin-right': '8px' }} />
               Start Debrief
             </Button>
           </div>
         </div>
       </Show>
     </div>
-  )
-}
+  );
+};

@@ -10,39 +10,39 @@ export const tempoDesign = {
     // Base colors
     background: '#0A0A0F',
     foreground: '#FAFAFA',
-    
+
     // Card colors
     card: '#1A1A24',
     cardForeground: '#FAFAFA',
     cardBorder: '#2A2A3A',
-    
+
     // Primary accent
     primary: '#5E6AD2',
     primaryForeground: '#FFFFFF',
     primaryHover: '#4E5AC2',
-    
+
     // Secondary
     secondary: '#2A2A3A',
     secondaryForeground: '#A0A0B0',
     secondaryHover: '#3A3A4A',
-    
+
     // Muted/subtle
     muted: '#1A1A24',
     mutedForeground: '#707080',
-    
+
     // Accent
     accent: '#2A2A3A',
     accentForeground: '#FAFAFA',
-    
+
     // Destructive
     destructive: '#DC2626',
     destructiveForeground: '#FFFFFF',
-    
+
     // Border/input
     border: '#2A2A3A',
     input: '#2A2A3A',
     ring: '#5E6AD2',
-    
+
     // Status colors
     amber: {
       50: '#FFFBEB',
@@ -53,15 +53,16 @@ export const tempoDesign = {
       800: '#92400E',
       900: '#78350F',
     },
-    
+
     // Frog priority
     frog: '#10B981',
     frogBg: 'rgba(16, 185, 129, 0.1)',
   },
-  
+
   // Typography
   typography: {
-    fontFamily: "'DM Sans', system-ui, -apple-system, sans-serif",
+    fontFamily: "'Geist', 'DM Sans', system-ui, -apple-system, sans-serif",
+    monoFamily: "'Geist Mono', 'Monaco', 'Menlo', monospace",
     sizes: {
       xs: '12px',
       sm: '13px',
@@ -83,7 +84,7 @@ export const tempoDesign = {
       relaxed: '1.7',
     },
   },
-  
+
   // Spacing
   spacing: {
     xs: '4px',
@@ -95,7 +96,7 @@ export const tempoDesign = {
     '3xl': '32px',
     '4xl': '40px',
   },
-  
+
   // Border radius
   radius: {
     sm: '6px',
@@ -104,21 +105,21 @@ export const tempoDesign = {
     xl: '16px',
     full: '9999px',
   },
-  
+
   // Shadows
   shadows: {
     sm: '0 1px 2px rgba(0, 0, 0, 0.2)',
     md: '0 4px 6px rgba(0, 0, 0, 0.3)',
     lg: '0 10px 15px rgba(0, 0, 0, 0.4)',
   },
-  
+
   // Transitions
   transitions: {
     fast: '0.15s cubic-bezier(0.4, 0, 0.2, 1)',
     normal: '0.2s cubic-bezier(0.4, 0, 0.2, 1)',
     slow: '0.3s cubic-bezier(0.4, 0, 0.2, 1)',
   },
-}
+};
 
 // Common component styles
 export const tempoComponents = {
@@ -128,7 +129,7 @@ export const tempoComponents = {
     margin: '0 auto',
     padding: '0 24px',
   },
-  
+
   // Card
   card: {
     'border-radius': tempoDesign.radius.lg,
@@ -137,7 +138,7 @@ export const tempoComponents = {
     color: tempoDesign.colors.cardForeground,
     'box-shadow': tempoDesign.shadows.sm,
   },
-  
+
   // Button base
   button: {
     display: 'inline-flex',
@@ -153,7 +154,7 @@ export const tempoComponents = {
     border: 'none',
     'white-space': 'nowrap',
   },
-  
+
   // Button variants
   buttonPrimary: {
     background: tempoDesign.colors.primary,
@@ -161,14 +162,14 @@ export const tempoComponents = {
     padding: '8px 12px',
     height: '36px',
   },
-  
+
   buttonSecondary: {
     background: tempoDesign.colors.secondary,
     color: tempoDesign.colors.secondaryForeground,
     padding: '8px 12px',
     height: '36px',
   },
-  
+
   buttonOutline: {
     background: 'transparent',
     color: tempoDesign.colors.foreground,
@@ -176,14 +177,14 @@ export const tempoComponents = {
     padding: '8px 12px',
     height: '36px',
   },
-  
+
   buttonGhost: {
     background: 'transparent',
     color: tempoDesign.colors.foreground,
     padding: '8px 12px',
     height: '36px',
   },
-  
+
   buttonIcon: {
     background: 'transparent',
     color: tempoDesign.colors.mutedForeground,
@@ -192,7 +193,7 @@ export const tempoComponents = {
     height: '36px',
     'border-radius': tempoDesign.radius.md,
   },
-  
+
   // Input
   input: {
     display: 'flex',
@@ -207,7 +208,7 @@ export const tempoComponents = {
     transition: `border-color ${tempoDesign.transitions.fast}`,
     outline: 'none',
   },
-  
+
   // Textarea
   textarea: {
     display: 'flex',
@@ -218,14 +219,14 @@ export const tempoComponents = {
     background: tempoDesign.colors.background,
     padding: '12px',
     'font-size': tempoDesign.typography.sizes.sm,
-    'font-family': "'Monaco', 'Menlo', monospace",
+    'font-family': "'Geist Mono', 'Monaco', 'Menlo', monospace",
     color: tempoDesign.colors.foreground,
     'line-height': tempoDesign.typography.lineHeights.relaxed,
     resize: 'vertical',
     transition: `border-color ${tempoDesign.transitions.fast}`,
     outline: 'none',
   },
-  
+
   // Badge
   badge: {
     display: 'inline-flex',
@@ -237,20 +238,20 @@ export const tempoComponents = {
     'font-family': tempoDesign.typography.fontFamily,
     'white-space': 'nowrap',
   },
-  
+
   badgeDefault: {
     background: tempoDesign.colors.primary,
     color: tempoDesign.colors.primaryForeground,
   },
-  
+
   badgeSecondary: {
     background: tempoDesign.colors.secondary,
     color: tempoDesign.colors.secondaryForeground,
   },
-  
+
   badgeOutline: {
     background: 'transparent',
     color: tempoDesign.colors.foreground,
     border: `1px solid ${tempoDesign.colors.border}`,
   },
-}
+};

@@ -1,18 +1,18 @@
 // /features/brain-dump/components/BrainDump.tsx
 // Solid.js component
 
-import { createSignal, Show } from "solid-js"
-import { A } from "@solidjs/router"
-import { Card, CardContent } from "../../ui/card"
-import { Button } from "../../ui/button"
-import { Textarea } from "../../ui/textarea"
-import { CircleDashed, Lock, CaretRight, Question } from "phosphor-solid"
-import { useBrainDump } from "../hooks/useBrainDump"
-import { ProcessedStories } from "./ProcessedStories"
-import type { ProcessedStory } from "../../lib/types"
+import { createSignal, Show } from 'solid-js';
+import { Card, CardContent } from '../../ui/card';
+import { Button } from '../../ui/button';
+import { Textarea } from '../../ui/textarea';
+import { CircleDashed, Lock, CaretRight, Question } from 'phosphor-solid';
+import { useBrainDump } from '../hooks/useBrainDump';
+import { ProcessedStories } from './ProcessedStories';
+import type { ProcessedStory } from '../../lib/types';
+import { tempoDesign } from '../../theme/tempo-design';
 
 interface BrainDumpProps {
-  onTasksProcessed?: (stories: ProcessedStory[]) => void
+  onTasksProcessed?: (stories: ProcessedStory[]) => void;
 }
 
 /**
@@ -23,7 +23,6 @@ interface BrainDumpProps {
  * - Allows users to create structured work sessions.
  */
 export const BrainDump = (props: BrainDumpProps) => {
-  const [showTips, setShowTips] = createSignal(false)
   const {
     tasks,
     setTasks,
@@ -33,69 +32,92 @@ export const BrainDump = (props: BrainDumpProps) => {
     isProcessing,
     isCreatingSession,
     processingStep,
-    error,
     processTasks,
     handleCreateSession,
     handleDurationChange,
-    handleRetry
-  } = useBrainDump(props.onTasksProcessed)
+    handleRetry,
+  } = useBrainDump(props.onTasksProcessed);
 
   return (
-    <Card class="border bg-card">
-      <CardContent class="p-4 space-y-4">
-        <div class="relative">
+    <Card>
+      <CardContent
+        style={{ display: 'flex', 'flex-direction': 'column', gap: '16px', padding: '16px' }}
+      >
+        <div style={{ position: 'relative' }}>
           <Textarea
-            placeholder="task .init
+            placeholder={`task .init
 Update client dashboard design 🐸
 Send weekly progress report - 20m
 Research API integration - 1h
 Schedule team meeting - by Thursday
 Update project docs
-Finalize product specs - EOD"
+Finalize product specs - EOD`}
             value={tasks()}
-            onChange={(e) => !isInputLocked() && setTasks(e.target.value)}
+            onInput={(e) => !isInputLocked() && setTasks(e.currentTarget.value)}
             disabled={isInputLocked()}
-            class="min-h-[150px] font-mono text-base"
+            style={{
+              'min-height': '150px',
+              'font-family': tempoDesign.typography.monoFamily,
+              'font-size': tempoDesign.typography.sizes.base,
+            }}
           />
-          <div class="absolute top-2 right-2">
-            {/* Tooltip commented out - using title attribute instead */}
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              class="text-muted-foreground hover:text-foreground"
+          <div style={{ position: 'absolute', top: '8px', right: '8px' }}>
+            <Button
+              variant="ghost"
+              size="icon"
+              style={{ color: tempoDesign.colors.mutedForeground }}
               title="Task entry tips: Use clear verbs, estimate time (30m), prioritize with 🐸 FROG, add deadlines"
             >
-              <Question class="h-4 w-4" />
+              <Question style={{ height: '16px', width: '16px' }} />
             </Button>
           </div>
         </div>
 
-        <div class="flex justify-end items-center gap-2">
-          <div class="text-xs text-muted-foreground flex items-center gap-1">
-            <CaretRight class="h-3 w-3" />
+        <div
+          style={{
+            display: 'flex',
+            'justify-content': 'flex-end',
+            'align-items': 'center',
+            gap: '8px',
+          }}
+        >
+          <div
+            style={{
+              'font-size': tempoDesign.typography.sizes.xs,
+              color: tempoDesign.colors.mutedForeground,
+              display: 'flex',
+              'align-items': 'center',
+              gap: '4px',
+            }}
+          >
+            <CaretRight style={{ height: '12px', width: '12px' }} />
             <span>Analyze to optimize</span>
           </div>
-          <Button 
+          <Button
             onClick={() => processTasks(false)}
             disabled={!tasks().trim() || isProcessing() || isInputLocked()}
-            class="w-32"
+            style={{ width: '128px' }}
           >
-            <Show 
+            <Show
               when={isProcessing()}
               fallback={
-                <Show 
-                  when={isInputLocked()}
-                  fallback="Analyze"
-                >
+                <Show when={isInputLocked()} fallback="Analyze">
                   <>
-                    <Lock class="mr-2 h-4 w-4" />
+                    <Lock style={{ 'margin-right': '8px', height: '16px', width: '16px' }} />
                     Locked
                   </>
                 </Show>
               }
             >
               <>
-                <CircleDashed class="mr-2 h-4 w-4 animate-spin" />
+                <CircleDashed
+                  style={{
+                    'margin-right': '8px',
+                    height: '16px',
+                    width: '16px',
+                    animation: 'spin 1s linear infinite',
+                  }}
+                />
                 Analyzing
               </>
             </Show>
@@ -103,31 +125,53 @@ Finalize product specs - EOD"
         </div>
 
         <Show when={processedStories().length > 0}>
-          <div class="space-y-4 pt-4 border-t">
-            <div class="flex items-center justify-between">
-              <h3 class="text-lg font-medium">Work Blocks</h3>
-              <div class="flex gap-2">
+          <div
+            style={{
+              display: 'flex',
+              'flex-direction': 'column',
+              gap: '16px',
+              'padding-top': '16px',
+              'border-top': `1px solid ${tempoDesign.colors.border}`,
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                'align-items': 'center',
+                'justify-content': 'space-between',
+              }}
+            >
+              <h3
+                style={{
+                  'font-size': tempoDesign.typography.sizes.lg,
+                  'font-weight': tempoDesign.typography.weights.medium,
+                  margin: 0,
+                }}
+              >
+                Work Blocks
+              </h3>
+              <div style={{ display: 'flex', gap: '8px' }}>
                 <Button onClick={handleRetry} variant="outline" size="sm">
                   Reset
                 </Button>
-                <Button 
-                  onClick={handleCreateSession} 
-                  size="sm"
-                  disabled={isCreatingSession()}
-                >
-                  <Show 
-                    when={isCreatingSession()}
-                    fallback="Create Session"
-                  >
+                <Button onClick={handleCreateSession} size="sm" disabled={isCreatingSession()}>
+                  <Show when={isCreatingSession()} fallback="Create Session">
                     <>
-                      <CircleDashed class="mr-2 h-4 w-4 animate-spin" />
-                      {processingStep() || "Creating"}
+                      <CircleDashed
+                        style={{
+                          'margin-right': '8px',
+                          height: '16px',
+                          width: '16px',
+                          animation: 'spin 1s linear infinite',
+                        }}
+                      />
+                      {processingStep() || 'Creating'}
                     </>
                   </Show>
                 </Button>
               </div>
             </div>
-            <ProcessedStories 
+            <ProcessedStories
               stories={processedStories()}
               editedDurations={editedDurations()}
               isCreatingSession={isCreatingSession()}
@@ -139,5 +183,5 @@ Finalize product specs - EOD"
         </Show>
       </CardContent>
     </Card>
-  )
-}
+  );
+};

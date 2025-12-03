@@ -1,69 +1,132 @@
 // /features/brain-dump/components/ProcessedStories.tsx
-import { Show, For } from "solid-js"
-// import { Alert, AlertDescription, AlertTitle } from "../../ui/alert"
-import { Info, CircleDashed } from "phosphor-solid"
-import { Button } from "../../ui/button"
-import { StoryCard } from "./StoryCard"
-import type { ProcessedStory } from "../../lib/types"
+import { Show, For } from 'solid-js';
+import { Info, CircleDashed } from 'phosphor-solid';
+import { Button } from '../../ui/button';
+import { StoryCard } from './StoryCard';
+import type { ProcessedStory } from '../../lib/types';
+import { tempoDesign } from '../../theme/tempo-design';
 
 interface ProcessedStoriesProps {
-  stories: ProcessedStory[]
-  editedDurations: Record<string, number>
-  onDurationChange: (storyTitle: string, newDuration: number) => void
-  isCreatingSession?: boolean
-  onRetry?: () => void
-  onCreateSession?: () => Promise<any>
+  stories: ProcessedStory[];
+  editedDurations: Record<string, number>;
+  onDurationChange: (storyTitle: string, newDuration: number) => void;
+  isCreatingSession?: boolean;
+  onRetry?: () => void;
+  onCreateSession?: () => Promise<any>;
 }
 
 export const ProcessedStories = (props: ProcessedStoriesProps) => {
   // Check for potential session planning issues
-  const hasLongStories = () => props.stories.some(story => story.estimatedDuration > 90)
-  const hasLongTasks = () => props.stories.some(story => 
-    story.tasks.some(task => task.duration > 60)
-  )
-  
+  const hasLongStories = () => props.stories.some((story) => story.estimatedDuration > 90);
+  const hasLongTasks = () =>
+    props.stories.some((story) => story.tasks.some((task) => task.duration > 60));
+
   // Only render if there are stories
   return (
     <Show when={props.stories.length > 0}>
-      <div class="space-y-4">
+      <div style={{ display: 'flex', 'flex-direction': 'column', gap: '16px' }}>
         <Show when={hasLongStories() || hasLongTasks()}>
-          <div class="bg-amber-50 border border-amber-200 rounded-lg p-4">
-            <div class="flex gap-2">
-              <Info class="h-4 w-4 text-amber-600 flex-shrink-0 mt-0.5" />
+          <div
+            style={{
+              background: tempoDesign.colors.amber[50],
+              border: `1px solid ${tempoDesign.colors.amber[200]}`,
+              'border-radius': tempoDesign.radius.lg,
+              padding: '16px',
+            }}
+          >
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <Info
+                style={{
+                  height: '16px',
+                  width: '16px',
+                  color: tempoDesign.colors.amber[600],
+                  'flex-shrink': 0,
+                  'margin-top': '2px',
+                }}
+              />
               <div>
-                <h4 class="font-medium text-sm text-amber-900">Productivity Optimization</h4>
-                <div class="mt-2">
-                  <p class="text-sm text-amber-800">Duration adjustments recommended to optimize focus and efficiency:</p>
-                  <ul class="mt-2 text-xs space-y-1 text-amber-700">
+                <h4
+                  style={{
+                    'font-weight': tempoDesign.typography.weights.medium,
+                    'font-size': tempoDesign.typography.sizes.sm,
+                    color: tempoDesign.colors.amber[900],
+                    margin: 0,
+                  }}
+                >
+                  Productivity Optimization
+                </h4>
+                <div style={{ 'margin-top': '8px' }}>
+                  <p
+                    style={{
+                      'font-size': tempoDesign.typography.sizes.sm,
+                      color: tempoDesign.colors.amber[800],
+                      margin: 0,
+                    }}
+                  >
+                    Duration adjustments recommended to optimize focus and efficiency:
+                  </p>
+                  <ul
+                    style={{
+                      'margin-top': '8px',
+                      'font-size': tempoDesign.typography.sizes.xs,
+                      color: tempoDesign.colors.amber[700],
+                      margin: '8px 0 0 0',
+                      padding: 0,
+                      'list-style': 'none',
+                      display: 'flex',
+                      'flex-direction': 'column',
+                      gap: '4px',
+                    }}
+                  >
                     <Show when={hasLongStories()}>
-                      <li>• Work blocks exceeding 90 minutes require strategic breaks to maintain cognitive performance</li>
+                      <li>
+                        • Work blocks exceeding 90 minutes require strategic breaks to maintain
+                        cognitive performance
+                      </li>
                     </Show>
                     <Show when={hasLongTasks()}>
-                      <li>• Tasks over 60 minutes benefit from division into focused, manageable segments</li>
+                      <li>
+                        • Tasks over 60 minutes benefit from division into focused, manageable
+                        segments
+                      </li>
                     </Show>
-                    <li>• Consider refining durations or restructuring complex tasks for optimal session planning</li>
+                    <li>
+                      • Consider refining durations or restructuring complex tasks for optimal
+                      session planning
+                    </li>
                   </ul>
                 </div>
               </div>
             </div>
           </div>
         </Show>
-        
+
         <Show when={props.onRetry && props.onCreateSession}>
-          <div class="flex items-center justify-between">
-            <h3 class="font-medium">Focus Block Analysis</h3>
-            <div class="flex gap-2">
+          <div
+            style={{ display: 'flex', 'align-items': 'center', 'justify-content': 'space-between' }}
+          >
+            <h3 style={{ 'font-weight': tempoDesign.typography.weights.medium, margin: 0 }}>
+              Focus Block Analysis
+            </h3>
+            <div style={{ display: 'flex', gap: '8px' }}>
               <Button onClick={props.onRetry} variant="outline" size="sm">
                 Reset Analysis
               </Button>
-              <Button 
-                onClick={props.onCreateSession} 
+              <Button
+                onClick={props.onCreateSession}
                 size="sm"
                 disabled={props.isCreatingSession ?? false}
               >
                 <Show when={props.isCreatingSession} fallback="Schedule Work Session">
                   <>
-                    <CircleDashed class="mr-2 h-4 w-4 animate-spin" weight="bold" />
+                    <CircleDashed
+                      style={{
+                        'margin-right': '8px',
+                        height: '16px',
+                        width: '16px',
+                        animation: 'spin 1s linear infinite',
+                      }}
+                    />
                     Generating...
                   </>
                 </Show>
@@ -71,11 +134,11 @@ export const ProcessedStories = (props: ProcessedStoriesProps) => {
             </div>
           </div>
         </Show>
-        
-        <div class="space-y-4">
+
+        <div style={{ display: 'flex', 'flex-direction': 'column', gap: '16px' }}>
           <For each={props.stories}>
-            {(story, index) => (
-              <StoryCard 
+            {(story) => (
+              <StoryCard
                 story={story}
                 editedDuration={props.editedDurations[story.title] || story.estimatedDuration}
                 onDurationChange={props.onDurationChange}
@@ -85,5 +148,5 @@ export const ProcessedStories = (props: ProcessedStoriesProps) => {
         </div>
       </div>
     </Show>
-  )
-}
+  );
+};

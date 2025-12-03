@@ -1,4 +1,4 @@
-import { Component, createSignal, Show, For, createMemo } from 'solid-js';
+import { Component, createSignal, Show, For, createMemo, onCleanup, createEffect } from 'solid-js';
 import { A, useNavigate, useParams } from '@solidjs/router';
 import { NurtureApp } from './components/nurture/NurtureApp';
 import { JustInCaseApp } from './components/justincase/JustInCaseApp';
@@ -1203,344 +1203,515 @@ const TabNavigation: Component<{
   activeTimeline: Timeline;
   activeTab: AppTab; 
 }> = (props) => {
-  const [dropdownOpen, setDropdownOpen] = createSignal(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = createSignal(false);
+  const [menuTimeline, setMenuTimeline] = createSignal<Timeline>(props.activeTimeline);
+  
+  // Drag state
+  const [menuPos, setMenuPos] = createSignal({ x: 16, y: 16 });
+  const [isDragging, setIsDragging] = createSignal(false);
+  const [dragStart, setDragStart] = createSignal({ x: 0, y: 0 });
+  const [initialPos, setInitialPos] = createSignal({ x: 0, y: 0 });
+
+  // Resize state
+  const [menuSize, setMenuSize] = createSignal(56);
+  const [isResizing, setIsResizing] = createSignal(false);
+  const [resizeStart, setResizeStart] = createSignal({ x: 0, y: 0, initialSize: 0 });
+
   const navigate = useNavigate();
-  const currentApps = () => apps.filter(app => app.timeline === props.activeTimeline);
   
-  // Get timeline color object
-  const getTimelineColor = (timeline: Timeline) => navTokens.timelineColors[timeline];
+  // Filtered apps for Hamburger Menu
+  const filteredApps = () => apps.filter(app => app.timeline === menuTimeline());
   
-  const handleTimelineChange = (timeline: Timeline) => {
-    const firstApp = firstAppByTimeline[timeline];
-    navigate(`/${firstApp}`);
-    setDropdownOpen(false);
+  // Sync menu timeline with active timeline when menu opens
+  createEffect(() => {
+    if (mobileMenuOpen()) {
+      setMenuTimeline(props.activeTimeline);
+    }
+  });
+
+  const handleMouseDown = (e: MouseEvent) => {
+    // Check if clicking resize handle (we'll add a class or id to check)
+    const target = e.target as HTMLElement;
+    if (target.closest('.resize-handle')) {
+      e.stopPropagation();
+      e.preventDefault();
+      setIsResizing(true);
+      setResizeStart({ x: e.clientX, y: e.clientY, initialSize: menuSize() });
+    } else {
+      setIsDragging(true);
+      setDragStart({ x: e.clientX, y: e.clientY });
+      setInitialPos(menuPos());
+      e.preventDefault();
+    }
   };
 
-  // Keyboard navigation for dropdown
-  const handleKeyDown = (e: KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      setDropdownOpen(false);
+  const handleWindowMouseMove = (e: MouseEvent) => {
+    if (isDragging()) {
+      const dx = e.clientX - dragStart().x;
+      const dy = e.clientY - dragStart().y;
+      setMenuPos({ 
+        x: Math.max(16, Math.min(window.innerWidth - menuSize() - 16, initialPos().x + dx)), 
+        y: Math.max(16, Math.min(window.innerHeight - menuSize() - 16, initialPos().y + dy)) 
+      });
+    } else if (isResizing()) {
+      const dx = e.clientX - resizeStart().x;
+      const dy = e.clientY - resizeStart().y;
+      // Use the larger of dx/dy to keep aspect ratio 1:1 if we want, or just diagonal
+      // Let's assume uniform scaling based on diagonal movement
+      const delta = (dx + dy) / 2; 
+      const newSize = Math.max(32, Math.min(120, resizeStart().initialSize + delta));
+      setMenuSize(newSize);
     }
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      setDropdownOpen(!dropdownOpen());
+  };
+
+  const handleWindowMouseUp = (e: MouseEvent) => {
+    if (isDragging()) {
+      setIsDragging(false);
+      // If moved less than 5px, treat as click
+      const dx = e.clientX - dragStart().x;
+      const dy = e.clientY - dragStart().y;
+      if (Math.abs(dx) < 5 && Math.abs(dy) < 5) {
+        setMobileMenuOpen(!mobileMenuOpen());
+      }
+    } else if (isResizing()) {
+      setIsResizing(false);
     }
   };
   
-  return (
-    <nav 
-      style={{
-        position: 'fixed',
-        top: navTokens.spacing.lg,
-        left: '50%',
-        transform: 'translateX(-50%)',
-        'z-index': 1000,
-        display: 'flex',
-        'align-items': 'center',
-        gap: navTokens.spacing.xs,
-        padding: navTokens.spacing.sm,
-        background: 'rgba(255, 255, 255, 0.96)',
-        'backdrop-filter': 'blur(20px)',
-        '-webkit-backdrop-filter': 'blur(20px)',
-        'border-radius': navTokens.radius.xl,
-        'box-shadow': navTokens.shadows.nav,
-        border: `1px solid ${navTokens.neutrals[200]}`,
-        'font-family': navTokens.typography.fontFamily,
-      }}
-      role="navigation"
-      aria-label="Main navigation"
-    >
-      {/* TACo Logo - Home Button */}
-      <TacoLogo size={38} />
-      
-      {/* Divider */}
-      <div 
-        style={{
-          width: '1px',
-          height: '24px',
-          background: navTokens.neutrals[200],
-          margin: `0 ${navTokens.spacing.sm}`,
-          'flex-shrink': 0,
-        }} 
-        aria-hidden="true"
-      />
-      
-      {/* Timeline Dropdown */}
-      <div style={{ position: 'relative' }}>
-        <button
-          onClick={() => setDropdownOpen(!dropdownOpen())}
-          onKeyDown={handleKeyDown}
-          aria-expanded={dropdownOpen()}
-          aria-haspopup="listbox"
-          aria-label={`Timeline: ${timelineLabels[props.activeTimeline].label}. ${timelineLabels[props.activeTimeline].description}`}
-          style={{
-            display: 'flex',
-            'align-items': 'center',
-            gap: navTokens.spacing.sm,
-            padding: `${navTokens.spacing.sm} ${navTokens.spacing.md}`,
-            background: `linear-gradient(135deg, ${navTokens.brand.dark} 0%, ${navTokens.brand.darker} 100%)`,
-            border: 'none',
-            'border-radius': navTokens.radius.sm,
-            color: 'white',
-            'font-size': navTokens.typography.sizes.base,
-            'font-weight': navTokens.typography.weights.medium,
-            'letter-spacing': navTokens.typography.letterSpacing.normal,
-            cursor: 'pointer',
-            'min-width': '100px',
-            transition: navTokens.transitions.normal,
-            outline: 'none',
-          }}
-          onFocus={(e) => {
-            e.currentTarget.style.boxShadow = `${navTokens.shadows.focus} ${navTokens.brand.teal}60`;
-          }}
-          onBlur={(e) => {
-            e.currentTarget.style.boxShadow = 'none';
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.opacity = '0.9';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.opacity = '1';
-          }}
-        >
-          <span style={{
-            width: '8px',
-            height: '8px',
-            'border-radius': navTokens.radius.full,
-            background: getTimelineColor(props.activeTimeline).primary,
-            'box-shadow': `0 0 6px ${getTimelineColor(props.activeTimeline).glow}`,
-            transition: navTokens.transitions.slow,
-          }} />
-          <span style={{ 'flex-grow': 1, 'text-align': 'left' }}>
-            {timelineLabels[props.activeTimeline].label}
-          </span>
-          <svg 
-            width="12" 
-            height="12" 
-            viewBox="0 0 24 24" 
-            fill="none" 
-            stroke="currentColor" 
-            stroke-width="2.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            style={{
-              transition: navTokens.transitions.normal,
-              transform: dropdownOpen() ? 'rotate(180deg)' : 'rotate(0deg)',
-              opacity: 0.7,
-            }}
-            aria-hidden="true"
-          >
-            <path d="M6 9l6 6 6-6" />
-          </svg>
-        </button>
-        
-        {/* Dropdown menu */}
-        <Show when={dropdownOpen()}>
-          <div 
+  // Attach drag listeners
+  createEffect(() => {
+    if (isDragging()) {
+      window.addEventListener('mousemove', handleWindowMouseMove);
+      window.addEventListener('mouseup', handleWindowMouseUp);
+    } else {
+      window.removeEventListener('mousemove', handleWindowMouseMove);
+      window.removeEventListener('mouseup', handleWindowMouseUp);
+    }
+  });
+  
+  // Cleanup on unmount
+  onCleanup(() => {
+    window.removeEventListener('mousemove', handleWindowMouseMove);
+    window.removeEventListener('mouseup', handleWindowMouseUp);
+  });
+  
+  const handleTimelineChange = (timeline: Timeline) => {
+    setMenuTimeline(timeline);
+  };
+  
+  const handleAppClick = (appId: AppTab) => {
+    navigate(`/${appId}`);
+    setMobileMenuOpen(false);
+  };
+
+  // Global keyboard shortcuts
+  const handleGlobalKeyDown = (e: KeyboardEvent) => {
+    // Ctrl + Shift + H (Home)
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'h') {
+      e.preventDefault();
+      navigate('/');
+      setMobileMenuOpen(false);
+    }
+  };
+
+  createEffect(() => {
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    onCleanup(() => window.removeEventListener('keydown', handleGlobalKeyDown));
+  });
+  
+   return (
+     <>
+       {/* Draggable Hamburger Button */}
+       <button
+         onMouseDown={handleMouseDown}
+         aria-label={mobileMenuOpen() ? "Close menu" : "Open menu"}
+         style={{
+           position: 'fixed',
+           top: `${menuPos().y}px`,
+           left: `${menuPos().x}px`,
+           'z-index': 2002,
+           width: `${menuSize()}px`,
+           height: `${menuSize()}px`,
+           display: 'flex',
+           'align-items': 'center',
+           'justify-content': 'center',
+           background: mobileMenuOpen() ? 'rgba(255,255,255,0.1)' : 'rgba(255, 255, 255, 0.9)',
+           'backdrop-filter': 'blur(12px)',
+           '-webkit-backdrop-filter': 'blur(12px)',
+           'border-radius': '50%',
+           border: mobileMenuOpen() ? '1px solid rgba(255,255,255,0.2)' : `1px solid ${navTokens.neutrals[200]}`,
+           'box-shadow': mobileMenuOpen() ? 'none' : isDragging() ? navTokens.shadows.dropdown : navTokens.shadows.nav,
+           cursor: isDragging() ? 'grabbing' : 'grab',
+           
+           // Persistent visibility
+           opacity: 1,
+           'pointer-events': 'auto',
+           transform: 'scale(1)',
+           
+           transition: (isDragging() || isResizing()) ? 'none' : 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+           color: mobileMenuOpen() ? 'white' : navTokens.brand.dark,
+           overflow: 'hidden',
+         }}
+         onMouseEnter={(e) => {
+           if (!mobileMenuOpen() && !isDragging() && !isResizing()) {
+             e.currentTarget.style.transform = 'scale(1.1) rotate(5deg)';
+             e.currentTarget.style.boxShadow = navTokens.shadows.dropdown;
+           }
+         }}
+         onMouseLeave={(e) => {
+           if (!isDragging() && !isResizing()) {
+             e.currentTarget.style.transform = 'scale(1) rotate(0deg)';
+             e.currentTarget.style.boxShadow = mobileMenuOpen() ? 'none' : navTokens.shadows.nav;
+           }
+         }}
+       >
+         {/* Resize Handle */}
+         <div 
+            class="resize-handle"
             style={{
               position: 'absolute',
-              top: `calc(100% + ${navTokens.spacing.sm})`,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              background: 'white',
-              'border-radius': navTokens.radius.md,
-              'box-shadow': navTokens.shadows.dropdown,
-              overflow: 'hidden',
-              'min-width': '190px',
-              border: `1px solid ${navTokens.neutrals[100]}`,
-              animation: 'dropdownFadeIn 0.2s ease',
+              bottom: '0',
+              right: '0',
+              width: '16px',
+              height: '16px',
+              cursor: 'nwse-resize',
+              'z-index': 10,
+              display: 'flex',
+              'align-items': 'flex-end',
+              'justify-content': 'flex-end',
+              padding: '3px',
+              opacity: 0,
+              transition: 'opacity 0.2s ease'
             }}
-            role="listbox"
-            aria-label="Select timeline"
-          >
-            {(['now', 'next', 'later'] as Timeline[]).map((timeline) => {
-              const colors = getTimelineColor(timeline);
-              const isSelected = props.activeTimeline === timeline;
-              return (
-                <button
-                  onClick={() => handleTimelineChange(timeline)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      handleTimelineChange(timeline);
-                    }
-                  }}
-                  role="option"
-                  aria-selected={isSelected}
+            onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+            onMouseLeave={(e) => e.currentTarget.style.opacity = '0'}
+         >
+           <div style={{
+             width: '6px',
+             height: '6px',
+             'border-right': `2px solid ${mobileMenuOpen() ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.3)'}`,
+             'border-bottom': `2px solid ${mobileMenuOpen() ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.3)'}`,
+             'border-bottom-right-radius': '2px'
+           }} />
+         </div>
+
+         <svg 
+           width={menuSize() * 0.5} 
+           height={menuSize() * 0.5} 
+           viewBox="0 0 24 24" 
+           fill="none" 
+           stroke="currentColor" 
+           stroke-width="2"
+           stroke-linecap="round"
+           stroke-linejoin="round"
+           style={{
+             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+             transform: mobileMenuOpen() ? 'rotate(90deg)' : 'rotate(0deg)',
+           }}
+         >
+           {mobileMenuOpen() ? (
+             <>
+               <line x1="18" y1="6" x2="6" y2="18" />
+               <line x1="6" y1="6" x2="18" y2="18" />
+             </>
+           ) : (
+             <>
+               <rect x="3" y="3" width="7" height="7" rx="1" />
+               <rect x="14" y="3" width="7" height="7" rx="1" />
+               <rect x="14" y="14" width="7" height="7" rx="1" />
+               <rect x="3" y="14" width="7" height="7" rx="1" />
+             </>
+           )}
+         </svg>
+       </button>
+       
+       {/* Full Screen Immersive Menu */}
+       <Show when={mobileMenuOpen()}>
+         <div
+           style={{
+             position: 'fixed',
+             top: 0,
+             left: 0,
+             right: 0,
+             bottom: 0,
+             background: '#0F0F1A',
+             'z-index': 2001,
+             display: 'flex',
+             animation: 'fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+           }}
+         >
+           {/* Left Column - Triangle */}
+           <div
+             onClick={() => setMobileMenuOpen(false)}
+             role="button"
+             tabIndex={0}
+             aria-label="Close menu"
+             style={{
+               position: 'relative',
+               width: '40%',
+               height: '100%',
+               background: `linear-gradient(135deg, ${navTokens.brand.coral}, ${navTokens.brand.yellow}, ${navTokens.brand.teal})`,
+               'clip-path': 'polygon(0 0, 100% 0, 60% 100%, 0 100%)',
+               cursor: 'pointer',
+               display: 'flex',
+               'align-items': 'center',
+               'justify-content': 'center',
+               'z-index': 2,
+               transition: 'filter 0.3s ease',
+             }}
+             onMouseEnter={(e) => e.currentTarget.style.filter = 'brightness(1.1)'}
+             onMouseLeave={(e) => e.currentTarget.style.filter = 'brightness(1)'}
+           >
+              <div style={{
+                 'font-size': 'clamp(80px, 15vw, 200px)',
+                 color: 'rgba(255,255,255,0.2)',
+                 'font-weight': '900',
+                 transform: 'rotate(-90deg)',
+                 'white-space': 'nowrap',
+                 'pointer-events': 'none',
+                 'user-select': 'none',
+                 'letter-spacing': '20px',
+              }}>
+                CLOSE
+              </div>
+           </div>
+
+           {/* Right Column - Content */}
+           <div style={{
+             flex: 1,
+             display: 'flex',
+             'flex-direction': 'column',
+             padding: '40px 60px',
+             'justify-content': 'center',
+             'overflow-y': 'auto',
+           }}>
+              {/* Header */}
+              <div style={{ 'margin-bottom': '48px', animation: 'slideDown 0.4s ease forwards' }}>
+                <div style={{ 
+                   'font-size': '14px', 
+                   'text-transform': 'uppercase', 
+                   'letter-spacing': '4px',
+                   color: 'rgba(255,255,255,0.4)',
+                   'margin-bottom': '16px',
+                 }}>
+                   Thoughtful App Co.
+                 </div>
+                 <h2 style={{
+                   'font-size': 'clamp(40px, 5vw, 64px)',
+                   'font-weight': '700',
+                   color: 'white',
+                   margin: 0,
+                   'line-height': 1,
+                 }}>
+                   Select App
+                 </h2>
+              </div>
+
+              {/* Timeline Tabs */}
+              <div style={{ 
+                 display: 'flex', 
+                 gap: '40px', 
+                 'margin-bottom': '48px',
+                 'border-bottom': '1px solid rgba(255,255,255,0.1)',
+                 'padding-bottom': '16px',
+                 animation: 'slideDown 0.5s ease forwards',
+              }}>
+                 {(['now', 'next', 'later'] as Timeline[]).map(timeline => (
+                   <button
+                     onClick={() => handleTimelineChange(timeline)}
+                     style={{
+                       background: 'transparent',
+                       border: 'none',
+                       color: menuTimeline() === timeline ? 'white' : 'rgba(255,255,255,0.4)',
+                       'font-size': '20px',
+                       'font-weight': menuTimeline() === timeline ? '600' : '400',
+                       cursor: 'pointer',
+                       transition: 'all 0.3s ease',
+                       position: 'relative',
+                       padding: '8px 0',
+                       'font-family': navTokens.typography.fontFamily,
+                     }}
+                     onMouseEnter={(e) => e.currentTarget.style.color = 'white'}
+                     onMouseLeave={(e) => {
+                       if (menuTimeline() !== timeline) e.currentTarget.style.color = 'rgba(255,255,255,0.4)';
+                     }}
+                   >
+                     {timelineLabels[timeline].label}
+                     {menuTimeline() === timeline && (
+                       <div style={{
+                         position: 'absolute',
+                         bottom: '-17px',
+                         left: 0,
+                         width: '100%',
+                         height: '3px',
+                         background: navTokens.timelineColors[timeline].primary,
+                         'box-shadow': `0 0 10px ${navTokens.timelineColors[timeline].glow}`,
+                         'border-radius': '2px',
+                         transition: 'all 0.3s ease',
+                       }} />
+                     )}
+                   </button>
+                 ))}
+              </div>
+
+              {/* App Grid */}
+              <div style={{ 
+                display: 'grid', 
+                'grid-template-columns': 'repeat(auto-fill, minmax(240px, 1fr))',
+                gap: '24px',
+                width: '100%',
+                animation: 'slideDown 0.6s ease forwards',
+              }}>
+                {filteredApps().map((app, index) => (
+                  <button
+                    onClick={() => handleAppClick(app.id)}
+                    style={{
+                      padding: '32px',
+                      background: 'rgba(255,255,255,0.03)',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      'border-radius': '24px',
+                      display: 'flex',
+                      'flex-direction': 'column',
+                      'align-items': 'flex-start',
+                      gap: '16px',
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      'animation-delay': `${0.1 * index}s`,
+                      cursor: 'pointer',
+                      'text-align': 'left',
+                      position: 'relative',
+                      overflow: 'hidden',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)';
+                      e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
+                      e.currentTarget.style.borderColor = app.color;
+                      e.currentTarget.style.boxShadow = `0 12px 32px -8px ${app.color}30`;
+                      const arrow = e.currentTarget.querySelector('.arrow-icon') as HTMLElement;
+                      if (arrow) {
+                        arrow.style.opacity = '1';
+                        arrow.style.transform = 'translateX(0)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                      e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+                      e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
+                      e.currentTarget.style.boxShadow = 'none';
+                      const arrow = e.currentTarget.querySelector('.arrow-icon') as HTMLElement;
+                      if (arrow) {
+                        arrow.style.opacity = '0';
+                        arrow.style.transform = 'translateX(-10px)';
+                      }
+                    }}
+                  >
+                    <div style={{
+                      display: 'flex',
+                      'align-items': 'center',
+                      'justify-content': 'space-between',
+                      width: '100%',
+                    }}>
+                      <div style={{
+                        width: '48px',
+                        height: '48px',
+                        'border-radius': '14px',
+                        background: app.color,
+                        display: 'flex',
+                        'align-items': 'center',
+                        'justify-content': 'center',
+                        'font-size': '20px',
+                        'font-weight': '700',
+                        color: 'white',
+                        'box-shadow': `0 8px 24px ${app.color}40`,
+                      }}>
+                        {app.name.charAt(0)}
+                      </div>
+                      
+                      <div 
+                        class="arrow-icon"
+                        style={{
+                          opacity: 0,
+                          transform: 'translateX(-10px)',
+                          transition: 'all 0.3s ease',
+                          color: 'white',
+                        }}
+                      >
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <line x1="5" y1="12" x2="19" y2="12" />
+                          <polyline points="12 5 19 12 12 19" />
+                        </svg>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <div style={{ 
+                        'font-size': '20px', 
+                        'font-weight': '600', 
+                        color: 'white',
+                        'margin-bottom': '6px',
+                        'font-family': navTokens.typography.fontFamily,
+                      }}>
+                        {app.name}
+                      </div>
+                      <div style={{ 
+                        'font-size': '14px', 
+                        color: 'rgba(255,255,255,0.5)',
+                        'line-height': '1.5',
+                        'font-family': navTokens.typography.fontFamily,
+                      }}>
+                        {app.description}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+              
+              {/* Home Button */}
+              <div style={{
+                'margin-top': 'auto',
+                'padding-top': '60px',
+                'text-align': 'center',
+                animation: 'slideDown 0.7s ease forwards',
+              }}>
+                <A
+                  href="/"
+                  onClick={() => setMobileMenuOpen(false)}
                   style={{
-                    display: 'flex',
+                    display: 'inline-flex',
                     'align-items': 'center',
-                    gap: navTokens.spacing.md,
-                    width: '100%',
-                    padding: `${navTokens.spacing.md} ${navTokens.spacing.lg}`,
-                    background: isSelected ? colors.bg : 'transparent',
-                    border: 'none',
-                    'border-left': `3px solid ${isSelected ? colors.primary : 'transparent'}`,
-                    'text-align': 'left',
-                    cursor: 'pointer',
-                    transition: navTokens.transitions.fast,
-                    outline: 'none',
+                    gap: '12px',
+                    padding: '16px 32px',
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    'border-radius': '50px',
+                    color: 'white',
+                    'font-size': '16px',
+                    'font-weight': '600',
+                    'text-decoration': 'none',
+                    transition: 'all 0.3s ease',
                     'font-family': navTokens.typography.fontFamily,
                   }}
                   onMouseEnter={(e) => {
-                    if (!isSelected) {
-                      e.currentTarget.style.background = navTokens.neutrals[50];
-                    }
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
+                    e.currentTarget.style.transform = 'translateY(-2px)';
                   }}
                   onMouseLeave={(e) => {
-                    e.currentTarget.style.background = isSelected ? colors.bg : 'transparent';
-                  }}
-                  onFocus={(e) => {
-                    e.currentTarget.style.background = colors.bg;
-                  }}
-                  onBlur={(e) => {
-                    e.currentTarget.style.background = isSelected ? colors.bg : 'transparent';
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+                    e.currentTarget.style.transform = 'translateY(0)';
                   }}
                 >
-                  <span style={{
-                    width: '10px',
-                    height: '10px',
-                    'border-radius': navTokens.radius.full,
-                    background: colors.primary,
-                    'box-shadow': `0 0 4px ${colors.glow}`,
-                    'flex-shrink': 0,
-                  }} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ 
-                      'font-size': navTokens.typography.sizes.md,
-                      'font-weight': navTokens.typography.weights.medium,
-                      color: navTokens.neutrals[800],
-                      'letter-spacing': navTokens.typography.letterSpacing.tight,
-                    }}>
-                      {timelineLabels[timeline].label}
-                    </div>
-                    <div style={{ 
-                      'font-size': navTokens.typography.sizes.xs,
-                      color: navTokens.neutrals[500],
-                      'margin-top': navTokens.spacing['2xs'],
-                    }}>
-                      {timelineLabels[timeline].description}
-                    </div>
-                  </div>
-                  <Show when={isSelected}>
-                    <svg 
-                      width="14" 
-                      height="14" 
-                      viewBox="0 0 24 24" 
-                      fill="none" 
-                      stroke={colors.primary}
-                      stroke-width="3" 
-                      stroke-linecap="round" 
-                      stroke-linejoin="round"
-                    >
-                      <polyline points="20 6 9 17 4 12" />
-                    </svg>
-                  </Show>
-                </button>
-              );
-            })}
-          </div>
-        </Show>
-      </div>
-      
-      {/* Divider */}
-      <div 
-        style={{
-          width: '1px',
-          height: '24px',
-          background: navTokens.neutrals[200],
-          margin: `0 ${navTokens.spacing.sm}`,
-          'flex-shrink': 0,
-        }} 
-        aria-hidden="true"
-      />
-      
-      {/* App Tabs */}
-      <For each={currentApps()}>
-        {(app) => {
-          const isActive = () => props.activeTab === app.id;
-          return (
-            <A
-              href={`/${app.id}`}
-              aria-current={isActive() ? 'page' : undefined}
-              style={{
-                display: 'flex',
-                'align-items': 'center',
-                gap: navTokens.spacing.sm,
-                padding: `${navTokens.spacing.sm} ${navTokens.spacing.md}`,
-                border: 'none',
-                'border-radius': navTokens.radius.sm,
-                background: isActive() ? app.color : 'transparent',
-                color: isActive() ? 'white' : navTokens.neutrals[600],
-                'font-size': navTokens.typography.sizes.base,
-                'font-weight': isActive() ? navTokens.typography.weights.medium : navTokens.typography.weights.normal,
-                'letter-spacing': navTokens.typography.letterSpacing.normal,
-                cursor: 'pointer',
-                transition: navTokens.transitions.normal,
-                'text-decoration': 'none',
-                outline: 'none',
-                position: 'relative',
-                'white-space': 'nowrap',
-              }}
-              onMouseEnter={(e) => {
-                if (!isActive()) {
-                  e.currentTarget.style.background = `${app.color}12`;
-                  e.currentTarget.style.color = app.color;
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (!isActive()) {
-                  e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.color = navTokens.neutrals[600];
-                }
-              }}
-              onFocus={(e) => {
-                e.currentTarget.style.boxShadow = `${navTokens.shadows.focus} ${app.color}50`;
-              }}
-              onBlur={(e) => {
-                e.currentTarget.style.boxShadow = 'none';
-              }}
-            >
-              {/* App Icon Badge */}
-              <div style={{
-                width: '20px',
-                height: '20px',
-                'border-radius': navTokens.radius.xs,
-                background: isActive() ? 'rgba(255,255,255,0.2)' : `${app.color}15`,
-                display: 'flex',
-                'align-items': 'center',
-                'justify-content': 'center',
-                'font-size': navTokens.typography.sizes.xs,
-                'font-weight': navTokens.typography.weights.bold,
-                color: isActive() ? 'white' : app.color,
-                transition: navTokens.transitions.fast,
-              }}>
-                {app.name.charAt(0)}
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                    <polyline points="9 22 9 12 15 12 15 22" />
+                  </svg>
+                  Back to Home
+                </A>
               </div>
-              
-              {/* App Name */}
-              <span>{app.name}</span>
-              
-              {/* Active indicator bar */}
-              <Show when={isActive()}>
-                <span style={{
-                  position: 'absolute',
-                  bottom: navTokens.spacing['2xs'],
-                  left: '50%',
-                  transform: 'translateX(-50%)',
-                  width: '16px',
-                  height: '2px',
-                  background: 'rgba(255,255,255,0.8)',
-                  'border-radius': navTokens.radius.full,
-                }} />
-              </Show>
-            </A>
-          );
-        }}
-      </For>
-    </nav>
-  );
-};
+           </div>
+         </div>
+       </Show>
+     </>
+   );
+ };
 
 // App page wrapper component - receives appId from route params
 export const AppPage: Component = () => {
@@ -1566,11 +1737,10 @@ export const AppPage: Component = () => {
         activeTab={appId()}
       />
       
-      {/* App content with top padding for nav */}
-      <div style={{ 'padding-top': '80px' }}>
-        <Show when={appId() === 'nurture'}>
-          <NurtureApp />
-        </Show>
+      {/* App content */}
+      <Show when={appId() === 'nurture'}>
+        <NurtureApp />
+      </Show>
         <Show when={appId() === 'justincase'}>
           <JustInCaseApp />
         </Show>
@@ -1589,7 +1759,6 @@ export const AppPage: Component = () => {
         <Show when={appId() === 'lol'}>
           <LolApp />
         </Show>
-      </div>
     </>
   );
 };
