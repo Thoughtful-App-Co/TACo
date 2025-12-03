@@ -234,9 +234,16 @@ const ARCHETYPES: Record<string, { title: string; description: string }> = {
   },
 };
 
-const CartoonBadge: Component<{ fit: string }> = (props) => {
+const CartoonBadge: Component<{ fit: number }> = (props) => {
+  const fitLabel = createMemo(() => {
+    if (props.fit >= 80) return 'Best';
+    if (props.fit >= 60) return 'Great';
+    return 'Good';
+  });
+
   const styles = createMemo(() => {
-    switch (props.fit) {
+    const label = fitLabel();
+    switch (label) {
       case 'Best':
         return {
           bg: '#A6D608', // Acid green
@@ -280,11 +287,11 @@ const CartoonBadge: Component<{ fit: string }> = (props) => {
         'letter-spacing': '0.5px',
         'box-shadow': '2px 2px 0px #000',
         display: 'inline-block',
-        'min-width': props.fit === 'Best' ? '40px' : 'auto',
+        'min-width': fitLabel() === 'Best' ? '40px' : 'auto',
         'text-align': 'center',
       }}
     >
-      {props.fit}
+      {fitLabel()}
     </div>
   );
 };

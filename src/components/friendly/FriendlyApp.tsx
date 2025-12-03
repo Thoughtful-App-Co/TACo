@@ -347,7 +347,6 @@ const GradientButton: Component<{
         'font-size': size.fontSize,
         'font-weight': m.fontWeight.semibold,
         'border-radius': t.radii.md,
-        border: 'none',
         cursor: props.disabled ? 'not-allowed' : 'pointer',
         transition: m.transition.normal,
         display: 'inline-flex',
@@ -363,6 +362,7 @@ const GradientButton: Component<{
           : {
               background: props.disabled ? t.colors.border : m.gradients.primary,
               color: 'white',
+              border: 'none',
               'box-shadow': props.disabled ? 'none' : m.glow.primary,
             }),
         ...props.style,
@@ -1198,7 +1198,7 @@ const PublicView: Component = () => {
                     color: 'white',
                     'border-radius': t.radii.md,
                     outline: 'none',
-                    'box-sizing': 'border-box',
+                    'box-sizing': 'border-box' as const,
                     'font-size': m.fontSize.base,
                     transition: m.transition.fast,
                   }}
@@ -1235,7 +1235,7 @@ const PublicView: Component = () => {
                       'border-radius': t.radii.md,
                       outline: 'none',
                       resize: 'none',
-                      'box-sizing': 'border-box',
+                      'box-sizing': 'border-box' as const,
                       'font-size': m.fontSize.base,
                       'font-family': 'inherit',
                     }}
@@ -2068,7 +2068,7 @@ const AcceptRequestModal: Component<{ request: any; onClose: () => void }> = (pr
             border: `1px solid ${t.colors.border}`,
             color: 'white',
             'border-radius': t.radii.md,
-            'box-sizing': 'border-box',
+            'box-sizing': 'border-box' as const,
             'font-size': m.fontSize.base,
             outline: 'none',
           }}
@@ -2151,7 +2151,7 @@ const SettingsView: Component = () => {
     border: `1px solid ${t.colors.border}`,
     color: 'white',
     'border-radius': t.radii.md,
-    'box-sizing': 'border-box',
+    'box-sizing': 'border-box' as const,
     'font-size': m.fontSize.base,
     outline: 'none',
     transition: m.transition.fast,
@@ -2268,7 +2268,7 @@ const SettingsView: Component = () => {
             }}
           >
             <span>A short message for your profile visitors.</span>
-            <span>{bio().length}/160</span>
+            <span>{(bio() || '').length}/160</span>
           </p>
         </div>
 
@@ -2390,7 +2390,7 @@ const CreateGroupModal: Component<{ onClose: () => void }> = (props) => {
     border: `1px solid ${t.colors.border}`,
     color: 'white',
     'border-radius': t.radii.md,
-    'box-sizing': 'border-box',
+    'box-sizing': 'border-box' as const,
     'font-size': m.fontSize.base,
     outline: 'none',
   };
@@ -2503,7 +2503,7 @@ const CreateEventModal: Component<{ onClose: () => void }> = (props) => {
     border: `1px solid ${t.colors.border}`,
     color: 'white',
     'border-radius': t.radii.md,
-    'box-sizing': 'border-box',
+    'box-sizing': 'border-box' as const,
     'font-size': m.fontSize.base,
     outline: 'none',
   };

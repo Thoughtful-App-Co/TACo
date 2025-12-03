@@ -20,10 +20,18 @@ export const CriteriaSchema = z.object({
   distance: z.number().max(500), // miles
   dealBreakers: z.array(z.string()),
   mustHaves: z.array(z.string()),
-  values: z.array(z.enum([
-    'family', 'career', 'adventure', 'stability', 
-    'creativity', 'spirituality', 'health', 'learning'
-  ])),
+  values: z.array(
+    z.enum([
+      'family',
+      'career',
+      'adventure',
+      'stability',
+      'creativity',
+      'spirituality',
+      'health',
+      'learning',
+    ])
+  ),
 });
 
 export const MatchSchema = z.object({
@@ -42,7 +50,14 @@ export const SelfDiscoverySchema = z.object({
   userId: z.string().uuid(),
   question: z.string(),
   answer: z.string(),
-  category: z.enum(['values', 'lifestyle', 'relationship', 'personality']),
+  category: z.enum([
+    'values',
+    'lifestyle',
+    'relationship',
+    'personality',
+    'emotional_intelligence',
+    'boundaries',
+  ]),
   completedAt: z.date(),
 });
 

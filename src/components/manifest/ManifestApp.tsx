@@ -100,7 +100,7 @@ const styles = {
     color: duotone.text,
     'font-family': "'Courier New', Courier, monospace",
     padding: '40px',
-    'overflow-x': 'hidden',
+    'overflow-x': 'hidden' as const,
     position: 'relative' as const,
     // Subtle noise/grain could be added here, but staying clean for Duotone impact
   },

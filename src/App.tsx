@@ -19,30 +19,13 @@ interface AppInfo {
   designSystem: string;
   color: string;
   timeline: Timeline;
+  releaseDate: string;
+  status: 'active' | 'alpha' | 'beta' | 'coming-soon';
+  logo?: string;
 }
 
 const apps: AppInfo[] = [
   // NOW - Active development
-  {
-    id: 'nurture',
-    name: 'Nurture',
-    description: 'Relationship CRM',
-    elevatorPitch:
-      'Never forget a birthday or let a friendship fade. Nurture helps you maintain meaningful relationships with gentle reminders and interaction tracking.',
-    designSystem: 'Biophilic',
-    color: '#2D5A45',
-    timeline: 'now',
-  },
-  {
-    id: 'justincase',
-    name: 'JustInCase',
-    description: 'Small claims helper',
-    elevatorPitch:
-      'Document everything, stress about nothing. JustInCase helps you build airtight cases for small claims court with guided evidence collection.',
-    designSystem: 'Daylight Reading',
-    color: '#1C1C1C',
-    timeline: 'now',
-  },
   {
     id: 'tempo',
     name: 'Tempo',
@@ -52,6 +35,33 @@ const apps: AppInfo[] = [
     designSystem: 'Dark Mode',
     color: '#5E6AD2',
     timeline: 'now',
+    releaseDate: 'December 2025',
+    status: 'active',
+    logo: '/tempo/tempo_logo.png',
+  },
+  {
+    id: 'nurture',
+    name: 'Nurture',
+    description: 'Relationship CRM',
+    elevatorPitch:
+      'Never forget a birthday or let a friendship fade. Nurture helps you maintain meaningful relationships with gentle reminders and interaction tracking.',
+    designSystem: 'Biophilic',
+    color: '#2D5A45',
+    timeline: 'now',
+    releaseDate: 'Q1 2026',
+    status: 'alpha',
+  },
+  {
+    id: 'justincase',
+    name: 'JustInCase',
+    description: 'Small claims helper',
+    elevatorPitch:
+      'Document everything, stress about nothing. JustInCase helps you build airtight cases for small claims court with guided evidence collection.',
+    designSystem: 'Daylight Reading',
+    color: '#1C1C1C',
+    timeline: 'next',
+    releaseDate: 'Q3 2026',
+    status: 'coming-soon',
   },
   // NEXT - Coming soon
   {
@@ -63,6 +73,8 @@ const apps: AppInfo[] = [
     designSystem: 'Liquid',
     color: '#3B82F6',
     timeline: 'next',
+    releaseDate: 'Q1 2026',
+    status: 'coming-soon',
   },
   {
     id: 'augment',
@@ -73,6 +85,8 @@ const apps: AppInfo[] = [
     designSystem: 'Maximalist',
     color: '#9333EA',
     timeline: 'next',
+    releaseDate: 'Q1 2027',
+    status: 'coming-soon',
   },
   // LATER - Future plans
   {
@@ -84,6 +98,8 @@ const apps: AppInfo[] = [
     designSystem: 'Brutalistic',
     color: '#000000',
     timeline: 'later',
+    releaseDate: 'TBD',
+    status: 'coming-soon',
   },
   {
     id: 'lol',
@@ -94,6 +110,8 @@ const apps: AppInfo[] = [
     designSystem: 'Papermorphic',
     color: '#2196F3',
     timeline: 'later',
+    releaseDate: 'Q3 2026',
+    status: 'coming-soon',
   },
 ];
 
