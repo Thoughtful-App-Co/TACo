@@ -326,15 +326,24 @@ function validateAllTasksIncluded(
 } {
   // Create maps to track tasks by ID and title
   const originalTaskMap = new Map<string, z.infer<typeof TaskSchema>>();
-  const scheduledTaskMap = new Map<string, TimeBoxTask>();
   const titleToIdMap = new Map<string, string>();
+  const idToTitlesMap = new Map<string, Set<string>>();
 
   // Build maps of original tasks
+  // Group split task parts by their shared ID
   originalTasks.forEach((task) => {
     originalTaskMap.set(task.id, task);
     titleToIdMap.set(task.title.toLowerCase(), task.id);
+
+    // Track all titles associated with each ID (for split tasks sharing the same ID)
+    if (!idToTitlesMap.has(task.id)) {
+      idToTitlesMap.set(task.id, new Set());
+    }
+    idToTitlesMap.get(task.id)!.add(task.title.toLowerCase());
+
     if (task.originalTitle) {
       titleToIdMap.set(task.originalTitle.toLowerCase(), task.id);
+      idToTitlesMap.get(task.id)!.add(task.originalTitle.toLowerCase());
     }
   });
 
@@ -344,31 +353,68 @@ function validateAllTasksIncluded(
     return !task.title.includes('Break');
   });
 
+  // Track which task IDs have been accounted for
+  const accountedIds = new Set<string>();
+  // Track which specific split part titles have been scheduled
+  const scheduledTitles = new Set<string>();
+
   // Track scheduled tasks and their relationships
   filteredScheduledTasks.forEach((task) => {
-    scheduledTaskMap.set(task.title.toLowerCase(), task);
+    const taskTitleLower = task.title.toLowerCase();
+    scheduledTitles.add(taskTitleLower);
 
-    // Handle split tasks
-    if (task.splitInfo?.originalTitle) {
-      const originalId = titleToIdMap.get(task.splitInfo.originalTitle.toLowerCase());
+    // Get the original title from either splitInfo or originalTitle property
+    const originalTitle = task.splitInfo?.originalTitle || task.originalTitle;
+
+    // Handle split tasks - check both splitInfo.originalTitle and direct originalTitle
+    if (originalTitle) {
+      const originalId = titleToIdMap.get(originalTitle.toLowerCase());
       if (originalId) {
-        const originalTask = originalTaskMap.get(originalId);
-        if (originalTask) {
-          // Mark the original task as accounted for
-          originalTaskMap.delete(originalId);
-        }
+        accountedIds.add(originalId);
       }
-    } else {
-      // Handle regular tasks
-      const taskId = titleToIdMap.get(task.title.toLowerCase());
-      if (taskId) {
-        originalTaskMap.delete(taskId);
+    }
+
+    // Also try to match by task ID directly
+    if (task.id) {
+      const matchedId = titleToIdMap.get(taskTitleLower);
+      if (matchedId) {
+        accountedIds.add(matchedId);
       }
+      // If the task ID exists in our original map, mark it as accounted
+      if (originalTaskMap.has(task.id)) {
+        accountedIds.add(task.id);
+      }
+    }
+
+    // Try matching by title (including split task format "Task (Part X of Y)")
+    const baseTitle = getBaseTaskTitle(taskTitleLower);
+    const baseTitleId = titleToIdMap.get(baseTitle);
+    if (baseTitleId) {
+      accountedIds.add(baseTitleId);
     }
   });
 
-  // Any tasks remaining in originalTaskMap are missing from the schedule
-  const missingTasks = Array.from(originalTaskMap.values()).map((task) => task.title);
+  // Find missing tasks - tasks whose ID was never accounted for
+  // For split tasks, we consider them accounted if ANY part was scheduled
+  const missingTasks: string[] = [];
+  const checkedIds = new Set<string>();
+
+  originalTasks.forEach((task) => {
+    // Skip if we already checked this ID (handles split tasks with same ID)
+    if (checkedIds.has(task.id)) {
+      return;
+    }
+    checkedIds.add(task.id);
+
+    if (!accountedIds.has(task.id)) {
+      // For split tasks, report the original title if available, otherwise the task title
+      const reportTitle = task.originalTitle || task.title;
+      // Avoid duplicates
+      if (!missingTasks.includes(reportTitle)) {
+        missingTasks.push(reportTitle);
+      }
+    }
+  });
 
   return {
     isMissingTasks: missingTasks.length > 0,
@@ -376,6 +422,35 @@ function validateAllTasksIncluded(
     scheduledCount: filteredScheduledTasks.length,
     originalCount: originalTasks.length,
   };
+}
+
+// Helper function to parse time from either ISO string or HH:MM format
+function parseTimeString(timeStr: string): Date {
+  const result = new Date();
+
+  // Check if it's an ISO string
+  if (timeStr.includes('T') || timeStr.includes('Z')) {
+    const parsed = new Date(timeStr);
+    if (!isNaN(parsed.getTime())) {
+      return parsed;
+    }
+  }
+
+  // Try HH:MM format
+  const parts = timeStr.split(':').map(Number);
+  if (parts.length >= 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+    result.setHours(parts[0], parts[1], 0, 0);
+    return result;
+  }
+
+  // Fallback to current time
+  console.warn(`Could not parse time string: ${timeStr}, using current time`);
+  return result;
+}
+
+// Helper function to format time as ISO string
+function formatTimeAsISO(date: Date): string {
+  return date.toISOString();
 }
 
 // Add helper function to insert breaks when work time exceeds maximum allowed
@@ -388,76 +463,62 @@ function insertMissingBreaks(storyBlocks: StoryBlock[]): StoryBlock[] {
     const updatedTimeBoxes: TimeBox[] = [];
 
     let consecutiveWorkTime = 0;
-    const currentTime = new Date();
+    let currentTime = new Date();
 
     // Set the start time for the first time box
-    if (block.timeBoxes.length > 0) {
-      const [hours, minutes] = block.timeBoxes[0].startTime.split(':').map(Number);
-      currentTime.setHours(hours, minutes, 0, 0);
+    if (block.timeBoxes.length > 0 && block.timeBoxes[0].startTime) {
+      currentTime = parseTimeString(block.timeBoxes[0].startTime);
     }
 
     for (let i = 0; i < block.timeBoxes.length; i++) {
       const timeBox = block.timeBoxes[i];
 
-      // Add the current timeBox to our updated list
-      updatedTimeBoxes.push(timeBox);
-
-      // Update current time based on this time box
-      const [hours, minutes] = timeBox.startTime.split(':').map(Number);
-      currentTime.setHours(hours, minutes, 0, 0);
-
-      // Get next time after this box
-      const nextTime = new Date(currentTime);
-      nextTime.setMinutes(nextTime.getMinutes() + timeBox.duration);
-
-      // Track consecutive work time
+      // Check if we need to insert a break BEFORE adding this work block
+      // This prevents exceeding the max work time
       if (timeBox.type === 'work') {
-        consecutiveWorkTime += timeBox.duration;
+        const projectedWorkTime = consecutiveWorkTime + timeBox.duration;
 
-        // Check if we need to insert a break
-        if (
-          consecutiveWorkTime > DURATION_RULES.MAX_WORK_WITHOUT_BREAK &&
-          (i === block.timeBoxes.length - 1 || block.timeBoxes[i + 1].type === 'work')
-        ) {
+        if (projectedWorkTime > DURATION_RULES.MAX_WORK_WITHOUT_BREAK && consecutiveWorkTime > 0) {
           console.log(
-            `Inserting break after ${timeBox.duration} min work session at ${nextTime.toTimeString().slice(0, 5)} (consecutive work time: ${consecutiveWorkTime} min)`
+            `Inserting break BEFORE work session "${timeBox.tasks?.[0]?.title || 'unknown'}" at ${formatTimeAsISO(currentTime)} (would exceed limit: ${projectedWorkTime} min)`
           );
 
-          // Create a new break time box
-          const breakDuration = 15; // Use a long break when hitting the max work threshold
-          const breakStartTime = nextTime.toTimeString().slice(0, 5); // Format as HH:MM
-
+          // Create a new break time box BEFORE the work
+          const breakDuration = 15;
           const breakTimeBox: TimeBox = {
             type: 'long-break',
-            startTime: breakStartTime,
+            startTime: formatTimeAsISO(currentTime),
             duration: breakDuration,
             tasks: [],
           };
 
-          // Add the break
+          // Add the break first
           updatedTimeBoxes.push(breakTimeBox);
+
+          // Update current time
+          currentTime = new Date(currentTime.getTime() + breakDuration * 60000);
 
           // Reset consecutive work time counter
           consecutiveWorkTime = 0;
-
-          // Update the next start time for subsequent time boxes
-          nextTime.setMinutes(nextTime.getMinutes() + breakDuration);
         }
+      }
+
+      // Update the timeBox's start time
+      timeBox.startTime = formatTimeAsISO(currentTime);
+
+      // Add the current timeBox to our updated list
+      updatedTimeBoxes.push(timeBox);
+
+      // Update current time based on this time box duration
+      currentTime = new Date(currentTime.getTime() + timeBox.duration * 60000);
+
+      // Track consecutive work time
+      if (timeBox.type === 'work') {
+        consecutiveWorkTime += timeBox.duration;
       } else if (timeBox.type === 'long-break') {
         consecutiveWorkTime = 0;
       } else if (timeBox.type === 'short-break') {
-        consecutiveWorkTime = Math.max(0, consecutiveWorkTime - 25); // Reduce accumulated work time
-      }
-
-      // Update start times for all subsequent time boxes
-      if (i < block.timeBoxes.length - 1) {
-        for (let j = i + 1; j < block.timeBoxes.length; j++) {
-          const nextBox = block.timeBoxes[j];
-          nextBox.startTime = nextTime.toTimeString().slice(0, 5);
-
-          // Update next time for following boxes
-          nextTime.setMinutes(nextTime.getMinutes() + nextBox.duration);
-        }
+        consecutiveWorkTime = Math.max(0, consecutiveWorkTime - 25);
       }
     }
 
@@ -654,17 +715,19 @@ Respond with a JSON session plan that follows this exact structure:
 }
 
 CRITICAL RULES:
+- YOU MUST INCLUDE ALL ${stories.length} STORIES AND ALL ${stories.reduce((sum, s) => sum + s.tasks.length, 0)} TASKS - do not skip any
 - Keep summaries extremely brief - just a few words is sufficient
 - Use short emoji icons
 - ENSURE your complete response fits within the available tokens
 - NEVER omit or truncate any part of the JSON structure
 - Produce valid, complete JSON with no trailing commas
 - NEVER change the story or task order provided
-- Preserve all task properties exactly as provided
+- Preserve all task properties exactly as provided (id, title, duration, taskCategory, projectType, isFrog)
 - Use ISO date strings for all times
 - Include empty tasks array for break time boxes
 - Ensure all durations are in minutes
-- Calculate accurate start and end times for each time box`,
+- Calculate accurate start and end times for each time box
+- If a task has "(Part X of Y)" in its title, include it exactly as written`,
             },
           ],
         });
@@ -935,9 +998,10 @@ CRITICAL RULES:
             console.log('- Work time:', workDuration);
             console.log('- Break time:', breakDuration);
 
-            // Add validation for maximum work time without substantial break
+            // Validation for maximum work time without substantial break
+            // Note: This validation should pass after insertMissingBreaks has run,
+            // as that function inserts long breaks before work blocks that would exceed the limit
             let consecutiveWorkTime = 0;
-            let lastBreakIndex = -1;
 
             for (let i = 0; i < block.timeBoxes.length; i++) {
               const currentBox = block.timeBoxes[i];
@@ -945,13 +1009,26 @@ CRITICAL RULES:
               if (currentBox.type === 'work') {
                 consecutiveWorkTime += currentBox.duration;
 
+                // Log for debugging
+                if (consecutiveWorkTime > DURATION_RULES.MAX_WORK_WITHOUT_BREAK * 0.9) {
+                  console.log(
+                    `Warning: Block "${block.title}" approaching max work time: ${consecutiveWorkTime}/${DURATION_RULES.MAX_WORK_WITHOUT_BREAK} min`
+                  );
+                }
+
                 if (consecutiveWorkTime > DURATION_RULES.MAX_WORK_WITHOUT_BREAK) {
-                  const breakTypes = block.timeBoxes
-                    .slice(lastBreakIndex + 1, i)
-                    .filter(
-                      (box: TimeBox) => box.type === 'short-break' || box.type === 'long-break'
+                  // This should not happen if insertMissingBreaks worked correctly
+                  console.error(
+                    `Block "${block.title}" exceeded max work time after break insertion`
+                  );
+                  console.error(
+                    `Time boxes:`,
+                    JSON.stringify(
+                      block.timeBoxes.map((b: TimeBox) => ({ type: b.type, duration: b.duration })),
+                      null,
+                      2
                     )
-                    .map((box: TimeBox) => box.type);
+                  );
 
                   throw new SessionCreationError(
                     'Too much work time without a substantial break',
@@ -961,16 +1038,14 @@ CRITICAL RULES:
                       timeBox: currentBox.startTime,
                       consecutiveWorkTime,
                       maxAllowed: DURATION_RULES.MAX_WORK_WITHOUT_BREAK,
-                      breaksSince: breakTypes,
                     }
                   );
                 }
               } else if (currentBox.type === 'long-break') {
                 consecutiveWorkTime = 0;
-                lastBreakIndex = i;
               } else if (currentBox.type === 'short-break') {
-                consecutiveWorkTime = Math.max(0, consecutiveWorkTime - 25); // Reduce accumulated work time
-                lastBreakIndex = i;
+                // Short breaks reduce accumulated work time but don't fully reset it
+                consecutiveWorkTime = Math.max(0, consecutiveWorkTime - 25);
               }
             }
           }
@@ -1007,6 +1082,28 @@ CRITICAL RULES:
           }
         );
 
+        // Log for debugging
+        console.log(`\nTask validation:`);
+        console.log(`- Stories returned by AI: ${parsedData.storyBlocks.length}`);
+        console.log(`- Stories expected: ${stories.length}`);
+        console.log(`- Tasks scheduled: ${allScheduledTasks.length}`);
+        console.log(
+          `- Tasks expected: ${stories.reduce((sum: number, s: Story) => sum + s.tasks.length, 0)}`
+        );
+
+        // Check if any stories are missing entirely
+        const returnedStoryTitles = new Set(
+          parsedData.storyBlocks.map((b: StoryBlock) => b.title.toLowerCase())
+        );
+        const missingStories = stories.filter(
+          (s: Story) => !returnedStoryTitles.has(s.title.toLowerCase())
+        );
+        if (missingStories.length > 0) {
+          console.error(
+            `WARNING: AI response is missing entire stories: ${missingStories.map((s: Story) => s.title).join(', ')}`
+          );
+        }
+
         // Validate that all original tasks are included
         const validationResult = validateAllTasksIncluded(
           stories.flatMap((story: Story) => story.tasks),
@@ -1015,6 +1112,9 @@ CRITICAL RULES:
 
         if (validationResult.isMissingTasks) {
           console.error('Missing tasks in schedule:', validationResult.missingTasks);
+          console.error(
+            `Scheduled ${validationResult.scheduledCount} of ${validationResult.originalCount} tasks`
+          );
           throw new SessionCreationError(
             'Some tasks are missing from the schedule',
             'MISSING_TASKS',
