@@ -31,7 +31,7 @@ const apps: AppInfo[] = [
     name: 'Tempo',
     description: 'AI task timer',
     elevatorPitch:
-      "Work with your natural rhythm, not against it. Tempo uses AI to learn when you're most productive and schedules tasks accordingly.",
+      "Work with your natural rhythm, not against it. Tempo uses AI to learn when you're most productive.",
     designSystem: 'Dark Mode',
     color: '#5E6AD2',
     timeline: 'now',
@@ -44,32 +44,32 @@ const apps: AppInfo[] = [
     name: 'Nurture',
     description: 'Relationship CRM',
     elevatorPitch:
-      'Never forget a birthday or let a friendship fade. Nurture helps you maintain meaningful relationships with gentle reminders and interaction tracking.',
+      'Never forget a birthday or let a friendship fade. Gentle reminders and interaction tracking.',
     designSystem: 'Biophilic',
     color: '#2D5A45',
     timeline: 'now',
     releaseDate: 'Q1 2026',
     status: 'alpha',
   },
+  // NEXT - Coming soon
   {
     id: 'justincase',
     name: 'JustInCase',
     description: 'Small claims helper',
     elevatorPitch:
-      'Document everything, stress about nothing. JustInCase helps you build airtight cases for small claims court with guided evidence collection.',
+      'Document everything, stress about nothing. Build airtight cases for small claims court.',
     designSystem: 'Daylight Reading',
-    color: '#1C1C1C',
+    color: '#64748B',
     timeline: 'next',
     releaseDate: 'Q3 2026',
     status: 'coming-soon',
   },
-  // NEXT - Coming soon
   {
     id: 'friendly',
     name: 'FriendLy',
     description: 'Friendship calendar',
     elevatorPitch:
-      'Coordinate hangouts without the group chat chaos. FriendLy finds the perfect time for everyone to meet up.',
+      'Coordinate hangouts without the group chat chaos. Finds the perfect time for everyone.',
     designSystem: 'Liquid',
     color: '#3B82F6',
     timeline: 'next',
@@ -81,7 +81,7 @@ const apps: AppInfo[] = [
     name: 'Augment',
     description: 'IO psychology jobs',
     elevatorPitch:
-      'Find work that actually fits you. Augment matches your personality and work style to careers using IO psychology principles.',
+      'Find work that actually fits you. Matches personality and work style to careers.',
     designSystem: 'Maximalist',
     color: '#9333EA',
     timeline: 'next',
@@ -93,8 +93,7 @@ const apps: AppInfo[] = [
     id: 'manifest',
     name: 'Manifest',
     description: 'Picky matchmaking',
-    elevatorPitch:
-      'Dating for people with standards. Manifest uses detailed compatibility matching for those who know exactly what they want.',
+    elevatorPitch: 'Dating for people with standards. Detailed compatibility matching.',
     designSystem: 'Brutalistic',
     color: '#000000',
     timeline: 'later',
@@ -105,8 +104,7 @@ const apps: AppInfo[] = [
     id: 'lol',
     name: 'LoL',
     description: 'Gamified chores',
-    elevatorPitch:
-      'Turn household tasks into a game everyone wants to play. LoL makes chores fun with rewards, streaks, and friendly competition.',
+    elevatorPitch: 'Turn household tasks into a game. Rewards, streaks, and friendly competition.',
     designSystem: 'Papermorphic',
     color: '#2196F3',
     timeline: 'later',
@@ -115,63 +113,339 @@ const apps: AppInfo[] = [
   },
 ];
 
-const timelineLabels: Record<Timeline, { label: string; description: string }> = {
-  now: { label: 'Now', description: 'Active Development' },
-  next: { label: 'Next', description: 'Coming Soon' },
-  later: { label: 'Later', description: 'Future Plans' },
+const timelineConfig: Record<Timeline, { label: string; description: string; color: string }> = {
+  now: {
+    label: 'Now',
+    description: 'Active Development',
+    color: '#10B981', // Emerald
+  },
+  next: {
+    label: 'Next',
+    description: 'Coming Soon',
+    color: '#F59E0B', // Amber
+  },
+  later: {
+    label: 'Later',
+    description: 'Future Plans',
+    color: '#8B5CF6', // Violet
+  },
 };
 
-// First app in each timeline for navigation
-const firstAppByTimeline: Record<Timeline, AppTab> = {
-  now: 'nurture',
+// First app in each timeline for navigation (fallback logic)
+const firstAppByTimeline: Record<string, AppTab> = {
+  now: 'tempo',
   next: 'friendly',
   later: 'manifest',
 };
 
-// App Tag with hover tooltip
-const AppTag: Component<{ app: AppInfo }> = (props) => {
+// =============================================================================
+// KINETIC & ISOMETRIC COMPONENTS
+// =============================================================================
+
+const KineticText: Component<{
+  text: string;
+  delay?: number;
+  style?: any;
+}> = (props) => {
+  return (
+    <h1
+      style={{
+        display: 'inline-block',
+        animation: 'slideUpFade 0.8s cubic-bezier(0.2, 0.8, 0.2, 1) forwards',
+        opacity: 0,
+        transform: 'translateY(20px)',
+        'animation-delay': `${props.delay || 0}ms`,
+        ...props.style,
+      }}
+    >
+      <For each={props.text.split('')}>
+        {(char) => (
+          <span
+            style={{
+              display: 'inline-block',
+              transition: 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), color 0.3s ease',
+              'min-width': char === ' ' ? '0.3em' : 'auto',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-4px) scale(1.1)';
+              e.currentTarget.style.color = '#4ECDC4';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0) scale(1)';
+              e.currentTarget.style.color = 'inherit';
+            }}
+          >
+            {char}
+          </span>
+        )}
+      </For>
+    </h1>
+  );
+};
+
+const IsometricCard: Component<{
+  app: AppInfo;
+  onClick: () => void;
+}> = (props) => {
+  return (
+    <div
+      onClick={props.onClick}
+      style={{
+        position: 'relative',
+        width: '100%',
+        height: '180px', // Fixed height for uniformity
+        cursor: 'pointer',
+        transition: 'transform 0.3s ease',
+        transform: 'perspective(1000px) rotateX(10deg) rotateY(-10deg)', // Subtle 3D
+        'transform-style': 'preserve-3d',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform =
+          'perspective(1000px) rotateX(0deg) rotateY(0deg) scale(1.05) translateZ(20px)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'perspective(1000px) rotateX(10deg) rotateY(-10deg)';
+      }}
+    >
+      {/* Shadow */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '20px',
+          left: '20px',
+          right: '-20px',
+          bottom: '-20px',
+          background: 'rgba(0,0,0,0.5)',
+          filter: 'blur(20px)',
+          'border-radius': '20px',
+          'z-index': 0,
+          transform: 'translateZ(-50px)',
+        }}
+      />
+
+      {/* Main Face */}
+      <div
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          width: '100%',
+          height: '100%',
+          background: `linear-gradient(135deg, ${props.app.color}20, #1A1A2E)`,
+          'backdrop-filter': 'blur(10px)',
+          border: `1px solid ${props.app.color}40`,
+          'border-radius': '20px',
+          padding: '24px',
+          display: 'flex',
+          'flex-direction': 'column',
+          gap: '12px',
+          overflow: 'hidden',
+          'box-shadow': `inset 0 0 0 1px rgba(255,255,255,0.1), inset 0 0 20px ${props.app.color}20`,
+          'z-index': 10,
+        }}
+      >
+        {/* Top Edge Highlight */}
+        <div
+          style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '1px',
+            background: `linear-gradient(90deg, transparent, ${props.app.color}, transparent)`,
+          }}
+        />
+
+        <div style={{ display: 'flex', 'align-items': 'center', gap: '12px' }}>
+          <div
+            style={{
+              width: '32px',
+              height: '32px',
+              'border-radius': '8px',
+              background: props.app.color,
+              display: 'flex',
+              'align-items': 'center',
+              'justify-content': 'center',
+              color: 'white',
+              'font-weight': 'bold',
+              'box-shadow': `0 4px 12px ${props.app.color}60`,
+            }}
+          >
+            {props.app.name[0]}
+          </div>
+          <h4 style={{ margin: 0, color: 'white', 'font-size': '18px' }}>{props.app.name}</h4>
+        </div>
+
+        <p
+          style={{
+            margin: 0,
+            'font-size': '13px',
+            color: 'rgba(255,255,255,0.7)',
+            'line-height': '1.4',
+          }}
+        >
+          {props.app.description}
+        </p>
+
+        <div style={{ 'margin-top': 'auto', display: 'flex', gap: '8px' }}>
+          <span
+            style={{
+              'font-size': '10px',
+              padding: '4px 8px',
+              'border-radius': '12px',
+              background: 'rgba(255,255,255,0.1)',
+              color: 'rgba(255,255,255,0.8)',
+            }}
+          >
+            {props.app.releaseDate}
+          </span>
+        </div>
+      </div>
+
+      {/* Side Face (Thickness) */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '0',
+          right: '-10px',
+          width: '10px',
+          height: '100%',
+          background: props.app.color,
+          filter: 'brightness(0.6)',
+          transform: 'skewY(45deg) translateZ(-1px)',
+          'transform-origin': 'left',
+          'border-top-right-radius': '4px',
+          'border-bottom-right-radius': '4px',
+        }}
+      />
+
+      {/* Bottom Face (Thickness) */}
+      <div
+        style={{
+          position: 'absolute',
+          bottom: '-10px',
+          left: '0',
+          width: '100%',
+          height: '10px',
+          background: props.app.color,
+          filter: 'brightness(0.4)',
+          transform: 'skewX(45deg) translateZ(-1px)',
+          'transform-origin': 'top',
+          'border-bottom-left-radius': '4px',
+          'border-bottom-right-radius': '4px',
+        }}
+      />
+    </div>
+  );
+};
+
+// Compact App Item with bracket styling and tooltip
+const AppItem: Component<{ app: AppInfo; onClick: () => void }> = (props) => {
   const [showTooltip, setShowTooltip] = createSignal(false);
 
   return (
     <div
       style={{
         position: 'relative',
-        display: 'inline-block',
+        display: 'block',
       }}
       onMouseEnter={() => setShowTooltip(true)}
       onMouseLeave={() => setShowTooltip(false)}
       onFocus={() => setShowTooltip(true)}
       onBlur={() => setShowTooltip(false)}
     >
-      <span
+      <button
+        onClick={props.onClick}
         tabIndex={0}
         role="button"
         aria-describedby={`tooltip-${props.app.id}`}
         style={{
-          padding: '6px 12px',
-          background: `${props.app.color}30`,
-          'border-radius': '12px',
-          'font-size': '12px',
-          'font-weight': '500',
-          color: 'rgba(255,255,255,0.9)',
+          display: 'flex',
+          'align-items': 'center',
+          gap: '12px',
+          padding: '10px 14px',
+          background: 'transparent',
+          border: 'none',
           cursor: 'pointer',
-          display: 'inline-block',
           transition: 'all 0.2s ease',
-          border: '1px solid transparent',
+          'border-radius': '8px',
+          width: '100%',
+          'text-align': 'left',
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.background = `${props.app.color}50`;
-          e.currentTarget.style.borderColor = `${props.app.color}60`;
-          e.currentTarget.style.transform = 'translateY(-2px)';
+          e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+          e.currentTarget.style.transform = 'translateX(4px)';
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.background = `${props.app.color}30`;
-          e.currentTarget.style.borderColor = 'transparent';
-          e.currentTarget.style.transform = 'translateY(0)';
+          e.currentTarget.style.background = 'transparent';
+          e.currentTarget.style.transform = 'translateX(0)';
         }}
       >
-        {props.app.name}
-      </span>
+        {/* Left bracket */}
+        <span
+          style={{
+            color: props.app.color,
+            'font-size': '18px',
+            'font-weight': '300',
+            opacity: 0.6,
+          }}
+        >
+          [
+        </span>
+
+        {/* App icon/logo */}
+        <div
+          style={{
+            width: '28px',
+            height: '28px',
+            'border-radius': '6px',
+            background: props.app.color,
+            display: 'flex',
+            'align-items': 'center',
+            'justify-content': 'center',
+            'flex-shrink': 0,
+            border: '1px solid rgba(255,255,255,0.15)',
+            'box-shadow': `0 0 12px ${props.app.color}40, inset 0 1px 0 rgba(255,255,255,0.1)`,
+          }}
+        >
+          <Show
+            when={props.app.id === 'tempo'}
+            fallback={
+              <span style={{ color: 'white', 'font-size': '12px', 'font-weight': '600' }}>
+                {props.app.name[0]}
+              </span>
+            }
+          >
+            <img
+              src="/tempo/tempo_logo.png"
+              alt="Tempo"
+              style={{ width: '18px', height: '18px', 'object-fit': 'contain' }}
+            />
+          </Show>
+        </div>
+
+        {/* App info */}
+        <div style={{ flex: 1, 'min-width': 0 }}>
+          <div style={{ 'font-size': '14px', 'font-weight': '600', color: 'white' }}>
+            {props.app.name}
+          </div>
+          <div style={{ 'font-size': '11px', color: 'rgba(255,255,255,0.4)' }}>
+            {props.app.description}
+          </div>
+        </div>
+
+        {/* Right bracket */}
+        <span
+          style={{
+            color: props.app.color,
+            'font-size': '18px',
+            'font-weight': '300',
+            opacity: 0.6,
+          }}
+        >
+          ]
+        </span>
+      </button>
 
       {/* Tooltip */}
       <Show when={showTooltip()}>
@@ -232,7 +506,13 @@ const AppTag: Component<{ app: AppInfo }> = (props) => {
                 'font-size': '14px',
               }}
             >
-              {props.app.name.charAt(0)}
+              <Show when={props.app.id === 'tempo'} fallback={props.app.name.charAt(0)}>
+                <img
+                  src="/tempo/tempo_logo.png"
+                  alt="Tempo"
+                  style={{ width: '20px', height: '20px', 'object-fit': 'contain' }}
+                />
+              </Show>
             </div>
             <div>
               <div
@@ -272,177 +552,9 @@ const AppTag: Component<{ app: AppInfo }> = (props) => {
   );
 };
 
-// Get timeline from app id
-const getTimelineFromApp = (appId: AppTab): Timeline => {
-  const app = apps.find((a) => a.id === appId);
-  return app?.timeline || 'now';
-};
-
-// TACo Logo Component - Brand identity anchor
-const TacoLogo: Component<{ size?: number }> = (props) => {
-  const size = props.size || 38;
-  const brandGradient = `linear-gradient(135deg, ${navTokens.brand.coral} 0%, ${navTokens.brand.yellow} 50%, ${navTokens.brand.teal} 100%)`;
-
-  return (
-    <A
-      href="/"
-      aria-label="Thoughtful App Co. - Return to home page"
-      style={{
-        display: 'flex',
-        'align-items': 'center',
-        'justify-content': 'center',
-        width: `${size}px`,
-        height: `${size}px`,
-        background: brandGradient,
-        border: 'none',
-        'border-radius': navTokens.radius.sm,
-        cursor: 'pointer',
-        transition: navTokens.transitions.normal,
-        'box-shadow': `0 2px 8px ${navTokens.brand.coral}30, ${navTokens.shadows.sm}`,
-        'text-decoration': 'none',
-        outline: 'none',
-        position: 'relative',
-        overflow: 'hidden',
-        'flex-shrink': 0,
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = 'scale(1.05)';
-        e.currentTarget.style.boxShadow = `0 4px 16px ${navTokens.brand.coral}40, 0 2px 6px rgba(0,0,0,0.08)`;
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'scale(1)';
-        e.currentTarget.style.boxShadow = `0 2px 8px ${navTokens.brand.coral}30, ${navTokens.shadows.sm}`;
-      }}
-      onFocus={(e) => {
-        e.currentTarget.style.boxShadow = `${navTokens.shadows.focus} ${navTokens.brand.teal}60, 0 2px 8px ${navTokens.brand.coral}30`;
-      }}
-      onBlur={(e) => {
-        e.currentTarget.style.boxShadow = `0 2px 8px ${navTokens.brand.coral}30, ${navTokens.shadows.sm}`;
-      }}
-    >
-      {/* Subtle shine overlay */}
-      <div
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          height: '50%',
-          background: 'linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 100%)',
-          'border-radius': `${navTokens.radius.sm} ${navTokens.radius.sm} 0 0`,
-          'pointer-events': 'none',
-        }}
-      />
-      <svg
-        width={size * 0.55}
-        height={size * 0.55}
-        viewBox="0 0 24 24"
-        fill="none"
-        aria-hidden="true"
-      >
-        <path
-          d="M12 3C7.5 3 4 6 4 9C4 10.5 4.5 12 6 13.5C7.5 15 9.5 16 12 16C14.5 16 16.5 15 18 13.5C19.5 12 20 10.5 20 9C20 6 16.5 3 12 3Z"
-          fill="white"
-          opacity="0.95"
-        />
-        <path
-          d="M6 13C6 13 7 17 12 17C17 17 18 13 18 13"
-          stroke="white"
-          stroke-width="2"
-          stroke-linecap="round"
-          opacity="0.95"
-        />
-        <circle cx="9" cy="9" r="1.5" fill={navTokens.brand.coral} />
-        <circle cx="15" cy="9" r="1.5" fill={navTokens.brand.teal} />
-        <circle cx="12" cy="11" r="1" fill={navTokens.brand.yellow} />
-      </svg>
-    </A>
-  );
-};
-
 // Main Landing Page with Manifesto
 const LandingPage: Component = () => {
   const navigate = useNavigate();
-
-  const handleSelectTimeline = (timeline: Timeline) => {
-    const firstApp = firstAppByTimeline[timeline];
-    navigate(`/${firstApp}`);
-  };
-
-  const philosophies = [
-    {
-      category: 'Design Philosophy',
-      items: [
-        {
-          title: 'For Human Good',
-          desc: 'Build and product roadmap dedicated to augmenting natural realities and subverting damage from profit-driven lifestyle applications',
-        },
-        {
-          title: 'Anti-Hero Application Patterns',
-          desc: 'Weaponize "negative" or dark patterns for good; applications should help basic human psychology and respect individual\'s "true nature"',
-        },
-        {
-          title: 'Simple & Artistic Design',
-          desc: 'Design influenced by UX/UI best practices while respecting the art of design',
-        },
-        {
-          title: 'Phone As a Server',
-          desc: 'Phone serves the individual rather than absorbing them; moonshots include wearables and notifications to increase reality time',
-        },
-      ],
-    },
-    {
-      category: 'Business Philosophy',
-      items: [
-        {
-          title: 'The New Bundle',
-          desc: 'Marketplace allowing individuals to pick up and drop apps, countering anti-competitive bundles',
-        },
-        {
-          title: 'Build for Blue Oceans',
-          desc: 'Always seek new ideas serving market needs based on intrinsic value (not investor dollar value)',
-        },
-        {
-          title: 'Alpha to Omega App Cycles',
-          desc: 'Apps serve their purpose then phase out; embrace natural lifecycle',
-        },
-        {
-          title: 'Alpha to Omega Growth',
-          desc: 'Believe in natural life and death of companies rather than endless growth',
-        },
-      ],
-    },
-    {
-      category: 'Technology Philosophy',
-      items: [
-        {
-          title: 'Adopt Local First Principles',
-          desc: 'Enable local-first principles for data custody',
-        },
-        {
-          title: 'Open to Close(ish) Source',
-          desc: 'May maintain select open-source elements based on strategic considerations',
-        },
-      ],
-    },
-    {
-      category: 'Community Philosophy',
-      items: [
-        {
-          title: 'Transparent Funding',
-          desc: 'Explore community participation opportunities and compensation models that align with project goals',
-        },
-        {
-          title: 'New Hiring Models',
-          desc: 'Leverage various talent discovery methods including hackathons and open-source contributions',
-        },
-        {
-          title: 'Incentivize Open-Source',
-          desc: 'Explore incentive models for community participation as deemed beneficial',
-        },
-      ],
-    },
-  ];
 
   return (
     <div
@@ -452,356 +564,211 @@ const LandingPage: Component = () => {
         'font-family': "'Inter', system-ui, sans-serif",
         color: 'white',
         overflow: 'hidden',
+        position: 'relative',
       }}
     >
+      <style>
+        {`
+          @keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+          }
+        `}
+      </style>
+
+      {/* Decorative gradient orbs */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '-100px',
+          left: '10%',
+          width: '400px',
+          height: '400px',
+          background: 'radial-gradient(circle, rgba(255,107,107,0.15) 0%, transparent 70%)',
+          'border-radius': '50%',
+          filter: 'blur(40px)',
+          'pointer-events': 'none',
+        }}
+      />
+      <div
+        style={{
+          position: 'absolute',
+          top: '0',
+          right: '15%',
+          width: '300px',
+          height: '300px',
+          background: 'radial-gradient(circle, rgba(78,205,196,0.12) 0%, transparent 70%)',
+          'border-radius': '50%',
+          filter: 'blur(40px)',
+          'pointer-events': 'none',
+        }}
+      />
+
       {/* Hero Section */}
       <header
         style={{
           'text-align': 'center',
-          padding: '80px 24px 60px',
+          padding: '80px 24px 50px',
           position: 'relative',
+          'z-index': 1,
         }}
       >
-        {/* Decorative gradient orbs */}
+        {/* Logo */}
         <div
           style={{
-            position: 'absolute',
-            top: '-100px',
-            left: '10%',
-            width: '400px',
-            height: '400px',
-            background: 'radial-gradient(circle, rgba(255,107,107,0.15) 0%, transparent 70%)',
-            'border-radius': '50%',
-            filter: 'blur(40px)',
-            'pointer-events': 'none',
+            width: '72px',
+            height: '72px',
+            margin: '0 auto 20px',
+            background: 'linear-gradient(135deg, #FF6B6B 0%, #FFE66D 50%, #4ECDC4 100%)',
+            'border-radius': '18px',
+            display: 'flex',
+            'align-items': 'center',
+            'justify-content': 'center',
+            'box-shadow': '0 8px 32px rgba(255,107,107,0.3)',
           }}
-        />
-        <div
-          style={{
-            position: 'absolute',
-            top: '0',
-            right: '15%',
-            width: '300px',
-            height: '300px',
-            background: 'radial-gradient(circle, rgba(78,205,196,0.12) 0%, transparent 70%)',
-            'border-radius': '50%',
-            filter: 'blur(40px)',
-            'pointer-events': 'none',
-          }}
-        />
-
-        <div style={{ position: 'relative', 'z-index': 1 }}>
-          {/* Logo */}
-          <div
-            style={{
-              width: '80px',
-              height: '80px',
-              margin: '0 auto 24px',
-              background: 'linear-gradient(135deg, #FF6B6B 0%, #FFE66D 50%, #4ECDC4 100%)',
-              'border-radius': '20px',
-              display: 'flex',
-              'align-items': 'center',
-              'justify-content': 'center',
-              'box-shadow': '0 8px 32px rgba(255,107,107,0.3)',
-            }}
-          >
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
-              <path
-                d="M12 3C7.5 3 4 6 4 9C4 10.5 4.5 12 6 13.5C7.5 15 9.5 16 12 16C14.5 16 16.5 15 18 13.5C19.5 12 20 10.5 20 9C20 6 16.5 3 12 3Z"
-                fill="white"
-                opacity="0.95"
-              />
-              <path
-                d="M6 13C6 13 7 17 12 17C17 17 18 13 18 13"
-                stroke="white"
-                stroke-width="2"
-                stroke-linecap="round"
-                opacity="0.95"
-              />
-            </svg>
-          </div>
-
-          <h1
-            style={{
-              margin: '0 0 8px 0',
-              'font-size': '14px',
-              'font-weight': '600',
-              'letter-spacing': '3px',
-              'text-transform': 'uppercase',
-              color: 'rgba(255,255,255,0.5)',
-            }}
-          >
-            Thoughtful App Co.
-          </h1>
-
-          <h2
-            style={{
-              margin: '0 0 24px 0',
-              'font-size': 'clamp(32px, 5vw, 56px)',
-              'font-weight': '700',
-              'line-height': '1.1',
-              'letter-spacing': '-1px',
-              'max-width': '800px',
-              'margin-left': 'auto',
-              'margin-right': 'auto',
-            }}
-          >
-            Building Technology That{' '}
-            <span
-              style={{
-                background: 'linear-gradient(135deg, #FF6B6B, #FFE66D, #4ECDC4)',
-                '-webkit-background-clip': 'text',
-                '-webkit-text-fill-color': 'transparent',
-                'background-clip': 'text',
-              }}
-            >
-              Enables, Not Enslaves
-            </span>
-          </h2>
-
-          <p
-            style={{
-              margin: '0 auto 40px',
-              'max-width': '700px',
-              'font-size': '18px',
-              'line-height': '1.7',
-              color: 'rgba(255,255,255,0.7)',
-            }}
-          >
-            We're an open contribution venture studio creating applications that respect your time,
-            attention, and autonomy. Technology should enhance life, not hijack it.
-          </p>
-
-          <p
-            style={{
-              margin: '0 auto 48px',
-              'max-width': '650px',
-              'font-size': '15px',
-              'line-height': '1.6',
-              color: 'rgba(255,255,255,0.5)',
-              'font-style': 'italic',
-            }}
-          >
-            Our intent is to use this seismic shift in code mechanics propelled by LLM code agents,
-            to rapid develop design-first, human-first, local-first applications at scale to take
-            back technology for human good.
-          </p>
+        >
+          <svg width="42" height="42" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M12 3C7.5 3 4 6 4 9C4 10.5 4.5 12 6 13.5C7.5 15 9.5 16 12 16C14.5 16 16.5 15 18 13.5C19.5 12 20 10.5 20 9C20 6 16.5 3 12 3Z"
+              fill="white"
+              opacity="0.95"
+            />
+            <path
+              d="M6 13C6 13 7 17 12 17C17 17 18 13 18 13"
+              stroke="white"
+              stroke-width="2"
+              stroke-linecap="round"
+              opacity="0.95"
+            />
+          </svg>
         </div>
-      </header>
 
-      {/* Timeline Selection */}
-      <section
-        style={{
-          padding: '0 24px 60px',
-          'max-width': '1000px',
-          margin: '0 auto',
-        }}
-      >
-        <h3
+        <h1
           style={{
-            'text-align': 'center',
-            'font-size': '12px',
+            margin: '0 0 6px 0',
+            'font-size': '13px',
             'font-weight': '600',
             'letter-spacing': '2px',
             'text-transform': 'uppercase',
-            color: 'rgba(255,255,255,0.4)',
-            'margin-bottom': '24px',
+            color: 'rgba(255,255,255,0.5)',
           }}
         >
-          Explore Our Apps
-        </h3>
+          Thoughtful App Co.
+        </h1>
 
+        <h2
+          style={{
+            margin: '0 0 20px 0',
+            'font-size': 'clamp(28px, 4vw, 48px)',
+            'font-weight': '700',
+            'line-height': '1.1',
+            'letter-spacing': '-1px',
+            background: 'linear-gradient(135deg, #FF6B6B, #FFE66D, #4ECDC4)',
+            '-webkit-background-clip': 'text',
+            '-webkit-text-fill-color': 'transparent',
+            'background-clip': 'text',
+          }}
+        >
+          Enable, Don't Enslave
+        </h2>
+
+        <p
+          style={{
+            margin: '0 auto 8px',
+            'max-width': '600px',
+            'font-size': '16px',
+            'line-height': '1.6',
+            color: 'rgba(255,255,255,0.6)',
+          }}
+        >
+          A marketplace of applications respecting your time, attention, and autonomy.
+        </p>
+        <p
+          style={{
+            margin: '0 auto',
+            'font-size': '13px',
+            color: 'rgba(255,255,255,0.4)',
+          }}
+        >
+          Human-First • Local-First • Design-First • Open Contribution
+        </p>
+      </header>
+
+      {/* App Marketplace */}
+      <section
+        style={{
+          padding: '20px 24px 80px',
+          'max-width': '1000px',
+          margin: '0 auto',
+          position: 'relative',
+          'z-index': 1,
+        }}
+      >
         <div
           style={{
             display: 'grid',
             'grid-template-columns': 'repeat(3, 1fr)',
-            gap: '16px',
+            gap: '24px',
           }}
         >
           <For each={['now', 'next', 'later'] as Timeline[]}>
-            {(timeline) => {
-              const timelineApps = apps.filter((a) => a.timeline === timeline);
-              const colors = {
-                now: {
-                  bg: 'rgba(16, 185, 129, 0.1)',
-                  border: 'rgba(16, 185, 129, 0.3)',
-                  dot: '#10B981',
-                },
-                next: {
-                  bg: 'rgba(245, 158, 11, 0.1)',
-                  border: 'rgba(245, 158, 11, 0.3)',
-                  dot: '#F59E0B',
-                },
-                later: {
-                  bg: 'rgba(107, 114, 128, 0.1)',
-                  border: 'rgba(107, 114, 128, 0.3)',
-                  dot: '#6B7280',
-                },
-              };
+            {(quadrant) => {
+              const quadrantApps = apps.filter((a) => a.timeline === quadrant);
+              const config = timelineConfig[quadrant];
 
               return (
-                <button
-                  onClick={() => handleSelectTimeline(timeline)}
+                <div
                   style={{
-                    padding: '24px',
-                    background: colors[timeline].bg,
-                    border: `1px solid ${colors[timeline].border}`,
+                    background: 'rgba(255,255,255,0.02)',
+                    border: '1px solid rgba(255,255,255,0.06)',
                     'border-radius': '16px',
-                    cursor: 'pointer',
-                    'text-align': 'left',
-                    transition: 'all 0.3s ease',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-4px)';
-                    e.currentTarget.style.borderColor = colors[timeline].dot;
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0)';
-                    e.currentTarget.style.borderColor = colors[timeline].border;
+                    padding: '20px',
                   }}
                 >
+                  {/* Section Header */}
                   <div
                     style={{
                       display: 'flex',
                       'align-items': 'center',
-                      gap: '10px',
-                      'margin-bottom': '12px',
+                      gap: '8px',
+                      'margin-bottom': '16px',
+                      'padding-bottom': '12px',
+                      'border-bottom': '1px solid rgba(255,255,255,0.06)',
                     }}
                   >
                     <span
                       style={{
-                        width: '10px',
-                        height: '10px',
+                        width: '8px',
+                        height: '8px',
                         'border-radius': '50%',
-                        background: colors[timeline].dot,
+                        background: config.color,
+                        'box-shadow': `0 0 8px ${config.color}`,
                       }}
                     />
+                    <span style={{ 'font-size': '14px', 'font-weight': '600', color: 'white' }}>
+                      {config.label}
+                    </span>
                     <span
                       style={{
-                        'font-size': '18px',
-                        'font-weight': '600',
-                        color: 'white',
+                        'font-size': '11px',
+                        color: 'rgba(255,255,255,0.4)',
+                        'margin-left': 'auto',
                       }}
                     >
-                      {timelineLabels[timeline].label}
+                      {config.description}
                     </span>
                   </div>
-                  <p
-                    style={{
-                      margin: '0 0 16px 0',
-                      'font-size': '13px',
-                      color: 'rgba(255,255,255,0.5)',
-                    }}
-                  >
-                    {timelineLabels[timeline].description}
-                  </p>
-                  <div style={{ display: 'flex', gap: '8px', 'flex-wrap': 'wrap' }}>
-                    <For each={timelineApps}>{(app) => <AppTag app={app} />}</For>
-                  </div>
-                </button>
-              );
-            }}
-          </For>
-        </div>
-      </section>
 
-      {/* Philosophy Grid */}
-      <section
-        style={{
-          padding: '60px 24px 80px',
-          background: 'rgba(0,0,0,0.2)',
-        }}
-      >
-        <div style={{ 'max-width': '1200px', margin: '0 auto' }}>
-          <h3
-            style={{
-              'text-align': 'center',
-              'font-size': '12px',
-              'font-weight': '600',
-              'letter-spacing': '2px',
-              'text-transform': 'uppercase',
-              color: 'rgba(255,255,255,0.4)',
-              'margin-bottom': '12px',
-            }}
-          >
-            TACo Mission Statement
-          </h3>
-          <h4
-            style={{
-              'text-align': 'center',
-              'font-size': '28px',
-              'font-weight': '600',
-              color: 'white',
-              'margin-bottom': '48px',
-            }}
-          >
-            Our Philosophy
-          </h4>
-
-          <div
-            style={{
-              display: 'grid',
-              'grid-template-columns': 'repeat(auto-fit, minmax(280px, 1fr))',
-              gap: '24px',
-            }}
-          >
-            <For each={philosophies}>
-              {(section) => (
-                <div
-                  style={{
-                    background: 'rgba(255,255,255,0.03)',
-                    'border-radius': '16px',
-                    padding: '24px',
-                    border: '1px solid rgba(255,255,255,0.06)',
-                  }}
-                >
-                  <h5
-                    style={{
-                      margin: '0 0 20px 0',
-                      'font-size': '11px',
-                      'font-weight': '600',
-                      'letter-spacing': '1.5px',
-                      'text-transform': 'uppercase',
-                      color: 'rgba(255,255,255,0.4)',
-                      'padding-bottom': '12px',
-                      'border-bottom': '1px solid rgba(255,255,255,0.08)',
-                    }}
-                  >
-                    {section.category}
-                  </h5>
-
-                  <div style={{ display: 'flex', 'flex-direction': 'column', gap: '16px' }}>
-                    <For each={section.items}>
-                      {(item) => (
-                        <div>
-                          <h6
-                            style={{
-                              margin: '0 0 4px 0',
-                              'font-size': '14px',
-                              'font-weight': '600',
-                              color: 'rgba(255,255,255,0.9)',
-                            }}
-                          >
-                            {item.title}
-                          </h6>
-                          <p
-                            style={{
-                              margin: 0,
-                              'font-size': '13px',
-                              'line-height': '1.5',
-                              color: 'rgba(255,255,255,0.5)',
-                            }}
-                          >
-                            {item.desc}
-                          </p>
-                        </div>
-                      )}
+                  {/* App List */}
+                  <div style={{ display: 'flex', 'flex-direction': 'column', gap: '4px' }}>
+                    <For each={quadrantApps}>
+                      {(app) => <AppItem app={app} onClick={() => navigate(`/${app.id}`)} />}
                     </For>
                   </div>
                 </div>
-              )}
-            </For>
-          </div>
+              );
+            }}
+          </For>
         </div>
       </section>
 
@@ -1358,22 +1325,22 @@ const navTokens = {
   },
 
   // Timeline colors - Semantic meaning:
-  // Now = Teal (active, current, go)
-  // Next = Amber/Orange (upcoming, attention, prepare)
-  // Later = Purple/Slate (future, planned, distant)
+  // Now = Emerald (active, current, go)
+  // Next = Amber (upcoming, attention, prepare)
+  // Later = Violet (future, planned)
   timelineColors: {
     now: {
-      primary: '#10B981', // Emerald green - active/current
+      primary: '#10B981', // Emerald green
       glow: 'rgba(16, 185, 129, 0.5)',
       bg: 'rgba(16, 185, 129, 0.08)',
     },
     next: {
-      primary: '#F59E0B', // Amber - upcoming/attention
+      primary: '#F59E0B', // Amber
       glow: 'rgba(245, 158, 11, 0.5)',
       bg: 'rgba(245, 158, 11, 0.08)',
     },
     later: {
-      primary: '#8B5CF6', // Violet - future/planned
+      primary: '#8B5CF6', // Violet
       glow: 'rgba(139, 92, 246, 0.5)',
       bg: 'rgba(139, 92, 246, 0.08)',
     },
@@ -1637,19 +1604,22 @@ const TabNavigation: Component<{
             transform: mobileMenuOpen() ? 'rotate(90deg)' : 'rotate(0deg)',
           }}
         >
-          {mobileMenuOpen() ? (
+          <Show
+            when={mobileMenuOpen()}
+            fallback={
+              <>
+                <rect x="3" y="3" width="7" height="7" rx="1" />
+                <rect x="14" y="3" width="7" height="7" rx="1" />
+                <rect x="14" y="14" width="7" height="7" rx="1" />
+                <rect x="3" y="14" width="7" height="7" rx="1" />
+              </>
+            }
+          >
             <>
               <line x1="18" y1="6" x2="6" y2="18" />
               <line x1="6" y1="6" x2="18" y2="18" />
             </>
-          ) : (
-            <>
-              <rect x="3" y="3" width="7" height="7" rx="1" />
-              <rect x="14" y="3" width="7" height="7" rx="1" />
-              <rect x="14" y="14" width="7" height="7" rx="1" />
-              <rect x="3" y="14" width="7" height="7" rx="1" />
-            </>
-          )}
+          </Show>
         </svg>
       </button>
 
@@ -1718,29 +1688,134 @@ const TabNavigation: Component<{
             }}
           >
             {/* Header */}
-            <div style={{ 'margin-bottom': '48px', animation: 'slideDown 0.4s ease forwards' }}>
-              <div
+            <div
+              style={{
+                'margin-bottom': '48px',
+                animation: 'slideDown 0.4s ease forwards',
+                display: 'flex',
+                'align-items': 'center',
+                'justify-content': 'space-between',
+              }}
+            >
+              {/* Logo and Company Name - Clickable Home Button */}
+              <A
+                href="/"
+                onClick={() => setMobileMenuOpen(false)}
                 style={{
-                  'font-size': '14px',
-                  'text-transform': 'uppercase',
-                  'letter-spacing': '4px',
-                  color: 'rgba(255,255,255,0.4)',
-                  'margin-bottom': '16px',
+                  display: 'flex',
+                  'align-items': 'center',
+                  gap: '16px',
+                  'text-decoration': 'none',
+                  transition: 'all 0.3s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateX(4px)';
+                  e.currentTarget.style.opacity = '0.8';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateX(0)';
+                  e.currentTarget.style.opacity = '1';
                 }}
               >
-                Thoughtful App Co.
-              </div>
-              <h2
+                {/* Logo */}
+                <div
+                  style={{
+                    width: '56px',
+                    height: '56px',
+                    'border-radius': '14px',
+                    background: `linear-gradient(135deg, ${navTokens.brand.coral}, ${navTokens.brand.yellow}, ${navTokens.brand.teal})`,
+                    display: 'flex',
+                    'align-items': 'center',
+                    'justify-content': 'center',
+                    'box-shadow': '0 8px 24px rgba(0,0,0,0.3)',
+                  }}
+                >
+                  <svg
+                    width="32"
+                    height="32"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="white"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                    <polyline points="9 22 9 12 15 12 15 22" />
+                  </svg>
+                </div>
+                <div>
+                  <h2
+                    style={{
+                      'font-size': 'clamp(24px, 4vw, 36px)',
+                      'font-weight': '700',
+                      color: 'white',
+                      margin: 0,
+                      'line-height': 1.2,
+                      'font-family': navTokens.typography.fontFamily,
+                    }}
+                  >
+                    Thoughtful App Co.
+                  </h2>
+                  <div
+                    style={{
+                      'font-size': '14px',
+                      color: 'rgba(255,255,255,0.5)',
+                      'margin-top': '4px',
+                    }}
+                  >
+                    Apps that care
+                  </div>
+                </div>
+              </A>
+
+              {/* Settings Button */}
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  // Navigate to settings/profile - for now just close menu
+                  // TODO: Add actual settings route when available
+                  navigate('/settings');
+                }}
+                aria-label="Settings"
                 style={{
-                  'font-size': 'clamp(40px, 5vw, 64px)',
-                  'font-weight': '700',
-                  color: 'white',
-                  margin: 0,
-                  'line-height': 1,
+                  width: '48px',
+                  height: '48px',
+                  'border-radius': '50%',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  display: 'flex',
+                  'align-items': 'center',
+                  'justify-content': 'center',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s ease',
+                  color: 'rgba(255,255,255,0.7)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
+                  e.currentTarget.style.color = 'white';
+                  e.currentTarget.style.transform = 'rotate(45deg)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+                  e.currentTarget.style.color = 'rgba(255,255,255,0.7)';
+                  e.currentTarget.style.transform = 'rotate(0deg)';
                 }}
               >
-                Select App
-              </h2>
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                </svg>
+              </button>
             </div>
 
             {/* Timeline Tabs */}
@@ -1776,8 +1851,8 @@ const TabNavigation: Component<{
                         e.currentTarget.style.color = 'rgba(255,255,255,0.4)';
                     }}
                   >
-                    {timelineLabels[timeline].label}
-                    {menuTimeline() === timeline && (
+                    {timelineConfig[timeline].label}
+                    <Show when={menuTimeline() === timeline}>
                       <div
                         style={{
                           position: 'absolute',
@@ -1791,7 +1866,7 @@ const TabNavigation: Component<{
                           transition: 'all 0.3s ease',
                         }}
                       />
-                    )}
+                    </Show>
                   </button>
                 )}
               </For>
@@ -1873,7 +1948,7 @@ const TabNavigation: Component<{
                         padding: app.id === 'tempo' ? '4px' : '0',
                       }}
                     >
-                      {app.id === 'tempo' ? (
+                      <Show when={app.id === 'tempo'} fallback={app.name.charAt(0)}>
                         <img
                           src="/tempo/tempo_logo.png"
                           alt="Tempo Logo"
@@ -1883,9 +1958,7 @@ const TabNavigation: Component<{
                             'object-fit': 'contain',
                           }}
                         />
-                      ) : (
-                        app.name.charAt(0)
-                      )}
+                      </Show>
                     </div>
 
                     <div
@@ -1939,64 +2012,17 @@ const TabNavigation: Component<{
                 </button>
               ))}
             </div>
-
-            {/* Home Button */}
-            <div
-              style={{
-                'margin-top': 'auto',
-                'padding-top': '60px',
-                'text-align': 'center',
-                animation: 'slideDown 0.7s ease forwards',
-              }}
-            >
-              <A
-                href="/"
-                onClick={() => setMobileMenuOpen(false)}
-                style={{
-                  display: 'inline-flex',
-                  'align-items': 'center',
-                  gap: '12px',
-                  padding: '16px 32px',
-                  background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  'border-radius': '50px',
-                  color: 'white',
-                  'font-size': '16px',
-                  'font-weight': '600',
-                  'text-decoration': 'none',
-                  transition: 'all 0.3s ease',
-                  'font-family': navTokens.typography.fontFamily,
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-                  e.currentTarget.style.transform = 'translateY(0)';
-                }}
-              >
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
-                  <polyline points="9 22 9 12 15 12 15 22" />
-                </svg>
-                Back to Home
-              </A>
-            </div>
           </div>
         </div>
       </Show>
     </>
   );
+};
+
+// Get timeline from app id
+const getTimelineFromApp = (appId: AppTab): Timeline => {
+  const app = apps.find((a) => a.id === appId);
+  return app?.timeline || 'now';
 };
 
 // App page wrapper component - receives appId from route params
