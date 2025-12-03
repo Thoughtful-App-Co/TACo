@@ -1,0 +1,29 @@
+# Wrangler Configuration for Cloudflare Pages
+# Production deployment is handled by Cloudflare Pages via GitHub Actions
+
+name = "thoughtful-app-co"
+compatibility_date = "2024-01-01"
+
+# Pages Functions configuration
+pages_build_output_dir = "dist"
+
+# Environment variables
+# For production, these are set in Cloudflare Pages dashboard
+[vars]
+# Add any non-secret environment variables here
+
+# Preview environment (for PR previews)
+[env.preview]
+# Same configuration as production
+
+# Production environment
+[env.production]
+# Production-specific settings
+
+# Secret environment variables (loaded from .env.local or .dev.vars for local dev)
+# ANTHROPIC_API_KEY will be passed from the frontend or loaded from .dev.vars
+
+# Note: For local development with "Bring Your Own Key" feature,
+# the API key is passed from the frontend in the X-API-Key header
+# For shared local development, you can create a .dev.vars file with:
+# ANTHROPIC_API_KEY=your-key-here

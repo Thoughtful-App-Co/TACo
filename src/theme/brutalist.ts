@@ -6,14 +6,14 @@ import { Theme } from './types';
 export const brutalist: Theme = {
   name: 'manifest',
   colors: {
-    primary: '#000000',      // Pure black
-    secondary: '#1A1A1A',    // Near black
-    accent: '#FF0000',       // Raw red
-    background: '#FFFFFF',   // Stark white
-    surface: '#F5F5F5',      // Concrete gray
-    text: '#000000',         // High contrast
-    textMuted: '#666666',    // Industrial gray
-    border: '#000000',       // Hard edge
+    primary: '#000000', // Pure black
+    secondary: '#1A1A1A', // Near black
+    accent: '#FF0000', // Raw red
+    background: '#FFFFFF', // Stark white
+    surface: '#F5F5F5', // Concrete gray
+    text: '#000000', // High contrast
+    textMuted: '#666666', // Industrial gray
+    border: '#000000', // Hard edge
   },
   fonts: {
     body: "'IBM Plex Mono', 'Courier New', monospace",

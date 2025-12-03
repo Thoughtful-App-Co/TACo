@@ -1,4 +1,3 @@
-
 const BASE_URL = 'https://api-v2.onetcenter.org';
 const API_KEY = 'sKmBp-Jk05G-bmJzB-soNQQ';
 
@@ -24,8 +23,8 @@ export async function searchCareers(keyword: string): Promise<OnetCareer[]> {
   try {
     const response = await fetch(`${BASE_URL}/mnm/search?keyword=${encodeURIComponent(keyword)}`, {
       headers: {
-        'X-API-Key': API_KEY
-      }
+        'X-API-Key': API_KEY,
+      },
     });
 
     if (!response.ok) {
@@ -78,13 +77,19 @@ export interface OnetResultResponse {
   }[];
 }
 
-export async function getInterestProfilerQuestions(start: number = 1, end: number = 60): Promise<OnetQuestion[]> {
+export async function getInterestProfilerQuestions(
+  start: number = 1,
+  end: number = 60
+): Promise<OnetQuestion[]> {
   try {
-    const response = await fetch(`${BASE_URL}/mnm/interestprofiler/questions?start=${start}&end=${end}`, {
-      headers: {
-        'X-API-Key': API_KEY
+    const response = await fetch(
+      `${BASE_URL}/mnm/interestprofiler/questions?start=${start}&end=${end}`,
+      {
+        headers: {
+          'X-API-Key': API_KEY,
+        },
       }
-    });
+    );
 
     if (!response.ok) {
       console.error('O*NET API Error:', response.statusText);
@@ -99,12 +104,14 @@ export async function getInterestProfilerQuestions(start: number = 1, end: numbe
   }
 }
 
-export async function getInterestProfilerResults(answers: string): Promise<RiasecScoreWithDetails | null> {
+export async function getInterestProfilerResults(
+  answers: string
+): Promise<RiasecScoreWithDetails | null> {
   try {
     const response = await fetch(`${BASE_URL}/mnm/interestprofiler/results?answers=${answers}`, {
       headers: {
-        'X-API-Key': API_KEY
-      }
+        'X-API-Key': API_KEY,
+      },
     });
 
     if (!response.ok) {
@@ -113,17 +120,17 @@ export async function getInterestProfilerResults(answers: string): Promise<Riase
     }
 
     const data: OnetResultResponse = await response.json();
-    
+
     // Convert array to object
     const scores: any = {};
-    data.result.forEach(r => {
+    data.result.forEach((r) => {
       scores[r.code] = {
         score: r.score,
         description: r.description,
-        title: r.title
+        title: r.title,
       };
     });
-    
+
     return scores as RiasecScoreWithDetails;
   } catch (error) {
     console.error('Failed to fetch results:', error);
@@ -154,7 +161,7 @@ export async function getCareerDetails(code: string): Promise<OnetCareerDetails 
     const [careerRes, outlookRes, skillsRes] = await Promise.all([
       fetch(`${BASE_URL}/mnm/careers/${code}`, { headers: { 'X-API-Key': API_KEY } }),
       fetch(`${BASE_URL}/mnm/careers/${code}/job_outlook`, { headers: { 'X-API-Key': API_KEY } }),
-      fetch(`${BASE_URL}/mnm/careers/${code}/skills`, { headers: { 'X-API-Key': API_KEY } })
+      fetch(`${BASE_URL}/mnm/careers/${code}/skills`, { headers: { 'X-API-Key': API_KEY } }),
     ]);
 
     if (!careerRes.ok) {
@@ -171,7 +178,7 @@ export async function getCareerDetails(code: string): Promise<OnetCareerDetails 
       if (outlook.salary) {
         salaryData = {
           annual_median: outlook.salary.annual_median,
-          hourly_median: outlook.salary.hourly_median
+          hourly_median: outlook.salary.hourly_median,
         };
       }
     }
@@ -186,7 +193,7 @@ export async function getCareerDetails(code: string): Promise<OnetCareerDetails 
     return {
       ...careerData,
       salary: salaryData,
-      skills: skillsData
+      skills: skillsData,
     };
   } catch (error) {
     console.error('Failed to fetch career details:', error);
@@ -194,6 +201,9 @@ export async function getCareerDetails(code: string): Promise<OnetCareerDetails 
   }
 }
 
+export interface OnetCareerMatch extends OnetCareer {
+  fit: number;
+}
 
 export interface OnetCareersResponse {
   start: number;
@@ -202,7 +212,9 @@ export interface OnetCareersResponse {
   career: OnetCareerMatch[];
 }
 
-export async function getInterestProfilerCareers(scores: RiasecScoreWithDetails): Promise<OnetCareerMatch[]> {
+export async function getInterestProfilerCareers(
+  scores: RiasecScoreWithDetails
+): Promise<OnetCareerMatch[]> {
   try {
     const queryParams = new URLSearchParams({
       realistic: scores.realistic.score.toString(),
@@ -213,11 +225,14 @@ export async function getInterestProfilerCareers(scores: RiasecScoreWithDetails)
       conventional: scores.conventional.score.toString(),
     });
 
-    const response = await fetch(`${BASE_URL}/mnm/interestprofiler/careers?${queryParams.toString()}`, {
-      headers: {
-        'X-API-Key': API_KEY
+    const response = await fetch(
+      `${BASE_URL}/mnm/interestprofiler/careers?${queryParams.toString()}`,
+      {
+        headers: {
+          'X-API-Key': API_KEY,
+        },
       }
-    });
+    );
 
     if (!response.ok) {
       console.error('O*NET API Error:', response.statusText);
@@ -231,4 +246,3 @@ export async function getInterestProfilerCareers(scores: RiasecScoreWithDetails)
     return [];
   }
 }
-

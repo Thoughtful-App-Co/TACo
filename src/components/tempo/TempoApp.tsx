@@ -1,485 +1,447 @@
-import { Component, For, createSignal } from 'solid-js';
-import { Task } from '../../schemas/tempo.schema';
-import { linear, taskColors } from '../../theme/linear';
+/**
+ * Tempo - Time-Block Task Management App
+ *
+ * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
+ *
+ * This software is proprietary and confidential. Unauthorized copying, modification,
+ * or distribution of this code is strictly prohibited. The frontend logic is local-first
+ * and protected intellectual property. No infringement or unauthorized use is permitted.
+ */
 
-const sampleTasks: Task[] = [
-  { id: '1', title: 'Review Q4 planning doc', estimatedMinutes: 25, status: 'in-progress', priority: 'high', tags: ['work'] },
-  { id: '2', title: 'Code review: Auth PR', estimatedMinutes: 45, status: 'todo', priority: 'urgent', tags: ['code'] },
-  { id: '3', title: 'Write weekly standup notes', estimatedMinutes: 15, status: 'todo', priority: 'medium', tags: ['work'] },
-  { id: '4', title: 'Research AI time estimation APIs', estimatedMinutes: 60, status: 'backlog', priority: 'low', tags: ['research'] },
-  { id: '5', title: 'Respond to client emails', estimatedMinutes: 20, status: 'done', priority: 'medium', tags: ['comms'] },
-];
+import { Component, createSignal, Show } from 'solid-js';
+import { BrainDump } from './brain-dump';
+import { CaretRight, Gear, ArrowLeft } from 'phosphor-solid';
+import { tempoDesign } from './theme/tempo-design';
+import { TempoLogo } from './ui/logo';
+import { Button } from './ui/button';
+import { SettingsModal } from './ui/settings-modal';
+import { Tabs, type Tab } from './ui/tabs';
+import { SessionsList } from './session-manager/components/sessions-list';
+import { SessionView } from './session-manager/components/session-view';
+import { ApiConfigService } from './services/api-config.service';
 
-const StatusIcon: Component<{ status: Task['status'] }> = (props) => {
-  const icons: Record<Task['status'], string> = {
-    'backlog': 'M12 4v16m-8-8h16',
-    'todo': 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z',
-    'in-progress': 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z',
-    'done': 'M5 13l4 4L19 7',
-    'cancelled': 'M6 18L18 6M6 6l12 12',
-  };
-  
-  return (
-    <svg 
-      width="16" 
-      height="16" 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke={taskColors[props.status === 'in-progress' ? 'inProgress' : props.status]}
-      stroke-width="2"
-      stroke-linecap="round"
-      stroke-linejoin="round"
-    >
-      <path d={icons[props.status]} />
-    </svg>
-  );
-};
+interface Stats {
+  totalTasks: number;
+  totalDuration: number;
+  totalStories: number;
+  totalFrogs: number;
+}
 
-const PriorityBadge: Component<{ priority: Task['priority'] }> = (props) => {
-  const colors: Record<Task['priority'], string> = {
-    urgent: '#EF4444',
-    high: '#F59E0B',
-    medium: '#6B7280',
-    low: '#374151',
-  };
-  
-  return (
-    <span style={{
-      display: 'inline-flex',
-      'align-items': 'center',
-      gap: '4px',
-      padding: '2px 8px',
-      'background': `${colors[props.priority]}20`,
-      'border-radius': '4px',
-      'font-size': '11px',
-      'font-weight': '500',
-      color: colors[props.priority],
-      'text-transform': 'uppercase',
-      'letter-spacing': '0.5px',
-    }}>
-      {props.priority === 'urgent' && (
-        <span style={{ width: '6px', height: '6px', 'border-radius': '50%', background: colors.urgent }} />
-      )}
-      {props.priority}
-    </span>
-  );
-};
+// Add responsive grid styles
+const responsiveStyles = document.createElement('style');
+responsiveStyles.textContent = `
+  @media (max-width: 1024px) {
+    .tempo-grid {
+      grid-template-columns: 1fr !important;
+    }
+  }
 
-const TaskRow: Component<{ task: Task }> = (props) => {
-  const [isHovered, setIsHovered] = createSignal(false);
-  
-  return (
-    <div
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      style={{
-        display: 'flex',
-        'align-items': 'center',
-        gap: '12px',
-        padding: '12px 16px',
-        background: isHovered() ? linear.colors.surface : 'transparent',
-        'border-radius': linear.radii.md,
-        cursor: 'pointer',
-        transition: 'background 0.15s ease',
-        'border-left': `2px solid ${isHovered() ? linear.colors.primary : 'transparent'}`,
-      }}
-    >
-      <div style={{ 'flex-shrink': 0 }}>
-        <StatusIcon status={props.task.status} />
-      </div>
-      
-      <div style={{ flex: 1, 'min-width': 0 }}>
-        <div style={{
-          'font-size': '14px',
-          'font-weight': '500',
-          color: props.task.status === 'done' ? linear.colors.textMuted : linear.colors.text,
-          'text-decoration': props.task.status === 'done' ? 'line-through' : 'none',
-          'white-space': 'nowrap',
-          overflow: 'hidden',
-          'text-overflow': 'ellipsis',
-        }}>
-          {props.task.title}
-        </div>
-      </div>
-      
-      <div style={{ display: 'flex', 'align-items': 'center', gap: '12px', 'flex-shrink': 0 }}>
-        <PriorityBadge priority={props.task.priority} />
-        
-        <div style={{
-          display: 'flex',
-          'align-items': 'center',
-          gap: '4px',
-          'font-size': '12px',
-          color: linear.colors.textMuted,
-          'font-family': "'IBM Plex Mono', monospace",
-        }}>
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10" />
-            <path d="M12 6v6l4 2" />
-          </svg>
-          {props.task.estimatedMinutes}m
-        </div>
-        
-        {props.task.tags?.map(tag => (
-          <span style={{
-            padding: '2px 6px',
-            'background': linear.colors.border,
-            'border-radius': '3px',
-            'font-size': '11px',
-            color: linear.colors.textMuted,
-          }}>
-            {tag}
-          </span>
-        ))}
-      </div>
-    </div>
-  );
-};
+  @media (max-width: 768px) {
+    .tempo-main {
+      padding: 16px !important;
+    }
+    
+    .tempo-header {
+      margin-bottom: 24px !important;
+      padding-bottom: 16px !important;
+    }
 
-const TimerDisplay: Component<{ minutes: number; seconds: number; isRunning: boolean }> = (props) => {
-  return (
-    <div style={{
-      display: 'flex',
-      'flex-direction': 'column',
-      'align-items': 'center',
-      gap: '16px',
-      padding: '32px',
-      background: linear.colors.surface,
-      'border-radius': linear.radii.lg,
-      border: `1px solid ${linear.colors.border}`,
-    }}>
-      <div style={{
-        'font-family': "'IBM Plex Mono', monospace",
-        'font-size': '64px',
-        'font-weight': '300',
-        color: props.isRunning ? linear.colors.accent : linear.colors.text,
-        'letter-spacing': '-2px',
-      }}>
-        {String(props.minutes).padStart(2, '0')}:{String(props.seconds).padStart(2, '0')}
-      </div>
-      
-      <div style={{ display: 'flex', gap: '8px' }}>
-        <button style={{
-          padding: '10px 24px',
-          background: props.isRunning ? 'transparent' : linear.colors.primary,
-          border: props.isRunning ? `1px solid ${linear.colors.border}` : 'none',
-          'border-radius': linear.radii.md,
-          color: props.isRunning ? linear.colors.textMuted : 'white',
-          'font-size': '13px',
-          'font-weight': '500',
-          cursor: 'pointer',
-        }}>
-          {props.isRunning ? 'Pause' : 'Start'}
-        </button>
-        <button style={{
-          padding: '10px 16px',
-          background: 'transparent',
-          border: `1px solid ${linear.colors.border}`,
-          'border-radius': linear.radii.md,
-          color: linear.colors.textMuted,
-          'font-size': '13px',
-          cursor: 'pointer',
-        }}>
-          Skip
-        </button>
-      </div>
-    </div>
-  );
-};
+    .tempo-grid {
+      gap: 16px !important;
+    }
+  }
+
+  @media (max-width: 640px) {
+    .tempo-main {
+      padding: 12px !important;
+    }
+
+    .tempo-header {
+      margin-bottom: 16px !important;
+    }
+  }
+`;
+document.head.appendChild(responsiveStyles);
 
 export const TempoApp: Component = () => {
-  const [activeView, setActiveView] = createSignal<'tasks' | 'timer'>('tasks');
-  const totalMinutes = sampleTasks.reduce((sum, t) => sum + t.estimatedMinutes, 0);
-  
+  const [stats, setStats] = createSignal<Stats>({
+    totalTasks: 0,
+    totalDuration: 0,
+    totalStories: 0,
+    totalFrogs: 0,
+  });
+
+  const [showSettings, setShowSettings] = createSignal(false);
+  const [activeTab, setActiveTab] = createSignal<string>('tasks');
+  const [selectedSessionDate, setSelectedSessionDate] = createSignal<string | null>(null);
+  const [viewingSession, setViewingSession] = createSignal(false);
+
+  // Check if API key is configured
+  const [hasApiKey, setHasApiKey] = createSignal(ApiConfigService.hasApiKey());
+
+  const handleTasksProcessed = (
+    stories: { tasks: { isFrog?: boolean; duration?: number }[]; estimatedDuration?: number }[]
+  ) => {
+    const totalTasks = stories.reduce((acc, story) => acc + story.tasks.length, 0);
+    const totalDuration = stories.reduce((acc, story) => {
+      // Ensure we're using the correct duration field and handling potential undefined values
+      const storyDuration =
+        story.estimatedDuration ||
+        story.tasks.reduce((taskSum: number, task) => taskSum + (task.duration || 0), 0) ||
+        0;
+      return acc + storyDuration;
+    }, 0);
+    const totalFrogs = stories.reduce(
+      (acc, story) => acc + story.tasks.filter((task) => task.isFrog).length,
+      0
+    );
+
+    setStats({
+      totalTasks,
+      totalDuration: Math.round(totalDuration), // Ensure integer duration
+      totalStories: stories.length,
+      totalFrogs,
+    });
+  };
+
+  const handleSettingsSave = () => {
+    setHasApiKey(ApiConfigService.hasApiKey());
+  };
+
+  const handleSessionSelect = (date: string) => {
+    setSelectedSessionDate(date);
+    setViewingSession(true);
+  };
+
+  const handleBackToSessions = () => {
+    setViewingSession(false);
+    setSelectedSessionDate(null);
+  };
+
+  const tabs: Tab[] = [
+    { id: 'tasks', label: 'Create Tasks' },
+    { id: 'sessions', label: 'Your Sessions' },
+  ];
+
   return (
-    <div style={{
-      'min-height': '100vh',
-      background: linear.colors.background,
-      'font-family': linear.fonts.body,
-      color: linear.colors.text,
-    }}>
-      {/* Command bar style header */}
-      <header style={{
+    <main
+      class="tempo-main"
+      style={{
+        flex: 1,
+        'max-width': '1280px',
+        margin: '0 auto',
+        padding: '24px',
+        'font-family': tempoDesign.typography.fontFamily,
+        background: tempoDesign.colors.background,
+        color: tempoDesign.colors.foreground,
+        'min-height': '100vh',
         display: 'flex',
-        'align-items': 'center',
-        'justify-content': 'space-between',
-        padding: '16px 24px',
-        'border-bottom': `1px solid ${linear.colors.border}`,
-      }}>
-        <div style={{ display: 'flex', 'align-items': 'center', gap: '16px' }}>
-          <div style={{ display: 'flex', 'align-items': 'center', gap: '8px' }}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <circle cx="12" cy="12" r="10" stroke={linear.colors.primary} stroke-width="2" />
-              <path d="M12 6v6l4 2" stroke={linear.colors.primary} stroke-width="2" stroke-linecap="round" />
-            </svg>
-            <span style={{ 'font-size': '18px', 'font-weight': '600', 'letter-spacing': '-0.3px' }}>
-              Tempo
-            </span>
-          </div>
-          
-          <div style={{
+        'flex-direction': 'column',
+      }}
+    >
+      {/* Header */}
+      <header
+        class="tempo-header"
+        style={{
+          'margin-bottom': '32px',
+          'padding-bottom': '24px',
+          'border-bottom': `1px solid ${tempoDesign.colors.border}`,
+          display: 'flex',
+          'align-items': 'center',
+          'justify-content': 'space-between',
+        }}
+      >
+        <TempoLogo size={48} />
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setShowSettings(true)}
+          style={{
+            height: '40px',
+            width: '40px',
+            'border-radius': tempoDesign.radius.full,
             display: 'flex',
             'align-items': 'center',
-            gap: '4px',
-            padding: '6px 12px',
-            background: linear.colors.surface,
-            'border-radius': linear.radii.md,
-            border: `1px solid ${linear.colors.border}`,
-          }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={linear.colors.textMuted} stroke-width="2">
-              <circle cx="11" cy="11" r="8" />
-              <path d="M21 21l-4.35-4.35" />
-            </svg>
-            <span style={{ 'font-size': '13px', color: linear.colors.textMuted }}>
-              Search tasks...
-            </span>
-            <span style={{
-              'margin-left': '24px',
-              padding: '2px 6px',
-              background: linear.colors.border,
-              'border-radius': '3px',
-              'font-size': '11px',
-              color: linear.colors.textMuted,
-            }}>
-              /
-            </span>
-          </div>
-        </div>
-        
-        <div style={{ display: 'flex', 'align-items': 'center', gap: '16px' }}>
-          <div style={{
-            'font-family': "'IBM Plex Mono', monospace",
-            'font-size': '13px',
-            color: linear.colors.textMuted,
-          }}>
-            {Math.floor(totalMinutes / 60)}h {totalMinutes % 60}m scheduled
-          </div>
-          
-          <button style={{
-            padding: '8px 16px',
-            background: linear.colors.primary,
-            border: 'none',
-            'border-radius': linear.radii.md,
-            color: 'white',
-            'font-size': '13px',
-            'font-weight': '500',
-            cursor: 'pointer',
-            display: 'flex',
-            'align-items': 'center',
-            gap: '6px',
-          }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 5v14M5 12h14" />
-            </svg>
-            Add Task
-          </button>
-        </div>
+            'justify-content': 'center',
+          }}
+          title="Settings"
+        >
+          <Gear size={20} />
+        </Button>
       </header>
-      
-      <div style={{ display: 'flex', 'min-height': 'calc(100vh - 65px)' }}>
-        {/* Sidebar */}
-        <nav style={{
-          width: '220px',
-          padding: '16px',
-          'border-right': `1px solid ${linear.colors.border}`,
-        }}>
-          {[
-            { id: 'tasks', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2', label: 'Tasks' },
-            { id: 'timer', icon: 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z', label: 'Timer' },
-          ].map(item => (
-            <button
-              onClick={() => setActiveView(item.id as 'tasks' | 'timer')}
+
+      {/* Settings Modal */}
+      <SettingsModal
+        isOpen={showSettings()}
+        onClose={() => setShowSettings(false)}
+        onSave={handleSettingsSave}
+      />
+
+      {/* API Key Warning */}
+      <Show when={!hasApiKey()}>
+        <div
+          style={{
+            'background-color': `${tempoDesign.colors.amber[600]}10`,
+            border: `1px solid ${tempoDesign.colors.amber[600]}30`,
+            'border-radius': tempoDesign.radius.lg,
+            padding: '12px 16px',
+            'margin-bottom': '16px',
+            'font-size': tempoDesign.typography.sizes.sm,
+            color: tempoDesign.colors.amber[700],
+            display: 'flex',
+            'align-items': 'center',
+            'justify-content': 'space-between',
+            gap: '12px',
+          }}
+        >
+          <span>⚠️ Please configure your Claude API key in settings to use Tempo</span>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowSettings(true)}
+            style={{
+              color: tempoDesign.colors.amber[600],
+              'text-decoration': 'underline',
+              'white-space': 'nowrap',
+            }}
+          >
+            Configure Now
+          </Button>
+        </div>
+      </Show>
+
+      {/* Tab Navigation - Only show when not viewing a session */}
+      <Show when={!viewingSession()}>
+        <Tabs tabs={tabs} defaultTab={activeTab()} onChange={(tabId) => setActiveTab(tabId)} />
+      </Show>
+
+      {/* Content Area */}
+      <Show
+        when={viewingSession() && selectedSessionDate()}
+        fallback={
+          <Show
+            when={activeTab() === 'tasks'}
+            fallback={
+              <div
+                style={{
+                  'margin-top': '24px',
+                  display: 'flex',
+                  'flex-direction': 'column',
+                  gap: '16px',
+                }}
+              >
+                <SessionsList onSessionSelect={handleSessionSelect} />
+              </div>
+            }
+          >
+            <div
+              class="tempo-grid"
               style={{
-                display: 'flex',
-                'align-items': 'center',
-                gap: '10px',
-                width: '100%',
-                padding: '10px 12px',
-                background: activeView() === item.id ? linear.colors.surface : 'transparent',
-                border: 'none',
-                'border-radius': linear.radii.md,
-                color: activeView() === item.id ? linear.colors.text : linear.colors.textMuted,
-                'font-size': '14px',
-                'font-weight': activeView() === item.id ? '500' : '400',
-                cursor: 'pointer',
-                'text-align': 'left',
-                transition: 'all 0.15s ease',
+                display: 'grid',
+                gap: '24px',
+                'grid-template-columns': '1.5fr 1fr',
+                'margin-top': '24px',
               }}
             >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                <path d={item.icon} />
-              </svg>
-              {item.label}
-            </button>
-          ))}
-          
-          <div style={{ 'margin-top': '24px', padding: '0 12px' }}>
-            <div style={{
-              'font-size': '11px',
-              'font-weight': '600',
-              color: linear.colors.textMuted,
-              'text-transform': 'uppercase',
-              'letter-spacing': '0.5px',
-              'margin-bottom': '8px',
-            }}>
-              Filters
-            </div>
-            {['All', 'Today', 'Upcoming', 'Completed'].map(filter => (
-              <div style={{
-                padding: '8px 0',
-                'font-size': '13px',
-                color: linear.colors.textMuted,
-                cursor: 'pointer',
-              }}>
-                {filter}
-              </div>
-            ))}
-          </div>
-        </nav>
-        
-        {/* Main content */}
-        <main style={{ flex: 1, padding: '24px 32px' }}>
-          {activeView() === 'tasks' ? (
-            <>
-              <div style={{
-                display: 'flex',
-                'align-items': 'center',
-                'justify-content': 'space-between',
-                'margin-bottom': '24px',
-              }}>
-                <h1 style={{
-                  margin: 0,
-                  'font-size': '24px',
-                  'font-weight': '600',
-                  'letter-spacing': '-0.5px',
-                }}>
-                  Today's Schedule
-                </h1>
-                
-                <div style={{
-                  display: 'flex',
-                  'align-items': 'center',
-                  gap: '8px',
-                  padding: '6px 12px',
-                  background: linear.colors.surface,
-                  'border-radius': linear.radii.md,
-                  border: `1px solid ${linear.colors.border}`,
-                }}>
-                  <span style={{ 'font-size': '13px', color: linear.colors.textMuted }}>Sort:</span>
-                  <span style={{ 'font-size': '13px', color: linear.colors.text }}>Priority</span>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke={linear.colors.textMuted} stroke-width="2">
-                    <path d="M6 9l6 6 6-6" />
-                  </svg>
-                </div>
-              </div>
-              
-              {/* Task groups */}
-              <div style={{ 'margin-bottom': '32px' }}>
-                <div style={{
-                  'font-size': '12px',
-                  'font-weight': '600',
-                  color: linear.colors.textMuted,
-                  'text-transform': 'uppercase',
-                  'letter-spacing': '0.5px',
-                  'margin-bottom': '8px',
-                  padding: '0 16px',
-                }}>
-                  In Progress
-                </div>
-                <For each={sampleTasks.filter(t => t.status === 'in-progress')}>
-                  {task => <TaskRow task={task} />}
-                </For>
-              </div>
-              
-              <div style={{ 'margin-bottom': '32px' }}>
-                <div style={{
-                  'font-size': '12px',
-                  'font-weight': '600',
-                  color: linear.colors.textMuted,
-                  'text-transform': 'uppercase',
-                  'letter-spacing': '0.5px',
-                  'margin-bottom': '8px',
-                  padding: '0 16px',
-                }}>
-                  Todo
-                </div>
-                <For each={sampleTasks.filter(t => t.status === 'todo')}>
-                  {task => <TaskRow task={task} />}
-                </For>
-              </div>
-              
-              <div style={{ 'margin-bottom': '32px' }}>
-                <div style={{
-                  'font-size': '12px',
-                  'font-weight': '600',
-                  color: linear.colors.textMuted,
-                  'text-transform': 'uppercase',
-                  'letter-spacing': '0.5px',
-                  'margin-bottom': '8px',
-                  padding: '0 16px',
-                }}>
-                  Completed
-                </div>
-                <For each={sampleTasks.filter(t => t.status === 'done')}>
-                  {task => <TaskRow task={task} />}
-                </For>
-              </div>
-            </>
-          ) : (
-            <div style={{
-              display: 'flex',
-              'flex-direction': 'column',
-              'align-items': 'center',
-              'padding-top': '64px',
-            }}>
-              <div style={{
-                'font-size': '14px',
-                color: linear.colors.textMuted,
-                'margin-bottom': '8px',
-              }}>
-                Currently working on:
-              </div>
-              <div style={{
-                'font-size': '20px',
-                'font-weight': '500',
-                'margin-bottom': '32px',
-              }}>
-                Review Q4 planning doc
-              </div>
-              
-              <TimerDisplay minutes={18} seconds={42} isRunning={true} />
-              
-              <div style={{
-                display: 'flex',
-                gap: '32px',
-                'margin-top': '48px',
-              }}>
-                {['Work', 'Short Break', 'Long Break'].map((type, i) => (
-                  <div style={{
-                    'text-align': 'center',
-                    padding: '16px 24px',
-                    background: i === 0 ? linear.colors.surface : 'transparent',
-                    'border-radius': linear.radii.md,
-                    border: i === 0 ? `1px solid ${linear.colors.primary}` : 'none',
-                  }}>
-                    <div style={{ 'font-size': '13px', color: i === 0 ? linear.colors.text : linear.colors.textMuted }}>
-                      {type}
+              <BrainDump onTasksProcessed={handleTasksProcessed} />
+
+              <Show when={stats().totalTasks > 0}>
+                <div
+                  style={{
+                    'border-radius': tempoDesign.radius.lg,
+                    border: `1px solid ${tempoDesign.colors.cardBorder}`,
+                    background: tempoDesign.colors.card,
+                    'box-shadow': tempoDesign.shadows.sm,
+                    height: 'fit-content',
+                  }}
+                >
+                  {/* Header */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      'flex-direction': 'row',
+                      'align-items': 'center',
+                      'justify-content': 'space-between',
+                      padding: '24px 24px 8px',
+                    }}
+                  >
+                    <div>
+                      <h3
+                        style={{
+                          'font-size': tempoDesign.typography.sizes.lg,
+                          'font-weight': tempoDesign.typography.weights.medium,
+                          margin: 0,
+                          color: tempoDesign.colors.foreground,
+                        }}
+                      >
+                        Session Preview
+                      </h3>
+                      <p
+                        style={{
+                          'font-size': tempoDesign.typography.sizes.sm,
+                          color: tempoDesign.colors.mutedForeground,
+                          margin: '4px 0 0 0',
+                        }}
+                      >
+                        Productivity metrics
+                      </p>
                     </div>
-                    <div style={{
-                      'font-family': "'IBM Plex Mono', monospace",
-                      'font-size': '20px',
-                      color: i === 0 ? linear.colors.accent : linear.colors.textMuted,
-                      'margin-top': '4px',
-                    }}>
-                      {i === 0 ? '25:00' : i === 1 ? '5:00' : '15:00'}
+                    <div
+                      style={{
+                        display: 'flex',
+                        'align-items': 'center',
+                        gap: '4px',
+                        'font-size': tempoDesign.typography.sizes.xs,
+                        color: tempoDesign.colors.mutedForeground,
+                      }}
+                    >
+                      <CaretRight style={{ width: '12px', height: '12px' }} />
+                      <span>Optimize workflow</span>
                     </div>
                   </div>
-                ))}
-              </div>
+
+                  {/* Content */}
+                  <div style={{ padding: '24px 24px', 'padding-top': 0 }}>
+                    <dl style={{ display: 'flex', 'flex-direction': 'column', gap: '16px' }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          'justify-content': 'space-between',
+                          'align-items': 'baseline',
+                        }}
+                      >
+                        <dt
+                          style={{
+                            color: tempoDesign.colors.mutedForeground,
+                            'font-size': tempoDesign.typography.sizes.sm,
+                          }}
+                        >
+                          Tasks
+                        </dt>
+                        <dd
+                          style={{
+                            'font-size': tempoDesign.typography.sizes['2xl'],
+                            'font-weight': tempoDesign.typography.weights.medium,
+                            margin: 0,
+                          }}
+                        >
+                          {stats().totalTasks}
+                        </dd>
+                      </div>
+                      <div
+                        style={{
+                          display: 'flex',
+                          'justify-content': 'space-between',
+                          'align-items': 'baseline',
+                        }}
+                      >
+                        <dt
+                          style={{
+                            color: tempoDesign.colors.mutedForeground,
+                            'font-size': tempoDesign.typography.sizes.sm,
+                          }}
+                        >
+                          Estimated Time
+                        </dt>
+                        <dd
+                          style={{
+                            'font-size': tempoDesign.typography.sizes['2xl'],
+                            'font-weight': tempoDesign.typography.weights.medium,
+                            margin: 0,
+                          }}
+                        >
+                          {stats().totalDuration > 59
+                            ? `${Math.floor(stats().totalDuration / 60)}h ${stats().totalDuration % 60}m`
+                            : `${stats().totalDuration}m`}
+                        </dd>
+                      </div>
+                      <div
+                        style={{
+                          display: 'flex',
+                          'justify-content': 'space-between',
+                          'align-items': 'baseline',
+                        }}
+                      >
+                        <dt
+                          style={{
+                            color: tempoDesign.colors.mutedForeground,
+                            'font-size': tempoDesign.typography.sizes.sm,
+                          }}
+                        >
+                          Focus Stories
+                        </dt>
+                        <dd
+                          style={{
+                            'font-size': tempoDesign.typography.sizes['2xl'],
+                            'font-weight': tempoDesign.typography.weights.medium,
+                            margin: 0,
+                          }}
+                        >
+                          {stats().totalStories}
+                        </dd>
+                      </div>
+                      <Show when={stats().totalFrogs > 0}>
+                        <div
+                          style={{
+                            display: 'flex',
+                            'justify-content': 'space-between',
+                            'align-items': 'baseline',
+                          }}
+                        >
+                          <dt
+                            style={{
+                              color: tempoDesign.colors.mutedForeground,
+                              'font-size': tempoDesign.typography.sizes.sm,
+                              display: 'flex',
+                              'align-items': 'center',
+                              gap: '4px',
+                            }}
+                          >
+                            <span>Frogs</span>
+                            <span style={{ 'font-size': tempoDesign.typography.sizes.base }}>
+                              🐸
+                            </span>
+                          </dt>
+                          <dd
+                            style={{
+                              'font-size': tempoDesign.typography.sizes['2xl'],
+                              'font-weight': tempoDesign.typography.weights.medium,
+                              color: tempoDesign.colors.primary,
+                              margin: 0,
+                            }}
+                          >
+                            {stats().totalFrogs}
+                          </dd>
+                        </div>
+                      </Show>
+                    </dl>
+                  </div>
+                </div>
+              </Show>
             </div>
-          )}
-        </main>
-      </div>
-    </div>
+          </Show>
+        }
+      >
+        {/* Session View */}
+        <div style={{ 'margin-top': '24px' }}>
+          {/* Back Button */}
+          <Button
+            variant="ghost"
+            onClick={handleBackToSessions}
+            style={{
+              'margin-bottom': '16px',
+              display: 'flex',
+              'align-items': 'center',
+              gap: '8px',
+            }}
+          >
+            <ArrowLeft size={16} />
+            Back to Sessions
+          </Button>
+
+          <SessionView date={selectedSessionDate() || undefined} />
+        </div>
+      </Show>
+    </main>
   );
 };

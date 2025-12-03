@@ -5,14 +5,14 @@ import { Theme } from './types';
 export const biophilic: Theme = {
   name: 'nurture',
   colors: {
-    primary: '#2D5A45',      // Deep forest
-    secondary: '#4A7C6F',    // Moss
-    accent: '#8FB8A8',       // Sage mist
-    background: '#F7FAF8',   // Morning fog
+    primary: '#2D5A45', // Deep forest
+    secondary: '#4A7C6F', // Moss
+    accent: '#8FB8A8', // Sage mist
+    background: '#F7FAF8', // Morning fog
     surface: '#FFFFFF',
-    text: '#1A2F25',         // Deep earth
-    textMuted: '#5A7268',    // Weathered stone
-    border: '#D4E5DD',       // Lichen
+    text: '#1A2F25', // Deep earth
+    textMuted: '#5A7268', // Weathered stone
+    border: '#D4E5DD', // Lichen
   },
   fonts: {
     body: "'DM Sans', system-ui, sans-serif",

@@ -13,14 +13,16 @@ export const ThemeSchema = z.object({
     textMuted: z.string(),
     border: z.string(),
   }),
-  riasec: z.object({
-    realistic: z.string(),
-    investigative: z.string(),
-    artistic: z.string(),
-    social: z.string(),
-    enterprising: z.string(),
-    conventional: z.string(),
-  }).optional(),
+  riasec: z
+    .object({
+      realistic: z.string(),
+      investigative: z.string(),
+      artistic: z.string(),
+      social: z.string(),
+      enterprising: z.string(),
+      conventional: z.string(),
+    })
+    .optional(),
   fonts: z.object({
     body: z.string(),
     heading: z.string(),

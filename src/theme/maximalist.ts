@@ -6,20 +6,20 @@ import { Theme } from './types';
 export const maximalist: Theme = {
   name: 'augment',
   colors: {
-    primary: '#D946EF',      // Fuchsia 500
-    secondary: '#8B5CF6',    // Violet 500
-    accent: '#FBBF24',       // Amber 400
-    background: '#121212',   // Near Black (Grayscale for pop)
-    surface: '#1E1E1E',      // Dark Grey
-    text: '#F3F4F6',         // Cool Grey 100
-    textMuted: '#9CA3AF',    // Cool Grey 400
-    border: '#374151',       // Cool Grey 700
+    primary: '#D946EF', // Fuchsia 500
+    secondary: '#8B5CF6', // Violet 500
+    accent: '#FBBF24', // Amber 400
+    background: '#121212', // Near Black (Grayscale for pop)
+    surface: '#1E1E1E', // Dark Grey
+    text: '#F3F4F6', // Cool Grey 100
+    textMuted: '#9CA3AF', // Cool Grey 400
+    border: '#374151', // Cool Grey 700
   },
   riasec: {
-    realistic: '#F97316',    // Neon Orange (Hot)
+    realistic: '#F97316', // Neon Orange (Hot)
     investigative: '#8B5CF6', // Neon Purple (Cool)
-    artistic: '#EC4899',     // Hot Pink (Hot)
-    social: '#10B981',       // Emerald Green (Cool)
+    artistic: '#EC4899', // Hot Pink (Hot)
+    social: '#10B981', // Emerald Green (Cool)
     enterprising: '#EAB308', // Electric Yellow (Hot)
     conventional: '#06B6D4', // Cyan (Cool)
   },

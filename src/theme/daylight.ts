@@ -5,14 +5,14 @@ import { Theme } from './types';
 export const daylight: Theme = {
   name: 'justincase',
   colors: {
-    primary: '#1C1C1C',      // Ink black
-    secondary: '#4A4A4A',    // Soft charcoal
-    accent: '#D4A574',       // Warm highlight (sepia marker)
-    background: '#FAFAF7',   // Natural paper
-    surface: '#FFFFFF',      // Bright paper
-    text: '#2C2C2C',         // Reading ink
-    textMuted: '#6B6B6B',    // Faded text
-    border: '#E8E8E4',       // Paper edge
+    primary: '#1C1C1C', // Ink black
+    secondary: '#4A4A4A', // Soft charcoal
+    accent: '#D4A574', // Warm highlight (sepia marker)
+    background: '#FAFAF7', // Natural paper
+    surface: '#FFFFFF', // Bright paper
+    text: '#2C2C2C', // Reading ink
+    textMuted: '#6B6B6B', // Faded text
+    border: '#E8E8E4', // Paper edge
   },
   fonts: {
     body: "'Crimson Pro', Georgia, 'Times New Roman', serif",

@@ -17,12 +17,14 @@ export const UserProfileSchema = z.object({
   avatar: z.string().optional(),
   availability: AvailabilitySchema.default([]),
   badges: z.array(z.string()).default([]), // Badge IDs
-  stats: z.object({
-    hangoutsHosted: z.number().default(0),
-    hangoutsAttended: z.number().default(0),
-    friendsMade: z.number().default(0),
-    streakWeeks: z.number().default(0), // Consecutive weeks with hangouts
-  }).default({}),
+  stats: z
+    .object({
+      hangoutsHosted: z.number().default(0),
+      hangoutsAttended: z.number().default(0),
+      friendsMade: z.number().default(0),
+      streakWeeks: z.number().default(0), // Consecutive weeks with hangouts
+    })
+    .default({}),
 });
 
 // --- BADGES (Gamification) ---
@@ -56,11 +58,13 @@ export const BookingSchema = z.object({
   id: z.string().uuid(),
   slot: TimeSlotSchema,
   title: z.string().optional(), // e.g. "Coffee with Alex"
-  participants: z.array(z.object({
-    name: z.string(),
-    email: z.string().email().optional(),
-    isHost: z.boolean().default(false),
-  })),
+  participants: z.array(
+    z.object({
+      name: z.string(),
+      email: z.string().email().optional(),
+      isHost: z.boolean().default(false),
+    })
+  ),
   openToGroup: z.boolean().default(false), // Others can join
   isPublic: z.boolean().default(false), // Show on public page
   showParticipantNames: z.boolean().default(true), // If public but names hidden
@@ -98,10 +102,14 @@ export const EventSchema = z.object({
   location: z.string().optional(),
   hostId: z.string().uuid(), // User who created it
   invitedIds: z.array(z.string().uuid()), // Invited friends
-  rsvps: z.array(z.object({
-    friendId: z.string().uuid(),
-    status: z.enum(['going', 'maybe', 'notGoing']),
-  })).default([]),
+  rsvps: z
+    .array(
+      z.object({
+        friendId: z.string().uuid(),
+        status: z.enum(['going', 'maybe', 'notGoing']),
+      })
+    )
+    .default([]),
   visibility: z.enum(['private', 'circle', 'public']), // Who can see it
   circleId: z.string().uuid().optional(), // If tied to a circle
   status: z.enum(['upcoming', 'live', 'completed', 'cancelled']),
@@ -120,10 +128,46 @@ export type Event = z.infer<typeof EventSchema>;
 
 // --- PRESET BADGES ---
 export const BADGES: Badge[] = [
-  { id: 'social-butterfly', name: 'Social Butterfly', description: 'Attended 10+ hangouts', icon: '🦋', requirement: { type: 'hangoutsAttended', threshold: 10 } },
-  { id: 'host-with-most', name: 'Host with the Most', description: 'Hosted 5+ events', icon: '🎉', requirement: { type: 'hangoutsHosted', threshold: 5 } },
-  { id: 'connector', name: 'The Connector', description: 'Made 20+ friends', icon: '🔗', requirement: { type: 'friendsMade', threshold: 20 } },
-  { id: 'streak-master', name: 'Streak Master', description: '4 weeks in a row with hangouts', icon: '🔥', requirement: { type: 'streakWeeks', threshold: 4 } },
-  { id: 'early-bird', name: 'Early Bird', description: 'First to RSVP 5 times', icon: '🐦', requirement: { type: 'special' } },
-  { id: 'night-owl', name: 'Night Owl', description: 'Attended 5 evening events', icon: '🦉', requirement: { type: 'special' } },
+  {
+    id: 'social-butterfly',
+    name: 'Social Butterfly',
+    description: 'Attended 10+ hangouts',
+    icon: '🦋',
+    requirement: { type: 'hangoutsAttended', threshold: 10 },
+  },
+  {
+    id: 'host-with-most',
+    name: 'Host with the Most',
+    description: 'Hosted 5+ events',
+    icon: '🎉',
+    requirement: { type: 'hangoutsHosted', threshold: 5 },
+  },
+  {
+    id: 'connector',
+    name: 'The Connector',
+    description: 'Made 20+ friends',
+    icon: '🔗',
+    requirement: { type: 'friendsMade', threshold: 20 },
+  },
+  {
+    id: 'streak-master',
+    name: 'Streak Master',
+    description: '4 weeks in a row with hangouts',
+    icon: '🔥',
+    requirement: { type: 'streakWeeks', threshold: 4 },
+  },
+  {
+    id: 'early-bird',
+    name: 'Early Bird',
+    description: 'First to RSVP 5 times',
+    icon: '🐦',
+    requirement: { type: 'special' },
+  },
+  {
+    id: 'night-owl',
+    name: 'Night Owl',
+    description: 'Attended 5 evening events',
+    icon: '🦉',
+    requirement: { type: 'special' },
+  },
 ];

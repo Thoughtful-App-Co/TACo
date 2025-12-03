@@ -6,14 +6,14 @@ import { Theme } from './types';
 export const papermorphic: Theme = {
   name: 'lol',
   colors: {
-    primary: '#2196F3',      // Paper blue
-    secondary: '#607D8B',    // Blue gray
-    accent: '#FF9800',       // Orange marker
-    background: '#FAFAFA',   // Light paper
-    surface: '#FFFFFF',      // White card
-    text: '#212121',         // Ink black
-    textMuted: '#757575',    // Pencil gray
-    border: '#E0E0E0',       // Fold line
+    primary: '#2196F3', // Paper blue
+    secondary: '#607D8B', // Blue gray
+    accent: '#FF9800', // Orange marker
+    background: '#FAFAFA', // Light paper
+    surface: '#FFFFFF', // White card
+    text: '#212121', // Ink black
+    textMuted: '#757575', // Pencil gray
+    border: '#E0E0E0', // Fold line
   },
   fonts: {
     body: "'Roboto', system-ui, sans-serif",
