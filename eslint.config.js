@@ -63,9 +63,50 @@ export default [
       'prefer-const': 'warn',
       'no-var': 'warn',
       'no-undef': 'warn',
+
+      // ========================================
+      // SolidJS-specific rules
+      // ========================================
       'solid/prefer-for': 'warn',
       'solid/reactivity': 'warn',
       'solid/style-prop': 'warn',
+      'solid/no-destructure': 'warn', // Prevent destructuring props (breaks reactivity)
+      'solid/jsx-no-duplicate-props': 'error',
+      'solid/jsx-no-undef': 'error',
+      'solid/jsx-uses-vars': 'error',
+      'solid/no-innerhtml': 'error', // XSS prevention
+      'solid/no-react-deps': 'warn', // Catch React patterns that don't work in Solid
+      'solid/no-react-specific-props': 'warn',
+      'solid/self-closing-comp': 'warn',
+      'solid/prefer-show': 'warn', // Prefer <Show> over ternary for conditional rendering
+
+      // ========================================
+      // Security-focused rules
+      // ========================================
+      // Prevent eval and similar dangerous patterns
+      'no-eval': 'error',
+      'no-implied-eval': 'error',
+      'no-new-func': 'error',
+
+      // Prevent potential XSS vectors
+      'no-script-url': 'error',
+
+      // Prevent prototype pollution
+      'no-proto': 'error',
+      'no-extend-native': 'error',
+
+      // Prevent potential injection issues
+      'no-useless-escape': 'warn',
+
+      // Prevent accidental data exposure
+      'no-alert': 'warn',
+
+      // Ensure proper error handling
+      'no-throw-literal': 'error',
+
+      // Prevent potential security issues with regex
+      'no-control-regex': 'error',
+      'no-invalid-regexp': 'error',
     },
   },
 ];

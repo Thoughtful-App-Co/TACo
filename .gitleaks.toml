@@ -1,0 +1,111 @@
+# Gitleaks Configuration
+# https://github.com/gitleaks/gitleaks
+
+title = "Gitleaks Configuration for Thoughtful App Co"
+
+[extend]
+# Extend the default gitleaks config
+useDefault = true
+
+# Custom rules for additional secret patterns
+[[rules]]
+id = "cloudflare-api-token"
+description = "Cloudflare API Token"
+regex = '''(?i)(?:cloudflare|cf)[_-]?(?:api[_-]?)?(?:token|key)\s*[=:]\s*['""]?([a-zA-Z0-9_-]{40})['""]?'''
+keywords = ["cloudflare", "cf_api"]
+
+[[rules]]
+id = "anthropic-api-key"
+description = "Anthropic API Key"
+regex = '''sk-ant-[a-zA-Z0-9_-]{32,}'''
+keywords = ["sk-ant"]
+
+[[rules]]
+id = "openai-api-key"
+description = "OpenAI API Key"
+regex = '''sk-[a-zA-Z0-9]{32,}'''
+keywords = ["sk-"]
+
+[[rules]]
+id = "wrangler-secret"
+description = "Wrangler/Cloudflare Secret"
+regex = '''(?i)wrangler.*secret\s*[=:]\s*['""]?([a-zA-Z0-9_-]{20,})['""]?'''
+keywords = ["wrangler"]
+
+[[rules]]
+id = "jwt-token"
+description = "JWT Token"
+regex = '''eyJ[a-zA-Z0-9_-]*\.eyJ[a-zA-Z0-9_-]*\.[a-zA-Z0-9_-]*'''
+keywords = ["eyJ"]
+
+[[rules]]
+id = "base64-high-entropy"
+description = "High entropy base64 string (potential secret)"
+regex = '''['""][a-zA-Z0-9+/]{40,}={0,2}['""]'''
+entropy = 4.5
+keywords = ["secret", "key", "token", "password"]
+
+# Paths to ignore (not scanned for secrets)
+[allowlist]
+paths = [
+  '''\.gitleaks\.toml$''',
+  '''\.dev\.vars\.example$''',
+  '''package-lock\.json$''',
+  '''node_modules/''',
+  '''dist/''',
+  '''\.git/''',
+  '''docs/.*\.md$''',
+  '''.*\.test\.(ts|tsx|js|jsx)$''',
+  '''.*\.spec\.(ts|tsx|js|jsx)$''',
+  '''__tests__/''',
+  '''__mocks__/''',
+  # Font files
+  '''\.woff$''',
+  '''\.woff2$''',
+  '''\.ttf$''',
+  '''\.eot$''',
+  # Images
+  '''\.png$''',
+  '''\.jpg$''',
+  '''\.jpeg$''',
+  '''\.gif$''',
+  '''\.svg$''',
+  '''\.ico$''',
+]
+
+# Specific strings to ignore (false positives)
+regexes = [
+  # Example/placeholder values
+  '''EXAMPLE_.*''',
+  '''example\.com''',
+  '''your-.*-here''',
+  '''<your-.*>''',
+  '''YOUR_.*_HERE''',
+  '''placeholder''',
+  # Test values
+  '''test-api-key''',
+  '''fake-secret''',
+  '''dummy-token''',
+  # Common false positives in SolidJS/TypeScript
+  '''createSignal''',
+  '''createEffect''',
+  '''createMemo''',
+]
+
+# Commits to ignore (historical false positives)
+commits = [
+  # Add commit hashes here if needed
+]
+
+# Stop words - common strings that look like secrets but aren't
+stopwords = [
+  "example",
+  "sample", 
+  "test",
+  "placeholder",
+  "changeme",
+  "yourkey",
+  "CHANGEME",
+  "INSERT",
+  "REPLACE",
+]
