@@ -1,16 +1,34 @@
 import { type Component, type ComponentProps, splitProps } from "solid-js"
-import { cn } from "../lib/utils"
+import { tempoComponents, tempoDesign } from "../theme/tempo-design"
 
 export type TextareaProps = ComponentProps<"textarea">
 
 export const Textarea: Component<TextareaProps> = (props) => {
-  const [local, others] = splitProps(props, ["class"])
+  const [local, others] = splitProps(props, ["style", "disabled"])
   return (
     <textarea
-      class={cn(
-        "flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
-        local.class
-      )}
+      disabled={local.disabled}
+      style={{
+        ...tempoComponents.textarea,
+        ...(local.disabled && { 
+          opacity: 0.5, 
+          cursor: 'not-allowed',
+          background: tempoDesign.colors.muted,
+        }),
+        ...(local.style as any),
+      }}
+      onFocus={(e) => {
+        if (!local.disabled) {
+          e.currentTarget.style.borderColor = tempoDesign.colors.ring
+          e.currentTarget.style.boxShadow = `0 0 0 2px ${tempoDesign.colors.background}, 0 0 0 4px ${tempoDesign.colors.ring}`
+        }
+      }}
+      onBlur={(e) => {
+        if (!local.disabled) {
+          e.currentTarget.style.borderColor = tempoDesign.colors.input
+          e.currentTarget.style.boxShadow = 'none'
+        }
+      }}
       {...others}
     />
   )

@@ -1,32 +1,48 @@
 import { Progress as KobalteProgress } from "@kobalte/core/progress"
 import { splitProps } from "solid-js"
-import { cn } from "../lib/utils"
+import { tempoDesign } from "../theme/tempo-design"
 
 interface ProgressProps {
   value?: number
   max?: number
-  class?: string
-  indicatorClass?: string
+  style?: any
+  indicatorStyle?: any
 }
 
 export const Progress = (props: ProgressProps) => {
-  const [local, others] = splitProps(props, ["value", "max", "class", "indicatorClass"])
+  const [local, others] = splitProps(props, ["value", "max", "style", "indicatorStyle"])
   
   return (
     <KobalteProgress
       value={local.value}
       maxValue={local.max ?? 100}
-      class={cn(
-        "relative h-4 w-full overflow-hidden rounded-full bg-secondary",
-        local.class
-      )}
+      style={{
+        position: 'relative',
+        height: '16px',
+        width: '100%',
+        overflow: 'hidden',
+        'border-radius': tempoDesign.radius.full,
+        background: tempoDesign.colors.secondary,
+        ...(local.style as any)
+      }}
+      {...others}
     >
-      <KobalteProgress.Track class="h-full w-full bg-secondary">
+      <KobalteProgress.Track 
+        style={{
+          height: '100%',
+          width: '100%',
+          background: tempoDesign.colors.secondary,
+        }}
+      >
         <KobalteProgress.Fill
-          class={cn(
-            "h-full w-[var(--kb-progress-fill-width)] flex-1 bg-primary transition-all",
-            local.indicatorClass
-          )}
+          style={{
+            height: '100%',
+            width: 'var(--kb-progress-fill-width)',
+            flex: 1,
+            background: tempoDesign.colors.primary,
+            transition: 'all 0.2s linear',
+            ...(local.indicatorStyle as any)
+          }}
         />
       </KobalteProgress.Track>
     </KobalteProgress>

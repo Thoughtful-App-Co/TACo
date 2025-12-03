@@ -1,62 +1,92 @@
-import { type Component, type ComponentProps, splitProps } from "solid-js"
-import { cn } from "../lib/utils"
+import { type Component, type ComponentProps, splitProps, mergeProps } from "solid-js"
+import { tempoDesign, tempoComponents } from "../theme/tempo-design"
 
 export const Card: Component<ComponentProps<"div">> = (props) => {
-  const [local, others] = splitProps(props, ["class"])
+  const [local, others] = splitProps(props, ["style"])
   return (
     <div
-      class={cn(
-        "rounded-lg border bg-card text-card-foreground shadow-sm",
-        local.class
-      )}
+      style={{
+        ...tempoComponents.card,
+        ...(local.style as any),
+      }}
       {...others}
     />
   )
 }
 
 export const CardHeader: Component<ComponentProps<"div">> = (props) => {
-  const [local, others] = splitProps(props, ["class"])
+  const [local, others] = splitProps(props, ["style"])
   return (
     <div
-      class={cn("flex flex-col space-y-1.5 p-6", local.class)}
+      style={{
+        display: 'flex',
+        'flex-direction': 'column',
+        gap: '6px',
+        padding: '24px',
+        ...(local.style as any),
+      }}
       {...others}
     />
   )
 }
 
 export const CardTitle: Component<ComponentProps<"h3">> = (props) => {
-  const [local, others] = splitProps(props, ["class"])
+  const [local, others] = splitProps(props, ["style"])
   return (
     <h3
-      class={cn(
-        "text-2xl font-semibold leading-none tracking-tight",
-        local.class
-      )}
+      style={{
+        'font-size': tempoDesign.typography.sizes['2xl'],
+        'font-weight': tempoDesign.typography.weights.semibold,
+        'line-height': 1,
+        'letter-spacing': '-0.025em',
+        margin: 0,
+        ...(local.style as any),
+      }}
       {...others}
     />
   )
 }
 
 export const CardDescription: Component<ComponentProps<"p">> = (props) => {
-  const [local, others] = splitProps(props, ["class"])
+  const [local, others] = splitProps(props, ["style"])
   return (
     <p
-      class={cn("text-sm text-muted-foreground", local.class)}
+      style={{
+        'font-size': tempoDesign.typography.sizes.sm,
+        color: tempoDesign.colors.mutedForeground,
+        margin: 0,
+        ...(local.style as any),
+      }}
       {...others}
     />
   )
 }
 
 export const CardContent: Component<ComponentProps<"div">> = (props) => {
-  const [local, others] = splitProps(props, ["class"])
-  return <div class={cn("p-6 pt-0", local.class)} {...others} />
+  const [local, others] = splitProps(props, ["style"])
+  return (
+    <div 
+      style={{
+        padding: '24px',
+        'padding-top': 0,
+        ...(local.style as any),
+      }} 
+      {...others} 
+    />
+  )
 }
 
 export const CardFooter: Component<ComponentProps<"div">> = (props) => {
-  const [local, others] = splitProps(props, ["class"])
+  const [local, others] = splitProps(props, ["style"])
   return (
     <div
-      class={cn("flex items-center p-6 pt-0", local.class)}
+      style={{
+        display: 'flex',
+        'align-items': 'center',
+        padding: '24px',
+        'padding-top': 0,
+        ...(local.style as any),
+      }}
       {...others}
     />
   )

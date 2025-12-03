@@ -1,35 +1,37 @@
-import { type Component, type ComponentProps, splitProps } from "solid-js"
-import { cva, type VariantProps } from "class-variance-authority"
-import { cn } from "../lib/utils"
+import { type Component, type ComponentProps, splitProps, mergeProps } from "solid-js"
+import { tempoDesign, tempoComponents } from "../theme/tempo-design"
 
-const badgeVariants = cva(
-  "inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
-  {
-    variants: {
-      variant: {
-        default:
-          "border-transparent bg-primary text-primary-foreground hover:bg-primary/80",
-        secondary:
-          "border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        destructive:
-          "border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80",
-        outline: "text-foreground",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-    },
-  }
-)
-
-export type BadgeProps = ComponentProps<"div"> &
-  VariantProps<typeof badgeVariants>
+export interface BadgeProps extends ComponentProps<"div"> {
+  variant?: 'default' | 'secondary' | 'destructive' | 'outline'
+}
 
 export const Badge: Component<BadgeProps> = (props) => {
-  const [local, others] = splitProps(props, ["class", "variant"])
+  const merged = mergeProps({ variant: 'default' }, props)
+  const [local, others] = splitProps(merged, ["variant", "style"])
+
+  const getVariantStyles = () => {
+    switch (local.variant) {
+      case 'secondary':
+        return tempoComponents.badgeSecondary
+      case 'outline':
+        return tempoComponents.badgeOutline
+      case 'destructive':
+        return {
+          background: tempoDesign.colors.destructive,
+          color: tempoDesign.colors.destructiveForeground,
+        }
+      default:
+        return tempoComponents.badgeDefault
+    }
+  }
+
   return (
     <div
-      class={cn(badgeVariants({ variant: local.variant }), local.class)}
+      style={{
+        ...tempoComponents.badge,
+        ...getVariantStyles(),
+        ...(local.style as any),
+      }}
       {...others}
     />
   )
