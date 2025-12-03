@@ -32,13 +32,28 @@ npm install
 npx husky install
 ```
 
-### 4. Start Development Server
+### 4. Build the Project
+
+Before starting development, build the project once:
+
+```bash
+npm run build
+```
+
+This compiles the frontend and copies Cloudflare Functions to `dist/`.
+
+### 5. Start Development Server
 
 ```bash
 npm run dev
 ```
 
-The app will be available at `http://localhost:5173`
+This starts **two servers**:
+
+- **Vite** (Frontend) at http://localhost:3000
+- **Wrangler** (API Functions) at http://localhost:8787
+
+Open http://localhost:3000 in your browser.
 
 ## Detailed Installation
 
@@ -58,20 +73,40 @@ See [INSTALLATION.md](./INSTALLATION.md) for detailed setup instructions includi
 ## Key Commands
 
 ```bash
-npm run dev              # Start dev server
-npm run build           # Build for production
-npm run lint            # Run ESLint
-npm run format          # Format code with Prettier
-npm run type-check      # Check TypeScript types
-npm run validate        # Run all checks + build
+npm run dev              # Start dev servers (Vite + Wrangler)
+npm run dev:vite         # Start only Vite dev server
+npm run dev:wrangler     # Start only Wrangler dev server
+npm run build            # Build for production
+npm run lint             # Run ESLint
+npm run format           # Format code with Prettier
+npm run type-check       # Check TypeScript types
+npm run validate         # Run all checks + build
 ```
+
+## API Development
+
+For detailed information on local API development:
+
+- See [LOCAL_API_DEVELOPMENT.md](../development/LOCAL_API_DEVELOPMENT.md)
 
 ## Common Issues
 
-**Port 5173 already in use?**
+**Port 3000 or 8787 already in use?**
 
 ```bash
-npm run dev -- --port 3000
+# Kill process on port
+lsof -ti:3000 | xargs kill -9
+
+# Or use different port
+npm run dev:vite -- --port 3001
+```
+
+**Functions returning 404?**
+
+```bash
+# Rebuild and restart
+npm run build
+npm run dev
 ```
 
 **Dependencies not installing?**

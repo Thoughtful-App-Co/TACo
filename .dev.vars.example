@@ -1,0 +1,9 @@
+# .dev.vars.example
+# Copy this file to .dev.vars and add your actual values
+# .dev.vars is used by Wrangler for local development secrets
+
+# Anthropic Claude API Key
+# Get yours from: https://console.anthropic.com/
+# NOTE: With the "Bring Your Own Key" feature, this is optional for local dev
+# The API key can be passed from the frontend (stored in localStorage)
+ANTHROPIC_API_KEY=sk-ant-your-key-here
