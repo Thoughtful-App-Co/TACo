@@ -7,8 +7,17 @@ import { FriendlyApp } from './components/friendly/FriendlyApp';
 import { ManifestApp } from './components/manifest/ManifestApp';
 import { AugmentApp } from './components/augment/AugmentApp';
 import { LolApp } from './components/lol/LolApp';
+import { PaperTrailApp } from './components/papertrail/PaperTrailApp';
 
-type AppTab = 'nurture' | 'justincase' | 'tempo' | 'friendly' | 'manifest' | 'augment' | 'lol';
+type AppTab =
+  | 'nurture'
+  | 'justincase'
+  | 'tempo'
+  | 'friendly'
+  | 'manifest'
+  | 'augment'
+  | 'lol'
+  | 'papertrail';
 type Timeline = 'now' | 'next' | 'later';
 
 interface AppInfo {
@@ -109,6 +118,18 @@ const apps: AppInfo[] = [
     color: '#2196F3',
     timeline: 'later',
     releaseDate: 'Q3 2026',
+    status: 'coming-soon',
+  },
+  {
+    id: 'papertrail',
+    name: 'Paper Trail',
+    description: 'News changelog',
+    elevatorPitch:
+      'Track what was said vs. what was true. Graph-first news aggregation with correction tracking.',
+    designSystem: 'Paper Trail',
+    color: '#D4A800',
+    timeline: 'later',
+    releaseDate: 'TBD',
     status: 'coming-soon',
   },
 ];
@@ -2040,6 +2061,7 @@ export const AppPage: Component = () => {
     manifest: ManifestApp,
     augment: AugmentApp,
     lol: LolApp,
+    papertrail: PaperTrailApp,
   };
 
   return (
@@ -2067,6 +2089,9 @@ export const AppPage: Component = () => {
       </Show>
       <Show when={appId() === 'lol'}>
         <LolApp />
+      </Show>
+      <Show when={appId() === 'papertrail'}>
+        <PaperTrailApp />
       </Show>
     </>
   );
