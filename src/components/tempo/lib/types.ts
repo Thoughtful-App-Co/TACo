@@ -9,7 +9,7 @@ export interface SplitInfo {
 }
 
 // Create central types as a single source of truth
-export type TaskType = 'focus' | 'learning' | 'review' | 'break' | 'research';
+export type TaskType = 'focus' | 'learning' | 'review' | 'break' | 'research' | 'social';
 export type TaskCategory = TaskType;
 
 // Consolidated status types

@@ -7,8 +7,17 @@ import { FriendlyApp } from './components/friendly/FriendlyApp';
 import { ManifestApp } from './components/manifest/ManifestApp';
 import { AugmentApp } from './components/augment/AugmentApp';
 import { LolApp } from './components/lol/LolApp';
+import { PaperTrailApp } from './components/papertrail/PaperTrailApp';
 
-type AppTab = 'nurture' | 'justincase' | 'tempo' | 'friendly' | 'manifest' | 'augment' | 'lol';
+type AppTab =
+  | 'nurture'
+  | 'justincase'
+  | 'tempo'
+  | 'friendly'
+  | 'manifest'
+  | 'augment'
+  | 'lol'
+  | 'papertrail';
 type Timeline = 'now' | 'next' | 'later';
 
 interface AppInfo {
@@ -109,6 +118,18 @@ const apps: AppInfo[] = [
     color: '#2196F3',
     timeline: 'later',
     releaseDate: 'Q3 2026',
+    status: 'coming-soon',
+  },
+  {
+    id: 'papertrail',
+    name: 'Paper Trail',
+    description: 'News changelog',
+    elevatorPitch:
+      'Track what was said vs. what was true. Graph-first news aggregation with correction tracking.',
+    designSystem: 'Paper Trail',
+    color: '#FFE500',
+    timeline: 'later',
+    releaseDate: 'TBD',
     status: 'coming-soon',
   },
 ];
@@ -269,6 +290,8 @@ const IsometricCard: Component<{
               color: 'white',
               'font-weight': 'bold',
               'box-shadow': `0 4px 12px ${props.app.color}60`,
+              'text-shadow':
+                '0 0 2px rgba(0,0,0,0.8), 0 0 4px rgba(0,0,0,0.5), 1px 1px 0 rgba(0,0,0,0.3)',
             }}
           >
             {props.app.name[0]}
@@ -411,7 +434,15 @@ const AppItem: Component<{ app: AppInfo; onClick: () => void }> = (props) => {
           <Show
             when={props.app.id === 'tempo'}
             fallback={
-              <span style={{ color: 'white', 'font-size': '12px', 'font-weight': '600' }}>
+              <span
+                style={{
+                  color: 'white',
+                  'font-size': '12px',
+                  'font-weight': '600',
+                  'text-shadow':
+                    '0 0 2px rgba(0,0,0,0.8), 0 0 4px rgba(0,0,0,0.5), 1px 1px 0 rgba(0,0,0,0.3)',
+                }}
+              >
                 {props.app.name[0]}
               </span>
             }
@@ -504,6 +535,8 @@ const AppItem: Component<{ app: AppInfo; onClick: () => void }> = (props) => {
                 color: 'white',
                 'font-weight': '700',
                 'font-size': '14px',
+                'text-shadow':
+                  '0 0 2px rgba(0,0,0,0.8), 0 0 4px rgba(0,0,0,0.5), 1px 1px 0 rgba(0,0,0,0.3)',
               }}
             >
               <Show when={props.app.id === 'tempo'} fallback={props.app.name.charAt(0)}>
@@ -1946,6 +1979,8 @@ const TabNavigation: Component<{
                         color: 'white',
                         'box-shadow': `0 8px 24px ${app.color}40`,
                         padding: app.id === 'tempo' ? '4px' : '0',
+                        'text-shadow':
+                          '0 0 2px rgba(0,0,0,0.8), 0 0 4px rgba(0,0,0,0.5), 1px 1px 0 rgba(0,0,0,0.3)',
                       }}
                     >
                       <Show when={app.id === 'tempo'} fallback={app.name.charAt(0)}>
@@ -2040,6 +2075,7 @@ export const AppPage: Component = () => {
     manifest: ManifestApp,
     augment: AugmentApp,
     lol: LolApp,
+    papertrail: PaperTrailApp,
   };
 
   return (
@@ -2067,6 +2103,9 @@ export const AppPage: Component = () => {
       </Show>
       <Show when={appId() === 'lol'}>
         <LolApp />
+      </Show>
+      <Show when={appId() === 'papertrail'}>
+        <PaperTrailApp />
       </Show>
     </>
   );

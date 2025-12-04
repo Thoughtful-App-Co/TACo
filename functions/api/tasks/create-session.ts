@@ -50,7 +50,7 @@ const TaskSchema = z.object({
   id: z.string(),
   title: z.string(),
   duration: z.number(),
-  taskCategory: z.enum(['focus', 'learning', 'review', 'research'] as const),
+  taskCategory: z.enum(['focus', 'learning', 'review', 'research', 'social'] as const),
   projectType: z.string().optional(),
   isFrog: z.boolean(),
   isFlexible: z.boolean(),
@@ -700,7 +700,7 @@ Respond with a JSON session plan that follows this exact structure:
               "id": "string",
               "title": "string",
               "duration": number,
-              "taskCategory": "focus" | "learning" | "review" | "research",
+              "taskCategory": "focus" | "learning" | "review" | "research" | "social",
               "projectType": "string" (optional),
               "isFrog": boolean
             }
