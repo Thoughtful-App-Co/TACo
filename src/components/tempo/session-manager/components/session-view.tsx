@@ -31,9 +31,11 @@ import {
   ChartBar,
 } from 'phosphor-solid';
 import { useSession } from '../hooks/useSession';
+import type { SessionMode, UserSubtask } from '../hooks/useSession';
 import { SessionStorageService } from '../../services/session-storage.service';
 import { format } from 'date-fns';
 import { VerticalTimeline } from './vertical-timeline';
+import { StartTimeBoxModal } from './start-timebox-modal';
 import { tempoDesign } from '../../theme/tempo-design';
 
 interface SessionViewProps {
@@ -512,6 +514,7 @@ export const SessionView = (props: SessionViewProps) => {
     loading,
     error,
     activeTimeBox,
+    activeSessionMode,
     timeRemaining,
     isTimerRunning,
     completedPercentage,
@@ -525,10 +528,59 @@ export const SessionView = (props: SessionViewProps) => {
     undoCompleteTimeBox,
     isCurrentTimeBox,
     updateTimeRemaining,
+    getActiveStoryTitle,
   } = useSession({ id: sessionId, storageService: props.storageService });
 
   // State for active time update
   const [currentFormattedTime, setCurrentFormattedTime] = createSignal('00:00');
+
+  // State for start timebox modal
+  const [showStartModal, setShowStartModal] = createSignal(false);
+  const [pendingTimeBox, setPendingTimeBox] = createSignal<{
+    storyId: string;
+    timeBoxIndex: number;
+    duration: number;
+    storyTitle: string;
+    existingTasks?: Array<{ id: string; title: string; status?: string }>;
+  } | null>(null);
+
+  // Handler to show modal when Start is clicked
+  const handleStartTimeBoxClick = (storyId: string, timeBoxIndex: number, duration: number) => {
+    const story = session()?.storyBlocks.find((s) => s.id === storyId);
+    if (!story) return;
+
+    const timeBox = story.timeBoxes[timeBoxIndex];
+    const existingTasks = timeBox?.tasks?.map((t, idx) => ({
+      id: `existing-${idx}`,
+      title: t.title,
+      status: t.status || 'todo',
+    }));
+
+    setPendingTimeBox({
+      storyId,
+      timeBoxIndex,
+      duration,
+      storyTitle: story.title,
+      existingTasks,
+    });
+    setShowStartModal(true);
+  };
+
+  // Handler when user confirms start from modal
+  const handleModalStart = (mode: SessionMode, subtasks: UserSubtask[]) => {
+    const pending = pendingTimeBox();
+    if (!pending) return;
+
+    startTimeBox(pending.storyId, pending.timeBoxIndex, pending.duration, mode, subtasks);
+    setShowStartModal(false);
+    setPendingTimeBox(null);
+  };
+
+  // Handler to close modal
+  const handleModalClose = () => {
+    setShowStartModal(false);
+    setPendingTimeBox(null);
+  };
 
   // Stable visibility state for floating timer
   const [stableFloatingVisible, setStableFloatingVisible] = createSignal(false);
@@ -1712,7 +1764,7 @@ export const SessionView = (props: SessionViewProps) => {
                         console.log('Show details for current timebox:', timeBox);
                       }
                     }}
-                    onStartTimeBox={startTimeBox}
+                    onStartTimeBox={handleStartTimeBoxClick}
                     onCompleteTimeBox={(storyId: string, timeBoxIndex: number) => {
                       completeTimeBox(storyId, timeBoxIndex);
                     }}
@@ -1739,6 +1791,16 @@ export const SessionView = (props: SessionViewProps) => {
           </div>
         </Show>
       </Show>
+
+      {/* Start Timebox Modal */}
+      <StartTimeBoxModal
+        isOpen={showStartModal()}
+        storyTitle={pendingTimeBox()?.storyTitle || ''}
+        timeBoxDuration={pendingTimeBox()?.duration || 0}
+        existingTasks={pendingTimeBox()?.existingTasks}
+        onClose={handleModalClose}
+        onStart={handleModalStart}
+      />
     </Show>
   );
 };
