@@ -263,6 +263,7 @@ export const ChangelogService = {
       correction: 0,
       retraction: 0,
       clarification: 0,
+      development: 0,
     };
 
     for (const entry of changelog) {

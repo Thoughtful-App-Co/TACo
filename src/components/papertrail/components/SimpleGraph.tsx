@@ -47,15 +47,15 @@ interface Transform {
   scale: number;
 }
 
-// Force-directed layout parameters
+// Force-directed layout parameters - EXTREME SPACING
 const LAYOUT = {
-  width: 1200,
-  height: 900,
-  nodeSpacing: 180,
-  centerForce: 0.002,
-  repulsionForce: 8000,
-  attractionForce: 0.0005,
-  iterations: 300,
+  width: 3000,
+  height: 2400,
+  nodeSpacing: 400,
+  centerForce: 0,
+  repulsionForce: 25000,
+  attractionForce: 0,
+  iterations: 400,
 };
 
 export const SimpleGraph: Component<SimpleGraphProps> = (props) => {
@@ -92,32 +92,34 @@ export const SimpleGraph: Component<SimpleGraphProps> = (props) => {
     const centerX = width / 2;
     const centerY = height / 2;
 
-    // Initialize positions in a circle with wider spread
+    // Initialize positions randomly across entire canvas
     const positions: PositionedEntity[] = entities.map((entity, i) => {
-      const angle = (i / entities.length) * 2 * Math.PI;
-      const radius = Math.min(width, height) * 0.45; // Even wider initial spread
-      const nodeRadius = Math.min(4 + entity.mentionCount * 0.5, 12); // Much smaller nodes
+      const nodeRadius = 32; // 2x bigger nodes (was 16)
+
+      // Spread nodes across entire canvas randomly
+      const x = 200 + Math.random() * (width - 400);
+      const y = 200 + Math.random() * (height - 400);
 
       return {
         ...entity,
-        x: centerX + Math.cos(angle) * radius,
-        y: centerY + Math.sin(angle) * radius,
+        x,
+        y,
         radius: nodeRadius,
       };
     });
 
     // Simple force-directed simulation
     for (let iter = 0; iter < LAYOUT.iterations; iter++) {
-      // Repulsion between nodes - always repel, much stronger when close
+      // Repulsion between nodes - EXTREME REPULSION
       for (let i = 0; i < positions.length; i++) {
         for (let j = i + 1; j < positions.length; j++) {
           const dx = positions[j].x - positions[i].x;
           const dy = positions[j].y - positions[i].y;
           const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-          const minDist = positions[i].radius + positions[j].radius + LAYOUT.nodeSpacing;
+          const minDist = LAYOUT.nodeSpacing;
 
-          // Much stronger repulsion when too close
-          const repulsionMultiplier = dist < minDist ? 0.5 : 0.08;
+          // ALWAYS apply massive repulsion
+          const repulsionMultiplier = dist < minDist ? 0.8 : 0.15;
           const force = (LAYOUT.repulsionForce / (dist * dist)) * repulsionMultiplier;
           const fx = (dx / dist) * force;
           const fy = (dy / dist) * force;
@@ -129,41 +131,20 @@ export const SimpleGraph: Component<SimpleGraphProps> = (props) => {
         }
       }
 
-      // Attraction to center (prevent flying off)
-      for (const pos of positions) {
-        pos.x += (centerX - pos.x) * LAYOUT.centerForce;
-        pos.y += (centerY - pos.y) * LAYOUT.centerForce;
-
-        // Keep within bounds with extra margin for labels
-        const margin = pos.radius + 50;
-        pos.x = Math.max(margin, Math.min(width - margin, pos.x));
-        pos.y = Math.max(margin, Math.min(height - margin, pos.y));
-      }
-
-      // Attraction along edges - only pull if too far apart
-      for (const relation of props.relations) {
-        const source = positions.find((p) => p.id === relation.sourceId);
-        const target = positions.find((p) => p.id === relation.targetId);
-
-        if (source && target) {
-          const dx = target.x - source.x;
-          const dy = target.y - source.y;
-          const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-
-          // Only attract if distance is large, to keep connected nodes visible but not clustered
-          const idealDist = 150;
-          if (dist > idealDist) {
-            const force = (dist - idealDist) * LAYOUT.attractionForce * relation.strength;
-            const fx = (dx / dist) * force;
-            const fy = (dy / dist) * force;
-
-            source.x += fx;
-            source.y += fy;
-            target.x -= fx;
-            target.y -= fy;
-          }
+      // Very gentle bounds constraint (only apply after repulsion settles)
+      if (iter > LAYOUT.iterations * 0.7) {
+        for (const pos of positions) {
+          // Only pull back if way outside bounds
+          const margin = 100;
+          if (pos.x < margin) pos.x += (margin - pos.x) * 0.1;
+          if (pos.x > width - margin) pos.x -= (pos.x - (width - margin)) * 0.1;
+          if (pos.y < margin) pos.y += (margin - pos.y) * 0.1;
+          if (pos.y > height - margin) pos.y -= (pos.y - (height - margin)) * 0.1;
         }
       }
+
+      // NO EDGE ATTRACTION - edges can be any length
+      // (Removed to maximize spacing)
     }
 
     return positions;
@@ -325,7 +306,7 @@ export const SimpleGraph: Component<SimpleGraphProps> = (props) => {
     isHovered: boolean,
     isConnected: boolean
   ) => {
-    if (isSelected) return yellowScale[500];
+    if (isSelected) return '#EF4444'; // Red for selected
     if (isHovered) return yellowScale[400];
     if (isConnected && selectedEntity()) return yellowScale[300];
     return graphTokens.node[type]?.fill || yellowScale[500];
@@ -345,7 +326,7 @@ export const SimpleGraph: Component<SimpleGraphProps> = (props) => {
 
     const isConnected = relation.sourceId === selected || relation.targetId === selected;
     if (isConnected) {
-      return { stroke: yellowScale[500], opacity: 1, width: Math.min(relation.strength + 1, 4) };
+      return { stroke: '#EF4444', opacity: 1, width: Math.min(relation.strength + 1, 4) }; // Red for selected edges
     }
 
     return { stroke: inkScale.mid, opacity: 0.1, width: 1 };
@@ -563,7 +544,7 @@ export const SimpleGraph: Component<SimpleGraphProps> = (props) => {
             <svg
               ref={svgRef}
               width="100%"
-              height="700"
+              height="800"
               viewBox={`0 0 ${LAYOUT.width} ${LAYOUT.height}`}
               style={{ display: 'block' }}
               onWheel={handleWheel}
@@ -609,10 +590,10 @@ export const SimpleGraph: Component<SimpleGraphProps> = (props) => {
                     // Semantic zoom: keep visual sizes consistent across zoom levels
                     const scale = transform().scale;
                     const scaledRadius = () => entity.radius / Math.sqrt(scale);
-                    const scaledStrokeWidth = () => (isSelected() ? 3 : 2) / scale;
-                    const scaledRingOffset = () => 6 / Math.sqrt(scale);
-                    const scaledFontSize = () => (isSelected() ? 11 : 9) / scale;
-                    const scaledTextOffset = () => entity.radius / Math.sqrt(scale) + 24 / scale;
+                    const scaledStrokeWidth = () => (isSelected() ? 5 : 4) / scale;
+                    const scaledRingOffset = () => 10 / Math.sqrt(scale);
+                    const scaledFontSize = () => (isSelected() ? 16 : 14) / scale;
+                    const scaledTextOffset = () => entity.radius / Math.sqrt(scale) + 32 / scale;
 
                     return (
                       <g
@@ -629,7 +610,7 @@ export const SimpleGraph: Component<SimpleGraphProps> = (props) => {
                             cy={entity.y}
                             r={scaledRadius() + scaledRingOffset()}
                             fill="none"
-                            stroke={isSelected() ? yellowScale[500] : yellowScale[300]}
+                            stroke={isSelected() ? '#EF4444' : yellowScale[300]}
                             stroke-width={scaledStrokeWidth()}
                             stroke-dasharray={
                               isConnected() && !isSelected() ? `${4 / scale},${4 / scale}` : 'none'
@@ -644,7 +625,11 @@ export const SimpleGraph: Component<SimpleGraphProps> = (props) => {
                           cy={entity.y}
                           r={scaledRadius()}
                           fill={getNodeColor(entity.type, isSelected(), isHovered(), isConnected())}
-                          stroke={graphTokens.node[entity.type]?.stroke || yellowScale[700]}
+                          stroke={
+                            isSelected()
+                              ? '#DC2626'
+                              : graphTokens.node[entity.type]?.stroke || yellowScale[700]
+                          }
                           stroke-width={scaledStrokeWidth()}
                           style={{
                             transition: `all ${motionTokens.duration.fast} ${motionTokens.easing.standard}`,
@@ -665,6 +650,7 @@ export const SimpleGraph: Component<SimpleGraphProps> = (props) => {
                           {entity.name.length > 20
                             ? entity.name.substring(0, 20) + '...'
                             : entity.name}
+                          <title>{entity.name}</title>
                         </text>
                       </g>
                     );

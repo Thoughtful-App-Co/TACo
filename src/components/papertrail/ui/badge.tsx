@@ -41,6 +41,11 @@ const changeColors: Record<ChangeType, { bg: string; text: string; border: strin
     text: '#1E40AF',
     border: '#000000',
   },
+  development: {
+    bg: diffColors.added.bg,
+    text: diffColors.added.text,
+    border: '#000000',
+  },
 };
 
 export const ChangeBadge: Component<ChangeBadgeProps> = (props) => {

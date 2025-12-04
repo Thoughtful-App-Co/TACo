@@ -14,11 +14,12 @@
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
-import { Component, createSignal, Show } from 'solid-js';
+import { Component, createSignal, Show, onCleanup, onMount } from 'solid-js';
 import { papertrail, yellowScale, papertrailCSS, kineticAnimations } from '../../theme/papertrail';
 import { useNews } from './hooks/useNews';
 import { useChangelog } from './hooks/useChangelog';
 import { useEntities } from './hooks/useEntities';
+import { useStoryClusters } from './hooks/useStoryClusters';
 import { Tabs } from './ui/tabs';
 import { Button } from './ui/button';
 import { SettingsModal } from './ui/settings-modal';
@@ -26,23 +27,29 @@ import { NewsFeed } from './components/NewsFeed';
 import { DiffView } from './components/DiffView';
 import { SimpleGraph } from './components/SimpleGraph';
 import { AIOnboarding } from './components/AIOnboarding';
+import { StoryClustersView } from './components/StoryClustersView';
+import { TimelineView } from './components/TimelineView';
 
-type TabId = 'feed' | 'changes' | 'graph';
+type TabId = 'stories' | 'timeline' | 'feed' | 'changes' | 'graph';
+
+const AUTO_REFRESH_INTERVAL = 5 * 60 * 1000; // 5 minutes
 
 export const PaperTrailApp: Component = () => {
   // State
-  const [activeTab, setActiveTab] = createSignal<TabId>('feed');
+  const [activeTab, setActiveTab] = createSignal<TabId>('stories');
   const [showSettings, setShowSettings] = createSignal(false);
 
   // Hooks
   const news = useNews();
   const changelog = useChangelog();
   const entities = useEntities();
+  const clusters = useStoryClusters();
 
   // Handle settings save
   const handleSettingsSave = () => {
-    // Rebuild graph after AI config changes
+    // Rebuild clusters and graph after AI config changes
     if (news.articles().length > 0) {
+      clusters.buildClusters(news.articles());
       entities.buildGraph(news.articles());
     }
   };
@@ -62,8 +69,28 @@ export const PaperTrailApp: Component = () => {
     await entities.buildGraph(news.articles());
   };
 
+  // Handle cluster build
+  const handleBuildClusters = async () => {
+    await clusters.buildClusters(news.articles());
+  };
+
+  // Auto-refresh setup
+  onMount(() => {
+    const intervalId = setInterval(async () => {
+      console.log('[PaperTrail] Auto-refreshing news...');
+      await news.refresh();
+      if (news.articles().length > 0 && clusters.clusters().length > 0) {
+        await clusters.buildClusters(news.articles());
+      }
+    }, AUTO_REFRESH_INTERVAL);
+
+    onCleanup(() => clearInterval(intervalId));
+  });
+
   // Tab configuration
   const tabs = () => [
+    { id: 'stories', label: 'Stories', count: clusters.clusters().length },
+    { id: 'timeline', label: 'Timeline', count: 0 },
     { id: 'feed', label: 'Feed', count: news.articles().length },
     { id: 'changes', label: 'Changes', count: changelog.changelog().length },
     { id: 'graph', label: 'Graph', count: entities.entities().length },
@@ -228,6 +255,22 @@ export const PaperTrailApp: Component = () => {
           padding: '24px',
         }}
       >
+        {/* Stories Tab - NEW! AI-Clustered Stories */}
+        <Show when={activeTab() === 'stories'}>
+          <StoryClustersView
+            clusters={clusters.clusters()}
+            articles={news.articles()}
+            isBuilding={clusters.isBuilding()}
+            onBuildClusters={handleBuildClusters}
+            getClusterArticles={(cluster) => clusters.getClusterArticles(cluster, news.articles())}
+          />
+        </Show>
+
+        {/* Timeline Tab - Visual story evolution */}
+        <Show when={activeTab() === 'timeline'}>
+          <TimelineView clusters={clusters.clusters()} />
+        </Show>
+
         {/* Feed Tab */}
         <Show when={activeTab() === 'feed'}>
           <NewsFeed
