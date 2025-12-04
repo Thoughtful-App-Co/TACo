@@ -127,7 +127,7 @@ const apps: AppInfo[] = [
     elevatorPitch:
       'Track what was said vs. what was true. Graph-first news aggregation with correction tracking.',
     designSystem: 'Paper Trail',
-    color: '#D4A800',
+    color: '#FFE500',
     timeline: 'later',
     releaseDate: 'TBD',
     status: 'coming-soon',
@@ -290,6 +290,8 @@ const IsometricCard: Component<{
               color: 'white',
               'font-weight': 'bold',
               'box-shadow': `0 4px 12px ${props.app.color}60`,
+              'text-shadow':
+                '0 0 2px rgba(0,0,0,0.8), 0 0 4px rgba(0,0,0,0.5), 1px 1px 0 rgba(0,0,0,0.3)',
             }}
           >
             {props.app.name[0]}
@@ -432,7 +434,15 @@ const AppItem: Component<{ app: AppInfo; onClick: () => void }> = (props) => {
           <Show
             when={props.app.id === 'tempo'}
             fallback={
-              <span style={{ color: 'white', 'font-size': '12px', 'font-weight': '600' }}>
+              <span
+                style={{
+                  color: 'white',
+                  'font-size': '12px',
+                  'font-weight': '600',
+                  'text-shadow':
+                    '0 0 2px rgba(0,0,0,0.8), 0 0 4px rgba(0,0,0,0.5), 1px 1px 0 rgba(0,0,0,0.3)',
+                }}
+              >
                 {props.app.name[0]}
               </span>
             }
@@ -525,6 +535,8 @@ const AppItem: Component<{ app: AppInfo; onClick: () => void }> = (props) => {
                 color: 'white',
                 'font-weight': '700',
                 'font-size': '14px',
+                'text-shadow':
+                  '0 0 2px rgba(0,0,0,0.8), 0 0 4px rgba(0,0,0,0.5), 1px 1px 0 rgba(0,0,0,0.3)',
               }}
             >
               <Show when={props.app.id === 'tempo'} fallback={props.app.name.charAt(0)}>
@@ -1967,6 +1979,8 @@ const TabNavigation: Component<{
                         color: 'white',
                         'box-shadow': `0 8px 24px ${app.color}40`,
                         padding: app.id === 'tempo' ? '4px' : '0',
+                        'text-shadow':
+                          '0 0 2px rgba(0,0,0,0.8), 0 0 4px rgba(0,0,0,0.5), 1px 1px 0 rgba(0,0,0,0.3)',
                       }}
                     >
                       <Show when={app.id === 'tempo'} fallback={app.name.charAt(0)}>

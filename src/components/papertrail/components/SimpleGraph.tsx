@@ -51,11 +51,11 @@ interface Transform {
 const LAYOUT = {
   width: 800,
   height: 600,
-  nodeSpacing: 80,
-  centerForce: 0.02,
-  repulsionForce: 1500,
-  attractionForce: 0.005,
-  iterations: 100,
+  nodeSpacing: 50,
+  centerForce: 0.01,
+  repulsionForce: 2000,
+  attractionForce: 0.003,
+  iterations: 150,
 };
 
 export const SimpleGraph: Component<SimpleGraphProps> = (props) => {
@@ -96,7 +96,7 @@ export const SimpleGraph: Component<SimpleGraphProps> = (props) => {
     const positions: PositionedEntity[] = entities.map((entity, i) => {
       const angle = (i / entities.length) * 2 * Math.PI;
       const radius = Math.min(width, height) * 0.35;
-      const nodeRadius = Math.min(10 + entity.mentionCount * 3, 30);
+      const nodeRadius = Math.min(6 + entity.mentionCount * 1.5, 18);
 
       return {
         ...entity,
@@ -437,7 +437,7 @@ export const SimpleGraph: Component<SimpleGraphProps> = (props) => {
                   gap: '6px',
                   padding: '6px 12px',
                   background: isActive() ? graphTokens.node[type]?.fill : 'transparent',
-                  border: `1px solid ${isActive() ? graphTokens.node[type]?.stroke : papertrail.colors.border}`,
+                  border: `2px solid ${isActive() ? graphTokens.node[type]?.stroke : papertrail.colors.border}`,
                   'border-radius': '16px',
                   cursor: 'pointer',
                   opacity: isActive() ? 1 : 0.5,
@@ -449,14 +449,15 @@ export const SimpleGraph: Component<SimpleGraphProps> = (props) => {
                     width: '10px',
                     height: '10px',
                     'border-radius': '50%',
-                    background: isActive() ? '#fff' : graphTokens.node[type]?.fill,
+                    background: graphTokens.node[type]?.fill,
+                    border: isActive() ? '2px solid #000000' : 'none',
                   }}
                 />
                 <span
                   style={{
                     'font-size': '12px',
                     'font-weight': 500,
-                    color: isActive() ? '#fff' : papertrail.colors.textMuted,
+                    color: '#000000',
                     'text-transform': 'capitalize',
                   }}
                 >
@@ -574,6 +575,8 @@ export const SimpleGraph: Component<SimpleGraphProps> = (props) => {
                     if (!source || !target) return null;
 
                     const style = getEdgeStyle(relation);
+                    const scale = transform().scale;
+                    const scaledWidth = () => style.width / scale;
 
                     return (
                       <line
@@ -582,7 +585,7 @@ export const SimpleGraph: Component<SimpleGraphProps> = (props) => {
                         x2={target.x}
                         y2={target.y}
                         stroke={style.stroke}
-                        stroke-width={style.width}
+                        stroke-width={scaledWidth()}
                         opacity={style.opacity}
                         style={{
                           transition: `all ${motionTokens.duration.fast} ${motionTokens.easing.standard}`,
@@ -599,6 +602,14 @@ export const SimpleGraph: Component<SimpleGraphProps> = (props) => {
                     const isHovered = () => hoveredEntity() === entity.id;
                     const isConnected = () => isConnectedToSelected(entity.id);
 
+                    // Semantic zoom: keep visual sizes consistent across zoom levels
+                    const scale = transform().scale;
+                    const scaledRadius = () => entity.radius / Math.sqrt(scale);
+                    const scaledStrokeWidth = () => (isSelected() ? 3 : 2) / scale;
+                    const scaledRingOffset = () => 6 / Math.sqrt(scale);
+                    const scaledFontSize = () => (isSelected() ? 12 : 10) / scale;
+                    const scaledTextOffset = () => entity.radius / Math.sqrt(scale) + 16 / scale;
+
                     return (
                       <g
                         style={{ cursor: 'pointer' }}
@@ -612,11 +623,13 @@ export const SimpleGraph: Component<SimpleGraphProps> = (props) => {
                           <circle
                             cx={entity.x}
                             cy={entity.y}
-                            r={entity.radius + 6}
+                            r={scaledRadius() + scaledRingOffset()}
                             fill="none"
                             stroke={isSelected() ? yellowScale[500] : yellowScale[300]}
-                            stroke-width={2}
-                            stroke-dasharray={isConnected() && !isSelected() ? '4,4' : 'none'}
+                            stroke-width={scaledStrokeWidth()}
+                            stroke-dasharray={
+                              isConnected() && !isSelected() ? `${4 / scale},${4 / scale}` : 'none'
+                            }
                             opacity={0.8}
                           />
                         </Show>
@@ -625,10 +638,10 @@ export const SimpleGraph: Component<SimpleGraphProps> = (props) => {
                         <circle
                           cx={entity.x}
                           cy={entity.y}
-                          r={entity.radius}
+                          r={scaledRadius()}
                           fill={getNodeColor(entity.type, isSelected(), isHovered(), isConnected())}
                           stroke={graphTokens.node[entity.type]?.stroke || yellowScale[700]}
-                          stroke-width={isSelected() ? 3 : 2}
+                          stroke-width={scaledStrokeWidth()}
                           style={{
                             transition: `all ${motionTokens.duration.fast} ${motionTokens.easing.standard}`,
                           }}
@@ -637,10 +650,10 @@ export const SimpleGraph: Component<SimpleGraphProps> = (props) => {
                         {/* Label */}
                         <text
                           x={entity.x}
-                          y={entity.y + entity.radius + 16}
+                          y={entity.y + scaledTextOffset()}
                           text-anchor="middle"
                           fill={isSelected() ? papertrail.colors.text : papertrail.colors.textMuted}
-                          font-size={isSelected() ? '12' : '10'}
+                          font-size={`${scaledFontSize()}`}
                           font-family={papertrail.fonts.heading}
                           font-weight={isSelected() ? 600 : 400}
                           style={{ 'pointer-events': 'none' }}
