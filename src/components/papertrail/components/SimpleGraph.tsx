@@ -49,13 +49,13 @@ interface Transform {
 
 // Force-directed layout parameters
 const LAYOUT = {
-  width: 800,
-  height: 600,
-  nodeSpacing: 50,
-  centerForce: 0.01,
-  repulsionForce: 2000,
-  attractionForce: 0.003,
-  iterations: 150,
+  width: 1200,
+  height: 900,
+  nodeSpacing: 180,
+  centerForce: 0.002,
+  repulsionForce: 8000,
+  attractionForce: 0.0005,
+  iterations: 300,
 };
 
 export const SimpleGraph: Component<SimpleGraphProps> = (props) => {
@@ -92,11 +92,11 @@ export const SimpleGraph: Component<SimpleGraphProps> = (props) => {
     const centerX = width / 2;
     const centerY = height / 2;
 
-    // Initialize positions in a circle
+    // Initialize positions in a circle with wider spread
     const positions: PositionedEntity[] = entities.map((entity, i) => {
       const angle = (i / entities.length) * 2 * Math.PI;
-      const radius = Math.min(width, height) * 0.35;
-      const nodeRadius = Math.min(6 + entity.mentionCount * 1.5, 18);
+      const radius = Math.min(width, height) * 0.45; // Even wider initial spread
+      const nodeRadius = Math.min(4 + entity.mentionCount * 0.5, 12); // Much smaller nodes
 
       return {
         ...entity,
@@ -108,7 +108,7 @@ export const SimpleGraph: Component<SimpleGraphProps> = (props) => {
 
     // Simple force-directed simulation
     for (let iter = 0; iter < LAYOUT.iterations; iter++) {
-      // Repulsion between nodes
+      // Repulsion between nodes - always repel, much stronger when close
       for (let i = 0; i < positions.length; i++) {
         for (let j = i + 1; j < positions.length; j++) {
           const dx = positions[j].x - positions[i].x;
@@ -116,16 +116,16 @@ export const SimpleGraph: Component<SimpleGraphProps> = (props) => {
           const dist = Math.sqrt(dx * dx + dy * dy) || 1;
           const minDist = positions[i].radius + positions[j].radius + LAYOUT.nodeSpacing;
 
-          if (dist < minDist) {
-            const force = (LAYOUT.repulsionForce / (dist * dist)) * 0.1;
-            const fx = (dx / dist) * force;
-            const fy = (dy / dist) * force;
+          // Much stronger repulsion when too close
+          const repulsionMultiplier = dist < minDist ? 0.5 : 0.08;
+          const force = (LAYOUT.repulsionForce / (dist * dist)) * repulsionMultiplier;
+          const fx = (dx / dist) * force;
+          const fy = (dy / dist) * force;
 
-            positions[i].x -= fx;
-            positions[i].y -= fy;
-            positions[j].x += fx;
-            positions[j].y += fy;
-          }
+          positions[i].x -= fx;
+          positions[i].y -= fy;
+          positions[j].x += fx;
+          positions[j].y += fy;
         }
       }
 
@@ -134,13 +134,13 @@ export const SimpleGraph: Component<SimpleGraphProps> = (props) => {
         pos.x += (centerX - pos.x) * LAYOUT.centerForce;
         pos.y += (centerY - pos.y) * LAYOUT.centerForce;
 
-        // Keep within bounds
-        const margin = pos.radius + 20;
+        // Keep within bounds with extra margin for labels
+        const margin = pos.radius + 50;
         pos.x = Math.max(margin, Math.min(width - margin, pos.x));
         pos.y = Math.max(margin, Math.min(height - margin, pos.y));
       }
 
-      // Attraction along edges
+      // Attraction along edges - only pull if too far apart
       for (const relation of props.relations) {
         const source = positions.find((p) => p.id === relation.sourceId);
         const target = positions.find((p) => p.id === relation.targetId);
@@ -150,14 +150,18 @@ export const SimpleGraph: Component<SimpleGraphProps> = (props) => {
           const dy = target.y - source.y;
           const dist = Math.sqrt(dx * dx + dy * dy) || 1;
 
-          const force = dist * LAYOUT.attractionForce * relation.strength;
-          const fx = (dx / dist) * force;
-          const fy = (dy / dist) * force;
+          // Only attract if distance is large, to keep connected nodes visible but not clustered
+          const idealDist = 150;
+          if (dist > idealDist) {
+            const force = (dist - idealDist) * LAYOUT.attractionForce * relation.strength;
+            const fx = (dx / dist) * force;
+            const fy = (dy / dist) * force;
 
-          source.x += fx;
-          source.y += fy;
-          target.x -= fx;
-          target.y -= fy;
+            source.x += fx;
+            source.y += fy;
+            target.x -= fx;
+            target.y -= fy;
+          }
         }
       }
     }
@@ -559,7 +563,7 @@ export const SimpleGraph: Component<SimpleGraphProps> = (props) => {
             <svg
               ref={svgRef}
               width="100%"
-              height="500"
+              height="700"
               viewBox={`0 0 ${LAYOUT.width} ${LAYOUT.height}`}
               style={{ display: 'block' }}
               onWheel={handleWheel}
@@ -607,8 +611,8 @@ export const SimpleGraph: Component<SimpleGraphProps> = (props) => {
                     const scaledRadius = () => entity.radius / Math.sqrt(scale);
                     const scaledStrokeWidth = () => (isSelected() ? 3 : 2) / scale;
                     const scaledRingOffset = () => 6 / Math.sqrt(scale);
-                    const scaledFontSize = () => (isSelected() ? 12 : 10) / scale;
-                    const scaledTextOffset = () => entity.radius / Math.sqrt(scale) + 16 / scale;
+                    const scaledFontSize = () => (isSelected() ? 11 : 9) / scale;
+                    const scaledTextOffset = () => entity.radius / Math.sqrt(scale) + 24 / scale;
 
                     return (
                       <g
@@ -701,7 +705,7 @@ export const SimpleGraph: Component<SimpleGraphProps> = (props) => {
                     flex: '0 0 280px',
                     background: papertrail.colors.surface,
                     border: `1px solid ${papertrail.colors.border}`,
-                    'max-height': '500px',
+                    'max-height': '700px',
                     'overflow-y': 'auto',
                   }}
                 >

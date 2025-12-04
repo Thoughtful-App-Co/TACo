@@ -31,6 +31,7 @@ export interface NewsApiResponse {
   total: number;
   currentPage: number;
   pages: number;
+  sources?: string[]; // List of source names in this response
 }
 
 export const NewsService = {

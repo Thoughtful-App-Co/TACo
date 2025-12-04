@@ -258,11 +258,35 @@ export const PreferencesSchema = z.object({
 export type Preferences = z.infer<typeof PreferencesSchema>;
 
 // =============================================================================
+// STORY CLUSTERS (THE CORE VALUE!)
+// =============================================================================
+//
+// This is where Paper Trail shines: grouping related articles into "stories"
+// and tracking how those stories evolve over time with AI-powered summaries
+// and automatic changelog generation.
+
+export const StoryClusterSchema = z.object({
+  id: z.string(), // Generated cluster ID
+  title: z.string(), // AI-generated cluster title
+  summary: z.string(), // AI-generated summary of the story
+  articleIds: z.array(z.string()), // Articles in this cluster
+  firstSeenAt: z.string(), // When we first saw this story
+  lastUpdatedAt: z.string(), // Last time articles were added
+  updateCount: z.number(), // How many times it's been updated
+  significance: z.enum(['low', 'medium', 'high']), // AI-determined importance
+  topics: z.array(z.string()), // Key topics/themes
+  changelog: z.array(ChangelogEntrySchema), // Evolution history
+});
+
+export type StoryCluster = z.infer<typeof StoryClusterSchema>;
+
+// =============================================================================
 // APP STATE
 // =============================================================================
 
 export const AppStateSchema = z.object({
   articles: z.array(ArticleSchema),
+  storyClusters: z.array(StoryClusterSchema), // NEW: Clustered stories
   changelog: z.array(ChangelogEntrySchema),
   entityGraph: EntityGraphSchema.nullable(),
   preferences: PreferencesSchema,

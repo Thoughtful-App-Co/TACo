@@ -25,6 +25,7 @@ import { SettingsModal } from './ui/settings-modal';
 import { NewsFeed } from './components/NewsFeed';
 import { DiffView } from './components/DiffView';
 import { SimpleGraph } from './components/SimpleGraph';
+import { AIOnboarding } from './components/AIOnboarding';
 
 type TabId = 'feed' | 'changes' | 'graph';
 
@@ -39,7 +40,17 @@ export const PaperTrailApp: Component = () => {
   const entities = useEntities();
 
   // Handle settings save
-  const handleSettingsSave = () => {};
+  const handleSettingsSave = () => {
+    // Rebuild graph after AI config changes
+    if (news.articles().length > 0) {
+      entities.buildGraph(news.articles());
+    }
+  };
+
+  // Handle AI setup from onboarding
+  const handleSetupAI = () => {
+    setShowSettings(true);
+  };
 
   // Handle view changes from article card
   const handleViewChanges = (_articleId: string) => {
@@ -236,6 +247,7 @@ export const PaperTrailApp: Component = () => {
 
         {/* Graph Tab */}
         <Show when={activeTab() === 'graph'}>
+          <AIOnboarding onSetupAI={handleSetupAI} />
           <SimpleGraph
             entities={entities.entities()}
             relations={entities.relations()}
