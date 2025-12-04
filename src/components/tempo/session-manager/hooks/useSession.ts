@@ -31,11 +31,22 @@ export interface UseSessionProps {
   storageService?: SessionStorageService;
 }
 
+// Session mode type for user-selected work style
+export type SessionMode = 'tasks' | 'flow';
+
+// User-created subtask interface
+export interface UserSubtask {
+  id: string;
+  title: string;
+  status: 'todo' | 'completed';
+}
+
 export interface UseSessionReturn {
   session: () => Session | null;
   loading: () => boolean;
   error: () => Error | null;
   activeTimeBox: () => { storyId: string; timeBoxIndex: number } | null;
+  activeSessionMode: () => SessionMode | null;
   timeRemaining: () => number | null;
   isTimerRunning: () => boolean;
   isSessionComplete: () => boolean;
@@ -46,7 +57,13 @@ export interface UseSessionReturn {
     taskIndex: number,
     task: TimeBoxTask
   ) => void;
-  startTimeBox: (storyId: string, timeBoxIndex: number, duration: number) => void;
+  startTimeBox: (
+    storyId: string,
+    timeBoxIndex: number,
+    duration: number,
+    mode?: SessionMode,
+    userSubtasks?: UserSubtask[]
+  ) => void;
   pauseTimer: () => void;
   resumeTimer: () => void;
   resetTimer: () => void;
@@ -56,6 +73,7 @@ export interface UseSessionReturn {
   findNextTimeBox: () => { storyId: string; timeBoxIndex: number } | null;
   isCurrentTimeBox: (timeBox: TimeBox) => boolean;
   updateTimeRemaining: (newTime: number) => void;
+  getActiveStoryTitle: () => string | null;
 }
 
 export const useSession = ({
@@ -67,6 +85,9 @@ export const useSession = ({
   const [session, setSession] = createSignal<Session | null>(null);
   const [loading, setLoading] = createSignal<boolean>(true);
   const [error, setError] = createSignal<Error | null>(null);
+
+  // Session mode state (tasks or flow)
+  const [activeSessionMode, setActiveSessionMode] = createSignal<SessionMode | null>(null);
 
   // Timer state
   const [activeTimeBox, setActiveTimeBox] = createSignal<{
@@ -181,38 +202,45 @@ export const useSession = ({
   const undoCompleteTimeBox = (storyId: string, timeBoxIndex: number) => {
     if (!session()) return;
 
-    const updatedSession = { ...session()! };
-    const storyIndex = updatedSession.storyBlocks.findIndex((story) => story.id === storyId);
+    const storyIndex = session()!.storyBlocks.findIndex((story) => story.id === storyId);
 
     if (storyIndex === -1) {
       console.error(`Story with ID ${storyId} not found`);
       return;
     }
 
-    // Get the timebox
-    const timeBox = updatedSession.storyBlocks[storyIndex].timeBoxes[timeBoxIndex];
+    // Get the current timebox
+    const currentTimeBox = session()!.storyBlocks[storyIndex].timeBoxes[timeBoxIndex];
 
     // Only allow undoing completed timeboxes
-    if (timeBox.status !== 'completed') {
+    if (currentTimeBox.status !== 'completed') {
       console.warn('Cannot undo a timebox that is not completed');
       return;
     }
 
-    // Revert timebox to todo status
-    timeBox.status = 'todo';
+    // Create fully immutable update for SolidJS reactivity
+    const updatedSession: Session = {
+      ...session()!,
+      storyBlocks: session()!.storyBlocks.map((story, sIdx) => {
+        if (sIdx !== storyIndex) return story;
 
-    // Reset tasks to todo status (optional - you might want to keep their completion status)
-    const tasks = timeBox.tasks;
-    if (tasks && tasks.length > 0) {
-      tasks.forEach((task) => {
-        task.status = 'todo';
-      });
-    }
+        const updatedTimeBoxes = story.timeBoxes.map((tb, tbIdx) => {
+          if (tbIdx !== timeBoxIndex) return tb;
+          return {
+            ...tb,
+            status: 'todo' as TimeBoxStatus,
+            // Reset tasks to todo status
+            tasks: tb.tasks?.map((task) => ({ ...task, status: 'todo' as const })) || [],
+          };
+        });
 
-    // Update story progress
-    updatedSession.storyBlocks[storyIndex].progress = calculateStoryProgress(
-      updatedSession.storyBlocks[storyIndex]
-    );
+        return {
+          ...story,
+          timeBoxes: updatedTimeBoxes,
+          progress: calculateStoryProgress({ ...story, timeBoxes: updatedTimeBoxes }),
+        };
+      }),
+    };
 
     // Update session in storage
     updateSession(updatedSession);
@@ -241,105 +269,53 @@ export const useSession = ({
       timerIdRef = null;
     }
 
-    const updatedSession = { ...session()! };
-    const storyIndex = updatedSession.storyBlocks.findIndex((story) => story.id === storyId);
+    const storyIndex = session()!.storyBlocks.findIndex((story) => story.id === storyId);
 
     if (storyIndex === -1) {
       console.error(`Story with ID ${storyId} not found`);
       return;
     }
 
-    // Mark all tasks as completed
-    const tasks = updatedSession.storyBlocks[storyIndex].timeBoxes[timeBoxIndex].tasks;
-    if (tasks && tasks.length > 0) {
-      tasks.forEach((task) => {
-        task.status = 'completed';
-      });
-    }
+    const currentTimeBox = session()!.storyBlocks[storyIndex].timeBoxes[timeBoxIndex];
 
-    // Set the timebox to completed
-    const timeBox = updatedSession.storyBlocks[storyIndex].timeBoxes[timeBoxIndex];
-    timeBox.status = 'completed';
+    // Calculate actual duration
+    let actualDuration: number;
+    let startTime = currentTimeBox.startTime;
 
-    // Calculate and store actual duration if we have a start time
-    if (timeBox.startTime) {
-      const startTime = new Date(timeBox.startTime);
+    if (startTime) {
+      const startDate = new Date(startTime);
       const endTime = new Date();
-      const rawActualDuration = Math.round((endTime.getTime() - startTime.getTime()) / 60000); // in minutes
+      actualDuration = Math.round((endTime.getTime() - startDate.getTime()) / 60000);
 
-      // Use the exact elapsed time, even if it's 0
-      timeBox.actualDuration = rawActualDuration;
-
-      console.log(`TimeBox completed - Type: ${timeBox.type}, ID: ${storyId}-${timeBoxIndex}`);
-      console.log(`  Start Time: ${timeBox.startTime}`);
+      console.log(
+        `TimeBox completed - Type: ${currentTimeBox.type}, ID: ${storyId}-${timeBoxIndex}`
+      );
+      console.log(`  Start Time: ${startTime}`);
       console.log(`  End Time: ${endTime.toISOString()}`);
       console.log(
-        `  Actual Duration: ${timeBox.actualDuration}min (planned: ${timeBox.duration}min)`
+        `  Actual Duration: ${actualDuration}min (planned: ${currentTimeBox.duration}min)`
       );
-      console.log(`  Time saved: ${timeBox.duration - timeBox.actualDuration}min`);
-
-      // Save the actual duration to storage
-      if (session()!.date) {
-        storageService
-          .saveActualDuration(session()!.date, storyId, timeBoxIndex, timeBox.actualDuration)
-          .then((result) => {
-            if (!result) {
-              console.error('Failed to save actual duration to storage');
-            } else {
-              console.log(
-                `Successfully saved actual duration to storage: ${timeBox.actualDuration}min`
-              );
-            }
-          });
-      }
     } else {
       // Handle missing startTime by creating a synthetic one
       console.warn(
-        `TimeBox has no startTime record! Type: ${timeBox.type}, ID: ${storyId}-${timeBoxIndex}`
+        `TimeBox has no startTime record! Type: ${currentTimeBox.type}, ID: ${storyId}-${timeBoxIndex}`
       );
 
-      // For synthetic cases, use a more conservative approach
-      if (timeBox.type === 'work') {
-        // For focus sessions, use a more realistic synthetic duration
-        timeBox.actualDuration = Math.max(1, Math.floor(timeBox.duration * 0.8));
-
-        console.log(
-          `Using synthetic duration for focus session: ${timeBox.actualDuration}min (80% of planned ${timeBox.duration}min)`
-        );
+      if (currentTimeBox.type === 'work') {
+        actualDuration = Math.max(1, Math.floor(currentTimeBox.duration * 0.8));
+        console.log(`Using synthetic duration for focus session: ${actualDuration}min`);
       } else {
-        // For breaks, use something close to the planned duration
-        const variation = -Math.floor(Math.random() * 2); // -0 to -1 minutes
-        timeBox.actualDuration = Math.max(1, timeBox.duration + variation);
-
-        console.log(
-          `Using synthetic duration for break: ${timeBox.actualDuration}min (${variation}min from planned ${timeBox.duration}min)`
-        );
+        const variation = -Math.floor(Math.random() * 2);
+        actualDuration = Math.max(1, currentTimeBox.duration + variation);
+        console.log(`Using synthetic duration for break: ${actualDuration}min`);
       }
 
-      // Set startTime based on actualDuration
-      timeBox.startTime = new Date(
-        new Date().getTime() - timeBox.actualDuration * 60000
-      ).toISOString();
+      startTime = new Date(new Date().getTime() - actualDuration * 60000).toISOString();
+    }
 
-      console.log(
-        `  Synthetic Duration: ${timeBox.actualDuration}min (planned: ${timeBox.duration}min)`
-      );
-      console.log(`  Time saved: ${timeBox.duration - timeBox.actualDuration}min`);
-
-      // Save the synthetic duration to storage
-      if (session()!.date) {
-        storageService
-          .saveActualDuration(session()!.date, storyId, timeBoxIndex, timeBox.actualDuration)
-          .then((result) => {
-            if (!result) {
-              console.error('Failed to save synthetic duration to storage');
-            } else {
-              console.log(
-                `Successfully saved synthetic duration to storage: ${timeBox.actualDuration}min`
-              );
-            }
-          });
-      }
+    // Save actual duration to storage
+    if (session()!.date) {
+      storageService.saveActualDuration(session()!.date, storyId, timeBoxIndex, actualDuration);
     }
 
     // Reset timer state if this was the active timebox
@@ -349,10 +325,31 @@ export const useSession = ({
       setIsTimerRunning(false);
     }
 
-    // Update story progress
-    updatedSession.storyBlocks[storyIndex].progress = calculateStoryProgress(
-      updatedSession.storyBlocks[storyIndex]
-    );
+    // Create fully immutable update for SolidJS reactivity
+    const updatedSession: Session = {
+      ...session()!,
+      storyBlocks: session()!.storyBlocks.map((story, sIdx) => {
+        if (sIdx !== storyIndex) return story;
+
+        const updatedTimeBoxes = story.timeBoxes.map((tb, tbIdx) => {
+          if (tbIdx !== timeBoxIndex) return tb;
+          return {
+            ...tb,
+            status: 'completed' as TimeBoxStatus,
+            startTime,
+            actualDuration,
+            // Mark all tasks as completed
+            tasks: tb.tasks?.map((task) => ({ ...task, status: 'completed' as const })) || [],
+          };
+        });
+
+        return {
+          ...story,
+          timeBoxes: updatedTimeBoxes,
+          progress: calculateStoryProgress({ ...story, timeBoxes: updatedTimeBoxes }),
+        };
+      }),
+    };
 
     // Update session in storage
     updateSession(updatedSession);
@@ -368,7 +365,6 @@ export const useSession = ({
     // Find next timebox to suggest
     const nextTimeBox = findNextTimeBox();
     if (nextTimeBox) {
-      // Get the type of the next timebox for better user guidance
       const nextStoryIndex = updatedSession.storyBlocks.findIndex(
         (story) => story.id === nextTimeBox.storyId
       );
@@ -388,10 +384,7 @@ export const useSession = ({
           title: 'Timebox Completed',
           description: `Your next ${boxTypeLabel} is ready to start. Check the highlighted button.`,
           actionLabel: 'Go to Next',
-          onAction: () => {
-            // We don't auto-start the next task, just help the user find it
-            // Scroll to the element might be implemented here if needed
-          },
+          onAction: () => {},
         });
       }
     } else {
@@ -402,8 +395,14 @@ export const useSession = ({
     }
   };
 
-  // Start a timebox
-  const startTimeBox = (storyId: string, timeBoxIndex: number, duration: number) => {
+  // Start a timebox with optional user-created subtasks
+  const startTimeBox = (
+    storyId: string,
+    timeBoxIndex: number,
+    duration: number,
+    mode: SessionMode = 'tasks',
+    userSubtasks?: UserSubtask[]
+  ) => {
     if (!session()) return;
 
     // Clear any existing timers
@@ -412,8 +411,7 @@ export const useSession = ({
       timerIdRef = null;
     }
 
-    const updatedSession = { ...session()! };
-    const storyIndex = updatedSession.storyBlocks.findIndex((story) => story.id === storyId);
+    const storyIndex = session()!.storyBlocks.findIndex((story) => story.id === storyId);
 
     if (storyIndex === -1) {
       // Handle the special case for session-debrief
@@ -422,6 +420,7 @@ export const useSession = ({
 
         // Set timer state without attempting to update non-existent timeBox
         setActiveTimeBox({ storyId, timeBoxIndex });
+        setActiveSessionMode(mode);
         setTimeRemaining(duration * 60); // Convert minutes to seconds
         setIsTimerRunning(true);
 
@@ -437,27 +436,59 @@ export const useSession = ({
       return;
     }
 
-    // Reset any previously in-progress timeboxes
-    updatedSession.storyBlocks.forEach((story) => {
-      story.timeBoxes.forEach((tb) => {
-        if (tb.status === 'in-progress') {
-          tb.status = 'todo';
-        }
-      });
-    });
+    // Build the new tasks array for the target timebox
+    let newTasks: TimeBoxTask[];
+    if (mode === 'flow') {
+      newTasks = [];
+    } else if (userSubtasks && userSubtasks.length > 0) {
+      // Convert UserSubtask to TimeBoxTask format
+      newTasks = userSubtasks.map((subtask) => ({
+        title: subtask.title,
+        duration: 0, // User subtasks don't have individual durations
+        status: subtask.status as 'todo' | 'completed',
+        isFrog: false,
+        isFlexible: true,
+      }));
+    } else {
+      // Keep existing tasks if any
+      newTasks = [...(session()!.storyBlocks[storyIndex].timeBoxes[timeBoxIndex].tasks || [])];
+    }
 
-    // Set the selected timebox to in-progress
+    // Create a fully immutable update to trigger SolidJS reactivity
+    const updatedSession: Session = {
+      ...session()!,
+      storyBlocks: session()!.storyBlocks.map((story, sIdx) => ({
+        ...story,
+        timeBoxes: story.timeBoxes.map((tb, tbIdx) => {
+          // Reset any previously in-progress timeboxes to todo
+          if (tb.status === 'in-progress') {
+            return { ...tb, status: 'todo' as TimeBoxStatus };
+          }
+          // Update the target timebox
+          if (sIdx === storyIndex && tbIdx === timeBoxIndex) {
+            return {
+              ...tb,
+              status: 'in-progress' as TimeBoxStatus,
+              tasks: newTasks,
+              startTime: new Date().toISOString(),
+            };
+          }
+          return tb;
+        }),
+      })),
+    };
+
     const timeBox = updatedSession.storyBlocks[storyIndex].timeBoxes[timeBoxIndex];
-    timeBox.status = 'in-progress';
-
-    // Record start time for actual duration tracking
-    timeBox.startTime = new Date().toISOString();
     console.log(
-      `Starting TimeBox - Type: ${timeBox.type}, ID: ${storyId}-${timeBoxIndex}, Start Time: ${timeBox.startTime}`
+      `Starting TimeBox - Type: ${timeBox.type}, Mode: ${mode}, ID: ${storyId}-${timeBoxIndex}, Start Time: ${timeBox.startTime}`
     );
+    if (userSubtasks && userSubtasks.length > 0) {
+      console.log(`  User subtasks: ${userSubtasks.map((t) => t.title).join(', ')}`);
+    }
 
-    // Set timer state
+    // Set timer state and session mode
     setActiveTimeBox({ storyId, timeBoxIndex });
+    setActiveSessionMode(mode);
     setTimeRemaining(duration * 60); // Convert minutes to seconds
     setIsTimerRunning(true);
 
@@ -472,10 +503,20 @@ export const useSession = ({
       'in-progress' as TimeBoxStatus
     );
 
+    const storyTitle = updatedSession.storyBlocks[storyIndex].title;
     toast({
-      title: 'Timebox Started',
-      description: `Timer set for ${duration} minutes`,
+      title: mode === 'flow' ? 'Focus Session Started' : 'Session Started',
+      description: `${storyTitle} - ${duration} minutes`,
     });
+  };
+
+  // Get the title of the active story block
+  const getActiveStoryTitle = (): string | null => {
+    const active = activeTimeBox();
+    if (!active || !session()) return null;
+
+    const story = session()!.storyBlocks.find((s) => s.id === active.storyId);
+    return story?.title || null;
   };
 
   // Handle task click
@@ -492,8 +533,7 @@ export const useSession = ({
 
     console.log('TASK UPDATE - Checking if task status changed in props:', task.status);
 
-    const updatedSession = { ...session()! };
-    const storyIndex = updatedSession.storyBlocks.findIndex((story) => story.id === storyId);
+    const storyIndex = session()!.storyBlocks.findIndex((story) => story.id === storyId);
 
     if (storyIndex === -1) {
       console.error(`Story with ID ${storyId} not found`);
@@ -501,14 +541,14 @@ export const useSession = ({
     }
 
     // Validate that the timeBox and its tasks array exist
-    const timeBox = updatedSession.storyBlocks[storyIndex].timeBoxes[timeBoxIndex];
-    if (!timeBox || !timeBox.tasks) {
+    const currentTimeBox = session()!.storyBlocks[storyIndex].timeBoxes[timeBoxIndex];
+    if (!currentTimeBox || !currentTimeBox.tasks) {
       console.error(`TimeBox or tasks array not found at index ${timeBoxIndex}`);
       return;
     }
 
     // Get the current task
-    const currentTask = timeBox.tasks[taskIndex];
+    const currentTask = currentTimeBox.tasks[taskIndex];
 
     // Only proceed if the status has actually changed
     if (currentTask.status === task.status) {
@@ -518,32 +558,46 @@ export const useSession = ({
 
     console.log('Updating task status from', currentTask.status, 'to', task.status);
 
-    // Update the task with the new status
-    timeBox.tasks[taskIndex] = {
-      ...timeBox.tasks[taskIndex],
-      status: task.status,
-    };
+    // Build new tasks array with the updated task
+    const newTasks = currentTimeBox.tasks.map((t, idx) =>
+      idx === taskIndex ? { ...t, status: task.status } : t
+    );
 
     // Check if all tasks are completed in this timebox
-    const allTasksCompleted = timeBox.tasks.every((t) => t.status === 'completed');
+    const allTasksCompleted = newTasks.every((t) => t.status === 'completed');
 
-    // Auto-complete timebox if all tasks are completed
+    // If this is the active timebox and all tasks completed, reset timer state
     if (allTasksCompleted) {
-      updatedSession.storyBlocks[storyIndex].timeBoxes[timeBoxIndex].status = 'completed';
-
-      // If this is the active timebox, reset timer state
       if (activeTimeBox()?.storyId === storyId && activeTimeBox()?.timeBoxIndex === timeBoxIndex) {
         setActiveTimeBox(null);
         setTimeRemaining(null);
         setIsTimerRunning(false);
         if (timerIdRef) clearInterval(timerIdRef);
       }
-
-      // Update story progress
-      updatedSession.storyBlocks[storyIndex].progress = calculateStoryProgress(
-        updatedSession.storyBlocks[storyIndex]
-      );
     }
+
+    // Create fully immutable update for SolidJS reactivity
+    const updatedSession: Session = {
+      ...session()!,
+      storyBlocks: session()!.storyBlocks.map((story, sIdx) => {
+        if (sIdx !== storyIndex) return story;
+
+        const updatedTimeBoxes = story.timeBoxes.map((tb, tbIdx) => {
+          if (tbIdx !== timeBoxIndex) return tb;
+          return {
+            ...tb,
+            tasks: newTasks,
+            status: allTasksCompleted ? ('completed' as TimeBoxStatus) : tb.status,
+          };
+        });
+
+        return {
+          ...story,
+          timeBoxes: updatedTimeBoxes,
+          progress: calculateStoryProgress({ ...story, timeBoxes: updatedTimeBoxes }),
+        };
+      }),
+    };
 
     // Update session in storage
     updateSession(updatedSession);
@@ -669,12 +723,19 @@ export const useSession = ({
     return activeBox === timeBox;
   };
 
+  // Track if we've already triggered auto-complete for the current timebox
+  // This prevents multiple completions from firing
+  let autoCompleteTriggered = false;
+
   // Start timer interval for countdown
   const startTimerInterval = () => {
     // Clear existing timer if any
     if (timerIdRef) {
       clearInterval(timerIdRef);
     }
+
+    // Reset auto-complete flag when starting a new timer
+    autoCompleteTriggered = false;
 
     // Create new timer
     timerIdRef = setInterval(() => {
@@ -692,6 +753,32 @@ export const useSession = ({
       });
     }, 1000);
   };
+
+  // Effect to auto-complete timebox when timer reaches 0
+  createEffect(() => {
+    const remaining = timeRemaining();
+    const active = activeTimeBox();
+
+    // Only trigger when timer reaches exactly 0, there's an active timebox,
+    // and we haven't already triggered auto-complete
+    if (remaining === 0 && active && !autoCompleteTriggered) {
+      autoCompleteTriggered = true;
+
+      console.log(
+        `Timer completed for timebox ${active.storyId}-${active.timeBoxIndex}, auto-completing...`
+      );
+
+      // Use setTimeout to ensure state updates have propagated
+      setTimeout(() => {
+        completeTimeBox(active.storyId, active.timeBoxIndex);
+      }, 100);
+    }
+
+    // Reset the flag when a new timebox becomes active (timeRemaining changes from null/0 to a positive value)
+    if (remaining !== null && remaining > 0) {
+      autoCompleteTriggered = false;
+    }
+  });
 
   // Effect to handle starting/stopping timer based on isTimerRunning state
   createEffect(() => {
@@ -853,6 +940,7 @@ export const useSession = ({
     loading,
     error,
     activeTimeBox,
+    activeSessionMode,
     timeRemaining,
     isTimerRunning,
     isSessionComplete,
@@ -867,6 +955,7 @@ export const useSession = ({
     findNextWorkTimeBox,
     findNextTimeBox,
     isCurrentTimeBox,
+    getActiveStoryTitle,
     updateTimeRemaining,
   };
 };

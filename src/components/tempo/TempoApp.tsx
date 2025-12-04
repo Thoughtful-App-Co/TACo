@@ -8,7 +8,8 @@
  * and protected intellectual property. No infringement or unauthorized use is permitted.
  */
 
-import { Component, createSignal, Show } from 'solid-js';
+import { Component, createSignal, Show, createEffect } from 'solid-js';
+import { useParams, useNavigate } from '@solidjs/router';
 import { BrainDump } from './brain-dump';
 import { CaretRight, Gear, ArrowLeft } from 'phosphor-solid';
 import { tempoDesign } from './theme/tempo-design';
@@ -64,6 +65,9 @@ responsiveStyles.textContent = `
 document.head.appendChild(responsiveStyles);
 
 export const TempoApp: Component = () => {
+  const params = useParams<{ sessionId?: string }>();
+  const navigate = useNavigate();
+
   const [stats, setStats] = createSignal<Stats>({
     totalTasks: 0,
     totalDuration: 0,
@@ -73,11 +77,13 @@ export const TempoApp: Component = () => {
 
   const [showSettings, setShowSettings] = createSignal(false);
   const [activeTab, setActiveTab] = createSignal<string>('tasks');
-  const [selectedSessionDate, setSelectedSessionDate] = createSignal<string | null>(null);
-  const [viewingSession, setViewingSession] = createSignal(false);
 
   // Check if API key is configured
   const [hasApiKey, setHasApiKey] = createSignal(ApiConfigService.hasApiKey());
+
+  // Derive session state from URL params
+  const selectedSessionDate = () => params.sessionId || null;
+  const viewingSession = () => !!params.sessionId;
 
   const handleTasksProcessed = (
     stories: { tasks: { isFrog?: boolean; duration?: number }[]; estimatedDuration?: number }[]
@@ -109,13 +115,11 @@ export const TempoApp: Component = () => {
   };
 
   const handleSessionSelect = (date: string) => {
-    setSelectedSessionDate(date);
-    setViewingSession(true);
+    navigate(`/tempo/session/${date}`);
   };
 
   const handleBackToSessions = () => {
-    setViewingSession(false);
-    setSelectedSessionDate(null);
+    navigate('/tempo');
   };
 
   const tabs: Tab[] = [

@@ -174,10 +174,7 @@ Finalize product specs - EOD`}
             <ProcessedStories
               stories={processedStories()}
               editedDurations={editedDurations()}
-              isCreatingSession={isCreatingSession()}
               onDurationChange={handleDurationChange}
-              onRetry={handleRetry}
-              onCreateSession={handleCreateSession}
             />
           </div>
         </Show>

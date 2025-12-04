@@ -156,6 +156,7 @@ if (root) {
       <Router root={App}>
         <Route path="/" component={LandingPage} />
         <Route path="/:appId" component={AppPage} />
+        <Route path="/:appId/session/:sessionId" component={AppPage} />
       </Router>
     ),
     root
