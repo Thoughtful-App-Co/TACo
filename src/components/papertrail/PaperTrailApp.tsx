@@ -268,7 +268,7 @@ export const PaperTrailApp: Component = () => {
 
         {/* Timeline Tab - Visual story evolution */}
         <Show when={activeTab() === 'timeline'}>
-          <TimelineView clusters={clusters.clusters()} />
+          <TimelineView clusters={clusters.clusters()} articles={news.articles()} />
         </Show>
 
         {/* Feed Tab */}

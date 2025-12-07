@@ -366,11 +366,32 @@ export const TimelineView: Component<TimelineViewProps> = (props) => {
                             />
 
                             {/* Story Content */}
-                            <div
+                            <a
+                              href={(() => {
+                                // Get first article URL from cluster
+                                const firstArticle = props.articles.find((a) =>
+                                  story.cluster.articleIds.includes(a.id)
+                                );
+                                return firstArticle?.url || '#';
+                              })()}
+                              target="_blank"
+                              rel="noopener noreferrer"
                               style={{
+                                display: 'block',
                                 padding: '12px 16px',
                                 background: papertrail.colors.background,
                                 border: `2px solid ${papertrail.colors.border}`,
+                                'text-decoration': 'none',
+                                color: 'inherit',
+                                transition: 'all 150ms cubic-bezier(0.4, 0, 0.2, 1)',
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.transform = 'translate(-2px, -2px)';
+                                e.currentTarget.style.boxShadow = '3px 3px 0 #000000';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.transform = 'translate(0, 0)';
+                                e.currentTarget.style.boxShadow = 'none';
                               }}
                             >
                               <div
@@ -391,9 +412,13 @@ export const TimelineView: Component<TimelineViewProps> = (props) => {
                                     'line-height': 1.4,
                                     color: '#000000',
                                     flex: 1,
+                                    display: 'flex',
+                                    'align-items': 'center',
+                                    gap: '6px',
                                   }}
                                 >
-                                  {story.cluster.title}
+                                  <span>{story.cluster.title}</span>
+                                  <ExternalLinkIcon size={14} color={papertrail.colors.textMuted} />
                                 </h4>
                                 <span
                                   style={{
@@ -437,7 +462,7 @@ export const TimelineView: Component<TimelineViewProps> = (props) => {
                                   </span>
                                 </Show>
                               </div>
-                            </div>
+                            </a>
                           </div>
                         )}
                       </For>

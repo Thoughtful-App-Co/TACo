@@ -9,6 +9,7 @@ import { Component, For, Show } from 'solid-js';
 import { Article, StoryCluster } from '../../../schemas/papertrail.schema';
 import { papertrail, yellowScale } from '../../../theme/papertrail';
 import { ChangeBadge } from '../ui/badge';
+import { ExternalLinkIcon } from '../ui/category-icons';
 
 export interface StoryDetailProps {
   cluster: StoryCluster;
@@ -220,9 +221,13 @@ export const StoryDetail: Component<StoryDetailProps> = (props) => {
                     'font-weight': 700,
                     'line-height': 1.4,
                     color: '#000000',
+                    display: 'flex',
+                    'align-items': 'center',
+                    gap: '6px',
                   }}
                 >
-                  {article.title}
+                  <span>{article.title}</span>
+                  <ExternalLinkIcon size={14} color={papertrail.colors.textMuted} />
                 </h5>
 
                 <Show when={article.description}>
