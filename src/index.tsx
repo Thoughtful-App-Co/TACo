@@ -24,6 +24,15 @@ globalStyles.textContent = `
     font-style: normal;
   }
 
+  /* Shupp - Brand Font */
+  @font-face {
+    font-family: 'Shupp';
+    src: url('/fonts/Shupp.otf') format('opentype');
+    font-weight: 400;
+    font-display: swap;
+    font-style: normal;
+  }
+
   *, *::before, *::after {
     box-sizing: border-box;
   }
