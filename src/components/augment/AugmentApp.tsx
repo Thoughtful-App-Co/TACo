@@ -18,7 +18,7 @@ import {
   createEffect,
   untrack,
 } from 'solid-js';
-import { Strength, JobMatch } from '../../schemas/augment.schema';
+import { JobMatch } from '../../schemas/augment.schema';
 import {
   searchCareers,
   getInterestProfilerQuestions,
@@ -30,7 +30,9 @@ import {
   OnetCareerMatch,
   OnetCareerDetails,
 } from '../../services/onet';
-import { maximalist, maxPalette, maxGradients, maxPatterns } from '../../theme/maximalist';
+import { maximalist, maxPalette, maxGradients } from '../../theme/maximalist';
+import { PipelineView, pipelineStore, Sidebar, SidebarView } from './pipeline';
+import { FeatureFlags, DEFAULT_FEATURE_FLAGS } from '../../schemas/pipeline.schema';
 
 // Helper to get RGB string from hex
 const hexToRgb = (hex: string) => {
@@ -76,73 +78,6 @@ const [currentTheme, setCurrentTheme] = createSignal({
     lg: '0 16px 48px rgba(255, 255, 255, 0.2), 0 8px 16px rgba(255, 255, 255, 0.15)',
   },
 });
-
-const sampleStrengths: Strength[] = [
-  {
-    id: '1',
-    name: 'Strategic Thinking',
-    category: 'strategic-thinking',
-    score: 92,
-    description: 'Sees patterns others miss',
-    relatedRoles: ['Product Manager', 'Consultant'],
-  },
-  {
-    id: '2',
-    name: 'Ideation',
-    category: 'strategic-thinking',
-    score: 88,
-    description: 'Generates creative solutions',
-    relatedRoles: ['Designer', 'Innovator'],
-  },
-  {
-    id: '3',
-    name: 'Achiever',
-    category: 'executing',
-    score: 85,
-    description: 'Driven to accomplish goals',
-    relatedRoles: ['Project Lead', 'Entrepreneur'],
-  },
-  {
-    id: '4',
-    name: 'Communication',
-    category: 'influencing',
-    score: 79,
-    description: 'Articulates ideas clearly',
-    relatedRoles: ['Sales', 'Marketing'],
-  },
-];
-
-const sampleJobs: JobMatch[] = [
-  {
-    id: '1',
-    userId: '1',
-    jobId: 'j1',
-    company: 'Innovate Labs',
-    role: 'Senior Product Strategist',
-    location: 'Remote',
-    strengthFitScore: 94,
-    cultureFitScore: 88,
-    overallScore: 91,
-    matchedStrengths: ['Strategic Thinking', 'Ideation'],
-    matchedValues: ['innovation', 'autonomy'],
-    status: 'discovered',
-  },
-  {
-    id: '2',
-    userId: '1',
-    jobId: 'j2',
-    company: 'GrowthCo',
-    role: 'Innovation Lead',
-    location: 'NYC',
-    salary: { min: 150000, max: 180000, currency: 'USD' },
-    strengthFitScore: 87,
-    cultureFitScore: 92,
-    overallScore: 89,
-    matchedStrengths: ['Achiever', 'Communication'],
-    matchedValues: ['growth', 'collaboration'],
-    status: 'interested',
-  },
-];
 
 const ARCHETYPES: Record<string, { title: string; description: string }> = {
   // Pure Types (fallback if scores are very skewed)
@@ -643,149 +578,6 @@ const RadarChart: Component<{ scores: RiasecScoreWithDetails }> = (props) => {
   );
 };
 
-const StrengthCard: Component<{ strength: Strength; index: number }> = (props) => {
-  const [isHovered, setIsHovered] = createSignal(false);
-  // Re-calculate pattern inside component to access currentTheme()
-  const dynamicPattern = createMemo(() => {
-    const color = currentTheme().colors.primary.replace('#', '%23');
-    return `url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='2' cy='2' r='2' fill='${color}' fill-opacity='0.3'/%3E%3C/svg%3E")`;
-  });
-
-  const accentColor = currentTheme().colors.primary;
-
-  return (
-    <div
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      style={{
-        position: 'relative',
-        background: maximalist.colors.surface,
-        'border-radius': maximalist.radii.lg,
-        padding: '24px',
-        'box-shadow': currentTheme().shadows.md,
-        border: `2px solid ${maximalist.colors.border}`,
-        overflow: 'hidden',
-        cursor: 'pointer',
-        transition: 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)',
-        transform: isHovered() ? 'scale(1.05) rotate(1deg)' : 'scale(1) rotate(0deg)',
-      }}
-    >
-      {/* Decorative background pattern */}
-      <div
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          'background-image': dynamicPattern(),
-          opacity: 0.4,
-          'pointer-events': 'none',
-        }}
-      />
-
-      {/* Accent blob */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '-30px',
-          right: '-30px',
-          width: '100px',
-          height: '100px',
-          background: accentColor,
-          'border-radius': maximalist.radii.organic,
-          opacity: 0.3,
-          transition: 'transform 0.5s ease',
-          transform: isHovered() ? 'scale(1.4) rotate(20deg)' : 'scale(1) rotate(0deg)',
-        }}
-      />
-
-      <div style={{ position: 'relative', 'z-index': 1 }}>
-        {/* Score badge - maximalist style */}
-        <div
-          style={{
-            display: 'inline-flex',
-            'align-items': 'center',
-            gap: '8px',
-            padding: '8px 16px',
-            background: currentTheme().gradients.primary,
-            'border-radius': '50px',
-            'margin-bottom': '16px',
-          }}
-        >
-          <span
-            style={{
-              'font-family': maximalist.fonts.heading,
-              'font-size': '24px',
-              'font-weight': '700',
-              color: currentTheme().colors.textOnPrimary,
-            }}
-          >
-            {props.strength.score}
-          </span>
-          <span
-            style={{
-              'font-size': '12px',
-              color:
-                currentTheme().colors.textOnPrimary === 'white'
-                  ? 'rgba(255,255,255,0.8)'
-                  : 'rgba(0,0,0,0.6)',
-              'font-weight': '500',
-            }}
-          >
-            / 100
-          </span>
-        </div>
-
-        <h3
-          style={{
-            margin: '0 0 8px 0',
-            'font-family': maximalist.fonts.heading,
-            'font-size': '24px',
-            'font-weight': '700',
-            color: maximalist.colors.text,
-          }}
-        >
-          {props.strength.name}
-        </h3>
-
-        <p
-          style={{
-            margin: '0 0 16px 0',
-            'font-family': maximalist.fonts.body,
-            'font-size': '14px',
-            color: maximalist.colors.textMuted,
-            'line-height': '1.5',
-          }}
-        >
-          {props.strength.description}
-        </p>
-
-        {/* Related roles - decorative chips */}
-        <div style={{ display: 'flex', 'flex-wrap': 'wrap', gap: '8px' }}>
-          <For each={props.strength.relatedRoles}>
-            {(role) => (
-              <span
-                style={{
-                  padding: '6px 12px',
-                  background: `${accentColor}25`,
-                  'border-radius': '20px',
-                  'font-size': '12px',
-                  color: maximalist.colors.text,
-                  'font-weight': '500',
-                  border: `1px solid ${accentColor}40`,
-                }}
-              >
-                {role}
-              </span>
-            )}
-          </For>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 const JobCard: Component<{ job: JobMatch }> = (props) => {
   return (
     <div
@@ -1081,8 +873,15 @@ const JobCard: Component<{ job: JobMatch }> = (props) => {
 };
 
 export const AugmentApp: Component = () => {
-  const [activeTab, setActiveTab] = createSignal<'RIASEC' | 'Matches'>('RIASEC');
+  const [activeTab, setActiveTab] = createSignal<'Discover' | 'Matches' | 'Prospect'>('Discover');
   const [jobs, setJobs] = createSignal<JobMatch[]>([]);
+
+  // Sidebar state
+  const [sidebarView, setSidebarView] = createSignal<SidebarView>(null);
+  const isSidebarOpen = () => sidebarView() !== null;
+
+  // Feature flags from Pipeline store
+  const featureFlags = () => pipelineStore.state.featureFlags;
 
   // Assessment State
   const [assessmentState, setAssessmentState] = createSignal<'intro' | 'questions' | 'results'>(
@@ -1250,7 +1049,7 @@ export const AugmentApp: Component = () => {
         // Find first unanswered question
         const firstUnanswered = parsed.findIndex((a: string) => a === '?');
         setCurrentQuestionIndex(firstUnanswered === -1 ? 0 : firstUnanswered);
-        setActiveTab('RIASEC');
+        setActiveTab('Discover');
       }
     }
   });
@@ -1278,7 +1077,7 @@ export const AugmentApp: Component = () => {
       if (scores) {
         setRiasecScore(scores);
         setAssessmentState('results');
-        setActiveTab('RIASEC');
+        setActiveTab('Discover');
 
         // Fetch careers
         const careers = await getInterestProfilerCareers(scores);
@@ -1446,36 +1245,133 @@ export const AugmentApp: Component = () => {
             </div>
           </div>
 
-          <div style={{ display: 'flex', 'align-items': 'center', gap: '16px' }}>
-            <div
-              style={{
-                padding: '10px 20px',
-                background: `${currentTheme().colors.accent}20`,
-                'border-radius': '50px',
-                'font-size': '14px',
-                color: currentTheme().colors.accent,
-                'font-weight': '600',
-              }}
-            >
-              4 New Matches
-            </div>
-
+          <div style={{ display: 'flex', 'align-items': 'center', gap: '12px' }}>
+            {/* Profile button */}
             <button
+              onClick={() => setSidebarView(sidebarView() === 'profile' ? null : 'profile')}
+              class="header-icon-btn"
               style={{
-                width: '48px',
-                height: '48px',
-                'border-radius': '50%',
-                background: maxGradients.sunset,
-                border: 'none',
+                width: '44px',
+                height: '44px',
+                'border-radius': '12px',
+                background:
+                  sidebarView() === 'profile' ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                border:
+                  sidebarView() === 'profile'
+                    ? `1px solid ${currentTheme().colors.primary}`
+                    : `1px solid ${maximalist.colors.border}`,
                 display: 'flex',
                 'align-items': 'center',
                 'justify-content': 'center',
                 cursor: 'pointer',
-                'box-shadow': currentTheme().shadows.sm,
+                color:
+                  sidebarView() === 'profile'
+                    ? currentTheme().colors.primary
+                    : maximalist.colors.textMuted,
+                transition: 'all 0.2s ease',
+                position: 'relative',
               }}
+              onMouseEnter={(e) => {
+                if (sidebarView() !== 'profile') {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                  e.currentTarget.style.borderColor = currentTheme().colors.primary;
+                  e.currentTarget.style.color = currentTheme().colors.text;
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (sidebarView() !== 'profile') {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.borderColor = maximalist.colors.border;
+                  e.currentTarget.style.color = maximalist.colors.textMuted;
+                  e.currentTarget.style.transform = 'scale(1)';
+                }
+              }}
+              title="Profile"
             >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
-                <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              {/* Notification dot if no profile */}
+              <Show when={!pipelineStore.state.profile && sidebarView() !== 'profile'}>
+                <span
+                  style={{
+                    position: 'absolute',
+                    top: '8px',
+                    right: '8px',
+                    width: '8px',
+                    height: '8px',
+                    'border-radius': '50%',
+                    background: '#F59E0B',
+                  }}
+                />
+              </Show>
+            </button>
+
+            {/* Settings button */}
+            <button
+              onClick={() => setSidebarView(sidebarView() === 'settings' ? null : 'settings')}
+              class="header-icon-btn"
+              style={{
+                width: '44px',
+                height: '44px',
+                'border-radius': '12px',
+                background:
+                  sidebarView() === 'settings' ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                border:
+                  sidebarView() === 'settings'
+                    ? `1px solid ${currentTheme().colors.primary}`
+                    : `1px solid ${maximalist.colors.border}`,
+                display: 'flex',
+                'align-items': 'center',
+                'justify-content': 'center',
+                cursor: 'pointer',
+                color:
+                  sidebarView() === 'settings'
+                    ? currentTheme().colors.primary
+                    : maximalist.colors.textMuted,
+                transition: 'all 0.2s ease',
+              }}
+              onMouseEnter={(e) => {
+                if (sidebarView() !== 'settings') {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                  e.currentTarget.style.borderColor = currentTheme().colors.primary;
+                  e.currentTarget.style.color = currentTheme().colors.text;
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (sidebarView() !== 'settings') {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.borderColor = maximalist.colors.border;
+                  e.currentTarget.style.color = maximalist.colors.textMuted;
+                  e.currentTarget.style.transform = 'scale(1)';
+                }
+              }}
+              title="Settings"
+            >
+              <svg
+                width="20"
+                height="20"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="12" r="3" />
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
               </svg>
             </button>
           </div>
@@ -1497,7 +1393,15 @@ export const AugmentApp: Component = () => {
               border: `1px solid ${maximalist.colors.border}`,
             }}
           >
-            <For each={['RIASEC', 'Matches'] as const}>
+            {/* Build tabs array based on feature flags */}
+            <For
+              each={(() => {
+                const tabs: ('Discover' | 'Matches' | 'Prospect')[] = ['Discover'];
+                if (featureFlags().showMatches) tabs.push('Matches');
+                if (featureFlags().showPipeline) tabs.push('Prospect');
+                return tabs;
+              })()}
+            >
               {(tab) => (
                 <button
                   onClick={() => setActiveTab(tab)}
@@ -1562,9 +1466,9 @@ export const AugmentApp: Component = () => {
                       color: maximalist.colors.textMuted,
                     }}
                   >
-                    <p>Complete the RIASEC assessment to see your matched opportunities.</p>
+                    <p>Complete the Discover assessment to see your matched opportunities.</p>
                     <button
-                      onClick={() => setActiveTab('RIASEC')}
+                      onClick={() => setActiveTab('Discover')}
                       style={{
                         'margin-top': '16px',
                         padding: '12px 24px',
@@ -1594,7 +1498,7 @@ export const AugmentApp: Component = () => {
             </>
           )}
 
-          {activeTab() === 'RIASEC' && (
+          {activeTab() === 'Discover' && (
             <div
               style={{
                 'max-width': '800px',
@@ -2156,12 +2060,51 @@ export const AugmentApp: Component = () => {
               </Show>
             </div>
           )}
+
+          {/* Pipeline Tab */}
+          {activeTab() === 'Prospect' && (
+            <PipelineView
+              currentTheme={() => ({
+                colors: {
+                  ...currentTheme().colors,
+                  surfaceLight: 'rgba(255, 255, 255, 0.03)',
+                  surfaceMedium: 'rgba(255, 255, 255, 0.06)',
+                  surfaceHover: 'rgba(255, 255, 255, 0.08)',
+                },
+                fonts: maximalist.fonts,
+                spacing: maximalist.spacing,
+              })}
+            />
+          )}
         </main>
 
         <Show when={selectedJob()}>
           <JobDetailModal job={selectedJob()!} onClose={() => setSelectedJob(null)} />
         </Show>
       </div>
+
+      {/* Sidebar for Profile/Settings */}
+      <Sidebar
+        isOpen={isSidebarOpen()}
+        view={sidebarView()}
+        onClose={() => setSidebarView(null)}
+        currentTheme={() =>
+          ({
+            ...currentTheme(),
+            colors: {
+              ...currentTheme().colors,
+              background: maximalist.colors.background,
+              surface: maximalist.colors.surface,
+              border: maximalist.colors.border,
+              text: maximalist.colors.text,
+              textMuted: maximalist.colors.textMuted,
+            },
+            fonts: maximalist.fonts,
+            spacing: maximalist.spacing,
+            radii: maximalist.radii,
+          }) as any
+        }
+      />
     </div>
   );
 };
