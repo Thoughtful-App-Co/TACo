@@ -156,17 +156,48 @@ export const ProspectSidebar: Component<ProspectSidebarProps> = (props) => {
           </Show>
 
           <Show when={isCollapsed()}>
-            <div
-              style={{
-                'font-size': '20px',
-                'font-family': "'Playfair Display', Georgia, serif",
-                'font-weight': '700',
-                color: theme().colors.primary,
-              }}
-            >
-              P
+            <div style={{ display: 'flex', 'justify-content': 'center' }}>
+              <IconGrid size={24} color={theme().colors.primary} />
             </div>
           </Show>
+
+          {/* Toggle Button */}
+          <button
+            onClick={toggleCollapse}
+            aria-label={isCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'}
+            style={{
+              display: 'flex',
+              'align-items': 'center',
+              'justify-content': 'center',
+              width: '32px',
+              height: '32px',
+              padding: '6px',
+              background: 'rgba(255, 255, 255, 0.05)',
+              border: `1px solid ${theme().colors.border}`,
+              'border-radius': '8px',
+              color: theme().colors.textMuted,
+              cursor: 'pointer',
+              transition: `all ${pipelineAnimations.fast}`,
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+              e.currentTarget.style.color = theme().colors.text;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+              e.currentTarget.style.color = theme().colors.textMuted;
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                transform: isCollapsed() ? 'rotate(180deg)' : 'rotate(0deg)',
+                transition: `transform ${pipelineAnimations.normal}`,
+              }}
+            >
+              <IconChevronLeft size={16} />
+            </div>
+          </button>
         </div>
 
         {/* Navigation Items */}

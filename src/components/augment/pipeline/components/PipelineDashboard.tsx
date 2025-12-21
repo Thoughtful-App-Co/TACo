@@ -257,176 +257,6 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
   return (
     <div>
       {/* Stats Overview with Tooltips */}
-      <div
-        style={{
-          display: 'grid',
-          'grid-template-columns': 'repeat(auto-fit, minmax(140px, 1fr))',
-          gap: '16px',
-          'margin-bottom': '24px',
-        }}
-      >
-        <Tooltip
-          content={
-            <StatTooltipContent
-              title="Active Applications"
-              metrics={[
-                { label: 'Total tracked', value: aggregateStats().total },
-                {
-                  label: 'Added this week',
-                  value: aggregateStats().addedThisWeek,
-                  trend: aggregateStats().addedThisWeek > 0 ? 'up' : 'neutral',
-                },
-                {
-                  label: 'Needing attention',
-                  value: aggregateStats().stale,
-                  color: aggregateStats().stale > 0 ? '#F59E0B' : undefined,
-                },
-              ]}
-              insight={
-                aggregateStats().avgScore
-                  ? `Avg match score: ${aggregateStats().avgScore}%`
-                  : 'Analyze jobs to see match scores'
-              }
-            />
-          }
-          position="bottom"
-        >
-          <StatCard
-            label="Active"
-            value={activeApplications().length}
-            duotoneColors={duotoneColors()}
-            icon={IconBriefcaseDuotone}
-            useDuotone
-          />
-        </Tooltip>
-
-        <Tooltip
-          content={
-            <StatTooltipContent
-              title="Applied"
-              metrics={[
-                { label: 'Avg. days since applied', value: avgDaysInStatus().applied ?? '—' },
-                {
-                  label: 'Conversion to interview',
-                  value: conversionRates().toInterview ? `${conversionRates().toInterview}%` : '—',
-                  color:
-                    conversionRates().toInterview && conversionRates().toInterview! >= 30
-                      ? '#10B981'
-                      : undefined,
-                },
-                {
-                  label: 'Oldest application',
-                  value: oldestInStatus().applied ? `${oldestInStatus().applied}d` : '—',
-                  color:
-                    oldestInStatus().applied && oldestInStatus().applied! >= 14
-                      ? '#EF4444'
-                      : undefined,
-                },
-              ]}
-              insight="Applications awaiting response"
-            />
-          }
-          position="bottom"
-        >
-          <StatCard
-            label="Applied"
-            value={applicationsByStatus().applied.length}
-            duotoneColors={getStatusDuotone('applied')}
-            icon={IconSendDuotone}
-            useDuotone
-          />
-        </Tooltip>
-
-        <Tooltip
-          content={
-            <StatTooltipContent
-              title="Interviewing"
-              metrics={[
-                { label: 'Avg. days in stage', value: avgDaysInStatus().interviewing ?? '—' },
-                {
-                  label: 'Conversion to offer',
-                  value: conversionRates().toOffer ? `${conversionRates().toOffer}%` : '—',
-                  color:
-                    conversionRates().toOffer && conversionRates().toOffer! >= 50
-                      ? '#10B981'
-                      : '#F59E0B',
-                },
-              ]}
-              insight="Active interview processes"
-            />
-          }
-          position="bottom"
-        >
-          <StatCard
-            label="Interviewing"
-            value={applicationsByStatus().interviewing.length}
-            duotoneColors={getStatusDuotone('interviewing')}
-            icon={IconMessageDuotone}
-            useDuotone
-          />
-        </Tooltip>
-
-        <Tooltip
-          content={
-            <StatTooltipContent
-              title="Offers Received"
-              metrics={[
-                { label: 'Pending decision', value: applicationsByStatus().offered.length },
-                {
-                  label: 'Total accepted',
-                  value: applicationsByStatus().accepted.length,
-                  color: '#10B981',
-                },
-              ]}
-              insight={
-                applicationsByStatus().offered.length > 0
-                  ? 'Review and respond to offers'
-                  : 'Keep going!'
-              }
-            />
-          }
-          position="bottom"
-        >
-          <StatCard
-            label="Offers"
-            value={applicationsByStatus().offered.length}
-            duotoneColors={getStatusDuotone('offered')}
-            icon={IconStarDuotone}
-            useDuotone
-          />
-        </Tooltip>
-
-        <Tooltip
-          content={
-            <StatTooltipContent
-              title="Follow-ups Due"
-              metrics={[
-                {
-                  label: 'Overdue',
-                  value: followUpsDue().length,
-                  color: followUpsDue().length > 0 ? '#EF4444' : undefined,
-                },
-                {
-                  label: 'Stale (14+ days)',
-                  value: aggregateStats().stale,
-                  color: aggregateStats().stale > 0 ? '#F59E0B' : undefined,
-                },
-              ]}
-              insight={followUpsDue().length > 0 ? 'Time to reach out!' : 'All caught up'}
-            />
-          }
-          position="bottom"
-        >
-          <StatCard
-            label="Follow-ups"
-            value={followUpsDue().length}
-            color="#F59E0B"
-            icon={IconClockDuotone}
-            pulse={followUpsDue().length > 0}
-            useDuotone
-          />
-        </Tooltip>
-      </div>
 
       {/* View Toggle */}
       <div
@@ -691,9 +521,10 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
         <div
           style={{
             display: 'grid',
-            'grid-template-columns': `repeat(${displayedStatuses().length}, minmax(240px, 1fr))`,
+            'grid-template-columns': `repeat(${displayedStatuses().length}, 280px)`,
             gap: '16px',
             'overflow-x': 'auto',
+            'overflow-y': 'visible',
             'padding-bottom': '16px',
           }}
         >
@@ -701,7 +532,7 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
             {(status) => (
               <PipelineColumn
                 status={status}
-                applications={displayApplicationsByStatus()[status]}
+                applications={applicationsByStatus()[status]}
                 theme={theme}
                 onSelectJob={props.onSelectJob}
                 onStatusChange={handleStatusChange}
@@ -917,13 +748,13 @@ const PipelineColumn: Component<PipelineColumnProps> = (props) => {
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
       style={{
-        'min-width': '260px',
+        // Grid handles sizing via 1fr
         background: props.isDragOver
           ? `linear-gradient(180deg, ${colors().bg.replace('0.15', '0.25')} 0%, ${colors().bg.replace('0.15', '0.15')} 100%)`
           : 'linear-gradient(180deg, rgba(30, 30, 30, 0.6) 0%, rgba(20, 20, 20, 0.4) 100%)',
         'backdrop-filter': 'blur(12px)',
         'border-radius': '14px',
-        padding: '14px',
+        padding: '16px',
         'max-height': '600px',
         overflow: 'auto',
         border: props.isDragOver
@@ -957,7 +788,7 @@ const PipelineColumn: Component<PipelineColumnProps> = (props) => {
             display: 'flex',
             'align-items': 'center',
             'justify-content': 'space-between',
-            gap: '16px',
+            gap: '14px',
             'margin-bottom': '14px',
             padding: '12px 16px',
             background: `linear-gradient(135deg, ${colors().bg}, ${colors().bg.replace('0.15', '0.08')})`,
@@ -1114,7 +945,7 @@ const ApplicationCard: Component<ApplicationCardProps> = (props) => {
           hoverable
           glowColor={accentColor()}
           style={{
-            padding: '14px',
+            padding: '16px',
             cursor: 'grab',
             position: 'relative',
             background: 'linear-gradient(135deg, rgba(35, 35, 40, 0.95), rgba(25, 25, 30, 0.98))',
@@ -1137,22 +968,22 @@ const ApplicationCard: Component<ApplicationCardProps> = (props) => {
           <div style={{ 'padding-left': '8px' }}>
             <div
               style={{
-                'font-size': '14px',
+                'font-size': '16px',
                 'font-family': "'Space Grotesk', system-ui, sans-serif",
-                'font-weight': '600',
+                'font-weight': '700',
                 color: props.theme().colors.text,
                 'margin-bottom': '4px',
                 'white-space': 'nowrap',
                 overflow: 'hidden',
                 'text-overflow': 'ellipsis',
-                'line-height': '1.3',
+                'line-height': '1.4',
               }}
             >
               {app().roleName}
             </div>
             <div
               style={{
-                'font-size': '12px',
+                'font-size': '14px',
                 'font-family': "'Space Grotesk', system-ui, sans-serif",
                 color: props.theme().colors.textMuted,
                 'margin-bottom': '12px',
@@ -1259,21 +1090,21 @@ const ApplicationRow: Component<ApplicationRowProps> = (props) => {
         <div style={{ flex: '1', 'min-width': '0', 'padding-left': '8px' }}>
           <div
             style={{
-              'font-size': '15px',
+              'font-size': '16px',
               'font-family': "'Space Grotesk', system-ui, sans-serif",
-              'font-weight': '600',
+              'font-weight': '700',
               color: props.theme().colors.text,
               'white-space': 'nowrap',
               overflow: 'hidden',
               'text-overflow': 'ellipsis',
-              'line-height': '1.3',
+              'line-height': '1.4',
             }}
           >
             {app().roleName}
           </div>
           <div
             style={{
-              'font-size': '13px',
+              'font-size': '14px',
               'font-family': "'Space Grotesk', system-ui, sans-serif",
               color: props.theme().colors.textMuted,
               'margin-top': '2px',

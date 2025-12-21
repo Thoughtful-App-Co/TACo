@@ -116,6 +116,70 @@ Business logic separated from UI:
 - `task-rollover.service.ts` - Daily task rollover
 - `debrief-storage.service.ts` - Session debriefing
 
+### Augment App
+
+**Root Component**: `src/components/augment/AugmentApp.tsx`
+
+The Augment app is a career intelligence system with three integrated phases:
+
+1. **Discover** (`AugmentApp.tsx` - RIASEC tab)
+   - IO psychology-based personality assessment (RIASEC/Holland Codes)
+   - Career aptitude evaluation
+   - Work style analysis
+   - Foundation for career self-knowledge
+
+2. **Matches** (`AugmentApp.tsx` - Matches tab)
+   - Personality-aligned career recommendations
+   - RIASEC fit scoring
+   - Career exploration based on assessment results
+
+3. **Prospect** (`pipeline/` directory)
+   - Job application tracking pipeline
+   - Kanban board with 8 statuses
+   - Analytics dashboard (stats, Sankey flow)
+   - Rejection tracking and insights
+   - Archive filtering
+   - RIASEC integration per application
+
+**Design System**: Maximalist + Liquid theme
+
+- **Theme**: `src/components/augment/pipeline/theme/liquid-augment.ts`
+- **Colors**: Duotone system based on RIASEC types
+- **Animation**: Fluid morphing, glassmorphic surfaces
+- **Components**: FluidCard, ProspectSidebar, JobDetailSidebar
+
+**Key Components**:
+
+**Navigation**:
+
+- `ProspectSidebar.tsx` - Left navigation (Dashboard/Pipeline/Insights/Settings)
+- `PipelineView.tsx` - Main container with sidebar integration
+
+**Views**:
+
+- `DashboardView.tsx` - Stats overview, recent activity, quick actions
+- `PipelineDashboard.tsx` - Kanban board, archive filter
+- `InsightsView.tsx` - Analytics (Sankey flow, metrics)
+- `SankeyView.tsx` - Flow visualization (status transitions)
+
+**Modals**:
+
+- `AddJobModal.tsx` - Create new job application
+- `ImportCSVModal.tsx` - Bulk import jobs
+- `JobDetailSidebar.tsx` - Edit application details
+
+**Services** (future):
+
+- Local storage for applications
+- RIASEC score persistence
+- Export/import functionality
+
+**Schema**: `src/schemas/pipeline.schema.ts`
+
+- `JobApplication` - Application data model
+- `PipelineStatus` - Status enum
+- Includes `rejectedAtStatus` for drop-off analysis
+
 ## Data Flow
 
 ```

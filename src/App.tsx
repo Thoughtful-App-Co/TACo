@@ -79,9 +79,9 @@ const apps: AppInfo[] = [
   {
     id: 'augment',
     name: 'Augment',
-    description: 'IO psychology jobs',
+    description: 'Career intelligence & job tracking',
     elevatorPitch:
-      'Find work that actually fits you. Matches personality and work style to careers.',
+      'Build deep self-knowledge of your professional identity. Track job applications from discovery to offer, and grow your career story over a lifetime. IO psychology-powered insights for every stage of your career.',
     designSystem: 'Maximalist',
     color: '#9333EA',
     timeline: 'next',

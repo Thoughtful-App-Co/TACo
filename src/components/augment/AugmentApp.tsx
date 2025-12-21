@@ -19,6 +19,7 @@ import {
   untrack,
 } from 'solid-js';
 import { JobMatch } from '../../schemas/augment.schema';
+import { IconSearch, IconStar, IconGrid } from './pipeline/ui/Icons';
 import {
   searchCareers,
   getInterestProfilerQuestions,
@@ -1191,7 +1192,7 @@ export const AugmentApp: Component = () => {
         {/* Header */}
         <header
           style={{
-            padding: '24px 32px',
+            padding: '24px 32px 32px',
             display: 'flex',
             'justify-content': 'space-between',
             'align-items': 'center',
@@ -1243,6 +1244,77 @@ export const AugmentApp: Component = () => {
                 Amplify Your Strengths
               </p>
             </div>
+          </div>
+
+          {/* Tab Navigation in Header */}
+          <div
+            style={{
+              display: 'flex',
+              gap: '10px',
+              padding: '6px',
+              background: 'rgba(255, 255, 255, 0.03)',
+              'border-radius': '12px',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+            }}
+          >
+            <For
+              each={(() => {
+                const tabs: ('Discover' | 'Matches' | 'Prospect')[] = ['Discover'];
+                if (featureFlags().showMatches) tabs.push('Matches');
+                if (featureFlags().showPipeline) tabs.push('Prospect');
+                return tabs;
+              })()}
+            >
+              {(tab) => {
+                const getIcon = () => {
+                  if (tab === 'Discover') return <IconSearch size={18} />;
+                  if (tab === 'Matches') return <IconStar size={18} />;
+                  if (tab === 'Prospect') return <IconGrid size={18} />;
+                  return null;
+                };
+
+                return (
+                  <button
+                    onClick={() => setActiveTab(tab)}
+                    style={{
+                      display: 'flex',
+                      'align-items': 'center',
+                      gap: '8px',
+                      padding: '12px 24px',
+                      background:
+                        activeTab() === tab ? currentTheme().gradients.primary : 'transparent',
+                      border: 'none',
+                      'border-radius': '9px',
+                      color:
+                        activeTab() === tab
+                          ? currentTheme().colors.textOnPrimary
+                          : maximalist.colors.textMuted,
+                      'font-size': '15px',
+                      'font-weight': '600',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                      outline: 'none',
+                      transform: 'scale(1)',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (activeTab() !== tab) {
+                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                        e.currentTarget.style.transform = 'scale(1.02)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (activeTab() !== tab) {
+                        e.currentTarget.style.background = 'transparent';
+                        e.currentTarget.style.transform = 'scale(1)';
+                      }
+                    }}
+                  >
+                    {getIcon()}
+                    {tab}
+                  </button>
+                );
+              }}
+            </For>
           </div>
 
           <div style={{ display: 'flex', 'align-items': 'center', gap: '12px' }}>
@@ -1378,60 +1450,15 @@ export const AugmentApp: Component = () => {
         </header>
 
         {/* Tab navigation - maximalist pills */}
-        <nav
+        {/* Main content */}
+        <main
           style={{
-            padding: '0 32px 32px',
+            padding: activeTab() === 'Prospect' ? '0' : '0 32px 48px',
+            'max-width': activeTab() === 'Prospect' ? 'none' : '1400px',
+            margin: activeTab() === 'Prospect' ? '0' : '0 auto',
+            height: activeTab() === 'Prospect' ? 'calc(100vh - 100px)' : 'auto',
           }}
         >
-          <div
-            style={{
-              display: 'inline-flex',
-              padding: '8px',
-              background: maximalist.colors.surface,
-              'border-radius': maximalist.radii.lg,
-              'box-shadow': currentTheme().shadows.sm,
-              border: `1px solid ${maximalist.colors.border}`,
-            }}
-          >
-            {/* Build tabs array based on feature flags */}
-            <For
-              each={(() => {
-                const tabs: ('Discover' | 'Matches' | 'Prospect')[] = ['Discover'];
-                if (featureFlags().showMatches) tabs.push('Matches');
-                if (featureFlags().showPipeline) tabs.push('Prospect');
-                return tabs;
-              })()}
-            >
-              {(tab) => (
-                <button
-                  onClick={() => setActiveTab(tab)}
-                  style={{
-                    padding: '14px 28px',
-                    background:
-                      activeTab() === tab ? currentTheme().gradients.primary : 'transparent',
-                    border: 'none',
-                    'border-radius': maximalist.radii.md,
-                    color:
-                      activeTab() === tab
-                        ? currentTheme().colors.textOnPrimary
-                        : maximalist.colors.textMuted,
-                    'font-size': '14px',
-                    'font-weight': '600',
-                    cursor: 'pointer',
-                    'text-transform': 'capitalize',
-                    transition: 'all 0.3s ease',
-                    outline: 'none', // Remove focus ring to prevent "stuck" look
-                  }}
-                >
-                  {tab}
-                </button>
-              )}
-            </For>
-          </div>
-        </nav>
-
-        {/* Main content */}
-        <main style={{ padding: '0 32px 48px', 'max-width': '1400px', margin: '0 auto' }}>
           {activeTab() === 'Matches' && (
             <>
               <div style={{ 'margin-bottom': '32px' }}>
