@@ -1,5 +1,6 @@
 /**
  * PipelineDashboard - Kanban-style view of job applications with aging indicators
+ * Enhanced with duotone icons, tooltips with analytics, and RIASEC theming
  *
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
@@ -7,17 +8,34 @@
 import { Component, createSignal, createMemo, For, Show } from 'solid-js';
 import { pipelineStore } from '../store';
 import { liquidAugment, statusColors, pipelineAnimations } from '../theme/liquid-augment';
-import { FluidCard, StatusBadge, AgingIndicator, ScoreBadge } from '../ui';
+import { getCurrentDuotone, getStatusDuotone, type DuotoneColors } from '../theme/riasec-colors';
+import {
+  FluidCard,
+  StatusBadge,
+  AgingIndicator,
+  ScoreBadge,
+  Tooltip,
+  StatTooltipContent,
+  PipelineColumnTooltipContent,
+  ApplicationTooltipContent,
+} from '../ui';
 import {
   IconGrid,
   IconList,
-  IconSend,
-  IconMessage,
-  IconStar,
-  IconClock,
-  IconPipeline,
-  IconBriefcase,
   IconTrendingUp,
+  IconPipeline,
+  IconPipelineDuotone,
+  IconBriefcase,
+  IconBriefcaseDuotone,
+  IconSend,
+  IconSendDuotone,
+  IconMessage,
+  IconMessageDuotone,
+  IconStar,
+  IconStarDuotone,
+  IconClock,
+  IconClockDuotone,
+  IconTrendingUpDuotone,
 } from '../ui/Icons';
 import { SankeyView } from './SankeyView';
 import {
@@ -25,6 +43,7 @@ import {
   ApplicationStatus,
   ACTIVE_STATUSES,
   STATUS_LABELS,
+  daysSince,
 } from '../../../../schemas/pipeline.schema';
 
 interface PipelineDashboardProps {
@@ -36,6 +55,13 @@ interface PipelineDashboardProps {
 export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
   const [viewMode, setViewMode] = createSignal<'kanban' | 'list' | 'sankey'>('kanban');
   const theme = () => props.currentTheme();
+
+  // Drag and drop state
+  const [draggedAppId, setDraggedAppId] = createSignal<string | null>(null);
+  const [dragOverStatus, setDragOverStatus] = createSignal<ApplicationStatus | null>(null);
+
+  // Get RIASEC-based duotone colors
+  const duotoneColors = createMemo<DuotoneColors>(() => getCurrentDuotone());
 
   const applications = () => pipelineStore.state.applications;
   const activeApplications = createMemo(() =>
@@ -70,13 +96,139 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
 
   const followUpsDue = createMemo(() => pipelineStore.getFollowUpsDue());
 
+  // =========================================================================
+  // ANALYTICS CALCULATIONS
+  // =========================================================================
+
+  // Calculate average days in each status
+  const avgDaysInStatus = createMemo(() => {
+    const result: Record<ApplicationStatus, number | null> = {
+      saved: null,
+      applied: null,
+      screening: null,
+      interviewing: null,
+      offered: null,
+      accepted: null,
+      rejected: null,
+      withdrawn: null,
+    };
+
+    for (const status of ACTIVE_STATUSES) {
+      const apps = applicationsByStatus()[status];
+      if (apps.length === 0) continue;
+
+      const totalDays = apps.reduce((sum, app) => {
+        return sum + daysSince(app.lastActivityAt);
+      }, 0);
+      result[status] = Math.round(totalDays / apps.length);
+    }
+
+    return result;
+  });
+
+  // Calculate conversion rates between stages
+  const conversionRates = createMemo(() => {
+    const apps = applications();
+    if (apps.length === 0) return { toApplied: null, toInterview: null, toOffer: null };
+
+    // Count applications that have been in each status at any point
+    const everSaved = apps.filter((a) => a.statusHistory?.some((h) => h.status === 'saved')).length;
+    const everApplied = apps.filter((a) =>
+      a.statusHistory?.some((h) => h.status === 'applied')
+    ).length;
+    const everInterviewing = apps.filter((a) =>
+      a.statusHistory?.some((h) => h.status === 'interviewing')
+    ).length;
+    const everOffered = apps.filter((a) =>
+      a.statusHistory?.some((h) => h.status === 'offered')
+    ).length;
+
+    // Count applications that progressed FROM one status TO the next
+    // For saved->applied: apps that have been both saved AND applied
+    const savedToApplied = apps.filter(
+      (a) =>
+        a.statusHistory?.some((h) => h.status === 'saved') &&
+        a.statusHistory?.some((h) => h.status === 'applied')
+    ).length;
+
+    // For applied->interviewing: apps that have been both applied AND interviewing
+    const appliedToInterviewing = apps.filter(
+      (a) =>
+        a.statusHistory?.some((h) => h.status === 'applied') &&
+        a.statusHistory?.some((h) => h.status === 'interviewing')
+    ).length;
+
+    // For interviewing->offered: apps that have been both interviewing AND offered
+    const interviewingToOffered = apps.filter(
+      (a) =>
+        a.statusHistory?.some((h) => h.status === 'interviewing') &&
+        a.statusHistory?.some((h) => h.status === 'offered')
+    ).length;
+
+    return {
+      toApplied: everSaved > 0 ? Math.round((savedToApplied / everSaved) * 100) : null,
+      toInterview: everApplied > 0 ? Math.round((appliedToInterviewing / everApplied) * 100) : null,
+      toOffer:
+        everInterviewing > 0 ? Math.round((interviewingToOffered / everInterviewing) * 100) : null,
+    };
+  });
+
+  // Get oldest application in each status
+  const oldestInStatus = createMemo(() => {
+    const result: Record<ApplicationStatus, number | null> = {
+      saved: null,
+      applied: null,
+      screening: null,
+      interviewing: null,
+      offered: null,
+      accepted: null,
+      rejected: null,
+      withdrawn: null,
+    };
+
+    for (const status of ACTIVE_STATUSES) {
+      const apps = applicationsByStatus()[status];
+      if (apps.length === 0) continue;
+
+      const oldest = Math.max(...apps.map((a) => daysSince(a.lastActivityAt)));
+      result[status] = oldest;
+    }
+
+    return result;
+  });
+
+  // Aggregate stats for tooltip displays
+  const aggregateStats = createMemo(() => {
+    const apps = applications();
+    const active = activeApplications();
+
+    // Average score across all analyzed applications
+    const analyzedApps = apps.filter((a) => a.analysis?.overallScore);
+    const avgScore =
+      analyzedApps.length > 0
+        ? Math.round(
+            analyzedApps.reduce((sum, a) => sum + (a.analysis?.overallScore || 0), 0) /
+              analyzedApps.length
+          )
+        : null;
+
+    // Applications added this week
+    const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const addedThisWeek = apps.filter((a) => new Date(a.createdAt).getTime() > oneWeekAgo).length;
+
+    // Applications needing attention (stale > 14 days)
+    const stale = active.filter((a) => daysSince(a.lastActivityAt) >= 14).length;
+
+    return { avgScore, addedThisWeek, stale, total: apps.length, active: active.length };
+  });
+
   const handleStatusChange = (appId: string, newStatus: ApplicationStatus) => {
     pipelineStore.updateStatus(appId, newStatus);
   };
 
   return (
     <div>
-      {/* Stats Overview */}
+      {/* Stats Overview with Tooltips */}
       <div
         style={{
           display: 'grid',
@@ -85,37 +237,167 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
           'margin-bottom': '24px',
         }}
       >
-        <StatCard
-          label="Active"
-          value={activeApplications().length}
-          color={theme().colors.primary}
-          icon={IconBriefcase}
-        />
-        <StatCard
-          label="Applied"
-          value={applicationsByStatus().applied.length}
-          color={statusColors.applied.text}
-          icon={IconSend}
-        />
-        <StatCard
-          label="Interviewing"
-          value={applicationsByStatus().interviewing.length}
-          color={statusColors.interviewing.text}
-          icon={IconMessage}
-        />
-        <StatCard
-          label="Offers"
-          value={applicationsByStatus().offered.length}
-          color={statusColors.offered.text}
-          icon={IconStar}
-        />
-        <StatCard
-          label="Follow-ups"
-          value={followUpsDue().length}
-          color="#F59E0B"
-          icon={IconClock}
-          pulse={followUpsDue().length > 0}
-        />
+        <Tooltip
+          content={
+            <StatTooltipContent
+              title="Active Applications"
+              metrics={[
+                { label: 'Total tracked', value: aggregateStats().total },
+                {
+                  label: 'Added this week',
+                  value: aggregateStats().addedThisWeek,
+                  trend: aggregateStats().addedThisWeek > 0 ? 'up' : 'neutral',
+                },
+                {
+                  label: 'Needing attention',
+                  value: aggregateStats().stale,
+                  color: aggregateStats().stale > 0 ? '#F59E0B' : undefined,
+                },
+              ]}
+              insight={
+                aggregateStats().avgScore
+                  ? `Avg match score: ${aggregateStats().avgScore}%`
+                  : 'Analyze jobs to see match scores'
+              }
+            />
+          }
+          position="bottom"
+        >
+          <StatCard
+            label="Active"
+            value={activeApplications().length}
+            duotoneColors={duotoneColors()}
+            icon={IconBriefcaseDuotone}
+            useDuotone
+          />
+        </Tooltip>
+
+        <Tooltip
+          content={
+            <StatTooltipContent
+              title="Applied"
+              metrics={[
+                { label: 'Avg. days since applied', value: avgDaysInStatus().applied ?? '—' },
+                {
+                  label: 'Conversion to interview',
+                  value: conversionRates().toInterview ? `${conversionRates().toInterview}%` : '—',
+                  color:
+                    conversionRates().toInterview && conversionRates().toInterview! >= 30
+                      ? '#10B981'
+                      : undefined,
+                },
+                {
+                  label: 'Oldest application',
+                  value: oldestInStatus().applied ? `${oldestInStatus().applied}d` : '—',
+                  color:
+                    oldestInStatus().applied && oldestInStatus().applied! >= 14
+                      ? '#EF4444'
+                      : undefined,
+                },
+              ]}
+              insight="Applications awaiting response"
+            />
+          }
+          position="bottom"
+        >
+          <StatCard
+            label="Applied"
+            value={applicationsByStatus().applied.length}
+            duotoneColors={getStatusDuotone('applied')}
+            icon={IconSendDuotone}
+            useDuotone
+          />
+        </Tooltip>
+
+        <Tooltip
+          content={
+            <StatTooltipContent
+              title="Interviewing"
+              metrics={[
+                { label: 'Avg. days in stage', value: avgDaysInStatus().interviewing ?? '—' },
+                {
+                  label: 'Conversion to offer',
+                  value: conversionRates().toOffer ? `${conversionRates().toOffer}%` : '—',
+                  color:
+                    conversionRates().toOffer && conversionRates().toOffer! >= 50
+                      ? '#10B981'
+                      : '#F59E0B',
+                },
+              ]}
+              insight="Active interview processes"
+            />
+          }
+          position="bottom"
+        >
+          <StatCard
+            label="Interviewing"
+            value={applicationsByStatus().interviewing.length}
+            duotoneColors={getStatusDuotone('interviewing')}
+            icon={IconMessageDuotone}
+            useDuotone
+          />
+        </Tooltip>
+
+        <Tooltip
+          content={
+            <StatTooltipContent
+              title="Offers Received"
+              metrics={[
+                { label: 'Pending decision', value: applicationsByStatus().offered.length },
+                {
+                  label: 'Total accepted',
+                  value: applicationsByStatus().accepted.length,
+                  color: '#10B981',
+                },
+              ]}
+              insight={
+                applicationsByStatus().offered.length > 0
+                  ? 'Review and respond to offers'
+                  : 'Keep going!'
+              }
+            />
+          }
+          position="bottom"
+        >
+          <StatCard
+            label="Offers"
+            value={applicationsByStatus().offered.length}
+            duotoneColors={getStatusDuotone('offered')}
+            icon={IconStarDuotone}
+            useDuotone
+          />
+        </Tooltip>
+
+        <Tooltip
+          content={
+            <StatTooltipContent
+              title="Follow-ups Due"
+              metrics={[
+                {
+                  label: 'Overdue',
+                  value: followUpsDue().length,
+                  color: followUpsDue().length > 0 ? '#EF4444' : undefined,
+                },
+                {
+                  label: 'Stale (14+ days)',
+                  value: aggregateStats().stale,
+                  color: aggregateStats().stale > 0 ? '#F59E0B' : undefined,
+                },
+              ]}
+              insight={followUpsDue().length > 0 ? 'Time to reach out!' : 'All caught up'}
+            />
+          }
+          position="bottom"
+        >
+          <StatCard
+            label="Follow-ups"
+            value={followUpsDue().length}
+            color="#F59E0B"
+            icon={IconClockDuotone}
+            pulse={followUpsDue().length > 0}
+            useDuotone
+          />
+        </Tooltip>
       </div>
 
       {/* View Toggle */}
@@ -366,6 +648,26 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
                 theme={theme}
                 onSelectJob={props.onSelectJob}
                 onStatusChange={handleStatusChange}
+                avgDays={avgDaysInStatus()[status]}
+                conversionRate={
+                  status === 'applied'
+                    ? conversionRates().toInterview
+                    : status === 'interviewing'
+                      ? conversionRates().toOffer
+                      : null
+                }
+                oldestDays={oldestInStatus()[status]}
+                draggedAppId={draggedAppId()}
+                isDragOver={dragOverStatus() === status}
+                onDragOver={() => setDragOverStatus(status)}
+                onDragLeave={() => setDragOverStatus(null)}
+                onDrop={(appId) => {
+                  handleStatusChange(appId, status);
+                  setDraggedAppId(null);
+                  setDragOverStatus(null);
+                }}
+                onCardDragStart={setDraggedAppId}
+                onCardDragEnd={() => setDraggedAppId(null)}
               />
             )}
           </For>
@@ -399,87 +701,117 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
 // SUB-COMPONENTS
 // ============================================================================
 
+interface DuotoneIconProps {
+  size?: number;
+  color?: string;
+  primaryColor?: string;
+  secondaryColor?: string;
+  opacity?: number;
+}
+
 interface StatCardProps {
   label: string;
   value: number;
-  color: string;
-  icon: Component<{ size?: number; color?: string }>;
+  color?: string;
+  duotoneColors?: DuotoneColors;
+  icon: Component<DuotoneIconProps>;
   pulse?: boolean;
+  useDuotone?: boolean;
 }
 
-const StatCard: Component<StatCardProps> = (props) => (
-  <FluidCard
-    variant="stat"
-    accentColor={props.color}
-    hoverable
-    style={{
-      padding: '20px 16px',
-      'text-align': 'center',
-    }}
-  >
-    {/* Subtle top accent line */}
-    <div
+const StatCard: Component<StatCardProps> = (props) => {
+  // Determine colors - prefer duotone, fallback to solid color
+  const primaryColor = () =>
+    props.useDuotone && props.duotoneColors
+      ? props.duotoneColors.primary
+      : props.color || '#8B5CF6';
+  const secondaryColor = () =>
+    props.useDuotone && props.duotoneColors ? props.duotoneColors.secondary : primaryColor();
+
+  return (
+    <FluidCard
+      variant="stat"
+      accentColor={primaryColor()}
+      hoverable
       style={{
-        position: 'absolute',
-        top: 0,
-        left: '20%',
-        right: '20%',
-        height: '2px',
-        background: `linear-gradient(90deg, transparent, ${props.color}60, transparent)`,
-        'border-radius': '0 0 2px 2px',
-      }}
-    />
-    <div
-      style={{
-        display: 'flex',
-        'justify-content': 'center',
-        'margin-bottom': '12px',
-        animation: props.pulse ? 'aging-pulse 2s ease-in-out infinite' : 'none',
-        opacity: 0.9,
+        padding: '20px 16px',
+        'text-align': 'center',
       }}
     >
+      {/* Subtle top accent line - duotone gradient */}
       <div
         style={{
-          padding: '10px',
-          'border-radius': '12px',
-          background: `${props.color}15`,
-          border: `1px solid ${props.color}25`,
+          position: 'absolute',
+          top: 0,
+          left: '15%',
+          right: '15%',
+          height: '2px',
+          background: props.useDuotone
+            ? `linear-gradient(90deg, transparent, ${primaryColor()}60, ${secondaryColor()}40, transparent)`
+            : `linear-gradient(90deg, transparent, ${primaryColor()}60, transparent)`,
+          'border-radius': '0 0 2px 2px',
+        }}
+      />
+      <div
+        style={{
           display: 'flex',
-          'align-items': 'center',
           'justify-content': 'center',
+          'margin-bottom': '12px',
+          animation: props.pulse ? 'aging-pulse 2s ease-in-out infinite' : 'none',
+          opacity: 0.9,
         }}
       >
-        <props.icon size={22} color={props.color} />
+        <div
+          style={{
+            padding: '10px',
+            'border-radius': '12px',
+            background: props.useDuotone
+              ? `linear-gradient(135deg, ${primaryColor()}15, ${secondaryColor()}10)`
+              : `${primaryColor()}15`,
+            border: `1px solid ${primaryColor()}25`,
+            display: 'flex',
+            'align-items': 'center',
+            'justify-content': 'center',
+          }}
+        >
+          <props.icon
+            size={22}
+            color={primaryColor()}
+            primaryColor={primaryColor()}
+            secondaryColor={secondaryColor()}
+            opacity={0.4}
+          />
+        </div>
       </div>
-    </div>
-    <div
-      class="stat-value"
-      style={{
-        'font-size': '32px',
-        'font-weight': '700',
-        'font-family': "'Playfair Display', Georgia, serif",
-        color: props.color,
-        'line-height': '1',
-        'text-shadow': `0 0 20px ${props.color}30`,
-      }}
-    >
-      {props.value}
-    </div>
-    <div
-      style={{
-        'font-size': '11px',
-        'font-family': "'Space Grotesk', system-ui, sans-serif",
-        color: 'rgba(255,255,255,0.55)',
-        'margin-top': '8px',
-        'text-transform': 'uppercase',
-        'letter-spacing': '0.1em',
-        'font-weight': '500',
-      }}
-    >
-      {props.label}
-    </div>
-  </FluidCard>
-);
+      <div
+        class="stat-value"
+        style={{
+          'font-size': '32px',
+          'font-weight': '700',
+          'font-family': "'Playfair Display', Georgia, serif",
+          color: primaryColor(),
+          'line-height': '1',
+          'text-shadow': `0 0 20px ${primaryColor()}30`,
+        }}
+      >
+        {props.value}
+      </div>
+      <div
+        style={{
+          'font-size': '11px',
+          'font-family': "'Space Grotesk', system-ui, sans-serif",
+          color: 'rgba(255,255,255,0.55)',
+          'margin-top': '8px',
+          'text-transform': 'uppercase',
+          'letter-spacing': '0.1em',
+          'font-weight': '500',
+        }}
+      >
+        {props.label}
+      </div>
+    </FluidCard>
+  );
+};
 
 interface PipelineColumnProps {
   status: ApplicationStatus;
@@ -487,82 +819,149 @@ interface PipelineColumnProps {
   theme: () => typeof liquidAugment;
   onSelectJob: (job: JobApplication) => void;
   onStatusChange: (appId: string, status: ApplicationStatus) => void;
+  avgDays: number | null;
+  conversionRate: number | null;
+  oldestDays: number | null;
+  // Drag and drop props
+  draggedAppId: string | null;
+  isDragOver: boolean;
+  onDragOver: () => void;
+  onDragLeave: () => void;
+  onDrop: (appId: string) => void;
+  onCardDragStart: (appId: string) => void;
+  onCardDragEnd: () => void;
 }
 
 const PipelineColumn: Component<PipelineColumnProps> = (props) => {
   const colors = () => statusColors[props.status];
 
+  // Handle drag events
+  const handleDragOver = (e: DragEvent) => {
+    e.preventDefault();
+    props.onDragOver();
+  };
+
+  const handleDragLeave = () => {
+    props.onDragLeave();
+  };
+
+  const handleDrop = (e: DragEvent) => {
+    e.preventDefault();
+    try {
+      const appId = e.dataTransfer?.getData('text/plain');
+      if (!appId) {
+        console.warn('Drop failed: No application ID in drag data');
+        return;
+      }
+      props.onDrop(appId);
+    } catch (error) {
+      console.error('Failed to process drop:', error);
+    }
+  };
+
   return (
     <div
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
       style={{
         'min-width': '260px',
-        background: 'linear-gradient(180deg, rgba(30, 30, 30, 0.6) 0%, rgba(20, 20, 20, 0.4) 100%)',
+        background: props.isDragOver
+          ? `linear-gradient(180deg, ${colors().bg.replace('0.15', '0.25')} 0%, ${colors().bg.replace('0.15', '0.15')} 100%)`
+          : 'linear-gradient(180deg, rgba(30, 30, 30, 0.6) 0%, rgba(20, 20, 20, 0.4) 100%)',
         'backdrop-filter': 'blur(12px)',
         'border-radius': '14px',
         padding: '14px',
         'max-height': '600px',
         overflow: 'auto',
-        border: '1px solid rgba(255, 255, 255, 0.06)',
-        'box-shadow': 'inset 0 1px 0 rgba(255, 255, 255, 0.03)',
+        border: props.isDragOver
+          ? `2px dashed ${colors().text}60`
+          : '1px solid rgba(255, 255, 255, 0.06)',
+        'box-shadow': props.isDragOver
+          ? `inset 0 0 20px ${colors().text}15, inset 0 1px 0 rgba(255, 255, 255, 0.03)`
+          : 'inset 0 1px 0 rgba(255, 255, 255, 0.03)',
+        transition: 'all 0.2s ease',
       }}
     >
-      {/* Column Header */}
-      <div
-        class="column-header"
-        style={{
-          display: 'flex',
-          'align-items': 'center',
-          'justify-content': 'space-between',
-          'margin-bottom': '14px',
-          padding: '12px 14px',
-          background: `linear-gradient(135deg, ${colors().bg}, ${colors().bg.replace('0.15', '0.08')})`,
-          'border-radius': '10px',
-          border: `1px solid ${colors().border}`,
-          position: 'relative',
-          overflow: 'hidden',
-        }}
+      {/* Column Header with Tooltip */}
+      <Tooltip
+        content={
+          <PipelineColumnTooltipContent
+            status={STATUS_LABELS[props.status]}
+            count={props.applications.length}
+            avgDaysInStage={props.avgDays}
+            conversionRate={props.conversionRate}
+            dropOffRate={null}
+            oldestDays={props.oldestDays}
+            accentColor={colors().text}
+          />
+        }
+        position="bottom"
+        maxWidth={240}
       >
-        {/* Subtle shine effect */}
         <div
+          class="column-header"
           style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            height: '1px',
-            background: `linear-gradient(90deg, transparent, ${colors().text}30, transparent)`,
-          }}
-        />
-        <span
-          style={{
-            'font-size': '13px',
-            'font-family': "'Space Grotesk', system-ui, sans-serif",
-            'font-weight': '600',
-            'letter-spacing': '0.02em',
-            color: colors().text,
+            display: 'flex',
+            'align-items': 'center',
+            'justify-content': 'space-between',
+            gap: '16px',
+            'margin-bottom': '14px',
+            padding: '12px 16px',
+            background: `linear-gradient(135deg, ${colors().bg}, ${colors().bg.replace('0.15', '0.08')})`,
+            'border-radius': '10px',
+            border: `1px solid ${colors().border}`,
+            position: 'relative',
+            overflow: 'hidden',
+            cursor: 'default',
           }}
         >
-          {STATUS_LABELS[props.status]}
-        </span>
-        <span
-          style={{
-            padding: '4px 10px',
-            background: `${colors().text}20`,
-            'border-radius': '12px',
-            'font-size': '12px',
-            'font-family': "'Space Grotesk', system-ui, sans-serif",
-            color: colors().text,
-            'font-weight': '700',
-            'min-width': '24px',
-            'text-align': 'center',
-          }}
-        >
-          {props.applications.length}
-        </span>
-      </div>
+          {/* Subtle shine effect */}
+          <div
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              height: '1px',
+              background: `linear-gradient(90deg, transparent, ${colors().text}30, transparent)`,
+            }}
+          />
+          <span
+            style={{
+              'font-size': '13px',
+              'font-family': "'Space Grotesk', system-ui, sans-serif",
+              'font-weight': '600',
+              'letter-spacing': '0.02em',
+              color: colors().text,
+              flex: '1',
+            }}
+          >
+            {STATUS_LABELS[props.status]}
+          </span>
+          <span
+            style={{
+              padding: '5px 12px',
+              background: `${colors().text}20`,
+              'border-radius': '12px',
+              'font-size': '13px',
+              'font-family': "'Space Grotesk', system-ui, sans-serif",
+              color: colors().text,
+              'font-weight': '700',
+              'min-width': '28px',
+              'text-align': 'center',
+              'flex-shrink': '0',
+            }}
+          >
+            {props.applications.length}
+          </span>
+        </div>
+      </Tooltip>
 
       {/* Cards */}
-      <div style={{ display: 'flex', 'flex-direction': 'column', gap: '10px' }}>
+      <div
+        style={{ display: 'flex', 'flex-direction': 'column', gap: '10px', 'min-height': '50px' }}
+      >
         <For each={props.applications}>
           {(app) => (
             <ApplicationCard
@@ -570,6 +969,9 @@ const PipelineColumn: Component<PipelineColumnProps> = (props) => {
               theme={props.theme}
               onClick={() => props.onSelectJob(app)}
               statusColor={colors().text}
+              isDragging={props.draggedAppId === app.id}
+              onDragStart={() => props.onCardDragStart(app.id)}
+              onDragEnd={props.onCardDragEnd}
             />
           )}
         </For>
@@ -583,83 +985,150 @@ interface ApplicationCardProps {
   theme: () => typeof liquidAugment;
   onClick: () => void;
   statusColor?: string;
+  // Drag props
+  isDragging?: boolean;
+  onDragStart?: () => void;
+  onDragEnd?: () => void;
 }
 
 const ApplicationCard: Component<ApplicationCardProps> = (props) => {
   const app = () => props.application;
   const accentColor = () => props.statusColor || props.theme().colors.primary;
+  const daysInStatus = () => daysSince(app().lastActivityAt);
+
+  // Determine next action based on status
+  const nextAction = () => {
+    const status = app().status;
+    const days = daysInStatus();
+
+    if (days >= 14) return 'Consider following up';
+    if (status === 'saved') return 'Ready to apply';
+    if (status === 'applied' && days >= 7) return 'Follow up soon';
+    if (status === 'interviewing') return 'Prepare for next round';
+    if (status === 'offered') return 'Review and respond';
+    return undefined;
+  };
+
+  // Handle drag start
+  const handleDragStart = (e: DragEvent) => {
+    try {
+      if (!e.dataTransfer) {
+        console.warn('Drag operation failed: dataTransfer not available');
+        return;
+      }
+      e.dataTransfer.setData('text/plain', app().id);
+      e.dataTransfer.effectAllowed = 'move';
+      props.onDragStart?.();
+    } catch (error) {
+      console.error('Failed to initiate drag operation:', error);
+      // Reset dragging state if drag fails
+      props.onDragEnd?.();
+    }
+  };
+
+  const handleDragEnd = () => {
+    props.onDragEnd?.();
+  };
 
   return (
-    <FluidCard
-      onClick={props.onClick}
-      hoverable
-      glowColor={accentColor()}
-      style={{
-        padding: '14px',
-        cursor: 'pointer',
-        position: 'relative',
-        background: 'linear-gradient(135deg, rgba(35, 35, 40, 0.95), rgba(25, 25, 30, 0.98))',
-        border: `1px solid rgba(255, 255, 255, 0.08)`,
-      }}
+    <Tooltip
+      content={
+        <ApplicationTooltipContent
+          companyName={app().companyName}
+          roleName={app().roleName}
+          daysInCurrentStatus={daysInStatus()}
+          status={STATUS_LABELS[app().status]}
+          score={app().analysis?.overallScore}
+          nextAction={nextAction()}
+          accentColor={accentColor()}
+        />
+      }
+      position="right"
+      delay={300}
+      disabled={props.isDragging}
     >
-      {/* Left accent bar */}
       <div
+        draggable={true}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
         style={{
-          position: 'absolute',
-          left: 0,
-          top: '8px',
-          bottom: '8px',
-          width: '3px',
-          background: `linear-gradient(180deg, ${accentColor()}, ${accentColor()}60)`,
-          'border-radius': '0 3px 3px 0',
-          opacity: 0.8,
+          opacity: props.isDragging ? 0.5 : 1,
+          transform: props.isDragging ? 'scale(0.98)' : 'scale(1)',
+          transition: 'opacity 0.2s ease, transform 0.2s ease',
         }}
-      />
-      <div style={{ 'padding-left': '8px' }}>
-        <div
+      >
+        <FluidCard
+          onClick={props.onClick}
+          hoverable
+          glowColor={accentColor()}
           style={{
-            'font-size': '14px',
-            'font-family': "'Space Grotesk', system-ui, sans-serif",
-            'font-weight': '600',
-            color: props.theme().colors.text,
-            'margin-bottom': '4px',
-            'white-space': 'nowrap',
-            overflow: 'hidden',
-            'text-overflow': 'ellipsis',
-            'line-height': '1.3',
+            padding: '14px',
+            cursor: 'grab',
+            position: 'relative',
+            background: 'linear-gradient(135deg, rgba(35, 35, 40, 0.95), rgba(25, 25, 30, 0.98))',
+            border: `1px solid rgba(255, 255, 255, 0.08)`,
           }}
         >
-          {app().roleName}
-        </div>
-        <div
-          style={{
-            'font-size': '12px',
-            'font-family': "'Space Grotesk', system-ui, sans-serif",
-            color: props.theme().colors.textMuted,
-            'margin-bottom': '12px',
-            'white-space': 'nowrap',
-            overflow: 'hidden',
-            'text-overflow': 'ellipsis',
-          }}
-        >
-          {app().companyName}
-        </div>
+          {/* Left accent bar */}
+          <div
+            style={{
+              position: 'absolute',
+              left: 0,
+              top: '8px',
+              bottom: '8px',
+              width: '3px',
+              background: `linear-gradient(180deg, ${accentColor()}, ${accentColor()}60)`,
+              'border-radius': '0 3px 3px 0',
+              opacity: 0.8,
+            }}
+          />
+          <div style={{ 'padding-left': '8px' }}>
+            <div
+              style={{
+                'font-size': '14px',
+                'font-family': "'Space Grotesk', system-ui, sans-serif",
+                'font-weight': '600',
+                color: props.theme().colors.text,
+                'margin-bottom': '4px',
+                'white-space': 'nowrap',
+                overflow: 'hidden',
+                'text-overflow': 'ellipsis',
+                'line-height': '1.3',
+              }}
+            >
+              {app().roleName}
+            </div>
+            <div
+              style={{
+                'font-size': '12px',
+                'font-family': "'Space Grotesk', system-ui, sans-serif",
+                color: props.theme().colors.textMuted,
+                'margin-bottom': '12px',
+                'white-space': 'nowrap',
+                overflow: 'hidden',
+                'text-overflow': 'ellipsis',
+              }}
+            >
+              {app().companyName}
+            </div>
 
-        <div
-          style={{
-            display: 'flex',
-            'align-items': 'center',
-            'justify-content': 'space-between',
-            gap: '8px',
-          }}
-        >
-          <AgingIndicator lastActivityAt={app().lastActivityAt} size="sm" />
-          <Show when={app().analysis?.overallScore}>
-            <ScoreBadge score={app().analysis!.overallScore} size="sm" />
-          </Show>
-        </div>
+            <div
+              style={{
+                display: 'flex',
+                'align-items': 'center',
+                'justify-content': 'space-between',
+                gap: '8px',
+              }}
+            >
+              <AgingIndicator lastActivityAt={app().lastActivityAt} size="sm" />
+              <Show when={app().analysis?.overallScore}>
+                <ScoreBadge score={app().analysis!.overallScore} size="sm" />
+              </Show>
+            </div>
+          </div>
+        </FluidCard>
       </div>
-    </FluidCard>
+    </Tooltip>
   );
 };
 
@@ -672,104 +1141,134 @@ interface ApplicationRowProps {
 const ApplicationRow: Component<ApplicationRowProps> = (props) => {
   const app = () => props.application;
   const statusColor = () => statusColors[app().status]?.text || '#FFFFFF';
+  const daysInStatus = () => daysSince(app().lastActivityAt);
+
+  // Determine next action based on status
+  const nextAction = () => {
+    const status = app().status;
+    const days = daysInStatus();
+
+    if (days >= 14) return 'Consider following up';
+    if (status === 'saved') return 'Ready to apply';
+    if (status === 'applied' && days >= 7) return 'Follow up soon';
+    if (status === 'interviewing') return 'Prepare for next round';
+    if (status === 'offered') return 'Review and respond';
+    return undefined;
+  };
 
   return (
-    <FluidCard
-      onClick={props.onClick}
-      hoverable
-      glowColor={statusColor()}
-      style={{
-        display: 'flex',
-        'align-items': 'center',
-        gap: '20px',
-        padding: '18px 20px',
-        cursor: 'pointer',
-        background: 'linear-gradient(135deg, rgba(35, 35, 40, 0.9), rgba(25, 25, 30, 0.95))',
-        border: '1px solid rgba(255, 255, 255, 0.07)',
-        position: 'relative',
-        overflow: 'hidden',
-      }}
+    <Tooltip
+      content={
+        <ApplicationTooltipContent
+          companyName={app().companyName}
+          roleName={app().roleName}
+          daysInCurrentStatus={daysInStatus()}
+          status={STATUS_LABELS[app().status]}
+          score={app().analysis?.overallScore}
+          nextAction={nextAction()}
+          accentColor={statusColor()}
+        />
+      }
+      position="left"
+      delay={300}
     >
-      {/* Status indicator dot */}
-      <div
+      <FluidCard
+        onClick={props.onClick}
+        hoverable
+        glowColor={statusColor()}
         style={{
-          position: 'absolute',
-          left: 0,
-          top: '50%',
-          transform: 'translateY(-50%)',
-          width: '4px',
-          height: '40%',
-          'min-height': '24px',
-          background: statusColor(),
-          'border-radius': '0 4px 4px 0',
-          'box-shadow': `0 0 8px ${statusColor()}50`,
-        }}
-      />
-      {/* Company/Role */}
-      <div style={{ flex: '1', 'min-width': '0', 'padding-left': '8px' }}>
-        <div
-          style={{
-            'font-size': '15px',
-            'font-family': "'Space Grotesk', system-ui, sans-serif",
-            'font-weight': '600',
-            color: props.theme().colors.text,
-            'white-space': 'nowrap',
-            overflow: 'hidden',
-            'text-overflow': 'ellipsis',
-            'line-height': '1.3',
-          }}
-        >
-          {app().roleName}
-        </div>
-        <div
-          style={{
-            'font-size': '13px',
-            'font-family': "'Space Grotesk', system-ui, sans-serif",
-            color: props.theme().colors.textMuted,
-            'margin-top': '2px',
-          }}
-        >
-          {app().companyName}
-        </div>
-      </div>
-
-      {/* Status */}
-      <StatusBadge status={app().status} size="sm" />
-
-      {/* Score */}
-      <Show when={app().analysis?.overallScore}>
-        <ScoreBadge score={app().analysis!.overallScore} size="sm" />
-      </Show>
-
-      {/* Aging */}
-      <AgingIndicator lastActivityAt={app().lastActivityAt} size="sm" />
-
-      {/* Hover arrow indicator */}
-      <div
-        style={{
-          width: '24px',
-          height: '24px',
           display: 'flex',
           'align-items': 'center',
-          'justify-content': 'center',
-          color: 'rgba(255, 255, 255, 0.3)',
-          transition: 'all 0.2s ease',
+          gap: '20px',
+          padding: '18px 20px',
+          cursor: 'pointer',
+          background: 'linear-gradient(135deg, rgba(35, 35, 40, 0.9), rgba(25, 25, 30, 0.95))',
+          border: '1px solid rgba(255, 255, 255, 0.07)',
+          position: 'relative',
+          overflow: 'hidden',
         }}
       >
-        <svg
-          width="16"
-          height="16"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
+        {/* Status indicator dot */}
+        <div
+          style={{
+            position: 'absolute',
+            left: 0,
+            top: '50%',
+            transform: 'translateY(-50%)',
+            width: '4px',
+            height: '40%',
+            'min-height': '24px',
+            background: statusColor(),
+            'border-radius': '0 4px 4px 0',
+            'box-shadow': `0 0 8px ${statusColor()}50`,
+          }}
+        />
+        {/* Company/Role */}
+        <div style={{ flex: '1', 'min-width': '0', 'padding-left': '8px' }}>
+          <div
+            style={{
+              'font-size': '15px',
+              'font-family': "'Space Grotesk', system-ui, sans-serif",
+              'font-weight': '600',
+              color: props.theme().colors.text,
+              'white-space': 'nowrap',
+              overflow: 'hidden',
+              'text-overflow': 'ellipsis',
+              'line-height': '1.3',
+            }}
+          >
+            {app().roleName}
+          </div>
+          <div
+            style={{
+              'font-size': '13px',
+              'font-family': "'Space Grotesk', system-ui, sans-serif",
+              color: props.theme().colors.textMuted,
+              'margin-top': '2px',
+            }}
+          >
+            {app().companyName}
+          </div>
+        </div>
+
+        {/* Status */}
+        <StatusBadge status={app().status} size="sm" />
+
+        {/* Score */}
+        <Show when={app().analysis?.overallScore}>
+          <ScoreBadge score={app().analysis!.overallScore} size="sm" />
+        </Show>
+
+        {/* Aging */}
+        <AgingIndicator lastActivityAt={app().lastActivityAt} size="sm" />
+
+        {/* Hover arrow indicator */}
+        <div
+          style={{
+            width: '24px',
+            height: '24px',
+            display: 'flex',
+            'align-items': 'center',
+            'justify-content': 'center',
+            color: 'rgba(255, 255, 255, 0.3)',
+            transition: 'all 0.2s ease',
+          }}
         >
-          <path d="M9 18l6-6-6-6" />
-        </svg>
-      </div>
-    </FluidCard>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M9 18l6-6-6-6" />
+          </svg>
+        </div>
+      </FluidCard>
+    </Tooltip>
   );
 };
 
