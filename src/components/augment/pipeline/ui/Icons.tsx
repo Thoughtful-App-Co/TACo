@@ -1,6 +1,11 @@
 /**
  * Pipeline Icons - SVG icon components for Pipeline UI
- * Following maximalist design language
+ * Following maximalist design language with duotone support
+ *
+ * Duotone Design Philosophy (based on monochroism.mdc):
+ * - Primary color: Main strokes and dominant elements
+ * - Secondary color: Accent fills and supporting elements
+ * - Creates visual depth through constraint of two tones
  *
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
@@ -11,6 +16,13 @@ interface IconProps {
   size?: number;
   color?: string;
   class?: string;
+}
+
+// Duotone icon props - supports two-color styling based on RIASEC theme
+interface DuotoneIconProps extends IconProps {
+  primaryColor?: string; // Main stroke color (derived from RIASEC primary)
+  secondaryColor?: string; // Accent/fill color (derived from RIASEC secondary)
+  opacity?: number; // Secondary color opacity for depth
 }
 
 // Pipeline / Target icon
@@ -452,6 +464,23 @@ export const IconChevronRight: Component<IconProps> = (props) => (
   </svg>
 );
 
+// Chevron left icon
+export const IconChevronLeft: Component<IconProps> = (props) => (
+  <svg
+    width={props.size || 20}
+    height={props.size || 20}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={props.color || 'currentColor'}
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    class={props.class}
+  >
+    <polyline points="15 18 9 12 15 6" />
+  </svg>
+);
+
 // External link icon
 export const IconExternalLink: Component<IconProps> = (props) => (
   <svg
@@ -569,6 +598,350 @@ export const IconLoader: Component<IconProps> = (props) => (
   </svg>
 );
 
+// =============================================================================
+// DUOTONE ICONS - Use RIASEC primary/secondary colors for visual depth
+// =============================================================================
+
+// Duotone Pipeline / Target icon - concentric circles with depth
+export const IconPipelineDuotone: Component<DuotoneIconProps> = (props) => {
+  const primary = () => props.primaryColor || props.color || 'currentColor';
+  const secondary = () => props.secondaryColor || primary();
+  const opacity = () => props.opacity || 0.4;
+
+  return (
+    <svg
+      width={props.size || 20}
+      height={props.size || 20}
+      viewBox="0 0 24 24"
+      fill="none"
+      class={props.class}
+    >
+      {/* Outer ring - secondary color with fill */}
+      <circle
+        cx="12"
+        cy="12"
+        r="10"
+        fill={secondary()}
+        fill-opacity={opacity()}
+        stroke={primary()}
+        stroke-width="2"
+      />
+      {/* Middle ring - primary stroke only */}
+      <circle
+        cx="12"
+        cy="12"
+        r="6"
+        fill="none"
+        stroke={primary()}
+        stroke-width="2"
+        stroke-opacity="0.8"
+      />
+      {/* Inner dot - primary filled */}
+      <circle cx="12" cy="12" r="2" fill={primary()} />
+    </svg>
+  );
+};
+
+// Duotone Briefcase icon - body and handle with two tones
+export const IconBriefcaseDuotone: Component<DuotoneIconProps> = (props) => {
+  const primary = () => props.primaryColor || props.color || 'currentColor';
+  const secondary = () => props.secondaryColor || primary();
+  const opacity = () => props.opacity || 0.3;
+
+  return (
+    <svg
+      width={props.size || 20}
+      height={props.size || 20}
+      viewBox="0 0 24 24"
+      fill="none"
+      class={props.class}
+    >
+      {/* Main body - secondary fill */}
+      <rect
+        x="2"
+        y="7"
+        width="20"
+        height="14"
+        rx="2"
+        ry="2"
+        fill={secondary()}
+        fill-opacity={opacity()}
+        stroke={primary()}
+        stroke-width="2"
+      />
+      {/* Handle - primary stroke */}
+      <path
+        d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"
+        stroke={primary()}
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </svg>
+  );
+};
+
+// Duotone User icon - body and head with depth
+export const IconUserDuotone: Component<DuotoneIconProps> = (props) => {
+  const primary = () => props.primaryColor || props.color || 'currentColor';
+  const secondary = () => props.secondaryColor || primary();
+  const opacity = () => props.opacity || 0.35;
+
+  return (
+    <svg
+      width={props.size || 20}
+      height={props.size || 20}
+      viewBox="0 0 24 24"
+      fill="none"
+      class={props.class}
+    >
+      {/* Body - secondary fill */}
+      <path
+        d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"
+        fill={secondary()}
+        fill-opacity={opacity()}
+        stroke={primary()}
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+      {/* Head - primary stroke and fill */}
+      <circle
+        cx="12"
+        cy="7"
+        r="4"
+        fill={secondary()}
+        fill-opacity={opacity() * 1.5}
+        stroke={primary()}
+        stroke-width="2"
+      />
+    </svg>
+  );
+};
+
+// Duotone Star icon - filled with glow effect
+export const IconStarDuotone: Component<DuotoneIconProps> = (props) => {
+  const primary = () => props.primaryColor || props.color || 'currentColor';
+  const secondary = () => props.secondaryColor || primary();
+  const opacity = () => props.opacity || 0.4;
+
+  return (
+    <svg
+      width={props.size || 20}
+      height={props.size || 20}
+      viewBox="0 0 24 24"
+      fill="none"
+      class={props.class}
+    >
+      <polygon
+        points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
+        fill={secondary()}
+        fill-opacity={opacity()}
+        stroke={primary()}
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </svg>
+  );
+};
+
+// Duotone Send/Applied icon
+export const IconSendDuotone: Component<DuotoneIconProps> = (props) => {
+  const primary = () => props.primaryColor || props.color || 'currentColor';
+  const secondary = () => props.secondaryColor || primary();
+  const opacity = () => props.opacity || 0.35;
+
+  return (
+    <svg
+      width={props.size || 20}
+      height={props.size || 20}
+      viewBox="0 0 24 24"
+      fill="none"
+      class={props.class}
+    >
+      <polygon
+        points="22 2 15 22 11 13 2 9 22 2"
+        fill={secondary()}
+        fill-opacity={opacity()}
+        stroke={primary()}
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+      <line
+        x1="22"
+        y1="2"
+        x2="11"
+        y2="13"
+        stroke={primary()}
+        stroke-width="2"
+        stroke-linecap="round"
+      />
+    </svg>
+  );
+};
+
+// Duotone Message/Interview icon
+export const IconMessageDuotone: Component<DuotoneIconProps> = (props) => {
+  const primary = () => props.primaryColor || props.color || 'currentColor';
+  const secondary = () => props.secondaryColor || primary();
+  const opacity = () => props.opacity || 0.35;
+
+  return (
+    <svg
+      width={props.size || 20}
+      height={props.size || 20}
+      viewBox="0 0 24 24"
+      fill="none"
+      class={props.class}
+    >
+      <path
+        d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"
+        fill={secondary()}
+        fill-opacity={opacity()}
+        stroke={primary()}
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </svg>
+  );
+};
+
+// Duotone Clock/Time icon
+export const IconClockDuotone: Component<DuotoneIconProps> = (props) => {
+  const primary = () => props.primaryColor || props.color || 'currentColor';
+  const secondary = () => props.secondaryColor || primary();
+  const opacity = () => props.opacity || 0.25;
+
+  return (
+    <svg
+      width={props.size || 20}
+      height={props.size || 20}
+      viewBox="0 0 24 24"
+      fill="none"
+      class={props.class}
+    >
+      <circle
+        cx="12"
+        cy="12"
+        r="10"
+        fill={secondary()}
+        fill-opacity={opacity()}
+        stroke={primary()}
+        stroke-width="2"
+      />
+      <polyline
+        points="12 6 12 12 16 14"
+        stroke={primary()}
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </svg>
+  );
+};
+
+// Duotone TrendingUp/Flow icon
+export const IconTrendingUpDuotone: Component<DuotoneIconProps> = (props) => {
+  const primary = () => props.primaryColor || props.color || 'currentColor';
+  const secondary = () => props.secondaryColor || primary();
+
+  return (
+    <svg
+      width={props.size || 20}
+      height={props.size || 20}
+      viewBox="0 0 24 24"
+      fill="none"
+      class={props.class}
+    >
+      {/* Arrow head - secondary */}
+      <polyline
+        points="17 6 23 6 23 12"
+        stroke={secondary()}
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-opacity="0.7"
+      />
+      {/* Main line - primary */}
+      <polyline
+        points="23 6 13.5 15.5 8.5 10.5 1 18"
+        stroke={primary()}
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </svg>
+  );
+};
+
+// Duotone Zap/Skills icon
+export const IconZapDuotone: Component<DuotoneIconProps> = (props) => {
+  const primary = () => props.primaryColor || props.color || 'currentColor';
+  const secondary = () => props.secondaryColor || primary();
+  const opacity = () => props.opacity || 0.4;
+
+  return (
+    <svg
+      width={props.size || 20}
+      height={props.size || 20}
+      viewBox="0 0 24 24"
+      fill="none"
+      class={props.class}
+    >
+      <polygon
+        points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"
+        fill={secondary()}
+        fill-opacity={opacity()}
+        stroke={primary()}
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      />
+    </svg>
+  );
+};
+
+// Duotone Settings/Gear icon
+export const IconSettingsDuotone: Component<DuotoneIconProps> = (props) => {
+  const primary = () => props.primaryColor || props.color || 'currentColor';
+  const secondary = () => props.secondaryColor || primary();
+  const opacity = () => props.opacity || 0.3;
+
+  return (
+    <svg
+      width={props.size || 20}
+      height={props.size || 20}
+      viewBox="0 0 24 24"
+      fill="none"
+      class={props.class}
+    >
+      {/* Center circle - secondary fill */}
+      <circle
+        cx="12"
+        cy="12"
+        r="3"
+        fill={secondary()}
+        fill-opacity={opacity() * 2}
+        stroke={primary()}
+        stroke-width="2"
+      />
+      {/* Gear teeth - primary */}
+      <path
+        d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
+        stroke={primary()}
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        fill={secondary()}
+        fill-opacity={opacity()}
+      />
+    </svg>
+  );
+};
+
 export default {
   IconPipeline,
   IconBriefcase,
@@ -594,6 +967,7 @@ export default {
   IconZap,
   IconTrendingUp,
   IconChevronRight,
+  IconChevronLeft,
   IconExternalLink,
   IconLightbulb,
   IconLink,
