@@ -9,9 +9,10 @@ import { pipelineStore } from '../store';
 import { liquidAugment, pipelineKeyframes } from '../theme/liquid-augment';
 import { PipelineDashboard } from './PipelineDashboard';
 import { AddJobModal } from './AddJobModal';
+import { ImportCSVModal } from './ImportCSVModal';
 import { JobDetailSidebar } from './JobDetailSidebar';
 import { JobApplication } from '../../../../schemas/pipeline.schema';
-import { IconPipeline, IconPlus } from '../ui/Icons';
+import { IconPipeline, IconPlus, IconUpload } from '../ui/Icons';
 
 interface PipelineViewProps {
   currentTheme?: () => Partial<typeof liquidAugment>;
@@ -20,6 +21,7 @@ interface PipelineViewProps {
 export const PipelineView: Component<PipelineViewProps> = (props) => {
   const [selectedJob, setSelectedJob] = createSignal<JobApplication | null>(null);
   const [isAddJobModalOpen, setIsAddJobModalOpen] = createSignal(false);
+  const [isImportModalOpen, setIsImportModalOpen] = createSignal(false);
 
   // Inject keyframes on mount
   if (typeof document !== 'undefined') {
@@ -102,29 +104,53 @@ export const PipelineView: Component<PipelineViewProps> = (props) => {
           </div>
         </div>
 
-        {/* Right side - Add Job Button */}
-        <button
-          class="pipeline-btn"
-          onClick={() => setIsAddJobModalOpen(true)}
-          style={{
-            display: 'flex',
-            'align-items': 'center',
-            gap: '8px',
-            padding: '10px 18px',
-            background: theme().colors.primary,
-            border: 'none',
-            'border-radius': '10px',
-            color: theme().colors.background,
-            'font-size': '14px',
-            'font-family': "'Space Grotesk', system-ui, sans-serif",
-            'font-weight': '600',
-            cursor: 'pointer',
-            transition: 'all 0.2s ease',
-          }}
-        >
-          <IconPlus size={16} />
-          Add Job
-        </button>
+        {/* Right side - Action Buttons */}
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <button
+            class="pipeline-btn"
+            onClick={() => setIsImportModalOpen(true)}
+            style={{
+              display: 'flex',
+              'align-items': 'center',
+              gap: '8px',
+              padding: '10px 18px',
+              background: 'transparent',
+              border: `1px solid ${theme().colors.border}`,
+              'border-radius': '10px',
+              color: theme().colors.text,
+              'font-size': '14px',
+              'font-family': "'Space Grotesk', system-ui, sans-serif",
+              'font-weight': '500',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <IconUpload size={16} />
+            Import CSV
+          </button>
+          <button
+            class="pipeline-btn"
+            onClick={() => setIsAddJobModalOpen(true)}
+            style={{
+              display: 'flex',
+              'align-items': 'center',
+              gap: '8px',
+              padding: '10px 18px',
+              background: theme().colors.primary,
+              border: 'none',
+              'border-radius': '10px',
+              color: theme().colors.background,
+              'font-size': '14px',
+              'font-family': "'Space Grotesk', system-ui, sans-serif",
+              'font-weight': '600',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <IconPlus size={16} />
+            Add Job
+          </button>
+        </div>
       </div>
 
       {/* Content - Dashboard */}
@@ -140,6 +166,13 @@ export const PipelineView: Component<PipelineViewProps> = (props) => {
       <AddJobModal
         isOpen={isAddJobModalOpen()}
         onClose={() => setIsAddJobModalOpen(false)}
+        currentTheme={theme}
+      />
+
+      {/* Import CSV Modal */}
+      <ImportCSVModal
+        isOpen={isImportModalOpen()}
+        onClose={() => setIsImportModalOpen(false)}
         currentTheme={theme}
       />
 
