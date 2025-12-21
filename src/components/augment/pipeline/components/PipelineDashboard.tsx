@@ -37,7 +37,6 @@ import {
   IconClockDuotone,
   IconTrendingUpDuotone,
 } from '../ui/Icons';
-import { SankeyView } from './SankeyView';
 import {
   JobApplication,
   ApplicationStatus,
@@ -53,7 +52,8 @@ interface PipelineDashboardProps {
 }
 
 export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
-  const [viewMode, setViewMode] = createSignal<'kanban' | 'list' | 'sankey'>('kanban');
+  const [viewMode, setViewMode] = createSignal<'kanban' | 'list'>('kanban');
+  const [showArchive, setShowArchive] = createSignal(false);
   const theme = () => props.currentTheme();
 
   // Drag and drop state
@@ -95,6 +95,22 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
   });
 
   const followUpsDue = createMemo(() => pipelineStore.getFollowUpsDue());
+
+  // Filtered applications for display (respects archive toggle)
+  const displayApplicationsByStatus = createMemo(() => {
+    const all = applicationsByStatus();
+
+    if (showArchive()) {
+      return all; // Show everything including rejected/withdrawn
+    }
+
+    // Hide rejected and withdrawn by default
+    return {
+      ...all,
+      rejected: [],
+      withdrawn: [],
+    };
+  });
 
   // =========================================================================
   // ANALYTICS CALCULATIONS
@@ -482,38 +498,67 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
             <IconList size={15} />
             List
           </button>
-          <button
-            class="pipeline-btn"
-            onClick={() => setViewMode('sankey')}
+        </div>
+
+        {/* Archive Filter Toggle */}
+        <button
+          class="pipeline-btn"
+          onClick={() => setShowArchive(!showArchive())}
+          style={{
+            display: 'flex',
+            'align-items': 'center',
+            gap: '8px',
+            padding: '10px 16px',
+            background: showArchive() ? 'rgba(245, 158, 11, 0.1)' : 'transparent',
+            border: showArchive()
+              ? '1px solid rgba(245, 158, 11, 0.3)'
+              : `1px solid ${theme().colors.border}`,
+            'border-radius': '10px',
+            color: showArchive() ? '#F59E0B' : theme().colors.textMuted,
+            'font-size': '13px',
+            'font-family': "'Space Grotesk', system-ui, sans-serif",
+            'font-weight': '500',
+            cursor: 'pointer',
+            transition: `all ${pipelineAnimations.fast}`,
+          }}
+        >
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
             style={{
-              display: 'flex',
-              'align-items': 'center',
-              gap: '8px',
-              padding: '10px 16px',
-              background:
-                viewMode() === 'sankey'
-                  ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.06))'
-                  : 'transparent',
-              color: '#FFFFFF',
-              border:
-                viewMode() === 'sankey'
-                  ? '1px solid rgba(255, 255, 255, 0.2)'
-                  : '1px solid transparent',
-              'border-radius': '8px',
-              cursor: 'pointer',
-              'font-size': '13px',
-              'font-family': "'Space Grotesk', system-ui, sans-serif",
-              'font-weight': viewMode() === 'sankey' ? '600' : '400',
-              opacity: viewMode() === 'sankey' ? 1 : 0.6,
-              transition: `all ${pipelineAnimations.fast}`,
-              'box-shadow':
-                viewMode() === 'sankey' ? 'inset 0 1px 0 rgba(255, 255, 255, 0.1)' : 'none',
+              transform: showArchive() ? 'rotate(180deg)' : 'rotate(0deg)',
+              transition: `transform ${pipelineAnimations.fast}`,
             }}
           >
-            <IconTrendingUp size={15} />
-            Flow
-          </button>
-        </div>
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+          {showArchive() ? 'Hide' : 'Show'} Archive
+          <Show
+            when={
+              !showArchive() &&
+              (applicationsByStatus().rejected.length > 0 ||
+                applicationsByStatus().withdrawn.length > 0)
+            }
+          >
+            <span
+              style={{
+                padding: '2px 8px',
+                background: 'rgba(245, 158, 11, 0.2)',
+                'border-radius': '10px',
+                'font-size': '11px',
+                'font-weight': '600',
+              }}
+            >
+              {applicationsByStatus().rejected.length + applicationsByStatus().withdrawn.length}
+            </span>
+          </Show>
+        </button>
       </div>
 
       {/* Empty State */}
@@ -644,7 +689,7 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
             {(status) => (
               <PipelineColumn
                 status={status}
-                applications={applicationsByStatus()[status]}
+                applications={displayApplicationsByStatus()[status]}
                 theme={theme}
                 onSelectJob={props.onSelectJob}
                 onStatusChange={handleStatusChange}
@@ -687,11 +732,6 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
             )}
           </For>
         </div>
-      </Show>
-
-      {/* Sankey / Flow View */}
-      <Show when={viewMode() === 'sankey'}>
-        <SankeyView currentTheme={theme} onSelectJob={props.onSelectJob} />
       </Show>
     </div>
   );
