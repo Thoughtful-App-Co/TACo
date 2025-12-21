@@ -9,14 +9,14 @@
 // ============================================================================
 
 export type ApplicationStatus =
-  | 'saved' // Bookmarked but not applied
+  | 'saved' // Bookmarked, not yet applied
   | 'applied' // Application submitted
-  | 'screening' // Initial HR screening
-  | 'interviewing' // In interview process
+  | 'screening' // Initial contact/conversations (not official interview yet)
+  | 'interviewing' // Official interview process
   | 'offered' // Received offer
-  | 'accepted' // Accepted offer
+  | 'accepted' // Accepted the offer
   | 'rejected' // Rejected by company
-  | 'withdrawn'; // Withdrawn by user
+  | 'withdrawn'; // Withdrew from consideration
 
 export interface StatusChange {
   status: ApplicationStatus;
@@ -91,6 +91,7 @@ export interface JobApplication {
   // Pipeline state
   status: ApplicationStatus;
   statusHistory: StatusChange[];
+  rejectedAtStatus?: ApplicationStatus; // Tracks which stage rejection occurred at
 
   // Timing & Aging
   savedAt: Date;
@@ -286,9 +287,9 @@ export interface AnalysisStreamState {
 export const STATUS_LABELS: Record<ApplicationStatus, string> = {
   saved: 'Saved',
   applied: 'Applied',
-  screening: 'Screening',
-  interviewing: 'Interviewing',
-  offered: 'Offered',
+  screening: 'Screen',
+  interviewing: 'Interview',
+  offered: 'Offer',
   accepted: 'Accepted',
   rejected: 'Rejected',
   withdrawn: 'Withdrawn',

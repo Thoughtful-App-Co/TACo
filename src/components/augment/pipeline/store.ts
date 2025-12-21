@@ -194,15 +194,23 @@ export const pipelineStore = {
     setState(
       'applications',
       (app) => app.id === id,
-      (app) => ({
-        ...app,
-        status: newStatus,
-        statusHistory: [...app.statusHistory, statusChange],
-        lastActivityAt: now,
-        updatedAt: now,
-        appliedAt: newStatus === 'applied' && !app.appliedAt ? now : app.appliedAt,
-        syncVersion: app.syncVersion + 1,
-      })
+      (app) => {
+        const updates: Partial<JobApplication> = {
+          status: newStatus,
+          statusHistory: [...app.statusHistory, statusChange],
+          lastActivityAt: now,
+          updatedAt: now,
+          appliedAt: newStatus === 'applied' && !app.appliedAt ? now : app.appliedAt,
+          syncVersion: app.syncVersion + 1,
+        };
+
+        // Capture rejection point: track which stage the rejection occurred at
+        if (newStatus === 'rejected' || newStatus === 'withdrawn') {
+          updates.rejectedAtStatus = app.status; // Store the previous status
+        }
+
+        return { ...app, ...updates };
+      }
     );
   },
 
