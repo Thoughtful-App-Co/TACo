@@ -398,8 +398,13 @@ export const pipelineKeyframes = `
     inset: 0;
     background: linear-gradient(135deg, transparent 40%, rgba(255, 255, 255, 0.03) 50%, transparent 60%);
     background-size: 200% 200%;
-    animation: shimmer 3s ease-in-out infinite;
+    background-position: -200% 0;
     pointer-events: none;
+    transition: none;
+  }
+
+  .stat-card:hover::after {
+    animation: shimmer 1.5s ease-in-out;
   }
 
   .stat-card:hover {
