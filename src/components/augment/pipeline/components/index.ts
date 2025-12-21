@@ -6,6 +6,8 @@
 
 export { PipelineView } from './PipelineView';
 export { PipelineDashboard } from './PipelineDashboard';
+export { DashboardView } from './DashboardView';
+export { InsightsView } from './InsightsView';
 export { ProfileBuilder } from './ProfileBuilder';
 export { JobInput } from './JobInput';
 export { SyncSettings } from './SyncSettings';
