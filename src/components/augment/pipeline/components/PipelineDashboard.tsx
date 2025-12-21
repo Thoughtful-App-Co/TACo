@@ -96,6 +96,18 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
 
   const followUpsDue = createMemo(() => pipelineStore.getFollowUpsDue());
 
+  // Columns to display (includes archive when toggled)
+  const displayedStatuses = createMemo(() => {
+    if (showArchive()) {
+      return [
+        ...ACTIVE_STATUSES,
+        'rejected' as ApplicationStatus,
+        'withdrawn' as ApplicationStatus,
+      ];
+    }
+    return ACTIVE_STATUSES;
+  });
+
   // Filtered applications for display (respects archive toggle)
   const displayApplicationsByStatus = createMemo(() => {
     const all = applicationsByStatus();
@@ -679,13 +691,13 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
         <div
           style={{
             display: 'grid',
-            'grid-template-columns': 'repeat(5, 1fr)',
+            'grid-template-columns': `repeat(${displayedStatuses().length}, minmax(240px, 1fr))`,
             gap: '16px',
             'overflow-x': 'auto',
             'padding-bottom': '16px',
           }}
         >
-          <For each={ACTIVE_STATUSES}>
+          <For each={displayedStatuses()}>
             {(status) => (
               <PipelineColumn
                 status={status}

@@ -78,9 +78,11 @@ const STORAGE_KEY = 'prospect_sidebar_collapsed';
 
 function loadCollapsedState(): boolean {
   try {
-    return localStorage.getItem(STORAGE_KEY) === 'true';
+    const stored = localStorage.getItem(STORAGE_KEY);
+    // Default to collapsed (true) if no preference stored
+    return stored === null ? true : stored === 'true';
   } catch {
-    return false;
+    return true; // Default to collapsed for more visual real-estate
   }
 }
 
