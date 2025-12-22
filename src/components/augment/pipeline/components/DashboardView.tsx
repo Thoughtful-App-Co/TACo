@@ -26,6 +26,7 @@ import {
   STATUS_LABELS,
   daysSince,
 } from '../../../../schemas/pipeline.schema';
+import { exportAndDownload } from '../utils/csv-export';
 
 interface DashboardViewProps {
   currentTheme: () => Partial<typeof liquidAugment> & typeof liquidAugment;
@@ -48,6 +49,11 @@ export const DashboardView: Component<DashboardViewProps> = (props) => {
   const theme = () => props.currentTheme();
   const applications = () => pipelineStore.state.applications;
   const duotoneColors = createMemo(() => getCurrentDuotone());
+
+  // Export CSV handler
+  const handleExportCSV = () => {
+    exportAndDownload(pipelineStore.state.applications);
+  };
 
   const activeApplications = createMemo(() =>
     applications().filter((app) => ACTIVE_STATUSES.includes(app.status))
@@ -569,6 +575,58 @@ export const DashboardView: Component<DashboardViewProps> = (props) => {
                 <IconUpload size={18} />
               </div>
               <span>Import from CSV</span>
+            </div>
+            <IconChevronRight size={16} color={theme().colors.textMuted} />
+          </button>
+
+          <button
+            class="pipeline-btn"
+            onClick={handleExportCSV}
+            style={{
+              display: 'flex',
+              'align-items': 'center',
+              'justify-content': 'space-between',
+              padding: '16px 20px',
+              background: 'rgba(255, 255, 255, 0.03)',
+              border: `1px solid ${theme().colors.border}`,
+              'border-radius': '12px',
+              color: theme().colors.text,
+              cursor: 'pointer',
+              transition: `all ${pipelineAnimations.fast}`,
+              'font-size': '15px',
+              'font-family': "'Space Grotesk', system-ui, sans-serif",
+              'font-weight': '500',
+            }}
+          >
+            <div style={{ display: 'flex', 'align-items': 'center', gap: '12px' }}>
+              <div
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  'border-radius': '10px',
+                  display: 'flex',
+                  'align-items': 'center',
+                  'justify-content': 'center',
+                  color: theme().colors.textMuted,
+                }}
+              >
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
+                </svg>
+              </div>
+              <span>Export to CSV</span>
             </div>
             <IconChevronRight size={16} color={theme().colors.textMuted} />
           </button>

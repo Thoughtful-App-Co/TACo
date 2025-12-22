@@ -16,6 +16,7 @@ import { AddJobModal } from './AddJobModal';
 import { ImportCSVModal } from './ImportCSVModal';
 import { JobDetailSidebar } from './JobDetailSidebar';
 import { JobApplication } from '../../../../schemas/pipeline.schema';
+import { exportAndDownload } from '../utils/csv-export';
 
 interface PipelineViewProps {
   currentTheme?: () => Partial<typeof liquidAugment>;
@@ -31,6 +32,11 @@ export const PipelineView: Component<PipelineViewProps> = (props) => {
   // Modal state
   const [isAddJobModalOpen, setIsAddJobModalOpen] = createSignal(false);
   const [isImportModalOpen, setIsImportModalOpen] = createSignal(false);
+
+  // Export CSV handler
+  const handleExportCSV = () => {
+    exportAndDownload(pipelineStore.state.applications);
+  };
 
   // Inject keyframes on mount
   if (typeof document !== 'undefined') {
@@ -168,6 +174,41 @@ export const PipelineView: Component<PipelineViewProps> = (props) => {
                     <line x1="12" y1="3" x2="12" y2="15" />
                   </svg>
                   Import CSV
+                </button>
+                <button
+                  class="pipeline-btn"
+                  onClick={handleExportCSV}
+                  style={{
+                    display: 'flex',
+                    'align-items': 'center',
+                    gap: '8px',
+                    padding: '10px 18px',
+                    background: 'transparent',
+                    border: `1px solid ${theme().colors.border}`,
+                    'border-radius': '10px',
+                    color: theme().colors.text,
+                    'font-size': '14px',
+                    'font-family': "'Space Grotesk', system-ui, sans-serif",
+                    'font-weight': '500',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease',
+                  }}
+                >
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                    <polyline points="7 10 12 15 17 10" />
+                    <line x1="12" y1="15" x2="12" y2="3" />
+                  </svg>
+                  Export CSV
                 </button>
                 <button
                   class="pipeline-btn"

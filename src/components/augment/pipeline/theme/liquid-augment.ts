@@ -284,6 +284,19 @@ export const pipelineKeyframes = `
     100% { transform: scale(1); }
   }
 
+  @keyframes accordion-slide-down {
+    from {
+      opacity: 0;
+      max-height: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      max-height: 2000px;
+      transform: translateY(0);
+    }
+  }
+
   .pipeline-card {
     animation: pipeline-fade-up 0.3s ${pipelineAnimations.flow} forwards;
   }

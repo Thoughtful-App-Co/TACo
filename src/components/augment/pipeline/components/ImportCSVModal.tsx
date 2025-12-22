@@ -7,8 +7,11 @@
  * - Status (optional, defaults to 'saved')
  * - URL (optional)
  * - Location (optional)
+ * - Location Type (optional: remote/hybrid/onsite)
+ * - Department (optional)
+ * - Salary (optional, supports formats like "$100K-$150K/yr", "100000-150000", "$50/hr")
  * - Notes (optional)
- * - Applied Date (optional)
+ * - Applied Date (optional, supports "YYYY-MM-DD" or "YYYY-MM-DD HH:MM", defaults to 12:00 PM if no time)
  *
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
@@ -31,6 +34,14 @@ interface ParsedRow {
   status: ApplicationStatus;
   jobUrl?: string;
   location?: string;
+  locationType?: 'remote' | 'hybrid' | 'onsite';
+  salary?: {
+    min?: number;
+    max?: number;
+    currency: string;
+    period: 'hourly' | 'annual';
+  };
+  department?: string;
   notes?: string;
   appliedAt?: Date;
   isValid: boolean;
@@ -44,6 +55,9 @@ const COLUMN_MAPPINGS: Record<string, string[]> = {
   status: ['status', 'state', 'stage', 'pipeline stage'],
   jobUrl: ['url', 'job url', 'link', 'job link', 'posting url', 'application url'],
   location: ['location', 'city', 'place', 'office', 'work location'],
+  locationType: ['location type', 'work type', 'remote', 'work model', 'work style'],
+  salary: ['salary', 'compensation', 'pay', 'salary range'],
+  department: ['department', 'dept', 'team', 'division'],
   notes: ['notes', 'note', 'comments', 'description', 'details'],
   appliedAt: ['applied', 'applied date', 'date applied', 'application date', 'date'],
 };
@@ -149,11 +163,89 @@ export const ImportCSVModal: Component<ImportCSVModalProps> = (props) => {
     return STATUS_MAPPINGS[normalized] || 'saved';
   };
 
-  // Parse date string
+  // Parse date string - defaults to 12:00 PM if no time is specified
   const parseDate = (dateStr: string): Date | undefined => {
     if (!dateStr) return undefined;
-    const parsed = new Date(dateStr);
+
+    let parsed: Date;
+
+    // Check if the date string includes a time component
+    if (dateStr.includes(':') || dateStr.toLowerCase().includes('t')) {
+      // Has time component, parse as-is
+      parsed = new Date(dateStr);
+    } else {
+      // No time component, add 12:00 (noon) as default
+      // Assuming date format is YYYY-MM-DD or similar
+      const dateOnly = dateStr.trim();
+      parsed = new Date(`${dateOnly}T12:00:00`);
+    }
+
     return isNaN(parsed.getTime()) ? undefined : parsed;
+  };
+
+  // Parse location type
+  const parseLocationType = (typeStr: string): 'remote' | 'hybrid' | 'onsite' | undefined => {
+    if (!typeStr) return undefined;
+    const normalized = typeStr.toLowerCase().trim();
+    if (normalized.includes('remote')) return 'remote';
+    if (normalized.includes('hybrid')) return 'hybrid';
+    if (
+      normalized.includes('onsite') ||
+      normalized.includes('on-site') ||
+      normalized.includes('office')
+    )
+      return 'onsite';
+    return undefined;
+  };
+
+  // Parse salary (supports formats like "$100K-$150K", "100000-150000", "$50/hr", etc.)
+  const parseSalary = (salaryStr: string): ParsedRow['salary'] | undefined => {
+    if (!salaryStr) return undefined;
+
+    const str = salaryStr.trim().toLowerCase();
+    const isHourly = str.includes('/hr') || str.includes('hour');
+    const period: 'hourly' | 'annual' = isHourly ? 'hourly' : 'annual';
+
+    // Extract currency symbol or default to USD
+    let currency = 'USD';
+    if (str.includes('€') || str.includes('eur')) currency = 'EUR';
+    else if (str.includes('£') || str.includes('gbp')) currency = 'GBP';
+    else if (str.includes('¥') || str.includes('jpy')) currency = 'JPY';
+    else if (str.includes('₹') || str.includes('inr')) currency = 'INR';
+
+    // Remove all non-numeric characters except dash and decimal
+    const cleaned = str.replace(/[^0-9.\-k]/gi, '');
+
+    // Check if it's a range (contains dash)
+    if (cleaned.includes('-')) {
+      const parts = cleaned.split('-').map((p) => p.trim());
+      if (parts.length === 2) {
+        const parseValue = (val: string): number | undefined => {
+          if (!val) return undefined;
+          let num = parseFloat(val.replace(/k/i, ''));
+          if (isNaN(num)) return undefined;
+          // If it has 'k' or 'K', multiply by 1000
+          if (val.toLowerCase().includes('k')) num *= 1000;
+          return num;
+        };
+
+        const min = parseValue(parts[0]);
+        const max = parseValue(parts[1]);
+
+        if (min !== undefined || max !== undefined) {
+          return { min, max, currency, period };
+        }
+      }
+    } else {
+      // Single value
+      let num = parseFloat(cleaned.replace(/k/i, ''));
+      if (!isNaN(num)) {
+        if (cleaned.toLowerCase().includes('k')) num *= 1000;
+        return { min: num, max: num, currency, period };
+      }
+    }
+
+    return undefined;
   };
 
   // Process uploaded CSV
@@ -177,6 +269,9 @@ export const ImportCSVModal: Component<ImportCSVModalProps> = (props) => {
       const statusIdx = findColumnIndex(headers, 'status');
       const urlIdx = findColumnIndex(headers, 'jobUrl');
       const locationIdx = findColumnIndex(headers, 'location');
+      const locationTypeIdx = findColumnIndex(headers, 'locationType');
+      const salaryIdx = findColumnIndex(headers, 'salary');
+      const departmentIdx = findColumnIndex(headers, 'department');
       const notesIdx = findColumnIndex(headers, 'notes');
       const appliedIdx = findColumnIndex(headers, 'appliedAt');
 
@@ -210,6 +305,10 @@ export const ImportCSVModal: Component<ImportCSVModalProps> = (props) => {
             status: statusIdx !== -1 ? parseStatus(row[statusIdx] || '') : 'saved',
             jobUrl: urlIdx !== -1 ? row[urlIdx]?.trim() || undefined : undefined,
             location: locationIdx !== -1 ? row[locationIdx]?.trim() || undefined : undefined,
+            locationType:
+              locationTypeIdx !== -1 ? parseLocationType(row[locationTypeIdx] || '') : undefined,
+            salary: salaryIdx !== -1 ? parseSalary(row[salaryIdx] || '') : undefined,
+            department: departmentIdx !== -1 ? row[departmentIdx]?.trim() || undefined : undefined,
             notes: notesIdx !== -1 ? row[notesIdx]?.trim() || undefined : undefined,
             appliedAt: appliedIdx !== -1 ? parseDate(row[appliedIdx]) : undefined,
             isValid: errors.length === 0,
@@ -277,6 +376,9 @@ export const ImportCSVModal: Component<ImportCSVModalProps> = (props) => {
         status: row.status,
         jobUrl: row.jobUrl,
         location: row.location,
+        locationType: row.locationType,
+        salary: row.salary,
+        department: row.department,
         notes: row.notes || '',
         savedAt: new Date(),
         appliedAt: row.appliedAt,

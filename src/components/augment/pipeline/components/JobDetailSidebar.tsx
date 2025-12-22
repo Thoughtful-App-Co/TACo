@@ -12,6 +12,7 @@ import {
   ApplicationStatus,
   STATUS_LABELS,
   ACTIVE_STATUSES,
+  SalaryRange,
 } from '../../../../schemas/pipeline.schema';
 import {
   IconX,
@@ -22,6 +23,12 @@ import {
   IconClock,
 } from '../ui/Icons';
 import { AgingIndicator } from '../ui';
+import {
+  formatSalary,
+  formatNumberForInput,
+  parseFormattedNumber,
+  getCurrencySymbol,
+} from '../utils';
 
 // Persist width preference
 const STORAGE_KEY = 'augment_job_sidebar_width';
@@ -42,6 +49,19 @@ export const JobDetailSidebar: Component<JobDetailSidebarProps> = (props) => {
   const [isEditing, setIsEditing] = createSignal(false);
   const [editedJob, setEditedJob] = createSignal<Partial<JobApplication>>({});
 
+  // Salary edit state
+  const [salaryIsRange, setSalaryIsRange] = createSignal(false);
+  const [salaryMin, setSalaryMin] = createSignal('');
+  const [salaryMax, setSalaryMax] = createSignal('');
+  const [salarySingle, setSalarySingle] = createSignal('');
+  const [salaryCurrency, setSalaryCurrency] = createSignal('USD');
+  const [salaryPeriod, setSalaryPeriod] = createSignal<'hourly' | 'annual'>('annual');
+  const [location, setLocation] = createSignal('');
+  const [locationType, setLocationType] = createSignal<'remote' | 'hybrid' | 'onsite' | ''>('');
+  const [department, setDepartment] = createSignal('');
+  const [appliedAtDate, setAppliedAtDate] = createSignal('');
+  const [appliedAtTime, setAppliedAtTime] = createSignal('12:00');
+
   // Resize state
   const [width, setWidth] = createSignal(
     parseInt(localStorage.getItem(STORAGE_KEY) || String(DEFAULT_WIDTH))
@@ -60,6 +80,54 @@ export const JobDetailSidebar: Component<JobDetailSidebarProps> = (props) => {
         notes: props.job.notes,
         status: props.job.status,
       });
+
+      // Initialize location
+      setLocation(props.job.location || '');
+      setLocationType(props.job.locationType || '');
+      setDepartment(props.job.department || '');
+
+      // Initialize applied date/time
+      if (props.job.appliedAt) {
+        const date = new Date(props.job.appliedAt);
+        setAppliedAtDate(date.toISOString().split('T')[0]); // YYYY-MM-DD
+        setAppliedAtTime(
+          date.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' })
+        );
+      } else {
+        setAppliedAtDate('');
+        setAppliedAtTime('12:00');
+      }
+
+      // Initialize salary (with formatted display)
+      if (props.job.salary) {
+        setSalaryCurrency(props.job.salary.currency);
+        setSalaryPeriod(props.job.salary.period);
+
+        if (props.job.salary.min === props.job.salary.max) {
+          // Single value - format with commas
+          setSalaryIsRange(false);
+          setSalarySingle(
+            props.job.salary.min ? formatNumberForInput(String(props.job.salary.min)) : ''
+          );
+        } else {
+          // Range - format with commas
+          setSalaryIsRange(true);
+          setSalaryMin(
+            props.job.salary.min ? formatNumberForInput(String(props.job.salary.min)) : ''
+          );
+          setSalaryMax(
+            props.job.salary.max ? formatNumberForInput(String(props.job.salary.max)) : ''
+          );
+        }
+      } else {
+        setSalaryIsRange(false);
+        setSalarySingle('');
+        setSalaryMin('');
+        setSalaryMax('');
+        setSalaryCurrency('USD');
+        setSalaryPeriod('annual');
+      }
+
       setIsEditing(false);
     }
   });
@@ -133,7 +201,46 @@ export const JobDetailSidebar: Component<JobDetailSidebarProps> = (props) => {
 
   const handleSave = () => {
     if (props.job && editedJob()) {
-      pipelineStore.updateApplication(props.job.id, editedJob());
+      // Build salary object
+      let salary: SalaryRange | undefined = undefined;
+      if (salaryIsRange()) {
+        const min = parseFormattedNumber(salaryMin());
+        const max = parseFormattedNumber(salaryMax());
+        if (!isNaN(min) || !isNaN(max)) {
+          salary = {
+            min: !isNaN(min) ? min : undefined,
+            max: !isNaN(max) ? max : undefined,
+            currency: salaryCurrency(),
+            period: salaryPeriod(),
+          };
+        }
+      } else {
+        const single = parseFormattedNumber(salarySingle());
+        if (!isNaN(single)) {
+          salary = {
+            min: single,
+            max: single,
+            currency: salaryCurrency(),
+            period: salaryPeriod(),
+          };
+        }
+      }
+
+      // Build appliedAt date/time
+      let appliedAt: Date | undefined = undefined;
+      if (appliedAtDate()) {
+        const dateStr = `${appliedAtDate()}T${appliedAtTime() || '12:00'}:00`;
+        appliedAt = new Date(dateStr);
+      }
+
+      pipelineStore.updateApplication(props.job.id, {
+        ...editedJob(),
+        salary,
+        location: location() || undefined,
+        locationType: locationType() || undefined,
+        department: department() || undefined,
+        appliedAt,
+      });
       setIsEditing(false);
     }
   };
@@ -462,6 +569,69 @@ export const JobDetailSidebar: Component<JobDetailSidebarProps> = (props) => {
                 </div>
               </Show>
 
+              {/* Location & Type */}
+              <Show when={props.job!.location || props.job!.locationType}>
+                <div>
+                  <label style={labelStyle()}>Location</label>
+                  <p
+                    style={{
+                      margin: 0,
+                      'font-size': '14px',
+                      'font-family': "'Space Grotesk', system-ui, sans-serif",
+                      color: theme().colors.text,
+                    }}
+                  >
+                    {props.job!.location}
+                    {props.job!.location && props.job!.locationType && ' • '}
+                    {props.job!.locationType && (
+                      <span
+                        style={{
+                          'text-transform': 'capitalize',
+                          color: theme().colors.textMuted,
+                        }}
+                      >
+                        {props.job!.locationType}
+                      </span>
+                    )}
+                  </p>
+                </div>
+              </Show>
+
+              {/* Department */}
+              <Show when={props.job!.department}>
+                <div>
+                  <label style={labelStyle()}>Department</label>
+                  <p
+                    style={{
+                      margin: 0,
+                      'font-size': '14px',
+                      'font-family': "'Space Grotesk', system-ui, sans-serif",
+                      color: theme().colors.text,
+                    }}
+                  >
+                    {props.job!.department}
+                  </p>
+                </div>
+              </Show>
+
+              {/* Salary */}
+              <Show when={props.job!.salary}>
+                <div>
+                  <label style={labelStyle()}>Salary</label>
+                  <p
+                    style={{
+                      margin: 0,
+                      'font-size': '14px',
+                      'font-family': "'Space Grotesk', system-ui, sans-serif",
+                      color: theme().colors.text,
+                      'font-weight': '600',
+                    }}
+                  >
+                    {formatSalary(props.job!.salary, false)}
+                  </p>
+                </div>
+              </Show>
+
               {/* Description */}
               <Show when={props.job!.jobPostingText}>
                 <div>
@@ -590,6 +760,254 @@ export const JobDetailSidebar: Component<JobDetailSidebarProps> = (props) => {
                   }
                   style={inputStyle()}
                 />
+              </div>
+
+              {/* Location Fields */}
+              <div style={{ display: 'grid', 'grid-template-columns': '2fr 1fr', gap: '12px' }}>
+                <div>
+                  <label style={labelStyle()}>Location</label>
+                  <input
+                    type="text"
+                    value={location()}
+                    onInput={(e) => setLocation(e.currentTarget.value)}
+                    placeholder="e.g., San Francisco, CA"
+                    style={inputStyle()}
+                  />
+                </div>
+                <div>
+                  <label style={labelStyle()}>Type</label>
+                  <select
+                    value={locationType()}
+                    onChange={(e) =>
+                      setLocationType(e.currentTarget.value as 'remote' | 'hybrid' | 'onsite' | '')
+                    }
+                    style={{
+                      ...inputStyle(),
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <option value="">Not specified</option>
+                    <option value="remote">Remote</option>
+                    <option value="hybrid">Hybrid</option>
+                    <option value="onsite">On-site</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Salary Section */}
+              <div
+                style={{
+                  padding: '16px',
+                  background: 'rgba(255, 255, 255, 0.02)',
+                  border: `1px solid ${theme().colors.border}`,
+                  'border-radius': '10px',
+                }}
+              >
+                <label style={{ ...labelStyle(), 'margin-bottom': '12px' }}>Salary</label>
+
+                <div style={{ 'margin-bottom': '12px' }}>
+                  <label
+                    style={{
+                      display: 'flex',
+                      'align-items': 'center',
+                      gap: '8px',
+                      cursor: 'pointer',
+                      'font-size': '13px',
+                      'font-family': "'Space Grotesk', system-ui, sans-serif",
+                      color: theme().colors.text,
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={salaryIsRange()}
+                      onChange={(e) => setSalaryIsRange(e.currentTarget.checked)}
+                      style={{ cursor: 'pointer' }}
+                    />
+                    Salary Range
+                  </label>
+                </div>
+
+                <div style={{ display: 'grid', gap: '12px' }}>
+                  <Show
+                    when={salaryIsRange()}
+                    fallback={
+                      <div>
+                        <label style={labelStyle()}>Amount</label>
+                        <div style={{ position: 'relative' }}>
+                          <span
+                            style={{
+                              position: 'absolute',
+                              left: '14px',
+                              top: '50%',
+                              transform: 'translateY(-50%)',
+                              color: theme().colors.textMuted,
+                              'font-size': '14px',
+                              'pointer-events': 'none',
+                            }}
+                          >
+                            {getCurrencySymbol(salaryCurrency())}
+                          </span>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            value={salarySingle()}
+                            onInput={(e) => {
+                              const formatted = formatNumberForInput(e.currentTarget.value);
+                              setSalarySingle(formatted);
+                            }}
+                            placeholder="e.g., 120,000"
+                            style={{ ...inputStyle(), 'padding-left': '36px' }}
+                          />
+                        </div>
+                      </div>
+                    }
+                  >
+                    <div
+                      style={{ display: 'grid', 'grid-template-columns': '1fr 1fr', gap: '12px' }}
+                    >
+                      <div>
+                        <label style={labelStyle()}>Min</label>
+                        <div style={{ position: 'relative' }}>
+                          <span
+                            style={{
+                              position: 'absolute',
+                              left: '14px',
+                              top: '50%',
+                              transform: 'translateY(-50%)',
+                              color: theme().colors.textMuted,
+                              'font-size': '14px',
+                              'pointer-events': 'none',
+                            }}
+                          >
+                            {getCurrencySymbol(salaryCurrency())}
+                          </span>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            value={salaryMin()}
+                            onInput={(e) => {
+                              const formatted = formatNumberForInput(e.currentTarget.value);
+                              setSalaryMin(formatted);
+                            }}
+                            placeholder="e.g., 100,000"
+                            style={{ ...inputStyle(), 'padding-left': '36px' }}
+                          />
+                        </div>
+                      </div>
+                      <div>
+                        <label style={labelStyle()}>Max</label>
+                        <div style={{ position: 'relative' }}>
+                          <span
+                            style={{
+                              position: 'absolute',
+                              left: '14px',
+                              top: '50%',
+                              transform: 'translateY(-50%)',
+                              color: theme().colors.textMuted,
+                              'font-size': '14px',
+                              'pointer-events': 'none',
+                            }}
+                          >
+                            {getCurrencySymbol(salaryCurrency())}
+                          </span>
+                          <input
+                            type="text"
+                            inputMode="numeric"
+                            value={salaryMax()}
+                            onInput={(e) => {
+                              const formatted = formatNumberForInput(e.currentTarget.value);
+                              setSalaryMax(formatted);
+                            }}
+                            placeholder="e.g., 140,000"
+                            style={{ ...inputStyle(), 'padding-left': '36px' }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </Show>
+
+                  <div style={{ display: 'grid', 'grid-template-columns': '1fr 1fr', gap: '12px' }}>
+                    <div>
+                      <label style={labelStyle()}>Currency</label>
+                      <select
+                        value={salaryCurrency()}
+                        onChange={(e) => setSalaryCurrency(e.currentTarget.value)}
+                        style={{
+                          ...inputStyle(),
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <option value="USD">USD ($)</option>
+                        <option value="EUR">EUR (€)</option>
+                        <option value="GBP">GBP (£)</option>
+                        <option value="CAD">CAD ($)</option>
+                        <option value="AUD">AUD ($)</option>
+                        <option value="JPY">JPY (¥)</option>
+                        <option value="INR">INR (₹)</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style={labelStyle()}>Period</label>
+                      <select
+                        value={salaryPeriod()}
+                        onChange={(e) =>
+                          setSalaryPeriod(e.currentTarget.value as 'hourly' | 'annual')
+                        }
+                        style={{
+                          ...inputStyle(),
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <option value="annual">Annual</option>
+                        <option value="hourly">Hourly</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label style={labelStyle()}>Department</label>
+                <input
+                  type="text"
+                  value={department()}
+                  onInput={(e) => setDepartment(e.currentTarget.value)}
+                  placeholder="e.g., Engineering, Sales, Marketing"
+                  style={inputStyle()}
+                />
+              </div>
+
+              {/* Applied Date & Time */}
+              <div>
+                <label style={labelStyle()}>Application Date & Time</label>
+                <div style={{ display: 'grid', 'grid-template-columns': '2fr 1fr', gap: '12px' }}>
+                  <div>
+                    <input
+                      type="date"
+                      value={appliedAtDate()}
+                      onInput={(e) => setAppliedAtDate(e.currentTarget.value)}
+                      style={inputStyle()}
+                    />
+                  </div>
+                  <div>
+                    <input
+                      type="time"
+                      value={appliedAtTime()}
+                      onInput={(e) => setAppliedAtTime(e.currentTarget.value)}
+                      style={inputStyle()}
+                    />
+                  </div>
+                </div>
+                <p
+                  style={{
+                    margin: '6px 0 0',
+                    'font-size': '11px',
+                    color: theme().colors.textMuted,
+                    'font-family': "'Space Grotesk', system-ui, sans-serif",
+                  }}
+                >
+                  Leave blank if not yet applied. Time defaults to 12:00 PM.
+                </p>
               </div>
 
               <div>

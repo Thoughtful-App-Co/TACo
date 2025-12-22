@@ -7,13 +7,7 @@
 
 import { Component, createSignal, createEffect, Show, For } from 'solid-js';
 import { liquidAugment, pipelineAnimations } from '../theme/liquid-augment';
-import {
-  IconGrid,
-  IconTrendingUp,
-  IconSettings,
-  IconChevronLeft,
-  IconChevronRight,
-} from '../ui/Icons';
+import { IconGrid, IconTrendingUp, IconSettings } from '../ui/Icons';
 import { Tooltip } from '../ui';
 
 export type ProspectSection = 'dashboard' | 'pipeline' | 'insights' | 'settings';
@@ -73,6 +67,40 @@ const NAV_ITEMS: NavItem[] = [
     ariaLabel: 'Settings - Criteria and preferences',
   },
 ];
+
+// Sidebar toggle icons
+const IconSidebarOpen: Component<{ size?: number; color?: string }> = (props) => (
+  <svg
+    width={props.size || 20}
+    height={props.size || 20}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={props.color || 'currentColor'}
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+    <line x1="9" y1="3" x2="9" y2="21" />
+  </svg>
+);
+
+const IconSidebarClose: Component<{ size?: number; color?: string }> = (props) => (
+  <svg
+    width={props.size || 20}
+    height={props.size || 20}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={props.color || 'currentColor'}
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+    <line x1="9" y1="3" x2="9" y2="21" />
+    <polyline points="14 9 17 12 14 15" />
+  </svg>
+);
 
 const STORAGE_KEY = 'prospect_sidebar_collapsed';
 
@@ -155,49 +183,45 @@ export const ProspectSidebar: Component<ProspectSidebarProps> = (props) => {
             </div>
           </Show>
 
-          <Show when={isCollapsed()}>
-            <div style={{ display: 'flex', 'justify-content': 'center' }}>
-              <IconGrid size={24} color={theme().colors.primary} />
-            </div>
-          </Show>
-
           {/* Toggle Button */}
-          <button
-            onClick={toggleCollapse}
-            aria-label={isCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'}
-            style={{
-              display: 'flex',
-              'align-items': 'center',
-              'justify-content': 'center',
-              width: '32px',
-              height: '32px',
-              padding: '6px',
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: `1px solid ${theme().colors.border}`,
-              'border-radius': '8px',
-              color: theme().colors.textMuted,
-              cursor: 'pointer',
-              transition: `all ${pipelineAnimations.fast}`,
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
-              e.currentTarget.style.color = theme().colors.text;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-              e.currentTarget.style.color = theme().colors.textMuted;
-            }}
+          <Tooltip
+            content={isCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'}
+            position="right"
+            delay={200}
           >
-            <div
+            <button
+              onClick={toggleCollapse}
+              aria-label={isCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'}
               style={{
                 display: 'flex',
-                transform: isCollapsed() ? 'rotate(180deg)' : 'rotate(0deg)',
-                transition: `transform ${pipelineAnimations.normal}`,
+                'align-items': 'center',
+                'justify-content': 'center',
+                width: '36px',
+                height: '36px',
+                padding: '8px',
+                background: 'transparent',
+                border: `1px solid ${theme().colors.border}`,
+                'border-radius': '8px',
+                color: theme().colors.textMuted,
+                cursor: 'pointer',
+                transition: `all ${pipelineAnimations.fast}`,
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                e.currentTarget.style.borderColor = theme().colors.primary;
+                e.currentTarget.style.color = theme().colors.primary;
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.borderColor = theme().colors.border;
+                e.currentTarget.style.color = theme().colors.textMuted;
               }}
             >
-              <IconChevronLeft size={16} />
-            </div>
-          </button>
+              <Show when={isCollapsed()} fallback={<IconSidebarOpen size={18} />}>
+                <IconSidebarClose size={18} />
+              </Show>
+            </button>
+          </Tooltip>
         </div>
 
         {/* Navigation Items */}
@@ -291,52 +315,6 @@ export const ProspectSidebar: Component<ProspectSidebarProps> = (props) => {
             }}
           </For>
         </nav>
-
-        {/* Collapse Toggle */}
-        <div
-          style={{
-            padding: '12px 8px',
-            'border-top': `1px solid ${theme().colors.border}`,
-          }}
-        >
-          <Tooltip
-            content={isCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'}
-            position="right"
-            delay={200}
-          >
-            <button
-              onClick={toggleCollapse}
-              aria-label={isCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'}
-              style={{
-                width: '100%',
-                display: 'flex',
-                'align-items': 'center',
-                'justify-content': 'center',
-                padding: '10px',
-                background: 'transparent',
-                border: `1px solid ${theme().colors.border}`,
-                'border-radius': '8px',
-                color: theme().colors.textMuted,
-                cursor: 'pointer',
-                transition: `all ${pipelineAnimations.fast}`,
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                e.currentTarget.style.borderColor = theme().colors.primary;
-                e.currentTarget.style.color = theme().colors.primary;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.borderColor = theme().colors.border;
-                e.currentTarget.style.color = theme().colors.textMuted;
-              }}
-            >
-              <Show when={isCollapsed()} fallback={<IconChevronLeft size={18} />}>
-                <IconChevronRight size={18} />
-              </Show>
-            </button>
-          </Tooltip>
-        </div>
       </aside>
     </>
   );
