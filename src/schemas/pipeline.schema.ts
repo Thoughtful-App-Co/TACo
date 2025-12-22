@@ -148,14 +148,26 @@ export const DEFAULT_CRITERIA: UserCriterion[] = [
 // USER RESUME / PROFILE
 // ============================================================================
 
+// Import types from prepare schema for enhanced experience tracking
+// Note: Actual Project and QuantifiableMetric types defined in prepare.schema.ts
 export interface WorkExperience {
   id: string;
   company: string;
   title: string;
   startDate: Date;
   endDate?: Date; // null = current
+  location?: string;
+  locationType?: 'remote' | 'hybrid' | 'onsite';
   description: string;
   elaboration?: string; // User's deeper write-up
+
+  // Enhanced for Prepare module
+  projects?: any[]; // Project[] from prepare.schema.ts
+  metrics?: any[]; // QuantifiableMetric[] from prepare.schema.ts
+  bulletPoints?: string[]; // AI-generated or manually crafted
+  rawBullets?: string[]; // Original from uploaded resume
+
+  // Existing fields
   skills: string[];
   achievements: string[];
 }
@@ -255,15 +267,21 @@ export interface PipelineSyncData {
 // ============================================================================
 
 export interface FeatureFlags {
-  showMatches: boolean;
-  showPipeline: boolean;
+  showDiscover: boolean; // RIASEC assessment module
+  showPrepare: boolean; // Resume builder module
+  showProspect: boolean; // Job tracking pipeline (renamed from showPipeline)
+  showProsper: boolean; // Career journal module
+  showMatches: boolean; // Deprecated - career matches (sunset)
   enableSync: boolean;
   enableAI: boolean;
 }
 
 export const DEFAULT_FEATURE_FLAGS: FeatureFlags = {
-  showMatches: false, // Sunset for now
-  showPipeline: true,
+  showDiscover: true,
+  showPrepare: true,
+  showProspect: true,
+  showProsper: true,
+  showMatches: false, // Sunset
   enableSync: true,
   enableAI: true,
 };
