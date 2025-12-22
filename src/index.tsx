@@ -3,6 +3,11 @@ import { render } from 'solid-js/web';
 import { Router, Route } from '@solidjs/router';
 import { App, LandingPage, AppPage } from './App';
 
+// Configure PDF.js worker globally
+// This must be done before any PDF parsing occurs
+import * as pdfjsLib from 'pdfjs-dist';
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+
 // Global styles
 const globalStyles = document.createElement('style');
 globalStyles.textContent = `
@@ -164,7 +169,8 @@ if (root) {
     () => (
       <Router root={App}>
         <Route path="/" component={LandingPage} />
-        <Route path="/:appId" component={AppPage} />
+        {/* All app routes - :appId handles base path, /* captures any sub-paths */}
+        <Route path="/:appId/*" component={AppPage} />
       </Router>
     ),
     root
