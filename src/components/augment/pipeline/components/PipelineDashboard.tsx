@@ -19,6 +19,7 @@ import {
   PipelineColumnTooltipContent,
   ApplicationTooltipContent,
 } from '../ui';
+import { AggregationAccordion } from '../ui/AggregationAccordion';
 import {
   IconGrid,
   IconList,
@@ -44,6 +45,7 @@ import {
   STATUS_LABELS,
   daysSince,
 } from '../../../../schemas/pipeline.schema';
+import { formatSalary } from '../utils/salary';
 
 interface PipelineDashboardProps {
   currentTheme: () => Partial<typeof liquidAugment> & typeof liquidAugment;
@@ -95,6 +97,22 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
   });
 
   const followUpsDue = createMemo(() => pipelineStore.getFollowUpsDue());
+
+  // Aggregation data
+  const aggregationMode = () => pipelineStore.state.aggregationMode;
+  const groupedApplications = createMemo(() => {
+    const mode = aggregationMode();
+    if (mode === 'none') return null;
+
+    if (mode === 'company') {
+      return pipelineStore.getApplicationsGroupedByCompany();
+    } else if (mode === 'position') {
+      return pipelineStore.getApplicationsGroupedByPosition();
+    } else if (mode === 'salary') {
+      return pipelineStore.getApplicationsGroupedBySalary();
+    }
+    return null;
+  });
 
   // Columns to display (includes archive when toggled)
   const displayedStatuses = createMemo(() => {
@@ -153,6 +171,23 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
 
     return result;
   });
+
+  // State for collapsible status groups in list view
+  const [collapsedStatuses, setCollapsedStatuses] = createSignal<Set<ApplicationStatus>>(new Set());
+
+  const toggleStatusCollapse = (status: ApplicationStatus) => {
+    setCollapsedStatuses((prev) => {
+      const next = new Set(prev);
+      if (next.has(status)) {
+        next.delete(status);
+      } else {
+        next.add(status);
+      }
+      return next;
+    });
+  };
+
+  const isStatusCollapsed = (status: ApplicationStatus) => collapsedStatuses().has(status);
 
   // Calculate conversion rates between stages
   const conversionRates = createMemo(() => {
@@ -258,15 +293,18 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
     <div>
       {/* Stats Overview with Tooltips */}
 
-      {/* View Toggle */}
+      {/* View Toggle & Aggregation Filter */}
       <div
         style={{
           display: 'flex',
           'justify-content': 'space-between',
           'align-items': 'center',
           'margin-bottom': '24px',
+          gap: '16px',
+          'flex-wrap': 'wrap',
         }}
       >
+        {/* Left: View Mode Toggle */}
         <div
           style={{
             display: 'flex',
@@ -342,7 +380,49 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
           </button>
         </div>
 
-        {/* Archive Filter Toggle */}
+        {/* Center: Aggregation Dropdown */}
+        <div style={{ display: 'flex', 'align-items': 'center', gap: '12px' }}>
+          <label
+            style={{
+              'font-size': '13px',
+              'font-family': "'Space Grotesk', system-ui, sans-serif",
+              'font-weight': '500',
+              color: theme().colors.textMuted,
+            }}
+          >
+            Group by:
+          </label>
+          <select
+            value={pipelineStore.state.aggregationMode}
+            onChange={(e) =>
+              pipelineStore.setAggregationMode(
+                e.currentTarget.value as 'none' | 'company' | 'position' | 'salary'
+              )
+            }
+            style={{
+              padding: '10px 16px',
+              background: 'linear-gradient(135deg, rgba(15, 15, 18, 0.95), rgba(10, 10, 12, 0.98))',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              'border-radius': '10px',
+              color: theme().colors.text,
+              'font-size': '13px',
+              'font-family': "'Space Grotesk', system-ui, sans-serif",
+              'font-weight': '500',
+              cursor: 'pointer',
+              outline: 'none',
+              transition: `all ${pipelineAnimations.fast}`,
+              'box-shadow':
+                'inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 4px 12px rgba(0, 0, 0, 0.2)',
+            }}
+          >
+            <option value="none">None</option>
+            <option value="company">Company</option>
+            <option value="position">Position</option>
+            <option value="salary">Salary</option>
+          </select>
+        </div>
+
+        {/* Right: Archive Filter Toggle */}
         <button
           class="pipeline-btn"
           onClick={() => setShowArchive(!showArchive())}
@@ -516,65 +596,450 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
         </FluidCard>
       </Show>
 
-      {/* Kanban View */}
+      {/* Kanban View - with or without aggregation */}
       <Show when={applications().length > 0 && viewMode() === 'kanban'}>
-        <div
-          style={{
-            display: 'grid',
-            'grid-template-columns': `repeat(${displayedStatuses().length}, 280px)`,
-            gap: '16px',
-            'overflow-x': 'auto',
-            'overflow-y': 'visible',
-            'padding-bottom': '16px',
-          }}
+        <Show
+          when={aggregationMode() !== 'none' && groupedApplications()}
+          fallback={
+            <div
+              style={{
+                display: 'grid',
+                'grid-template-columns': `repeat(${displayedStatuses().length}, 280px)`,
+                gap: '16px',
+                'overflow-x': 'auto',
+                'overflow-y': 'visible',
+                'padding-bottom': '16px',
+              }}
+            >
+              <For each={displayedStatuses()}>
+                {(status) => (
+                  <PipelineColumn
+                    status={status}
+                    applications={applicationsByStatus()[status]}
+                    theme={theme}
+                    onSelectJob={props.onSelectJob}
+                    onStatusChange={handleStatusChange}
+                    avgDays={avgDaysInStatus()[status]}
+                    conversionRate={
+                      status === 'applied'
+                        ? conversionRates().toInterview
+                        : status === 'interviewing'
+                          ? conversionRates().toOffer
+                          : null
+                    }
+                    oldestDays={oldestInStatus()[status]}
+                    draggedAppId={draggedAppId()}
+                    isDragOver={dragOverStatus() === status}
+                    onDragOver={() => setDragOverStatus(status)}
+                    onDragLeave={() => setDragOverStatus(null)}
+                    onDrop={(appId) => {
+                      handleStatusChange(appId, status);
+                      setDraggedAppId(null);
+                      setDragOverStatus(null);
+                    }}
+                    onCardDragStart={setDraggedAppId}
+                    onCardDragEnd={() => setDraggedAppId(null)}
+                  />
+                )}
+              </For>
+            </div>
+          }
         >
-          <For each={displayedStatuses()}>
-            {(status) => (
-              <PipelineColumn
-                status={status}
-                applications={applicationsByStatus()[status]}
-                theme={theme}
-                onSelectJob={props.onSelectJob}
-                onStatusChange={handleStatusChange}
-                avgDays={avgDaysInStatus()[status]}
-                conversionRate={
-                  status === 'applied'
-                    ? conversionRates().toInterview
-                    : status === 'interviewing'
-                      ? conversionRates().toOffer
-                      : null
-                }
-                oldestDays={oldestInStatus()[status]}
-                draggedAppId={draggedAppId()}
-                isDragOver={dragOverStatus() === status}
-                onDragOver={() => setDragOverStatus(status)}
-                onDragLeave={() => setDragOverStatus(null)}
-                onDrop={(appId) => {
-                  handleStatusChange(appId, status);
-                  setDraggedAppId(null);
-                  setDragOverStatus(null);
-                }}
-                onCardDragStart={setDraggedAppId}
-                onCardDragEnd={() => setDraggedAppId(null)}
-              />
-            )}
-          </For>
-        </div>
+          {/* Aggregated Board View - Mini Kanban per Group */}
+          <div style={{ display: 'flex', 'flex-direction': 'column', gap: '16px' }}>
+            <For each={Array.from(groupedApplications()!.entries())}>
+              {([groupName, apps]) => {
+                // Group apps within this aggregate by status
+                const appsByStatus = () => {
+                  const grouped: Record<ApplicationStatus, JobApplication[]> = {
+                    saved: [],
+                    applied: [],
+                    screening: [],
+                    interviewing: [],
+                    offered: [],
+                    accepted: [],
+                    rejected: [],
+                    withdrawn: [],
+                  };
+                  for (const app of apps) {
+                    grouped[app.status].push(app);
+                  }
+                  return grouped;
+                };
+
+                // Only show statuses that have apps (plus active statuses)
+                const relevantStatuses = () => {
+                  return ACTIVE_STATUSES.filter((status) => appsByStatus()[status].length > 0);
+                };
+
+                return (
+                  <AggregationAccordion
+                    title={groupName}
+                    count={apps.length}
+                    currentTheme={props.currentTheme}
+                    accentColor={theme().colors.primary}
+                  >
+                    <div
+                      style={{
+                        display: 'grid',
+                        'grid-template-columns': `repeat(${Math.max(relevantStatuses().length, 1)}, minmax(200px, 1fr))`,
+                        gap: '12px',
+                        'overflow-x': 'auto',
+                        'padding-bottom': '8px',
+                      }}
+                    >
+                      <For each={relevantStatuses()}>
+                        {(status) => {
+                          const statusApps = appsByStatus()[status];
+                          const colors = statusColors[status];
+                          return (
+                            <div
+                              style={{
+                                background: 'rgba(20, 20, 25, 0.6)',
+                                'border-radius': '10px',
+                                padding: '12px',
+                                'min-height': '100px',
+                                border: `1px solid ${colors.border}`,
+                              }}
+                            >
+                              {/* Mini column header */}
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  'align-items': 'center',
+                                  'justify-content': 'space-between',
+                                  'margin-bottom': '10px',
+                                  padding: '6px 10px',
+                                  background: colors.bg,
+                                  'border-radius': '6px',
+                                }}
+                              >
+                                <span
+                                  style={{
+                                    'font-size': '12px',
+                                    'font-weight': '600',
+                                    color: colors.text,
+                                  }}
+                                >
+                                  {STATUS_LABELS[status]}
+                                </span>
+                                <span
+                                  style={{
+                                    'font-size': '11px',
+                                    'font-weight': '700',
+                                    color: colors.text,
+                                    padding: '2px 8px',
+                                    background: `${colors.text}20`,
+                                    'border-radius': '8px',
+                                  }}
+                                >
+                                  {statusApps.length}
+                                </span>
+                              </div>
+                              {/* Cards in this status */}
+                              <div
+                                style={{ display: 'flex', 'flex-direction': 'column', gap: '8px' }}
+                              >
+                                <For each={statusApps}>
+                                  {(app) => (
+                                    <ApplicationCard
+                                      application={app}
+                                      theme={theme}
+                                      onClick={() => props.onSelectJob(app)}
+                                      statusColor={colors.text}
+                                      isDragging={draggedAppId() === app.id}
+                                      onDragStart={() => setDraggedAppId(app.id)}
+                                      onDragEnd={() => setDraggedAppId(null)}
+                                    />
+                                  )}
+                                </For>
+                              </div>
+                            </div>
+                          );
+                        }}
+                      </For>
+                    </div>
+                  </AggregationAccordion>
+                );
+              }}
+            </For>
+          </div>
+        </Show>
       </Show>
 
-      {/* List View */}
+      {/* List View - with or without aggregation */}
       <Show when={applications().length > 0 && viewMode() === 'list'}>
-        <div style={{ display: 'flex', 'flex-direction': 'column', gap: '12px' }}>
-          <For each={applications()}>
-            {(app) => (
-              <ApplicationRow
-                application={app}
-                theme={theme}
-                onClick={() => props.onSelectJob(app)}
-              />
-            )}
-          </For>
-        </div>
+        <Show
+          when={aggregationMode() !== 'none' && groupedApplications()}
+          fallback={
+            /* Grouped by status list view */
+            <div style={{ display: 'flex', 'flex-direction': 'column', gap: '24px' }}>
+              <For each={displayedStatuses()}>
+                {(status) => {
+                  const apps = displayApplicationsByStatus()[status];
+                  const colors = statusColors[status];
+                  return (
+                    <Show when={apps.length > 0}>
+                      <div>
+                        {/* Status Header - styled like kanban column headers */}
+                        <div
+                          onClick={() => toggleStatusCollapse(status)}
+                          style={{
+                            display: 'flex',
+                            'align-items': 'center',
+                            gap: '10px',
+                            padding: '12px 16px',
+                            background: `linear-gradient(135deg, ${colors.bg}, ${colors.bg.replace('0.15', '0.08')})`,
+                            'border-radius': '12px',
+                            border: `1px solid ${colors.border}`,
+                            'margin-bottom': '12px',
+                            position: 'relative',
+                            overflow: 'hidden',
+                            cursor: 'pointer',
+                            transition: `all ${pipelineAnimations.fast}`,
+                          }}
+                        >
+                          {/* Subtle shine effect */}
+                          <div
+                            style={{
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              right: 0,
+                              height: '1px',
+                              background: `linear-gradient(90deg, transparent, ${colors.text}30, transparent)`,
+                            }}
+                          />
+
+                          {/* Status Icon */}
+                          <div
+                            style={{
+                              width: '22px',
+                              height: '22px',
+                              display: 'flex',
+                              'align-items': 'center',
+                              'justify-content': 'center',
+                              color: colors.text,
+                            }}
+                          >
+                            {status === 'saved' && (
+                              <svg
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                              >
+                                <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                              </svg>
+                            )}
+                            {status === 'applied' && (
+                              <svg
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                              >
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                                <polyline points="22 4 12 14.01 9 11.01" />
+                              </svg>
+                            )}
+                            {status === 'screening' && (
+                              <svg
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                              >
+                                <circle cx="11" cy="11" r="8" />
+                                <path d="m21 21-4.35-4.35" />
+                              </svg>
+                            )}
+                            {status === 'interviewing' && (
+                              <svg
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                              >
+                                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                                <circle cx="9" cy="7" r="4" />
+                                <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                                <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                              </svg>
+                            )}
+                            {status === 'offered' && (
+                              <svg
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                              >
+                                <polyline points="20 6 9 17 4 12" />
+                              </svg>
+                            )}
+                            {status === 'accepted' && (
+                              <svg
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                              >
+                                <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                              </svg>
+                            )}
+                            {(status === 'rejected' || status === 'withdrawn') && (
+                              <svg
+                                width="16"
+                                height="16"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                              >
+                                <circle cx="12" cy="12" r="10" />
+                                <line x1="15" y1="9" x2="9" y2="15" />
+                                <line x1="9" y1="9" x2="15" y2="15" />
+                              </svg>
+                            )}
+                          </div>
+
+                          {/* Status Label */}
+                          <span
+                            style={{
+                              'font-size': '14px',
+                              'font-family': "'Space Grotesk', system-ui, sans-serif",
+                              'font-weight': '600',
+                              'letter-spacing': '0.02em',
+                              color: colors.text,
+                            }}
+                          >
+                            {STATUS_LABELS[status]}
+                          </span>
+
+                          {/* Chevron Icon */}
+                          <div
+                            style={{
+                              'margin-left': 'auto',
+                              display: 'flex',
+                              'align-items': 'center',
+                              transition: `transform ${pipelineAnimations.fast}`,
+                              transform: isStatusCollapsed(status)
+                                ? 'rotate(-90deg)'
+                                : 'rotate(0deg)',
+                            }}
+                          >
+                            <svg
+                              width="16"
+                              height="16"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                            >
+                              <polyline points="6 9 12 15 18 9" />
+                            </svg>
+                          </div>
+
+                          {/* Count Badge */}
+                          <span
+                            style={{
+                              padding: '4px 12px',
+                              background: `${colors.text}20`,
+                              'border-radius': '10px',
+                              'font-size': '13px',
+                              'font-family': "'Space Grotesk', system-ui, sans-serif",
+                              color: colors.text,
+                              'font-weight': '700',
+                            }}
+                          >
+                            {apps.length}
+                          </span>
+                        </div>
+
+                        {/* Application rows under this status */}
+                        <Show when={!isStatusCollapsed(status)}>
+                          <div
+                            style={{
+                              display: 'flex',
+                              'flex-direction': 'column',
+                              gap: '10px',
+                              'padding-left': '8px',
+                            }}
+                          >
+                            <For each={apps}>
+                              {(app) => (
+                                <ApplicationRow
+                                  application={app}
+                                  theme={theme}
+                                  onClick={() => props.onSelectJob(app)}
+                                  hideStatusBadge={true}
+                                />
+                              )}
+                            </For>
+                          </div>
+                        </Show>
+                      </div>
+                    </Show>
+                  );
+                }}
+              </For>
+            </div>
+          }
+        >
+          {/* Aggregated List View */}
+          <div style={{ display: 'flex', 'flex-direction': 'column', gap: '16px' }}>
+            <For each={Array.from(groupedApplications()!.entries())}>
+              {([groupName, apps]) => (
+                <AggregationAccordion
+                  title={groupName}
+                  count={apps.length}
+                  currentTheme={props.currentTheme}
+                  accentColor={theme().colors.primary}
+                >
+                  <div style={{ display: 'flex', 'flex-direction': 'column', gap: '12px' }}>
+                    <For each={apps}>
+                      {(app) => (
+                        <ApplicationRow
+                          application={app}
+                          theme={theme}
+                          onClick={() => props.onSelectJob(app)}
+                        />
+                      )}
+                    </For>
+                  </div>
+                </AggregationAccordion>
+              )}
+            </For>
+          </div>
+        </Show>
       </Show>
     </div>
   );
@@ -766,80 +1231,199 @@ const PipelineColumn: Component<PipelineColumnProps> = (props) => {
         transition: 'all 0.2s ease',
       }}
     >
-      {/* Column Header with Tooltip */}
-      <Tooltip
-        content={
-          <PipelineColumnTooltipContent
-            status={STATUS_LABELS[props.status]}
-            count={props.applications.length}
-            avgDaysInStage={props.avgDays}
-            conversionRate={props.conversionRate}
-            dropOffRate={null}
-            oldestDays={props.oldestDays}
-            accentColor={colors().text}
-          />
-        }
-        position="bottom"
-        maxWidth={240}
-      >
-        <div
-          class="column-header"
-          style={{
-            display: 'flex',
-            'align-items': 'center',
-            'justify-content': 'space-between',
-            gap: '14px',
-            'margin-bottom': '14px',
-            padding: '12px 16px',
-            background: `linear-gradient(135deg, ${colors().bg}, ${colors().bg.replace('0.15', '0.08')})`,
-            'border-radius': '10px',
-            border: `1px solid ${colors().border}`,
-            position: 'relative',
-            overflow: 'hidden',
-            cursor: 'default',
-          }}
+      {/* Column Header with Definition Tooltip */}
+      <div style={{ 'margin-bottom': '14px' }}>
+        <Tooltip
+          content={<StageDefinitionTooltip status={props.status} accentColor={colors().text} />}
+          position="top"
+          maxWidth={280}
         >
-          {/* Subtle shine effect */}
           <div
+            class="column-header"
             style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              right: 0,
-              height: '1px',
-              background: `linear-gradient(90deg, transparent, ${colors().text}30, transparent)`,
-            }}
-          />
-          <span
-            style={{
-              'font-size': '13px',
-              'font-family': "'Space Grotesk', system-ui, sans-serif",
-              'font-weight': '600',
-              'letter-spacing': '0.02em',
-              color: colors().text,
-              flex: '1',
+              display: 'flex',
+              'align-items': 'center',
+              gap: '8px',
+              padding: '10px 12px',
+              background: `linear-gradient(135deg, ${colors().bg}, ${colors().bg.replace('0.15', '0.08')})`,
+              'border-radius': '10px',
+              border: `1px solid ${colors().border}`,
+              position: 'relative',
+              overflow: 'hidden',
+              cursor: 'help',
+              width: '100%',
+              'box-sizing': 'border-box',
             }}
           >
-            {STATUS_LABELS[props.status]}
-          </span>
-          <span
-            style={{
-              padding: '5px 12px',
-              background: `${colors().text}20`,
-              'border-radius': '12px',
-              'font-size': '13px',
-              'font-family': "'Space Grotesk', system-ui, sans-serif",
-              color: colors().text,
-              'font-weight': '700',
-              'min-width': '28px',
-              'text-align': 'center',
-              'flex-shrink': '0',
-            }}
-          >
-            {props.applications.length}
-          </span>
-        </div>
-      </Tooltip>
+            {/* Subtle shine effect */}
+            <div
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                height: '1px',
+                background: `linear-gradient(90deg, transparent, ${colors().text}30, transparent)`,
+              }}
+            />
+
+            {/* Status Icon */}
+            <div
+              style={{
+                width: '20px',
+                height: '20px',
+                'flex-shrink': '0',
+                display: 'flex',
+                'align-items': 'center',
+                'justify-content': 'center',
+                color: colors().text,
+              }}
+            >
+              {props.status === 'saved' && (
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
+                </svg>
+              )}
+              {props.status === 'applied' && (
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                  <polyline points="22 4 12 14.01 9 11.01" />
+                </svg>
+              )}
+              {props.status === 'screening' && (
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <circle cx="11" cy="11" r="8" />
+                  <path d="m21 21-4.35-4.35" />
+                </svg>
+              )}
+              {props.status === 'interviewing' && (
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                  <circle cx="9" cy="7" r="4" />
+                  <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                  <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                </svg>
+              )}
+              {props.status === 'offered' && (
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              )}
+              {props.status === 'accepted' && (
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                </svg>
+              )}
+              {(props.status === 'rejected' || props.status === 'withdrawn') && (
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="15" y1="9" x2="9" y2="15" />
+                  <line x1="9" y1="9" x2="15" y2="15" />
+                </svg>
+              )}
+            </div>
+
+            {/* Status Label */}
+            <span
+              style={{
+                'font-size': '13px',
+                'font-family': "'Space Grotesk', system-ui, sans-serif",
+                'font-weight': '600',
+                'letter-spacing': '0.02em',
+                color: colors().text,
+                flex: '1',
+                'min-width': '0',
+                overflow: 'hidden',
+                'text-overflow': 'ellipsis',
+                'white-space': 'nowrap',
+              }}
+            >
+              {STATUS_LABELS[props.status]}
+            </span>
+
+            {/* Count Badge */}
+            <span
+              style={{
+                padding: '4px 10px',
+                background: `${colors().text}20`,
+                'border-radius': '10px',
+                'font-size': '12px',
+                'font-family': "'Space Grotesk', system-ui, sans-serif",
+                color: colors().text,
+                'font-weight': '700',
+                'min-width': '24px',
+                'text-align': 'center',
+                'flex-shrink': '0',
+              }}
+            >
+              {props.applications.length}
+            </span>
+          </div>
+        </Tooltip>
+      </div>
 
       {/* Cards */}
       <div
@@ -924,9 +1508,12 @@ const ApplicationCard: Component<ApplicationCardProps> = (props) => {
           score={app().analysis?.overallScore}
           nextAction={nextAction()}
           accentColor={accentColor()}
+          salary={formatSalary(app().salary)}
+          location={app().location}
+          locationType={app().locationType}
         />
       }
-      position="right"
+      position="auto"
       delay={300}
       disabled={props.isDragging}
     >
@@ -952,63 +1539,70 @@ const ApplicationCard: Component<ApplicationCardProps> = (props) => {
             border: `1px solid rgba(255, 255, 255, 0.08)`,
           }}
         >
-          {/* Left accent bar */}
           <div
             style={{
-              position: 'absolute',
-              left: 0,
-              top: '8px',
-              bottom: '8px',
-              width: '3px',
-              background: `linear-gradient(180deg, ${accentColor()}, ${accentColor()}60)`,
-              'border-radius': '0 3px 3px 0',
-              opacity: 0.8,
+              'font-size': '16px',
+              'font-family': "'Space Grotesk', system-ui, sans-serif",
+              'font-weight': '700',
+              color: props.theme().colors.text,
+              'margin-bottom': '4px',
+              'white-space': 'nowrap',
+              overflow: 'hidden',
+              'text-overflow': 'ellipsis',
+              'line-height': '1.4',
             }}
-          />
-          <div style={{ 'padding-left': '8px' }}>
-            <div
-              style={{
-                'font-size': '16px',
-                'font-family': "'Space Grotesk', system-ui, sans-serif",
-                'font-weight': '700',
-                color: props.theme().colors.text,
-                'margin-bottom': '4px',
-                'white-space': 'nowrap',
-                overflow: 'hidden',
-                'text-overflow': 'ellipsis',
-                'line-height': '1.4',
-              }}
-            >
-              {app().roleName}
-            </div>
-            <div
-              style={{
-                'font-size': '14px',
-                'font-family': "'Space Grotesk', system-ui, sans-serif",
-                color: props.theme().colors.textMuted,
-                'margin-bottom': '12px',
-                'white-space': 'nowrap',
-                overflow: 'hidden',
-                'text-overflow': 'ellipsis',
-              }}
-            >
-              {app().companyName}
-            </div>
+          >
+            {app().roleName}
+          </div>
+          <div
+            style={{
+              'font-size': '14px',
+              'font-family': "'Space Grotesk', system-ui, sans-serif",
+              color: props.theme().colors.textMuted,
+              'margin-bottom': '8px',
+              'white-space': 'nowrap',
+              overflow: 'hidden',
+              'text-overflow': 'ellipsis',
+            }}
+          >
+            {app().companyName}
+          </div>
 
+          {/* Location icon */}
+          <Show when={app().location || app().locationType}>
             <div
               style={{
                 display: 'flex',
                 'align-items': 'center',
-                'justify-content': 'space-between',
-                gap: '8px',
+                gap: '6px',
+                'font-size': '12px',
+                color: props.theme().colors.textMuted,
               }}
             >
-              <AgingIndicator lastActivityAt={app().lastActivityAt} size="sm" />
-              <Show when={app().analysis?.overallScore}>
-                <ScoreBadge score={app().analysis!.overallScore} size="sm" />
-              </Show>
+              <svg
+                width="12"
+                height="12"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+              <span
+                style={{
+                  'white-space': 'nowrap',
+                  overflow: 'hidden',
+                  'text-overflow': 'ellipsis',
+                }}
+              >
+                {app().location || app().locationType}
+              </span>
             </div>
-          </div>
+          </Show>
         </FluidCard>
       </div>
     </Tooltip>
@@ -1019,6 +1613,7 @@ interface ApplicationRowProps {
   application: JobApplication;
   theme: () => typeof liquidAugment;
   onClick: () => void;
+  hideStatusBadge?: boolean;
 }
 
 const ApplicationRow: Component<ApplicationRowProps> = (props) => {
@@ -1050,9 +1645,12 @@ const ApplicationRow: Component<ApplicationRowProps> = (props) => {
           score={app().analysis?.overallScore}
           nextAction={nextAction()}
           accentColor={statusColor()}
+          salary={formatSalary(app().salary)}
+          location={app().location}
+          locationType={app().locationType}
         />
       }
-      position="left"
+      position="auto"
       delay={300}
     >
       <FluidCard
@@ -1114,16 +1712,40 @@ const ApplicationRow: Component<ApplicationRowProps> = (props) => {
           </div>
         </div>
 
-        {/* Status */}
-        <StatusBadge status={app().status} size="sm" />
-
-        {/* Score */}
-        <Show when={app().analysis?.overallScore}>
-          <ScoreBadge score={app().analysis!.overallScore} size="sm" />
+        {/* Location icon (if available) */}
+        <Show when={app().location || app().locationType}>
+          <div
+            style={{
+              display: 'flex',
+              'align-items': 'center',
+              gap: '6px',
+              padding: '6px 12px',
+              'font-size': '13px',
+              color: props.theme().colors.textMuted,
+              'white-space': 'nowrap',
+            }}
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
+            {app().location || app().locationType}
+          </div>
         </Show>
 
-        {/* Aging */}
-        <AgingIndicator lastActivityAt={app().lastActivityAt} size="sm" />
+        {/* Status - hidden in grouped list view */}
+        <Show when={!props.hideStatusBadge}>
+          <StatusBadge status={app().status} size="sm" />
+        </Show>
 
         {/* Hover arrow indicator */}
         <div
@@ -1152,6 +1774,91 @@ const ApplicationRow: Component<ApplicationRowProps> = (props) => {
         </div>
       </FluidCard>
     </Tooltip>
+  );
+};
+
+// ============================================================================
+// STAGE DEFINITION TOOLTIP - Explains what each stage means
+// ============================================================================
+
+interface StageDefinitionTooltipProps {
+  status: ApplicationStatus;
+  accentColor: string;
+}
+
+const StageDefinitionTooltip: Component<StageDefinitionTooltipProps> = (props) => {
+  const definitions: Record<ApplicationStatus, { title: string; definition: string }> = {
+    saved: {
+      title: 'Saved',
+      definition: "Jobs you've bookmarked for future consideration. Not yet applied.",
+    },
+    applied: {
+      title: 'Applied',
+      definition: 'Application has been submitted. Waiting for initial response from the company.',
+    },
+    screening: {
+      title: 'Screening',
+      definition:
+        'Initial contact or conversations with recruiter/hiring manager. Not yet a formal interview.',
+    },
+    interviewing: {
+      title: 'Interviewing',
+      definition:
+        'In the official interview process. May include phone screens, technical assessments, or panel interviews.',
+    },
+    offered: {
+      title: 'Offered',
+      definition:
+        'Company has extended a formal job offer. Reviewing terms and negotiating if needed.',
+    },
+    accepted: {
+      title: 'Accepted',
+      definition: "You've accepted the offer. Congratulations! 🎉",
+    },
+    rejected: {
+      title: 'Rejected',
+      definition: 'Company declined to move forward. Consider following up for feedback.',
+    },
+    withdrawn: {
+      title: 'Withdrawn',
+      definition: 'You chose to withdraw from consideration for this role.',
+    },
+  };
+
+  const info = () => definitions[props.status];
+
+  return (
+    <div
+      style={{
+        padding: '12px 14px',
+        display: 'flex',
+        'flex-direction': 'column',
+        gap: '8px',
+      }}
+    >
+      <div
+        style={{
+          'font-size': '13px',
+          'font-family': "'Space Grotesk', system-ui, sans-serif",
+          'font-weight': '700',
+          color: props.accentColor,
+          'letter-spacing': '0.02em',
+          'text-transform': 'uppercase',
+        }}
+      >
+        {info().title}
+      </div>
+      <div
+        style={{
+          'font-size': '13px',
+          'font-family': "'Space Grotesk', system-ui, sans-serif",
+          'line-height': '1.5',
+          color: 'rgba(255, 255, 255, 0.85)',
+        }}
+      >
+        {info().definition}
+      </div>
+    </div>
   );
 };
 
