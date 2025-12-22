@@ -7,6 +7,7 @@
 import { Component, createSignal, Show } from 'solid-js';
 import { prepareStore } from './store';
 import { ResumeUploader } from './components/ResumeUploader';
+import { IconTrash } from '../pipeline/ui/Icons';
 
 interface PrepareAppProps {
   currentTheme: () => {
@@ -36,6 +37,7 @@ export const PrepareApp: Component<PrepareAppProps> = (props) => {
   const theme = () => props.currentTheme();
 
   const [viewMode, setViewMode] = createSignal<'wizard' | 'dashboard'>('wizard');
+  const [showDeleteConfirm, setShowDeleteConfirm] = createSignal(false);
 
   const hasMasterResume = () => prepareStore.hasMasterResume();
   const masterResume = () => prepareStore.state.masterResume;
@@ -44,6 +46,11 @@ export const PrepareApp: Component<PrepareAppProps> = (props) => {
   const handleParseComplete = () => {
     // Auto-advance to review step after successful parse
     prepareStore.setWizardStep('parse-review');
+  };
+
+  const handleDeleteResume = () => {
+    prepareStore.resetAll();
+    setShowDeleteConfirm(false);
   };
 
   return (
@@ -55,85 +62,95 @@ export const PrepareApp: Component<PrepareAppProps> = (props) => {
         'min-height': 'calc(100vh - 200px)',
       }}
     >
-      {/* Header */}
-      <div style={{ 'margin-bottom': '32px' }}>
-        <h1
-          style={{
-            margin: '0 0 8px',
-            'font-family': theme().fonts.heading,
-            'font-size': '42px',
-            'font-weight': '700',
-            background: theme().gradients.primary,
-            '-webkit-background-clip': 'text',
-            '-webkit-text-fill-color': 'transparent',
-            'background-clip': 'text',
-          }}
-        >
-          Prepare: Resume Intelligence
-        </h1>
-        <p
-          style={{
-            margin: 0,
-            'font-size': '18px',
-            color: theme().colors.textMuted,
-            'font-family': theme().fonts.body,
-          }}
-        >
-          Upload your resume, build it from scratch, or tailor it to any job description with AI
-        </p>
-      </div>
-
-      {/* View Mode Toggle */}
+      {/* View Mode Toggle & Delete Button */}
       <Show when={hasMasterResume()}>
         <div
           style={{
             display: 'flex',
-            gap: '12px',
+            'justify-content': 'space-between',
+            'align-items': 'center',
             'margin-bottom': '32px',
-            padding: '4px',
-            background: 'rgba(255, 255, 255, 0.03)',
-            'border-radius': '12px',
-            border: `1px solid ${theme().colors.border}`,
-            width: 'fit-content',
+            gap: '16px',
           }}
         >
-          <button
-            onClick={() => setViewMode('wizard')}
+          <div
             style={{
-              padding: '12px 24px',
-              background: viewMode() === 'wizard' ? theme().gradients.primary : 'transparent',
-              border: 'none',
-              'border-radius': '8px',
-              color:
-                viewMode() === 'wizard' ? theme().colors.textOnPrimary : theme().colors.textMuted,
+              display: 'flex',
+              gap: '12px',
+              padding: '4px',
+              background: 'rgba(255, 255, 255, 0.03)',
+              'border-radius': '12px',
+              border: `1px solid ${theme().colors.border}`,
+              width: 'fit-content',
+            }}
+          >
+            <button
+              onClick={() => setViewMode('wizard')}
+              style={{
+                padding: '12px 24px',
+                background: viewMode() === 'wizard' ? theme().gradients.primary : 'transparent',
+                border: 'none',
+                'border-radius': '8px',
+                color:
+                  viewMode() === 'wizard' ? theme().colors.textOnPrimary : theme().colors.textMuted,
+                cursor: 'pointer',
+                'font-size': '14px',
+                'font-weight': '600',
+                'font-family': theme().fonts.body,
+                transition: 'all 0.2s',
+              }}
+            >
+              Resume Builder
+            </button>
+            <button
+              onClick={() => setViewMode('dashboard')}
+              style={{
+                padding: '12px 24px',
+                background: viewMode() === 'dashboard' ? theme().gradients.primary : 'transparent',
+                border: 'none',
+                'border-radius': '8px',
+                color:
+                  viewMode() === 'dashboard'
+                    ? theme().colors.textOnPrimary
+                    : theme().colors.textMuted,
+                cursor: 'pointer',
+                'font-size': '14px',
+                'font-weight': '600',
+                'font-family': theme().fonts.body,
+                transition: 'all 0.2s',
+              }}
+            >
+              My Resumes
+            </button>
+          </div>
+
+          {/* Delete Resume Button */}
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            style={{
+              padding: '12px 20px',
+              background: `${theme().colors.error}20`,
+              border: `1px solid ${theme().colors.error}`,
+              'border-radius': '10px',
+              color: theme().colors.error,
               cursor: 'pointer',
               'font-size': '14px',
               'font-weight': '600',
               'font-family': theme().fonts.body,
+              display: 'flex',
+              'align-items': 'center',
+              gap: '8px',
               transition: 'all 0.2s',
             }}
-          >
-            Resume Builder
-          </button>
-          <button
-            onClick={() => setViewMode('dashboard')}
-            style={{
-              padding: '12px 24px',
-              background: viewMode() === 'dashboard' ? theme().gradients.primary : 'transparent',
-              border: 'none',
-              'border-radius': '8px',
-              color:
-                viewMode() === 'dashboard'
-                  ? theme().colors.textOnPrimary
-                  : theme().colors.textMuted,
-              cursor: 'pointer',
-              'font-size': '14px',
-              'font-weight': '600',
-              'font-family': theme().fonts.body,
-              transition: 'all 0.2s',
+            onMouseEnter={(e) => {
+              e.currentTarget.style.background = `${theme().colors.error}30`;
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.background = `${theme().colors.error}20`;
             }}
           >
-            My Resumes
+            <IconTrash size={16} />
+            Delete Resume
           </button>
         </div>
       </Show>
@@ -442,6 +459,107 @@ export const PrepareApp: Component<PrepareAppProps> = (props) => {
           <div>Wizard Step: {wizardState().currentStep}</div>
           <div>Upload Progress: {prepareStore.state.uploadProgress}%</div>
           <div>Parse Progress: {prepareStore.state.parseProgress}%</div>
+        </div>
+      </Show>
+
+      {/* Delete Confirmation Modal */}
+      <Show when={showDeleteConfirm()}>
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            'align-items': 'center',
+            'justify-content': 'center',
+            'z-index': 1000,
+            padding: '20px',
+          }}
+          onClick={() => setShowDeleteConfirm(false)}
+        >
+          <div
+            style={{
+              background: theme().colors.background,
+              border: `2px solid ${theme().colors.error}`,
+              'border-radius': '16px',
+              padding: '32px',
+              'max-width': '500px',
+              width: '100%',
+              'box-shadow': '0 20px 60px rgba(0, 0, 0, 0.5)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                display: 'flex',
+                'align-items': 'center',
+                gap: '12px',
+                'margin-bottom': '16px',
+              }}
+            >
+              <IconTrash size={24} color={theme().colors.error} />
+              <h3
+                style={{
+                  margin: 0,
+                  'font-size': '24px',
+                  color: theme().colors.error,
+                  'font-family': theme().fonts.heading,
+                }}
+              >
+                Delete Resume?
+              </h3>
+            </div>
+
+            <p
+              style={{
+                margin: '0 0 24px',
+                'font-size': '16px',
+                color: theme().colors.text,
+                'line-height': '1.6',
+              }}
+            >
+              This will permanently delete your master resume, all variants, and reset the wizard.
+              This action cannot be undone.
+            </p>
+
+            <div style={{ display: 'flex', gap: '12px', 'justify-content': 'flex-end' }}>
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                style={{
+                  padding: '12px 24px',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: `1px solid ${theme().colors.border}`,
+                  'border-radius': '10px',
+                  color: theme().colors.text,
+                  'font-size': '15px',
+                  'font-weight': '600',
+                  cursor: 'pointer',
+                  'font-family': theme().fonts.body,
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteResume}
+                style={{
+                  padding: '12px 24px',
+                  background: theme().colors.error,
+                  border: 'none',
+                  'border-radius': '10px',
+                  color: '#FFFFFF',
+                  'font-size': '15px',
+                  'font-weight': '600',
+                  cursor: 'pointer',
+                  'font-family': theme().fonts.body,
+                }}
+              >
+                Delete Permanently
+              </button>
+            </div>
+          </div>
         </div>
       </Show>
     </div>

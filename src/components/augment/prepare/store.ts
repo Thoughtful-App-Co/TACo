@@ -163,9 +163,18 @@ export const prepareStore = {
   },
 
   setParsedSections: (sections: MasterResume['parsedSections']) => {
-    setState('masterResume', 'parsedSections', sections);
-    setState('masterResume', 'lastParsedAt', new Date());
-    setState('masterResume', 'updatedAt', new Date());
+    setState('masterResume', (prev) => {
+      if (!prev) {
+        console.error('Cannot set parsed sections: masterResume is null');
+        return prev;
+      }
+      return {
+        ...prev,
+        parsedSections: sections,
+        lastParsedAt: new Date(),
+        updatedAt: new Date(),
+      };
+    });
   },
 
   addMetricToLibrary: (metric: any) => {

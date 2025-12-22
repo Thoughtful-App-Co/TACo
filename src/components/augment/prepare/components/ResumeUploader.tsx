@@ -7,6 +7,7 @@
 import { Component, createSignal, Show } from 'solid-js';
 import { prepareStore } from '../store';
 import { parseResume } from '../services/resume-parser.service';
+import { extractTextFromFile } from '../services/file-extractor.service';
 import { IconUpload, IconFileText, IconCheck, IconAlert, IconX } from '../../pipeline/ui/Icons';
 
 interface ResumeUploaderProps {
@@ -120,30 +121,26 @@ export const ResumeUploader: Component<ResumeUploaderProps> = (props) => {
         prepareStore.setUploadProgress(Math.min(currentProgress + 10, 90));
       }, 100);
 
-      // Read file as text or base64
-      const reader = new FileReader();
-
-      const fileContent = await new Promise<string>((resolve, reject) => {
-        reader.onload = () => {
-          const result = reader.result as string;
-          resolve(result);
-        };
-        reader.onerror = () => reject(new Error('Failed to read file'));
-
-        // For text files, read as text; for binary, read as base64
-        if (file.name.endsWith('.txt')) {
-          reader.readAsText(file);
-        } else {
-          reader.readAsDataURL(file);
-        }
-      });
+      // Extract text from file using client-side parsing
+      console.log('[ResumeUploader] Extracting text from file:', file.name);
+      const extraction = await extractTextFromFile(file);
 
       clearInterval(progressInterval);
       prepareStore.setUploadProgress(100);
       prepareStore.setUploading(false);
 
-      // Parse with AI
-      await parseResumeContent(fileContent, file.name, file.type);
+      if (!extraction.success) {
+        throw new Error(extraction.error || 'Failed to extract text from file');
+      }
+
+      console.log('[ResumeUploader] Extracted text:', {
+        wordCount: extraction.wordCount,
+        pageCount: extraction.pageCount,
+        textPreview: extraction.text.substring(0, 200) + '...',
+      });
+
+      // Parse with AI - send extracted text
+      await parseResumeContent(extraction.text, file.name, file.type);
     } catch (error) {
       console.error('Upload failed:', error);
       prepareStore.setError(error instanceof Error ? error.message : 'Upload failed');
@@ -188,12 +185,20 @@ export const ResumeUploader: Component<ResumeUploaderProps> = (props) => {
         fileName,
       });
 
+      console.log('[ResumeUploader] Parse result:', result);
+
       if (!result.success) {
         throw new Error(result.error || 'Parsing failed');
       }
 
+      console.log('[ResumeUploader] Parsed sections:', result.parsed);
+      console.log('[ResumeUploader] Experience count:', result.parsed?.experience?.length);
+      console.log('[ResumeUploader] Skills count:', result.parsed?.skills?.length);
+
       // Update master resume with parsed data
       prepareStore.setParsedSections(result.parsed);
+
+      console.log('[ResumeUploader] Store after update:', prepareStore.state.masterResume);
       prepareStore.updateMasterResume({
         rawText: result.extractedText || content,
         extractedKeywords: result.keywords,
@@ -369,7 +374,10 @@ export const ResumeUploader: Component<ResumeUploaderProps> = (props) => {
                     color: theme().colors.textMuted,
                   }}
                 >
-                  {(selectedFile()!.size / 1024).toFixed(0)} KB
+                  {(selectedFile()!.size / 1024).toLocaleString('en-US', {
+                    maximumFractionDigits: 0,
+                  })}{' '}
+                  KB
                 </p>
               </div>
             </div>
