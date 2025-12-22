@@ -630,10 +630,10 @@ export const SankeyView: Component<SankeyViewProps> = (props) => {
                       onMouseEnter={(e) => {
                         if (hasApps) {
                           setHoveredNode(node.id);
-                          // Position tooltip in center of screen
+                          const rect = (e.currentTarget as SVGGElement).getBoundingClientRect();
                           setTooltipPosition({
-                            x: window.innerWidth / 2,
-                            y: window.innerHeight / 2,
+                            x: rect.right + 20,
+                            y: rect.top + rect.height / 2,
                           });
                         }
                       }}

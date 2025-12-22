@@ -47,24 +47,58 @@ export const SankeyTooltip: Component<SankeyTooltipProps> = (props) => {
   const theme = () => props.theme();
   const color = () => statusColors[props.status];
 
-  // Sort applications reverse chronologically
-  const sortedApps = createMemo(() => {
-    return [...props.applications].sort((a, b) => {
+  // Sort applications reverse chronologically and group by domain
+  const appsByDomain = createMemo(() => {
+    // Sort reverse chronologically first
+    const sorted = [...props.applications].sort((a, b) => {
       const dateA = a.appliedAt || a.createdAt;
       const dateB = b.appliedAt || b.createdAt;
       return new Date(dateB).getTime() - new Date(dateA).getTime();
     });
+
+    // Group by domain (extract domain from company email if available, otherwise use company name)
+    const grouped = new Map<string, typeof sorted>();
+
+    sorted.forEach((app) => {
+      let domain = 'Unknown';
+
+      // Try to extract domain from company name if it looks like an email
+      if (app.companyName && app.companyName.includes('@')) {
+        const parts = app.companyName.split('@');
+        if (parts.length > 1) {
+          domain = parts[1];
+        }
+      } else {
+        // Otherwise, use company name as the grouping key
+        domain = app.companyName || 'Unknown';
+      }
+
+      if (!grouped.has(domain)) {
+        grouped.set(domain, []);
+      }
+      grouped.get(domain)!.push(app);
+    });
+
+    return grouped;
   });
 
-  // Top 6
-  const topSix = () => sortedApps().slice(0, 6);
-  const totalCount = () => sortedApps().length;
+  // Calculate total count and average age
+  const totalCount = () => {
+    let count = 0;
+    appsByDomain().forEach((apps) => (count += apps.length));
+    return count;
+  };
 
-  // Average age of ALL applications in this status
   const averageAge = () => {
-    const apps = sortedApps();
-    if (apps.length === 0) return 0;
-    return Math.round(apps.reduce((sum, app) => sum + getApplicationAge(app), 0) / apps.length);
+    let totalAge = 0;
+    let totalApps = 0;
+    appsByDomain().forEach((apps) => {
+      apps.forEach((app) => {
+        totalAge += getApplicationAge(app);
+        totalApps++;
+      });
+    });
+    return totalApps > 0 ? Math.round(totalAge / totalApps) : 0;
   };
 
   return (
@@ -123,51 +157,96 @@ export const SankeyTooltip: Component<SankeyTooltipProps> = (props) => {
         </div>
       </div>
 
-      {/* Application List - Minimalist, no containers */}
+      {/* Domain Sections */}
       <div
         style={{
           padding: `${DESIGN.spacing.sm}px ${DESIGN.spacing.md}px`,
         }}
       >
-        <For each={topSix()}>
-          {(app, index) => (
+        <For each={Array.from(appsByDomain().entries())}>
+          {([domain, apps], domainIndex) => (
             <div
               style={{
-                display: 'flex',
-                'flex-direction': 'column',
-                gap: '2px',
-                padding: `${DESIGN.spacing.xs}px 0`,
-                'border-bottom':
-                  index() < topSix().length - 1 ? '1px solid rgba(255, 255, 255, 0.05)' : 'none',
+                'margin-bottom':
+                  domainIndex() < Array.from(appsByDomain().keys()).length - 1
+                    ? `${DESIGN.spacing.md}px`
+                    : '0',
               }}
             >
-              {/* Job Title */}
+              {/* Domain Header */}
               <div
                 style={{
-                  'font-size': '12px',
+                  'font-size': '11px',
                   'font-family': DESIGN.fonts.body,
-                  'font-weight': '500',
-                  color: theme().colors.text,
-                  overflow: 'hidden',
-                  'text-overflow': 'ellipsis',
-                  'white-space': 'nowrap',
+                  'font-weight': '600',
+                  'text-transform': 'uppercase',
+                  'letter-spacing': '0.05em',
+                  color: color().text,
+                  'margin-bottom': `${DESIGN.spacing.xs}px`,
+                  'padding-bottom': `${DESIGN.spacing.xs}px`,
+                  'border-bottom': `1px solid ${color().border}`,
                 }}
               >
-                {app.roleName}
+                {domain} ({apps.length})
               </div>
 
-              {/* Age + Company - single line */}
-              <div
-                style={{
-                  'font-size': '10px',
-                  'font-family': DESIGN.fonts.body,
-                  color: theme().colors.textMuted,
-                  overflow: 'hidden',
-                  'text-overflow': 'ellipsis',
-                  'white-space': 'nowrap',
-                }}
-              >
-                {getApplicationAge(app)} days • {app.companyName}
+              {/* Apps in this domain */}
+              <div style={{ 'margin-top': `${DESIGN.spacing.xs}px` }}>
+                <For each={apps.slice(0, 6)}>
+                  {(app, index) => (
+                    <div
+                      style={{
+                        display: 'flex',
+                        'flex-direction': 'column',
+                        gap: '2px',
+                        padding: `${DESIGN.spacing.xs}px 0`,
+                        'font-size': '11px',
+                        'line-height': '1.3',
+                      }}
+                    >
+                      {/* Job Title */}
+                      <div
+                        style={{
+                          'font-weight': '500',
+                          color: theme().colors.text,
+                          overflow: 'hidden',
+                          'text-overflow': 'ellipsis',
+                          'white-space': 'nowrap',
+                        }}
+                      >
+                        {app.roleName}
+                      </div>
+
+                      {/* Age + Company */}
+                      <div
+                        style={{
+                          color: theme().colors.textMuted,
+                          overflow: 'hidden',
+                          'text-overflow': 'ellipsis',
+                          'white-space': 'nowrap',
+                          'font-size': '10px',
+                        }}
+                      >
+                        {getApplicationAge(app)} days • {app.companyName}
+                      </div>
+                    </div>
+                  )}
+                </For>
+
+                {/* Overflow for this domain */}
+                {apps.length > 6 && (
+                  <div
+                    style={{
+                      'font-size': '10px',
+                      'font-family': DESIGN.fonts.body,
+                      color: theme().colors.textMuted,
+                      'font-style': 'italic',
+                      'margin-top': `${DESIGN.spacing.xs}px`,
+                    }}
+                  >
+                    +{apps.length - 6} more
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -176,7 +255,7 @@ export const SankeyTooltip: Component<SankeyTooltipProps> = (props) => {
         {/* Summary Footer */}
         <div
           style={{
-            'margin-top': `${DESIGN.spacing.sm}px`,
+            'margin-top': `${DESIGN.spacing.md}px`,
             'padding-top': `${DESIGN.spacing.sm}px`,
             'border-top': `1px solid ${color().border}`,
             'font-size': '11px',
