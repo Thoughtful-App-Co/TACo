@@ -233,6 +233,9 @@ export interface PipelineSettings {
   apiKey?: string; // For BYOK
   apiProvider?: 'anthropic' | 'openai';
 
+  // Default landing tab for /augment route
+  defaultLandingTab: 'discover' | 'prepare' | 'prospect' | 'prosper';
+
   // Sync
   syncEnabled: boolean;
   lastSyncAt?: Date;
@@ -245,6 +248,7 @@ export const DEFAULT_SETTINGS: PipelineSettings = {
   agingCriticalDays: 30,
   criteria: DEFAULT_CRITERIA,
   apiMode: 'none',
+  defaultLandingTab: 'discover',
   syncEnabled: false,
   syncVersion: 1,
 };
