@@ -7,8 +7,21 @@
 // Store
 export { prepareStore } from './store';
 
-// Components
+// Main App
 export { PrepareApp } from './PrepareApp';
+
+// View Components
+export { ParseReviewPanel } from './components/ParseReviewPanel';
+export { ExperienceViewer } from './components/ExperienceViewer';
+export { EducationViewer } from './components/EducationViewer';
+export { SkillsViewer } from './components/SkillsViewer';
+
+// Editor Components
+export { ExperienceEditor } from './components/ExperienceEditor';
+export { EducationEditor } from './components/EducationEditor';
+
+// UI Components
+export { Modal } from './components/Modal';
 export { ResumeUploader } from './components/ResumeUploader';
 
 // Services

@@ -7,6 +7,10 @@
 import { Component, createSignal, Show } from 'solid-js';
 import { prepareStore } from './store';
 import { ResumeUploader } from './components/ResumeUploader';
+import { ParseReviewPanel } from './components/ParseReviewPanel';
+import { ExperienceEditor } from './components/ExperienceEditor';
+import { EducationEditor } from './components/EducationEditor';
+import { WorkExperience, Education } from '../../../schemas/pipeline.schema';
 import { IconTrash } from '../pipeline/ui/Icons';
 
 interface PrepareAppProps {
@@ -39,6 +43,12 @@ export const PrepareApp: Component<PrepareAppProps> = (props) => {
   const [viewMode, setViewMode] = createSignal<'wizard' | 'dashboard'>('wizard');
   const [showDeleteConfirm, setShowDeleteConfirm] = createSignal(false);
 
+  // Modal state signals
+  const [showExperienceEditor, setShowExperienceEditor] = createSignal(false);
+  const [showEducationEditor, setShowEducationEditor] = createSignal(false);
+  const [editingExperience, setEditingExperience] = createSignal<WorkExperience | undefined>();
+  const [editingEducation, setEditingEducation] = createSignal<Education | undefined>();
+
   const hasMasterResume = () => prepareStore.hasMasterResume();
   const masterResume = () => prepareStore.state.masterResume;
   const wizardState = () => prepareStore.state.wizardState;
@@ -51,6 +61,54 @@ export const PrepareApp: Component<PrepareAppProps> = (props) => {
   const handleDeleteResume = () => {
     prepareStore.resetAll();
     setShowDeleteConfirm(false);
+  };
+
+  // Experience handlers
+  const handleAddExperience = () => {
+    setEditingExperience(undefined);
+    setShowExperienceEditor(true);
+  };
+
+  const handleEditExperience = (exp: WorkExperience) => {
+    setEditingExperience(exp);
+    setShowExperienceEditor(true);
+  };
+
+  const handleDeleteExperience = (id: string) => {
+    prepareStore.removeExperience(id);
+  };
+
+  const handleSaveExperience = (exp: Omit<WorkExperience, 'id'>) => {
+    if (editingExperience()) {
+      prepareStore.updateExperience(editingExperience()!.id, exp);
+    } else {
+      prepareStore.addExperience(exp);
+    }
+    setShowExperienceEditor(false);
+  };
+
+  // Education handlers
+  const handleAddEducation = () => {
+    setEditingEducation(undefined);
+    setShowEducationEditor(true);
+  };
+
+  const handleEditEducation = (edu: Education) => {
+    setEditingEducation(edu);
+    setShowEducationEditor(true);
+  };
+
+  const handleDeleteEducation = (id: string) => {
+    prepareStore.removeEducation(id);
+  };
+
+  const handleSaveEducation = (edu: Omit<Education, 'id'>) => {
+    if (editingEducation()) {
+      prepareStore.updateEducation(editingEducation()!.id, edu);
+    } else {
+      prepareStore.addEducation(edu);
+    }
+    setShowEducationEditor(false);
   };
 
   return (
@@ -279,165 +337,17 @@ export const PrepareApp: Component<PrepareAppProps> = (props) => {
             </div>
           }
         >
-          {/* Post-upload: Resume parsed */}
-          <div
-            style={{
-              padding: '32px',
-              background: 'rgba(255, 255, 255, 0.02)',
-              border: `1px solid ${theme().colors.border}`,
-              'border-radius': '16px',
-            }}
-          >
-            <h3
-              style={{
-                margin: '0 0 24px',
-                'font-size': '24px',
-                color: theme().colors.text,
-                'font-family': theme().fonts.heading,
-              }}
-            >
-              Resume Parsed Successfully!
-            </h3>
-
-            {/* Summary Stats */}
-            <div
-              style={{
-                display: 'grid',
-                'grid-template-columns': 'repeat(auto-fit, minmax(200px, 1fr))',
-                gap: '16px',
-                'margin-bottom': '32px',
-              }}
-            >
-              <div
-                style={{
-                  padding: '20px',
-                  background: `${theme().colors.primary}10`,
-                  border: `1px solid ${theme().colors.primary}40`,
-                  'border-radius': '12px',
-                }}
-              >
-                <div
-                  style={{
-                    'font-size': '32px',
-                    'font-weight': '700',
-                    color: theme().colors.primary,
-                    'margin-bottom': '4px',
-                  }}
-                >
-                  {masterResume()?.parsedSections.experience.length || 0}
-                </div>
-                <div style={{ 'font-size': '14px', color: theme().colors.textMuted }}>
-                  Experiences
-                </div>
-              </div>
-
-              <div
-                style={{
-                  padding: '20px',
-                  background: `${theme().colors.secondary}10`,
-                  border: `1px solid ${theme().colors.secondary}40`,
-                  'border-radius': '12px',
-                }}
-              >
-                <div
-                  style={{
-                    'font-size': '32px',
-                    'font-weight': '700',
-                    color: theme().colors.secondary,
-                    'margin-bottom': '4px',
-                  }}
-                >
-                  {masterResume()?.parsedSections.skills.length || 0}
-                </div>
-                <div style={{ 'font-size': '14px', color: theme().colors.textMuted }}>Skills</div>
-              </div>
-
-              <div
-                style={{
-                  padding: '20px',
-                  background: `${theme().colors.success}10`,
-                  border: `1px solid ${theme().colors.success}40`,
-                  'border-radius': '12px',
-                }}
-              >
-                <div
-                  style={{
-                    'font-size': '32px',
-                    'font-weight': '700',
-                    color: theme().colors.success,
-                    'margin-bottom': '4px',
-                  }}
-                >
-                  {masterResume()?.extractedKeywords.technical.length || 0}
-                </div>
-                <div style={{ 'font-size': '14px', color: theme().colors.textMuted }}>Keywords</div>
-              </div>
-            </div>
-
-            {/* Next Steps */}
-            <div>
-              <h4
-                style={{
-                  margin: '0 0 16px',
-                  'font-size': '18px',
-                  color: theme().colors.text,
-                  'font-family': theme().fonts.heading,
-                }}
-              >
-                What's Next?
-              </h4>
-              <div style={{ display: 'flex', 'flex-direction': 'column', gap: '12px' }}>
-                <button
-                  style={{
-                    padding: '16px 24px',
-                    background: theme().gradients.primary,
-                    border: 'none',
-                    'border-radius': '10px',
-                    color: theme().colors.textOnPrimary,
-                    'font-size': '15px',
-                    'font-weight': '600',
-                    cursor: 'pointer',
-                    'text-align': 'left',
-                    'font-family': theme().fonts.body,
-                  }}
-                >
-                  → Review & Edit Experiences
-                </button>
-                <button
-                  style={{
-                    padding: '16px 24px',
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    border: `1px solid ${theme().colors.border}`,
-                    'border-radius': '10px',
-                    color: theme().colors.text,
-                    'font-size': '15px',
-                    'font-weight': '600',
-                    cursor: 'pointer',
-                    'text-align': 'left',
-                    'font-family': theme().fonts.body,
-                  }}
-                >
-                  → Add Projects & Metrics
-                </button>
-                <button
-                  style={{
-                    padding: '16px 24px',
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    border: `1px solid ${theme().colors.border}`,
-                    'border-radius': '10px',
-                    color: theme().colors.text,
-                    'font-size': '15px',
-                    'font-weight': '600',
-                    cursor: 'pointer',
-                    'text-align': 'left',
-                    'font-family': theme().fonts.body,
-                  }}
-                >
-                  → Tailor to Job Description
-                </button>
-              </div>
-            </div>
-          </div>
+          {/* Post-upload: Review parsed data */}
+          <ParseReviewPanel
+            currentTheme={theme}
+            onContinue={() => prepareStore.setWizardStep('experience')}
+            onAddExperience={handleAddExperience}
+            onEditExperience={handleEditExperience}
+            onDeleteExperience={handleDeleteExperience}
+            onAddEducation={handleAddEducation}
+            onEditEducation={handleEditEducation}
+            onDeleteEducation={handleDeleteEducation}
+          />
         </Show>
       </Show>
 
@@ -562,6 +472,24 @@ export const PrepareApp: Component<PrepareAppProps> = (props) => {
           </div>
         </div>
       </Show>
+
+      {/* Experience Editor Modal */}
+      <ExperienceEditor
+        isOpen={showExperienceEditor()}
+        onClose={() => setShowExperienceEditor(false)}
+        currentTheme={theme}
+        experience={editingExperience()}
+        onSave={handleSaveExperience}
+      />
+
+      {/* Education Editor Modal */}
+      <EducationEditor
+        isOpen={showEducationEditor()}
+        onClose={() => setShowEducationEditor(false)}
+        currentTheme={theme}
+        education={editingEducation()}
+        onSave={handleSaveEducation}
+      />
     </div>
   );
 };

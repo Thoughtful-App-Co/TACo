@@ -14,6 +14,7 @@ import {
   createEmptyWizardState,
   generateId,
 } from '../../../schemas/prepare.schema';
+import { WorkExperience, Education } from '../../../schemas/pipeline.schema';
 
 // ============================================================================
 // STORAGE KEYS
@@ -185,6 +186,223 @@ export const prepareStore = {
 
   removeMetricFromLibrary: (metricId: string) => {
     setState('masterResume', 'metricsLibrary', (lib) => lib.filter((m) => m.id !== metricId));
+    setState('masterResume', 'updatedAt', new Date());
+  },
+
+  // -------------------------------------------------------------------------
+  // EXPERIENCE CRUD
+  // -------------------------------------------------------------------------
+
+  addExperience: (experience: Omit<WorkExperience, 'id'>) => {
+    if (!state.masterResume) {
+      console.error('Cannot add experience: masterResume is null');
+      return;
+    }
+    const newExperience: WorkExperience = {
+      ...experience,
+      id: generateId(),
+    };
+    setState('masterResume', 'parsedSections', 'experience', (exp) => [...exp, newExperience]);
+    setState('masterResume', 'updatedAt', new Date());
+  },
+
+  updateExperience: (id: string, updates: Partial<WorkExperience>) => {
+    if (!state.masterResume) {
+      console.error('Cannot update experience: masterResume is null');
+      return;
+    }
+    setState(
+      'masterResume',
+      'parsedSections',
+      'experience',
+      (exp) => exp.id === id,
+      (exp) => ({ ...exp, ...updates })
+    );
+    setState('masterResume', 'updatedAt', new Date());
+  },
+
+  removeExperience: (id: string) => {
+    if (!state.masterResume) {
+      console.error('Cannot remove experience: masterResume is null');
+      return;
+    }
+    setState('masterResume', 'parsedSections', 'experience', (experiences) =>
+      experiences.filter((exp) => exp.id !== id)
+    );
+    setState('masterResume', 'updatedAt', new Date());
+  },
+
+  reorderExperiences: (ids: string[]) => {
+    if (!state.masterResume) {
+      console.error('Cannot reorder experiences: masterResume is null');
+      return;
+    }
+    setState('masterResume', 'parsedSections', 'experience', (experiences) => {
+      const experienceMap = new Map(experiences.map((exp) => [exp.id, exp]));
+      const reordered: WorkExperience[] = [];
+      for (const id of ids) {
+        const exp = experienceMap.get(id);
+        if (exp) {
+          reordered.push(exp);
+        }
+      }
+      // Add any experiences not in the ids array at the end
+      for (const exp of experiences) {
+        if (!ids.includes(exp.id)) {
+          reordered.push(exp);
+        }
+      }
+      return reordered;
+    });
+    setState('masterResume', 'updatedAt', new Date());
+  },
+
+  // -------------------------------------------------------------------------
+  // EDUCATION CRUD
+  // -------------------------------------------------------------------------
+
+  addEducation: (education: Omit<Education, 'id'>) => {
+    if (!state.masterResume) {
+      console.error('Cannot add education: masterResume is null');
+      return;
+    }
+    const newEducation: Education = {
+      ...education,
+      id: generateId(),
+    };
+    setState('masterResume', 'parsedSections', 'education', (edu) => [...edu, newEducation]);
+    setState('masterResume', 'updatedAt', new Date());
+  },
+
+  updateEducation: (id: string, updates: Partial<Education>) => {
+    if (!state.masterResume) {
+      console.error('Cannot update education: masterResume is null');
+      return;
+    }
+    setState(
+      'masterResume',
+      'parsedSections',
+      'education',
+      (edu) => edu.id === id,
+      (edu) => ({ ...edu, ...updates })
+    );
+    setState('masterResume', 'updatedAt', new Date());
+  },
+
+  removeEducation: (id: string) => {
+    if (!state.masterResume) {
+      console.error('Cannot remove education: masterResume is null');
+      return;
+    }
+    setState('masterResume', 'parsedSections', 'education', (educations) =>
+      educations.filter((edu) => edu.id !== id)
+    );
+    setState('masterResume', 'updatedAt', new Date());
+  },
+
+  // -------------------------------------------------------------------------
+  // SKILLS CRUD
+  // -------------------------------------------------------------------------
+
+  addSkill: (skill: string) => {
+    if (!state.masterResume) {
+      console.error('Cannot add skill: masterResume is null');
+      return;
+    }
+    // Check for duplicate
+    if (state.masterResume.parsedSections.skills.includes(skill)) {
+      return;
+    }
+    setState('masterResume', 'parsedSections', 'skills', (skills) => [...skills, skill]);
+    setState('masterResume', 'updatedAt', new Date());
+  },
+
+  removeSkill: (skill: string) => {
+    if (!state.masterResume) {
+      console.error('Cannot remove skill: masterResume is null');
+      return;
+    }
+    setState('masterResume', 'parsedSections', 'skills', (skills) =>
+      skills.filter((s) => s !== skill)
+    );
+    setState('masterResume', 'updatedAt', new Date());
+  },
+
+  updateSkills: (skills: string[]) => {
+    if (!state.masterResume) {
+      console.error('Cannot update skills: masterResume is null');
+      return;
+    }
+    setState('masterResume', 'parsedSections', 'skills', skills);
+    setState('masterResume', 'updatedAt', new Date());
+  },
+
+  // -------------------------------------------------------------------------
+  // CERTIFICATIONS CRUD
+  // -------------------------------------------------------------------------
+
+  addCertification: (cert: string) => {
+    if (!state.masterResume) {
+      console.error('Cannot add certification: masterResume is null');
+      return;
+    }
+    // Check for duplicate
+    if (state.masterResume.parsedSections.certifications.includes(cert)) {
+      return;
+    }
+    setState('masterResume', 'parsedSections', 'certifications', (certs) => [...certs, cert]);
+    setState('masterResume', 'updatedAt', new Date());
+  },
+
+  removeCertification: (cert: string) => {
+    if (!state.masterResume) {
+      console.error('Cannot remove certification: masterResume is null');
+      return;
+    }
+    setState('masterResume', 'parsedSections', 'certifications', (certs) =>
+      certs.filter((c) => c !== cert)
+    );
+    setState('masterResume', 'updatedAt', new Date());
+  },
+
+  // -------------------------------------------------------------------------
+  // KEYWORDS CRUD (extractedKeywords)
+  // -------------------------------------------------------------------------
+
+  addKeyword: (category: 'technical' | 'soft' | 'industry' | 'tools', keyword: string) => {
+    if (!state.masterResume) {
+      console.error('Cannot add keyword: masterResume is null');
+      return;
+    }
+    // Check for duplicate in category
+    if (state.masterResume.extractedKeywords[category].includes(keyword)) {
+      return;
+    }
+    setState('masterResume', 'extractedKeywords', category, (keywords) => [...keywords, keyword]);
+    setState('masterResume', 'updatedAt', new Date());
+  },
+
+  removeKeyword: (category: 'technical' | 'soft' | 'industry' | 'tools', keyword: string) => {
+    if (!state.masterResume) {
+      console.error('Cannot remove keyword: masterResume is null');
+      return;
+    }
+    setState('masterResume', 'extractedKeywords', category, (keywords) =>
+      keywords.filter((k) => k !== keyword)
+    );
+    setState('masterResume', 'updatedAt', new Date());
+  },
+
+  // -------------------------------------------------------------------------
+  // SUMMARY
+  // -------------------------------------------------------------------------
+
+  setSummary: (summary: string) => {
+    if (!state.masterResume) {
+      console.error('Cannot set summary: masterResume is null');
+      return;
+    }
+    setState('masterResume', 'parsedSections', 'summary', summary);
     setState('masterResume', 'updatedAt', new Date());
   },
 

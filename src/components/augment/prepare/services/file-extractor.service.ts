@@ -30,7 +30,23 @@ export interface ExtractionResult {
  */
 export async function extractTextFromPDF(file: File): Promise<ExtractionResult> {
   try {
-    // Import pdf-parse (worker already configured globally)
+    // Configure PDF.js worker for pdf-parse
+    // pdf-parse uses its own worker system
+    import('pdfjs-dist')
+      .then((pdfjsLib: any) => {
+        // Configure worker URL for pdf-parse
+        const workerUrl = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+
+        // Set on globalThis for pdf-parse to find
+        (globalThis as any).pdfjsWorker = workerUrl;
+
+        console.log('[FileExtractor] PDF.js worker configured:', workerUrl);
+      })
+      .catch((err) => {
+        console.error('Failed to load pdfjs-dist:', err);
+      });
+
+    // Import pdf-parse after worker configuration
     const { PDFParse } = await import('pdf-parse');
 
     // Read file as ArrayBuffer

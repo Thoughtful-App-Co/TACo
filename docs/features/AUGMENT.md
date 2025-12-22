@@ -19,7 +19,7 @@ Understanding yourself professionally is the mission. Job tracking is a powerful
 - Work style analysis
 - **Purpose:** Foundation of your career identity
 
-### 2. Matches - Career Exploration
+### 1B. Matches - Career Exploration [LATER]
 
 **Personality-Aligned Career Suggestions**
 
@@ -30,7 +30,7 @@ Understanding yourself professionally is the mission. Job tracking is a powerful
 
 ### 3. Prospect - Job Application Pipeline
 
-**Application Tracking & Analytics**
+**Job Application Tracking & Analytics**
 
 **Features:**
 
@@ -53,6 +53,22 @@ Understanding yourself professionally is the mission. Job tracking is a powerful
 8. **Withdrawn** - You withdrew
 
 **Purpose:** Learn from your job hunt journey, track progress, gain insights
+
+### 4. PREPARE - Resume Builder and Actualizer
+** Resume Preparation, Parsing and Actualizer **
+**MISSION STATEMENT** The intent of prepare is to give you a more powerful, streamlined resume wizard that can provide a better understanding 
+of what youv'e done, and easily move between a pdf/docx back into a pdf/docx using our platform. We will use small models to help interpret 
+you resume
+
+**FEATURES** 
+- User can parse PDF/DOCX directly into our system
+- User really understands their resume
+- User can mutate their resume into another position quickly (and quickly access those files)
+- cover letters and resumes for job app: user can bring in a job req-- we can quickly render a version of thier resume that best maps to the job reqs 
+(showing they are qualified)
+- User is able to convert into an elegant easy to read resume
+- Qualitative explanation/high level and inject: KPIS + quantitative data
+- Thinking of your experiences, projects, roles (when roles seem a bit blurred)
 
 ## Use Cases
 

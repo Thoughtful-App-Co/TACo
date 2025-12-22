@@ -253,6 +253,7 @@ export const ResumeUploader: Component<ResumeUploaderProps> = (props) => {
       >
         <button
           onClick={() => setUploadMode('file')}
+          class="pipeline-btn"
           style={{
             padding: '12px 24px',
             background:
@@ -263,13 +264,41 @@ export const ResumeUploader: Component<ResumeUploaderProps> = (props) => {
             cursor: 'pointer',
             'font-size': '14px',
             'font-weight': '600',
-            transition: 'all 0.2s',
+            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+            display: 'flex',
+            'align-items': 'center',
+            gap: '8px',
+          }}
+          onMouseOver={(e) => {
+            if (uploadMode() !== 'file') {
+              e.currentTarget.style.background = `${theme().colors.primary}15`;
+              e.currentTarget.style.borderColor = theme().colors.primary;
+              e.currentTarget.style.color = theme().colors.primary;
+              e.currentTarget.style.transform = 'translateY(-1px) scale(1.02)';
+              e.currentTarget.style.boxShadow = `0 4px 12px ${theme().colors.primary}20`;
+            } else {
+              e.currentTarget.style.transform = 'translateY(-1px) scale(1.02)';
+              e.currentTarget.style.boxShadow = `0 4px 12px ${theme().colors.primary}40`;
+            }
+          }}
+          onMouseOut={(e) => {
+            if (uploadMode() !== 'file') {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+              e.currentTarget.style.borderColor = theme().colors.border;
+              e.currentTarget.style.color = theme().colors.textMuted;
+              e.currentTarget.style.transform = 'none';
+              e.currentTarget.style.boxShadow = 'none';
+            } else {
+              e.currentTarget.style.transform = 'none';
+              e.currentTarget.style.boxShadow = 'none';
+            }
           }}
         >
           <IconUpload size={16} /> Upload File
         </button>
         <button
           onClick={() => setUploadMode('text')}
+          class="pipeline-btn"
           style={{
             padding: '12px 24px',
             background:
@@ -280,7 +309,34 @@ export const ResumeUploader: Component<ResumeUploaderProps> = (props) => {
             cursor: 'pointer',
             'font-size': '14px',
             'font-weight': '600',
-            transition: 'all 0.2s',
+            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+            display: 'flex',
+            'align-items': 'center',
+            gap: '8px',
+          }}
+          onMouseOver={(e) => {
+            if (uploadMode() !== 'text') {
+              e.currentTarget.style.background = `${theme().colors.primary}15`;
+              e.currentTarget.style.borderColor = theme().colors.primary;
+              e.currentTarget.style.color = theme().colors.primary;
+              e.currentTarget.style.transform = 'translateY(-1px) scale(1.02)';
+              e.currentTarget.style.boxShadow = `0 4px 12px ${theme().colors.primary}20`;
+            } else {
+              e.currentTarget.style.transform = 'translateY(-1px) scale(1.02)';
+              e.currentTarget.style.boxShadow = `0 4px 12px ${theme().colors.primary}40`;
+            }
+          }}
+          onMouseOut={(e) => {
+            if (uploadMode() !== 'text') {
+              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+              e.currentTarget.style.borderColor = theme().colors.border;
+              e.currentTarget.style.color = theme().colors.textMuted;
+              e.currentTarget.style.transform = 'none';
+              e.currentTarget.style.boxShadow = 'none';
+            } else {
+              e.currentTarget.style.transform = 'none';
+              e.currentTarget.style.boxShadow = 'none';
+            }
           }}
         >
           <IconFileText size={16} /> Paste Text
@@ -492,6 +548,7 @@ export const ResumeUploader: Component<ResumeUploaderProps> = (props) => {
           <button
             onClick={handleTextParse}
             disabled={!pastedText().trim() || isParsing()}
+            class="pipeline-btn"
             style={{
               'margin-top': '16px',
               padding: '14px 28px',
@@ -504,6 +561,19 @@ export const ResumeUploader: Component<ResumeUploaderProps> = (props) => {
               cursor: pastedText().trim() && !isParsing() ? 'pointer' : 'not-allowed',
               opacity: pastedText().trim() && !isParsing() ? 1 : 0.5,
               width: '100%',
+              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+            }}
+            onMouseOver={(e) => {
+              if (pastedText().trim() && !isParsing()) {
+                e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)';
+                e.currentTarget.style.boxShadow = `0 6px 16px ${theme().colors.primary}40`;
+                e.currentTarget.style.filter = 'brightness(1.1)';
+              }
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.transform = 'none';
+              e.currentTarget.style.boxShadow = 'none';
+              e.currentTarget.style.filter = 'none';
             }}
           >
             {isParsing() ? 'Parsing...' : 'Parse Resume with AI'}
@@ -531,6 +601,7 @@ export const ResumeUploader: Component<ResumeUploaderProps> = (props) => {
           </p>
           <button
             onClick={resetUploader}
+            class="pipeline-btn"
             style={{
               'margin-left': 'auto',
               background: 'none',
@@ -538,6 +609,15 @@ export const ResumeUploader: Component<ResumeUploaderProps> = (props) => {
               color: theme().colors.error,
               cursor: 'pointer',
               padding: '4px',
+              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.background = `${theme().colors.error}20`;
+              e.currentTarget.style.transform = 'scale(1.1)';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.background = 'none';
+              e.currentTarget.style.transform = 'none';
             }}
           >
             <IconX size={16} />

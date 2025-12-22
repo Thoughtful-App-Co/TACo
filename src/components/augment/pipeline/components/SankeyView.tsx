@@ -12,6 +12,7 @@ import { sankey, sankeyLinkHorizontal, SankeyNode, SankeyLink } from 'd3-sankey'
 import { pipelineStore } from '../store';
 import { liquidAugment, statusColors, pipelineAnimations } from '../theme/liquid-augment';
 import { FluidCard } from '../ui';
+import { SankeyTooltip } from './SankeyTooltip';
 import {
   JobApplication,
   ApplicationStatus,
@@ -80,6 +81,7 @@ export const SankeyView: Component<SankeyViewProps> = (props) => {
   // Interactive state
   const [hoveredNode, setHoveredNode] = createSignal<ApplicationStatus | null>(null);
   const [hoveredLink, setHoveredLink] = createSignal<string | null>(null);
+  const [tooltipPosition, setTooltipPosition] = createSignal({ x: 0, y: 0 });
 
   // Count applications by status
   const statusCounts = createMemo(() => {
@@ -625,7 +627,16 @@ export const SankeyView: Component<SankeyViewProps> = (props) => {
                         cursor: hasApps ? 'pointer' : 'default',
                         transition: `transform ${SANKEY_DESIGN.timing.normal}`,
                       }}
-                      onMouseEnter={() => setHoveredNode(node.id)}
+                      onMouseEnter={(e) => {
+                        if (hasApps) {
+                          setHoveredNode(node.id);
+                          // Position tooltip in center of screen
+                          setTooltipPosition({
+                            x: window.innerWidth / 2,
+                            y: window.innerHeight / 2,
+                          });
+                        }
+                      }}
                       onMouseLeave={() => setHoveredNode(null)}
                       onClick={() => {
                         const apps = getApplicationsForStatus(node.id);
@@ -701,6 +712,16 @@ export const SankeyView: Component<SankeyViewProps> = (props) => {
               </For>
             </g>
           </svg>
+        </Show>
+
+        {/* Node Hover Tooltip */}
+        <Show when={hoveredNode()}>
+          <SankeyTooltip
+            status={hoveredNode()!}
+            applications={getApplicationsForStatus(hoveredNode()!)}
+            theme={theme}
+            position={tooltipPosition()}
+          />
         </Show>
       </FluidCard>
 
