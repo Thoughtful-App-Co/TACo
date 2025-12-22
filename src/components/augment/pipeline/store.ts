@@ -21,6 +21,8 @@ import {
   generateId,
   daysSince,
 } from '../../../schemas/pipeline.schema';
+import { normalizeJobTitle, getCanonicalPositionName } from './utils/position-matching';
+import { normalizeToAnnual } from './utils/salary';
 
 // ============================================================================
 // STORAGE KEYS
@@ -38,6 +40,8 @@ const STORAGE_KEYS = {
 // STORE STATE INTERFACE
 // ============================================================================
 
+export type AggregationMode = 'none' | 'company' | 'position' | 'salary';
+
 interface PipelineStoreState {
   applications: JobApplication[];
   profile: UserProfile | null;
@@ -47,6 +51,7 @@ interface PipelineStoreState {
   // UI state
   isLoading: boolean;
   error: string | null;
+  aggregationMode: AggregationMode;
 }
 
 // ============================================================================
@@ -95,8 +100,8 @@ function loadInitialState(): PipelineStoreState {
   const featureFlags: FeatureFlags = {
     ...DEFAULT_FEATURE_FLAGS,
     ...storedFlags,
-    // Force showPipeline to true (migration from old data)
-    showPipeline: storedFlags.showPipeline ?? true,
+    // Migration: ensure all new flags are enabled by default
+    showProspect: storedFlags.showProspect ?? (storedFlags as any).showPipeline ?? true,
   };
 
   return {
@@ -106,6 +111,7 @@ function loadInitialState(): PipelineStoreState {
     featureFlags,
     isLoading: false,
     error: null,
+    aggregationMode: 'none' as AggregationMode,
   };
 }
 
@@ -473,6 +479,76 @@ export const pipelineStore = {
     setState('error', error);
   },
 
+  setAggregationMode: (mode: AggregationMode) => {
+    setState('aggregationMode', mode);
+  },
+
+  // -------------------------------------------------------------------------
+  // AGGREGATION HELPERS
+  // -------------------------------------------------------------------------
+
+  getApplicationsGroupedByCompany: (): Map<string, JobApplication[]> => {
+    const grouped = new Map<string, JobApplication[]>();
+
+    for (const app of state.applications) {
+      const company = app.companyName || 'Unknown Company';
+      if (!grouped.has(company)) {
+        grouped.set(company, []);
+      }
+      grouped.get(company)!.push(app);
+    }
+
+    return grouped;
+  },
+
+  getApplicationsGroupedByPosition: (): Map<string, JobApplication[]> => {
+    const grouped = new Map<string, JobApplication[]>();
+
+    // First, group by normalized title
+    for (const app of state.applications) {
+      const normalized = normalizeJobTitle(app.roleName || 'Unknown Position');
+      if (!grouped.has(normalized)) {
+        grouped.set(normalized, []);
+      }
+      grouped.get(normalized)!.push(app);
+    }
+
+    // Replace normalized keys with canonical names
+    const result = new Map<string, JobApplication[]>();
+    for (const [normalized, apps] of grouped.entries()) {
+      const canonical = getCanonicalPositionName(apps.map((a) => a.roleName));
+      result.set(canonical, apps);
+    }
+
+    return result;
+  },
+
+  getApplicationsGroupedBySalary: (): Map<string, JobApplication[]> => {
+    const grouped = new Map<string, JobApplication[]>();
+
+    for (const app of state.applications) {
+      const annual = normalizeToAnnual(app.salary);
+
+      let bucket: string;
+      if (annual === null) {
+        bucket = 'Not Specified';
+      } else {
+        bucket = annual.toLocaleString('en-US', {
+          style: 'currency',
+          currency: app.salary?.currency || 'USD',
+          maximumFractionDigits: 0,
+        });
+      }
+
+      if (!grouped.has(bucket)) {
+        grouped.set(bucket, []);
+      }
+      grouped.get(bucket)!.push(app);
+    }
+
+    return grouped;
+  },
+
   // -------------------------------------------------------------------------
   // RESET
   // -------------------------------------------------------------------------
@@ -487,6 +563,8 @@ export const pipelineStore = {
       settings: DEFAULT_SETTINGS,
       isLoading: false,
       error: null,
+      aggregationMode: 'none' as AggregationMode,
+      featureFlags: state.featureFlags,
     });
   },
 };
