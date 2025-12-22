@@ -16,6 +16,7 @@ import {
   IconCheck,
   IconX,
   IconCopy,
+  IconSettings,
 } from '../ui/Icons';
 
 interface SyncSettingsProps {
@@ -35,6 +36,9 @@ export const SyncSettings: Component<SyncSettingsProps> = (props) => {
   // API Config state
   const [apiKey, setApiKey] = createSignal(settings().apiKey || '');
   const [apiMode, setApiMode] = createSignal(settings().apiMode);
+  const [defaultLandingTab, setDefaultLandingTab] = createSignal<
+    'discover' | 'prepare' | 'prospect' | 'prosper'
+  >(settings().defaultLandingTab || 'discover');
 
   const inputStyle = () => ({
     width: '100%',
@@ -488,6 +492,138 @@ export const SyncSettings: Component<SyncSettingsProps> = (props) => {
               cursor: 'pointer',
             }}
           />
+        </div>
+      </FluidCard>
+
+      {/* Default Landing Tab */}
+      <FluidCard style={{ 'margin-bottom': '24px' }}>
+        <h4
+          style={{
+            margin: '0 0 12px',
+            'font-size': '16px',
+            'font-family': "'Playfair Display', Georgia, serif",
+            'font-weight': '600',
+            color: theme().colors.text,
+            display: 'flex',
+            'align-items': 'center',
+            gap: '10px',
+          }}
+        >
+          <IconSettings size={18} color={theme().colors.primary} /> Default Landing Tab
+        </h4>
+        <p
+          style={{
+            margin: '0 0 16px',
+            'font-size': '13px',
+            'font-family': "'Space Grotesk', system-ui, sans-serif",
+            color: theme().colors.textMuted,
+            'line-height': '1.5',
+          }}
+        >
+          Choose which tab to show when you open Augment.
+        </p>
+
+        <div style={{ display: 'flex', gap: '8px', 'flex-wrap': 'wrap' }}>
+          <button
+            class="pipeline-btn"
+            onClick={() => {
+              setDefaultLandingTab('discover');
+              pipelineStore.updateSettings({ defaultLandingTab: 'discover' });
+            }}
+            style={{
+              flex: 1,
+              'min-width': '100px',
+              padding: '12px',
+              background: '#0A0A0A',
+              border:
+                defaultLandingTab() === 'discover'
+                  ? '2px solid #FFFFFF'
+                  : '1px solid rgba(255, 255, 255, 0.3)',
+              'border-radius': '10px',
+              color: '#FFFFFF',
+              'font-family': "'Space Grotesk', system-ui, sans-serif",
+              'font-weight': defaultLandingTab() === 'discover' ? '600' : '400',
+              opacity: defaultLandingTab() === 'discover' ? 1 : 0.7,
+              cursor: 'pointer',
+            }}
+          >
+            Discover
+          </button>
+          <button
+            class="pipeline-btn"
+            onClick={() => {
+              setDefaultLandingTab('prepare');
+              pipelineStore.updateSettings({ defaultLandingTab: 'prepare' });
+            }}
+            style={{
+              flex: 1,
+              'min-width': '100px',
+              padding: '12px',
+              background: '#0A0A0A',
+              border:
+                defaultLandingTab() === 'prepare'
+                  ? '2px solid #FFFFFF'
+                  : '1px solid rgba(255, 255, 255, 0.3)',
+              'border-radius': '10px',
+              color: '#FFFFFF',
+              'font-family': "'Space Grotesk', system-ui, sans-serif",
+              'font-weight': defaultLandingTab() === 'prepare' ? '600' : '400',
+              opacity: defaultLandingTab() === 'prepare' ? 1 : 0.7,
+              cursor: 'pointer',
+            }}
+          >
+            Prepare
+          </button>
+          <button
+            class="pipeline-btn"
+            onClick={() => {
+              setDefaultLandingTab('prospect');
+              pipelineStore.updateSettings({ defaultLandingTab: 'prospect' });
+            }}
+            style={{
+              flex: 1,
+              'min-width': '100px',
+              padding: '12px',
+              background: '#0A0A0A',
+              border:
+                defaultLandingTab() === 'prospect'
+                  ? '2px solid #FFFFFF'
+                  : '1px solid rgba(255, 255, 255, 0.3)',
+              'border-radius': '10px',
+              color: '#FFFFFF',
+              'font-family': "'Space Grotesk', system-ui, sans-serif",
+              'font-weight': defaultLandingTab() === 'prospect' ? '600' : '400',
+              opacity: defaultLandingTab() === 'prospect' ? 1 : 0.7,
+              cursor: 'pointer',
+            }}
+          >
+            Prospect
+          </button>
+          <button
+            class="pipeline-btn"
+            onClick={() => {
+              setDefaultLandingTab('prosper');
+              pipelineStore.updateSettings({ defaultLandingTab: 'prosper' });
+            }}
+            style={{
+              flex: 1,
+              'min-width': '100px',
+              padding: '12px',
+              background: '#0A0A0A',
+              border:
+                defaultLandingTab() === 'prosper'
+                  ? '2px solid #FFFFFF'
+                  : '1px solid rgba(255, 255, 255, 0.3)',
+              'border-radius': '10px',
+              color: '#FFFFFF',
+              'font-family': "'Space Grotesk', system-ui, sans-serif",
+              'font-weight': defaultLandingTab() === 'prosper' ? '600' : '400',
+              opacity: defaultLandingTab() === 'prosper' ? 1 : 0.7,
+              cursor: 'pointer',
+            }}
+          >
+            Prosper
+          </button>
         </div>
       </FluidCard>
 
