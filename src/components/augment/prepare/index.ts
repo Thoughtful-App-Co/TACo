@@ -7,11 +7,9 @@
 // Store
 export { prepareStore } from './store';
 
-// Components (to be created)
-// export { PrepareApp } from './PrepareApp';
-// export { ResumeUploader } from './components/ResumeUploader';
-// export { ResumeWizard } from './components/ResumeWizard';
+// Components
+export { PrepareApp } from './PrepareApp';
+export { ResumeUploader } from './components/ResumeUploader';
 
 // Services
-// export { parseResume } from './services/resume-parser.service';
-// export { mutateResume } from './services/resume-mutator.service';
+export { parseResume } from './services/resume-parser.service';
