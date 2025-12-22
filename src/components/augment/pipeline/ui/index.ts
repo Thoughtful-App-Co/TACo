@@ -8,6 +8,7 @@ export { FluidCard } from './FluidCard';
 export { StatusBadge } from './StatusBadge';
 export { AgingIndicator } from './AgingIndicator';
 export { ScoreBadge } from './ScoreBadge';
+export { AggregationAccordion } from './AggregationAccordion';
 export {
   Tooltip,
   StatTooltipContent,

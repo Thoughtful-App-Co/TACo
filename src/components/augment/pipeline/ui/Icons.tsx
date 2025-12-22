@@ -585,7 +585,6 @@ export const IconLoader: Component<IconProps> = (props) => (
     stroke-linecap="round"
     stroke-linejoin="round"
     class={props.class}
-    style={{ animation: 'spin 1s linear infinite' }}
   >
     <line x1="12" y1="2" x2="12" y2="6" />
     <line x1="12" y1="18" x2="12" y2="22" />
@@ -595,6 +594,26 @@ export const IconLoader: Component<IconProps> = (props) => (
     <line x1="18" y1="12" x2="22" y2="12" />
     <line x1="4.93" y1="19.07" x2="7.76" y2="16.24" />
     <line x1="16.24" y1="7.76" x2="19.07" y2="4.93" />
+  </svg>
+);
+
+// Trash / Delete icon
+export const IconTrash: Component<IconProps> = (props) => (
+  <svg
+    width={props.size || 20}
+    height={props.size || 20}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={props.color || 'currentColor'}
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    class={props.class}
+  >
+    <polyline points="3 6 5 6 21 6" />
+    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
+    <line x1="10" y1="11" x2="10" y2="17" />
+    <line x1="14" y1="11" x2="14" y2="17" />
   </svg>
 );
 
@@ -974,4 +993,5 @@ export default {
   IconEdit,
   IconSettings,
   IconLoader,
+  IconTrash,
 };
