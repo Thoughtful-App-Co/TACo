@@ -14,7 +14,7 @@ export interface TooltipProps {
   /** The trigger element */
   children: JSX.Element;
   /** Tooltip position relative to trigger */
-  position?: 'top' | 'bottom' | 'left' | 'right';
+  position?: 'top' | 'bottom' | 'left' | 'right' | 'auto';
   /** Delay before showing tooltip (ms) */
   delay?: number;
   /** Max width of tooltip */
@@ -29,12 +29,60 @@ export const Tooltip: Component<TooltipProps> = (props) => {
   const [isVisible, setIsVisible] = createSignal(false);
   const [isRendered, setIsRendered] = createSignal(false);
   const [coords, setCoords] = createSignal({ x: 0, y: 0 });
+  const [resolvedPosition, setResolvedPosition] = createSignal<'top' | 'bottom' | 'left' | 'right'>(
+    'top'
+  );
   let triggerRef: HTMLDivElement | undefined;
   let timeoutId: number | undefined;
 
   const position = () => props.position || 'top';
   const delay = () => props.delay ?? 150;
   const maxWidth = () => props.maxWidth || 280;
+
+  // Calculate optimal position based on element location in viewport
+  const calculateAutoPosition = (rect: DOMRect): 'top' | 'bottom' | 'left' | 'right' => {
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const centerX = viewportWidth / 2;
+    const centerY = viewportHeight / 2;
+
+    // Calculate element center
+    const elementCenterX = rect.left + rect.width / 2;
+    const elementCenterY = rect.top + rect.height / 2;
+
+    // Check if there's enough space on each side
+    const spaceLeft = rect.left;
+    const spaceRight = viewportWidth - rect.right;
+    const spaceTop = rect.top;
+    const spaceBottom = viewportHeight - rect.bottom;
+
+    const minTooltipWidth = 280; // Match maxWidth default
+
+    // Prefer horizontal positioning for list items
+    // Position toward center: if element is on left, show tooltip on right (and vice versa)
+    if (elementCenterX < centerX) {
+      // Element is on left side, prefer showing tooltip to the right (toward center)
+      if (spaceRight >= minTooltipWidth) {
+        return 'right';
+      } else if (spaceLeft >= minTooltipWidth) {
+        return 'left';
+      }
+    } else {
+      // Element is on right side, prefer showing tooltip to the left (toward center)
+      if (spaceLeft >= minTooltipWidth) {
+        return 'left';
+      } else if (spaceRight >= minTooltipWidth) {
+        return 'right';
+      }
+    }
+
+    // Fallback to vertical if horizontal doesn't work
+    if (spaceBottom > spaceTop) {
+      return 'bottom';
+    } else {
+      return 'top';
+    }
+  };
 
   const showTooltip = () => {
     if (props.disabled) return;
@@ -45,10 +93,18 @@ export const Tooltip: Component<TooltipProps> = (props) => {
         const scrollX = window.scrollX;
         const scrollY = window.scrollY;
 
+        // Resolve 'auto' position to actual position
+        const actualPosition =
+          position() === 'auto'
+            ? calculateAutoPosition(rect)
+            : (position() as 'top' | 'bottom' | 'left' | 'right');
+
+        setResolvedPosition(actualPosition);
+
         let x = 0;
         let y = 0;
 
-        switch (position()) {
+        switch (actualPosition) {
           case 'top':
             x = rect.left + scrollX + rect.width / 2;
             y = rect.top + scrollY - 8;
@@ -96,7 +152,9 @@ export const Tooltip: Component<TooltipProps> = (props) => {
   });
 
   const getTransformOrigin = () => {
-    switch (position()) {
+    // Use resolved position for 'auto' mode
+    const pos = position() === 'auto' ? resolvedPosition() : position();
+    switch (pos) {
       case 'top':
         return 'bottom center';
       case 'bottom':
@@ -111,7 +169,9 @@ export const Tooltip: Component<TooltipProps> = (props) => {
   };
 
   const getTransform = () => {
-    switch (position()) {
+    // Use resolved position for 'auto' mode
+    const pos = position() === 'auto' ? resolvedPosition() : position();
+    switch (pos) {
       case 'top':
         return 'translateX(-50%) translateY(-100%)';
       case 'bottom':
@@ -416,6 +476,9 @@ interface ApplicationTooltipContentProps {
   score?: number;
   nextAction?: string;
   accentColor: string;
+  salary?: string | null;
+  location?: string;
+  locationType?: 'remote' | 'hybrid' | 'onsite';
 }
 
 export const ApplicationTooltipContent: Component<ApplicationTooltipContentProps> = (props) => (
@@ -466,27 +529,46 @@ export const ApplicationTooltipContent: Component<ApplicationTooltipContentProps
       </span>
     </div>
 
-    {/* Score if available */}
-    <Show when={props.score !== undefined}>
-      <div
-        style={{
-          display: 'flex',
-          'justify-content': 'space-between',
-          'margin-bottom': '8px',
-        }}
-      >
-        <span style={{ color: 'rgba(255, 255, 255, 0.65)', 'font-size': '13px' }}>Match Score</span>
-        <span
-          style={{
-            'font-weight': '600',
-            'font-size': '14px',
-            color: props.score! >= 70 ? '#10B981' : props.score! >= 50 ? '#F59E0B' : '#EF4444',
-          }}
-        >
-          {props.score}%
-        </span>
-      </div>
-    </Show>
+    {/* Metadata grid */}
+    <div style={{ display: 'grid', gap: '8px', 'margin-bottom': '8px' }}>
+      {/* Location */}
+      <Show when={props.location || props.locationType}>
+        <div style={{ display: 'flex', 'justify-content': 'space-between' }}>
+          <span style={{ color: 'rgba(255, 255, 255, 0.65)', 'font-size': '13px' }}>Location</span>
+          <span style={{ 'font-size': '13px', color: '#FFFFFF', 'font-weight': '500' }}>
+            {props.location || props.locationType || 'Not specified'}
+          </span>
+        </div>
+      </Show>
+
+      {/* Salary */}
+      <Show when={props.salary}>
+        <div style={{ display: 'flex', 'justify-content': 'space-between' }}>
+          <span style={{ color: 'rgba(255, 255, 255, 0.65)', 'font-size': '13px' }}>Salary</span>
+          <span style={{ 'font-size': '13px', color: '#22C55E', 'font-weight': '600' }}>
+            {props.salary}
+          </span>
+        </div>
+      </Show>
+
+      {/* Score if available */}
+      <Show when={props.score !== undefined}>
+        <div style={{ display: 'flex', 'justify-content': 'space-between' }}>
+          <span style={{ color: 'rgba(255, 255, 255, 0.65)', 'font-size': '13px' }}>
+            Match Score
+          </span>
+          <span
+            style={{
+              'font-weight': '600',
+              'font-size': '14px',
+              color: props.score! >= 70 ? '#10B981' : props.score! >= 50 ? '#F59E0B' : '#EF4444',
+            }}
+          >
+            {props.score}%
+          </span>
+        </div>
+      </Show>
+    </div>
 
     {/* Next action suggestion */}
     <Show when={props.nextAction}>
