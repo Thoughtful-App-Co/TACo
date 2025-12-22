@@ -33,6 +33,7 @@ import {
 } from '../../services/onet';
 import { maximalist, maxPalette, maxGradients } from '../../theme/maximalist';
 import { PipelineView, pipelineStore, Sidebar, SidebarView } from './pipeline';
+import { PrepareApp } from './prepare';
 import { FeatureFlags, DEFAULT_FEATURE_FLAGS } from '../../schemas/pipeline.schema';
 
 // Helper to get RGB string from hex
@@ -2097,38 +2098,18 @@ export const AugmentApp: Component = () => {
 
           {/* Prepare Tab - Resume Builder */}
           {activeTab() === 'Prepare' && (
-            <div style={{ 'text-align': 'center', padding: '48px' }}>
-              <h2
-                style={{
-                  'font-family': maximalist.fonts.heading,
-                  'font-size': '36px',
-                  'font-weight': '700',
-                  color: currentTheme().colors.primary,
-                  'margin-bottom': '16px',
-                }}
-              >
-                Prepare: Resume Intelligence
-              </h2>
-              <p style={{ color: maximalist.colors.textMuted, 'font-size': '16px' }}>
-                Upload your resume, build it from scratch, and tailor it to any job description with
-                AI.
-              </p>
-              <div
-                style={{
-                  'margin-top': '32px',
-                  padding: '24px',
-                  background: 'rgba(255, 255, 255, 0.03)',
-                  border: `1px solid ${maximalist.colors.border}`,
-                  'border-radius': '12px',
-                  'max-width': '600px',
-                  margin: '32px auto',
-                }}
-              >
-                <p style={{ color: maximalist.colors.text }}>
-                  🚧 Module coming soon - Phase 2 implementation
-                </p>
-              </div>
-            </div>
+            <PrepareApp
+              currentTheme={() => ({
+                colors: {
+                  ...currentTheme().colors,
+                  surface: 'rgba(255, 255, 255, 0.02)',
+                  success: '#10b981',
+                  error: '#ef4444',
+                },
+                fonts: maximalist.fonts,
+                gradients: currentTheme().gradients,
+              })}
+            />
           )}
 
           {/* Prospect Tab - Job Pipeline */}
