@@ -19,7 +19,7 @@ import {
   untrack,
 } from 'solid-js';
 import { JobMatch } from '../../schemas/augment.schema';
-import { IconSearch, IconStar, IconGrid } from './pipeline/ui/Icons';
+import { IconSearch, IconStar, IconGrid, IconFileText, IconBriefcase } from './pipeline/ui/Icons';
 import {
   searchCareers,
   getInterestProfilerQuestions,
@@ -874,7 +874,9 @@ const JobCard: Component<{ job: JobMatch }> = (props) => {
 };
 
 export const AugmentApp: Component = () => {
-  const [activeTab, setActiveTab] = createSignal<'Discover' | 'Matches' | 'Prospect'>('Discover');
+  const [activeTab, setActiveTab] = createSignal<
+    'Discover' | 'Prepare' | 'Prospect' | 'Prosper' | 'Matches'
+  >('Discover');
   const [jobs, setJobs] = createSignal<JobMatch[]>([]);
 
   // Sidebar state
@@ -1259,17 +1261,22 @@ export const AugmentApp: Component = () => {
           >
             <For
               each={(() => {
-                const tabs: ('Discover' | 'Matches' | 'Prospect')[] = ['Discover'];
+                const tabs: ('Discover' | 'Prepare' | 'Prospect' | 'Prosper' | 'Matches')[] = [];
+                if (featureFlags().showDiscover) tabs.push('Discover');
+                if (featureFlags().showPrepare) tabs.push('Prepare');
+                if (featureFlags().showProspect) tabs.push('Prospect');
+                if (featureFlags().showProsper) tabs.push('Prosper');
                 if (featureFlags().showMatches) tabs.push('Matches');
-                if (featureFlags().showPipeline) tabs.push('Prospect');
                 return tabs;
               })()}
             >
               {(tab) => {
                 const getIcon = () => {
                   if (tab === 'Discover') return <IconSearch size={18} />;
-                  if (tab === 'Matches') return <IconStar size={18} />;
+                  if (tab === 'Prepare') return <IconFileText size={18} />;
                   if (tab === 'Prospect') return <IconGrid size={18} />;
+                  if (tab === 'Prosper') return <IconBriefcase size={18} />;
+                  if (tab === 'Matches') return <IconStar size={18} />;
                   return null;
                 };
 
@@ -2088,7 +2095,43 @@ export const AugmentApp: Component = () => {
             </div>
           )}
 
-          {/* Pipeline Tab */}
+          {/* Prepare Tab - Resume Builder */}
+          {activeTab() === 'Prepare' && (
+            <div style={{ 'text-align': 'center', padding: '48px' }}>
+              <h2
+                style={{
+                  'font-family': maximalist.fonts.heading,
+                  'font-size': '36px',
+                  'font-weight': '700',
+                  color: currentTheme().colors.primary,
+                  'margin-bottom': '16px',
+                }}
+              >
+                Prepare: Resume Intelligence
+              </h2>
+              <p style={{ color: maximalist.colors.textMuted, 'font-size': '16px' }}>
+                Upload your resume, build it from scratch, and tailor it to any job description with
+                AI.
+              </p>
+              <div
+                style={{
+                  'margin-top': '32px',
+                  padding: '24px',
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  border: `1px solid ${maximalist.colors.border}`,
+                  'border-radius': '12px',
+                  'max-width': '600px',
+                  margin: '32px auto',
+                }}
+              >
+                <p style={{ color: maximalist.colors.text }}>
+                  🚧 Module coming soon - Phase 2 implementation
+                </p>
+              </div>
+            </div>
+          )}
+
+          {/* Prospect Tab - Job Pipeline */}
           {activeTab() === 'Prospect' && (
             <PipelineView
               currentTheme={() => ({
@@ -2102,6 +2145,41 @@ export const AugmentApp: Component = () => {
                 spacing: maximalist.spacing,
               })}
             />
+          )}
+
+          {/* Prosper Tab - Career Journal */}
+          {activeTab() === 'Prosper' && (
+            <div style={{ 'text-align': 'center', padding: '48px' }}>
+              <h2
+                style={{
+                  'font-family': maximalist.fonts.heading,
+                  'font-size': '36px',
+                  'font-weight': '700',
+                  color: currentTheme().colors.primary,
+                  'margin-bottom': '16px',
+                }}
+              >
+                Prosper: Career Journal
+              </h2>
+              <p style={{ color: maximalist.colors.textMuted, 'font-size': '16px' }}>
+                Quarterly check-ins and accomplishment tracking while employed.
+              </p>
+              <div
+                style={{
+                  'margin-top': '32px',
+                  padding: '24px',
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  border: `1px solid ${maximalist.colors.border}`,
+                  'border-radius': '12px',
+                  'max-width': '600px',
+                  margin: '32px auto',
+                }}
+              >
+                <p style={{ color: maximalist.colors.text }}>
+                  🚧 Module coming soon - Phase 2 implementation
+                </p>
+              </div>
+            </div>
           )}
         </main>
 
