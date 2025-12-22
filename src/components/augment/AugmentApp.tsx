@@ -18,6 +18,7 @@ import {
   createEffect,
   untrack,
 } from 'solid-js';
+import { useLocation, useNavigate } from '@solidjs/router';
 import { JobMatch } from '../../schemas/augment.schema';
 import { IconSearch, IconStar, IconGrid, IconFileText, IconBriefcase } from './pipeline/ui/Icons';
 import {
@@ -31,6 +32,7 @@ import {
   OnetCareerMatch,
   OnetCareerDetails,
 } from '../../services/onet';
+import { formatSalary } from './pipeline/utils';
 import { maximalist, maxPalette, maxGradients } from '../../theme/maximalist';
 import { PipelineView, pipelineStore, Sidebar, SidebarView } from './pipeline';
 import { PrepareApp } from './prepare';
@@ -830,8 +832,9 @@ const JobCard: Component<{ job: JobMatch }> = (props) => {
                 color: maximalist.colors.text,
               }}
             >
-              ${(props.job.salary.min / 1000).toFixed(0)}k - $
-              {(props.job.salary.max / 1000).toFixed(0)}k
+              {formatSalary(
+                props.job.salary ? { ...props.job.salary, period: 'annual' as const } : undefined
+              )}
             </span>
           </div>
         )}
@@ -874,11 +877,81 @@ const JobCard: Component<{ job: JobMatch }> = (props) => {
   );
 };
 
+// Feature ID to Tab name mapping
+type FeatureId = 'discover' | 'prepare' | 'prospect' | 'prosper';
+type TabName = 'Discover' | 'Prepare' | 'Prospect' | 'Prosper' | 'Matches';
+
+const featureIdToTab: Record<FeatureId, TabName> = {
+  discover: 'Discover',
+  prepare: 'Prepare',
+  prospect: 'Prospect',
+  prosper: 'Prosper',
+};
+
+const tabToFeatureId: Record<TabName, FeatureId | null> = {
+  Discover: 'discover',
+  Prepare: 'prepare',
+  Prospect: 'prospect',
+  Prosper: 'prosper',
+  Matches: null, // Matches doesn't have a dedicated route
+};
+
 export const AugmentApp: Component = () => {
-  const [activeTab, setActiveTab] = createSignal<
-    'Discover' | 'Prepare' | 'Prospect' | 'Prosper' | 'Matches'
-  >('Discover');
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Reactive accessor for current pathname
+  const pathname = () => location.pathname;
+
+  // Extract featureId from pathname (e.g., /augment/discover -> discover)
+  const featureIdFromPath = createMemo((): FeatureId | null => {
+    const path = pathname();
+    const match = path.match(/^\/augment\/(\w+)/);
+    return match ? (match[1].toLowerCase() as FeatureId) : null;
+  });
+
+  // Get the user's configured default landing tab from settings
+  const getDefaultLandingTab = (): TabName => {
+    const defaultTab = pipelineStore.state.settings.defaultLandingTab || 'discover';
+    return featureIdToTab[defaultTab] || 'Discover';
+  };
+
+  // Derive initial tab from URL, falling back to user's default landing tab
+  const getInitialTab = (): TabName => {
+    const featureId = featureIdFromPath();
+    if (featureId && featureIdToTab[featureId]) {
+      return featureIdToTab[featureId];
+    }
+    return getDefaultLandingTab();
+  };
+
+  const [activeTab, setActiveTab] = createSignal<TabName>(getInitialTab());
   const [jobs, setJobs] = createSignal<JobMatch[]>([]);
+
+  // Sync tab with URL when pathname changes
+  createEffect(() => {
+    const path = pathname(); // Track pathname reactively
+    const featureId = featureIdFromPath();
+
+    if (featureId && featureIdToTab[featureId]) {
+      setActiveTab(featureIdToTab[featureId]);
+    } else if (path === '/augment' || path === '/augment/') {
+      // If no featureId in URL, redirect to the user's default landing tab
+      const defaultTab = pipelineStore.state.settings.defaultLandingTab || 'discover';
+      navigate(`/augment/${defaultTab}`, { replace: true });
+    }
+  });
+
+  // Navigate when tab changes
+  const handleTabChange = (tab: TabName) => {
+    const featureId = tabToFeatureId[tab];
+    if (featureId) {
+      navigate(`/augment/${featureId}`);
+    } else {
+      // For tabs without routes (like Matches), stay on /augment
+      navigate('/augment');
+    }
+  };
 
   // Sidebar state
   const [sidebarView, setSidebarView] = createSignal<SidebarView>(null);
@@ -1283,7 +1356,7 @@ export const AugmentApp: Component = () => {
 
                 return (
                   <button
-                    onClick={() => setActiveTab(tab)}
+                    onClick={() => handleTabChange(tab)}
                     style={{
                       display: 'flex',
                       'align-items': 'center',
@@ -1503,7 +1576,7 @@ export const AugmentApp: Component = () => {
                   >
                     <p>Complete the Discover assessment to see your matched opportunities.</p>
                     <button
-                      onClick={() => setActiveTab('Discover')}
+                      onClick={() => handleTabChange('Discover')}
                       style={{
                         'margin-top': '16px',
                         padding: '12px 24px',
