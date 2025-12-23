@@ -481,6 +481,40 @@ export const IconChevronLeft: Component<IconProps> = (props) => (
   </svg>
 );
 
+// ChevronUp icon
+export const IconChevronUp: Component<IconProps> = (props) => (
+  <svg
+    width={props.size || 20}
+    height={props.size || 20}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={props.color || 'currentColor'}
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    class={props.class}
+  >
+    <polyline points="18 15 12 9 6 15" />
+  </svg>
+);
+
+// ChevronDown icon
+export const IconChevronDown: Component<IconProps> = (props) => (
+  <svg
+    width={props.size || 20}
+    height={props.size || 20}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={props.color || 'currentColor'}
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    class={props.class}
+  >
+    <polyline points="6 9 12 15 18 9" />
+  </svg>
+);
+
 // External link icon
 export const IconExternalLink: Component<IconProps> = (props) => (
   <svg
@@ -1044,6 +1078,28 @@ export const IconFilter: Component<IconProps> = (props) => (
   </svg>
 );
 
+// GripVertical / Drag Handle icon
+export const IconGripVertical: Component<IconProps> = (props) => (
+  <svg
+    width={props.size || 20}
+    height={props.size || 20}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={props.color || 'currentColor'}
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    class={props.class}
+  >
+    <circle cx="9" cy="5" r="1" />
+    <circle cx="9" cy="12" r="1" />
+    <circle cx="9" cy="19" r="1" />
+    <circle cx="15" cy="5" r="1" />
+    <circle cx="15" cy="12" r="1" />
+    <circle cx="15" cy="19" r="1" />
+  </svg>
+);
+
 export default {
   IconPipeline,
   IconBriefcase,
@@ -1070,6 +1126,8 @@ export default {
   IconTrendingUp,
   IconChevronRight,
   IconChevronLeft,
+  IconChevronUp,
+  IconChevronDown,
   IconExternalLink,
   IconLightbulb,
   IconLink,
@@ -1081,4 +1139,5 @@ export default {
   IconSortDesc,
   IconArrowUpDown,
   IconFilter,
+  IconGripVertical,
 };
