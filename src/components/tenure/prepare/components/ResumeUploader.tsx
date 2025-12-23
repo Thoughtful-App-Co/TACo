@@ -122,7 +122,6 @@ export const ResumeUploader: Component<ResumeUploaderProps> = (props) => {
       }, 100);
 
       // Extract text from file using client-side parsing
-      console.log('[ResumeUploader] Extracting text from file:', file.name);
       const extraction = await extractTextFromFile(file);
 
       clearInterval(progressInterval);
@@ -133,16 +132,9 @@ export const ResumeUploader: Component<ResumeUploaderProps> = (props) => {
         throw new Error(extraction.error || 'Failed to extract text from file');
       }
 
-      console.log('[ResumeUploader] Extracted text:', {
-        wordCount: extraction.wordCount,
-        pageCount: extraction.pageCount,
-        textPreview: extraction.text.substring(0, 200) + '...',
-      });
-
       // Parse with AI - send extracted text
       await parseResumeContent(extraction.text, file.name, file.type);
     } catch (error) {
-      console.error('Upload failed:', error);
       prepareStore.setError(error instanceof Error ? error.message : 'Upload failed');
       prepareStore.setUploading(false);
     }
@@ -185,20 +177,13 @@ export const ResumeUploader: Component<ResumeUploaderProps> = (props) => {
         fileName,
       });
 
-      console.log('[ResumeUploader] Parse result:', result);
-
       if (!result.success) {
         throw new Error(result.error || 'Parsing failed');
       }
 
-      console.log('[ResumeUploader] Parsed sections:', result.parsed);
-      console.log('[ResumeUploader] Experience count:', result.parsed?.experience?.length);
-      console.log('[ResumeUploader] Skills count:', result.parsed?.skills?.length);
-
       // Update master resume with parsed data
       prepareStore.setParsedSections(result.parsed);
 
-      console.log('[ResumeUploader] Store after update:', prepareStore.state.masterResume);
       prepareStore.updateMasterResume({
         rawText: result.extractedText || content,
         extractedKeywords: result.keywords,
@@ -225,7 +210,6 @@ export const ResumeUploader: Component<ResumeUploaderProps> = (props) => {
       // Callback
       props.onParseComplete?.();
     } catch (error) {
-      console.error('Parse failed:', error);
       prepareStore.setError(error instanceof Error ? error.message : 'Parsing failed');
       prepareStore.setParsing(false);
     }

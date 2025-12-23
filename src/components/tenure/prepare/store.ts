@@ -58,7 +58,6 @@ function loadFromStorage<T>(key: string, defaultValue: T): T {
       return reviveDates(parsed);
     }
   } catch (e) {
-    console.error(`Failed to load ${key} from storage:`, e);
   }
   return defaultValue;
 }
@@ -166,7 +165,6 @@ export const prepareStore = {
   setParsedSections: (sections: MasterResume['parsedSections']) => {
     setState('masterResume', (prev) => {
       if (!prev) {
-        console.error('Cannot set parsed sections: masterResume is null');
         return prev;
       }
       return {
@@ -195,7 +193,6 @@ export const prepareStore = {
 
   addExperience: (experience: Omit<WorkExperience, 'id'>) => {
     if (!state.masterResume) {
-      console.error('Cannot add experience: masterResume is null');
       return;
     }
     const newExperience: WorkExperience = {
@@ -208,7 +205,6 @@ export const prepareStore = {
 
   updateExperience: (id: string, updates: Partial<WorkExperience>) => {
     if (!state.masterResume) {
-      console.error('Cannot update experience: masterResume is null');
       return;
     }
     setState(
@@ -223,7 +219,6 @@ export const prepareStore = {
 
   removeExperience: (id: string) => {
     if (!state.masterResume) {
-      console.error('Cannot remove experience: masterResume is null');
       return;
     }
     setState('masterResume', 'parsedSections', 'experience', (experiences) =>
@@ -234,7 +229,6 @@ export const prepareStore = {
 
   reorderExperiences: (ids: string[]) => {
     if (!state.masterResume) {
-      console.error('Cannot reorder experiences: masterResume is null');
       return;
     }
     setState('masterResume', 'parsedSections', 'experience', (experiences) => {
@@ -263,7 +257,6 @@ export const prepareStore = {
 
   addEducation: (education: Omit<Education, 'id'>) => {
     if (!state.masterResume) {
-      console.error('Cannot add education: masterResume is null');
       return;
     }
     const newEducation: Education = {
@@ -276,7 +269,6 @@ export const prepareStore = {
 
   updateEducation: (id: string, updates: Partial<Education>) => {
     if (!state.masterResume) {
-      console.error('Cannot update education: masterResume is null');
       return;
     }
     setState(
@@ -291,12 +283,35 @@ export const prepareStore = {
 
   removeEducation: (id: string) => {
     if (!state.masterResume) {
-      console.error('Cannot remove education: masterResume is null');
       return;
     }
     setState('masterResume', 'parsedSections', 'education', (educations) =>
       educations.filter((edu) => edu.id !== id)
     );
+    setState('masterResume', 'updatedAt', new Date());
+  },
+
+  reorderEducation: (ids: string[]) => {
+    if (!state.masterResume) {
+      return;
+    }
+    setState('masterResume', 'parsedSections', 'education', (educations) => {
+      const educationMap = new Map(educations.map((edu) => [edu.id, edu]));
+      const reordered: Education[] = [];
+      for (const id of ids) {
+        const edu = educationMap.get(id);
+        if (edu) {
+          reordered.push(edu);
+        }
+      }
+      // Add any education entries not in the ids array at the end
+      for (const edu of educations) {
+        if (!ids.includes(edu.id)) {
+          reordered.push(edu);
+        }
+      }
+      return reordered;
+    });
     setState('masterResume', 'updatedAt', new Date());
   },
 
@@ -306,7 +321,6 @@ export const prepareStore = {
 
   addSkill: (skill: string) => {
     if (!state.masterResume) {
-      console.error('Cannot add skill: masterResume is null');
       return;
     }
     // Check for duplicate
@@ -319,7 +333,6 @@ export const prepareStore = {
 
   removeSkill: (skill: string) => {
     if (!state.masterResume) {
-      console.error('Cannot remove skill: masterResume is null');
       return;
     }
     setState('masterResume', 'parsedSections', 'skills', (skills) =>
@@ -330,7 +343,6 @@ export const prepareStore = {
 
   updateSkills: (skills: string[]) => {
     if (!state.masterResume) {
-      console.error('Cannot update skills: masterResume is null');
       return;
     }
     setState('masterResume', 'parsedSections', 'skills', skills);
@@ -343,7 +355,6 @@ export const prepareStore = {
 
   addCertification: (cert: string) => {
     if (!state.masterResume) {
-      console.error('Cannot add certification: masterResume is null');
       return;
     }
     // Check for duplicate
@@ -356,7 +367,6 @@ export const prepareStore = {
 
   removeCertification: (cert: string) => {
     if (!state.masterResume) {
-      console.error('Cannot remove certification: masterResume is null');
       return;
     }
     setState('masterResume', 'parsedSections', 'certifications', (certs) =>
@@ -371,7 +381,6 @@ export const prepareStore = {
 
   addKeyword: (category: 'technical' | 'soft' | 'industry' | 'tools', keyword: string) => {
     if (!state.masterResume) {
-      console.error('Cannot add keyword: masterResume is null');
       return;
     }
     // Check for duplicate in category
@@ -384,7 +393,6 @@ export const prepareStore = {
 
   removeKeyword: (category: 'technical' | 'soft' | 'industry' | 'tools', keyword: string) => {
     if (!state.masterResume) {
-      console.error('Cannot remove keyword: masterResume is null');
       return;
     }
     setState('masterResume', 'extractedKeywords', category, (keywords) =>
@@ -399,7 +407,6 @@ export const prepareStore = {
 
   setSummary: (summary: string) => {
     if (!state.masterResume) {
-      console.error('Cannot set summary: masterResume is null');
       return;
     }
     setState('masterResume', 'parsedSections', 'summary', summary);

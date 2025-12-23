@@ -50,7 +50,6 @@ export async function parseResume(request: ParseResumeRequest): Promise<ParseRes
     const data: ParseResumeResponse = await response.json();
     return data;
   } catch (error) {
-    console.error('Resume parsing failed:', error);
     return {
       success: false,
       parsed: {
@@ -98,7 +97,6 @@ export async function extractTextFromFile(file: File): Promise<string> {
     const data = await response.json();
     return data.text || '';
   } catch (error) {
-    console.error('Text extraction failed:', error);
     throw error;
   }
 }

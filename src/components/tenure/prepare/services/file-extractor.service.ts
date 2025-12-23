@@ -40,10 +40,8 @@ export async function extractTextFromPDF(file: File): Promise<ExtractionResult> 
         // Set on globalThis for pdf-parse to find
         (globalThis as any).pdfjsWorker = workerUrl;
 
-        console.log('[FileExtractor] PDF.js worker configured:', workerUrl);
       })
       .catch((err) => {
-        console.error('Failed to load pdfjs-dist:', err);
       });
 
     // Import pdf-parse after worker configuration
@@ -68,7 +66,6 @@ export async function extractTextFromPDF(file: File): Promise<ExtractionResult> 
       wordCount,
     };
   } catch (error) {
-    console.error('PDF extraction failed:', error);
     return {
       success: false,
       text: '',
@@ -100,7 +97,6 @@ export async function extractTextFromDOCX(file: File): Promise<ExtractionResult>
 
     // Log any warnings
     if (result.messages && result.messages.length > 0) {
-      console.warn('DOCX extraction warnings:', result.messages);
     }
 
     return {
@@ -109,7 +105,6 @@ export async function extractTextFromDOCX(file: File): Promise<ExtractionResult>
       wordCount,
     };
   } catch (error) {
-    console.error('DOCX extraction failed:', error);
     return {
       success: false,
       text: '',

@@ -78,6 +78,10 @@ export const PrepareApp: Component<PrepareAppProps> = (props) => {
     prepareStore.removeExperience(id);
   };
 
+  const handleReorderExperiences = (ids: string[]) => {
+    prepareStore.reorderExperiences(ids);
+  };
+
   const handleSaveExperience = (exp: Omit<WorkExperience, 'id'>) => {
     if (editingExperience()) {
       prepareStore.updateExperience(editingExperience()!.id, exp);
@@ -100,6 +104,10 @@ export const PrepareApp: Component<PrepareAppProps> = (props) => {
 
   const handleDeleteEducation = (id: string) => {
     prepareStore.removeEducation(id);
+  };
+
+  const handleReorderEducation = (ids: string[]) => {
+    prepareStore.reorderEducation(ids);
   };
 
   const handleSaveEducation = (edu: Omit<Education, 'id'>) => {
@@ -344,33 +352,15 @@ export const PrepareApp: Component<PrepareAppProps> = (props) => {
             onAddExperience={handleAddExperience}
             onEditExperience={handleEditExperience}
             onDeleteExperience={handleDeleteExperience}
+            onReorderExperiences={handleReorderExperiences}
             onAddEducation={handleAddEducation}
             onEditEducation={handleEditEducation}
             onDeleteEducation={handleDeleteEducation}
+            onReorderEducation={handleReorderEducation}
           />
         </Show>
       </Show>
 
-      {/* Debug Info (dev only) */}
-      <Show when={import.meta.env.DEV}>
-        <div
-          style={{
-            'margin-top': '32px',
-            padding: '16px',
-            background: 'rgba(255, 255, 255, 0.02)',
-            border: `1px solid ${theme().colors.border}`,
-            'border-radius': '8px',
-            'font-family': 'monospace',
-            'font-size': '12px',
-            color: theme().colors.textMuted,
-          }}
-        >
-          <div>Has Master Resume: {hasMasterResume() ? 'Yes' : 'No'}</div>
-          <div>Wizard Step: {wizardState().currentStep}</div>
-          <div>Upload Progress: {prepareStore.state.uploadProgress}%</div>
-          <div>Parse Progress: {prepareStore.state.parseProgress}%</div>
-        </div>
-      </Show>
 
       {/* Delete Confirmation Modal */}
       <Show when={showDeleteConfirm()}>
