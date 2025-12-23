@@ -52,11 +52,13 @@ interface ParseReviewPanelProps {
   onAddExperience: () => void;
   onEditExperience: (exp: WorkExperience) => void;
   onDeleteExperience: (id: string) => void;
+  onReorderExperiences?: (ids: string[]) => void;
 
   // Education handlers
   onAddEducation: () => void;
   onEditEducation: (edu: Education) => void;
   onDeleteEducation: (id: string) => void;
+  onReorderEducation?: (ids: string[]) => void;
 }
 
 // ============================================================================
@@ -266,26 +268,6 @@ export const ParseReviewPanel: Component<ParseReviewPanelProps> = (props) => {
     'justify-content': 'center',
   });
 
-  const footerStyle = (): JSX.CSSProperties => ({
-    display: 'flex',
-    'justify-content': 'flex-end',
-    'padding-top': '24px',
-    'border-top': '1px solid rgba(255, 255, 255, 0.06)',
-  });
-
-  const continueButtonStyle = (): JSX.CSSProperties => ({
-    padding: '14px 28px',
-    background: props.currentTheme().gradients.primary,
-    border: 'none',
-    'border-radius': '12px',
-    color: props.currentTheme().colors.textOnPrimary,
-    'font-size': '15px',
-    'font-weight': '600',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease',
-    'box-shadow': `0 4px 20px ${props.currentTheme().colors.primary}40`,
-  });
-
   // ---------------------------------------------------------------------------
   // RENDER HELPERS
   // ---------------------------------------------------------------------------
@@ -299,6 +281,7 @@ export const ParseReviewPanel: Component<ParseReviewPanelProps> = (props) => {
         onEdit={props.onEditExperience}
         onDelete={props.onDeleteExperience}
         onAdd={props.onAddExperience}
+        onReorder={props.onReorderExperiences}
       />
     );
   };
@@ -312,6 +295,7 @@ export const ParseReviewPanel: Component<ParseReviewPanelProps> = (props) => {
         onEdit={props.onEditEducation}
         onDelete={props.onDeleteEducation}
         onAdd={props.onAddEducation}
+        onReorder={props.onReorderEducation}
       />
     );
   };
@@ -408,15 +392,6 @@ export const ParseReviewPanel: Component<ParseReviewPanelProps> = (props) => {
       {/* Content Area */}
       <FluidCard style={{ padding: '24px' }}>
         <div style={contentAreaStyle()}>{renderTabContent()}</div>
-
-        {/* Footer with Continue Button */}
-        <Show when={props.onContinue}>
-          <div style={footerStyle()}>
-            <button style={continueButtonStyle()} onClick={props.onContinue} class="pipeline-btn">
-              Continue to Next Step
-            </button>
-          </div>
-        </Show>
       </FluidCard>
     </div>
   );

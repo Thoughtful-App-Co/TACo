@@ -8,7 +8,14 @@ import { Component, For, Show, createSignal } from 'solid-js';
 import type { WorkExperience } from '../../../../schemas/pipeline.schema';
 import type { Theme } from '../../../../theme/types';
 import { FluidCard } from '../../pipeline/ui/FluidCard';
-import { IconEdit, IconTrash, IconPlus, IconBriefcase } from '../../pipeline/ui/Icons';
+import {
+  IconEdit,
+  IconTrash,
+  IconPlus,
+  IconBriefcase,
+  IconChevronUp,
+  IconChevronDown,
+} from '../../pipeline/ui/Icons';
 import { liquidTenure, pipelineAnimations } from '../../pipeline/theme/liquid-tenure';
 
 // ============================================================================
@@ -23,6 +30,7 @@ export interface ExperienceViewerProps {
   onEdit: (experience: WorkExperience) => void;
   onDelete: (id: string) => void;
   onAdd: () => void;
+  onReorder?: (ids: string[]) => void;
 }
 
 // ============================================================================
@@ -86,6 +94,86 @@ function getLocationTypeBadge(
 export const ExperienceViewer: Component<ExperienceViewerProps> = (props) => {
   const theme = () => props.currentTheme();
   const [hoveredCardId, setHoveredCardId] = createSignal<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = createSignal<string | null>(null);
+  const [animatingId, setAnimatingId] = createSignal<string | null>(null);
+
+  const handleDeleteClick = (id: string) => {
+    setDeleteConfirmId(id);
+  };
+
+  const handleConfirmDelete = () => {
+    const id = deleteConfirmId();
+    if (id) {
+      props.onDelete(id);
+      setDeleteConfirmId(null);
+    }
+  };
+
+  const handleCancelDelete = () => {
+    setDeleteConfirmId(null);
+  };
+
+  const handleMoveUp = (id: string) => {
+    if (!props.onReorder) return;
+
+    const currentIds = props.experiences.map((exp) => exp.id);
+    const currentIndex = currentIds.indexOf(id);
+
+    // Can't move up if already at the top
+    if (currentIndex <= 0) return;
+
+    // Trigger animation
+    setAnimatingId(id);
+
+    // Swap with previous item
+    const newIds = [...currentIds];
+    [newIds[currentIndex - 1], newIds[currentIndex]] = [
+      newIds[currentIndex],
+      newIds[currentIndex - 1],
+    ];
+
+    // Call reorder handler
+    props.onReorder(newIds);
+
+    // Clear animation after transition completes
+    setTimeout(() => setAnimatingId(null), 300);
+  };
+
+  const handleMoveDown = (id: string) => {
+    if (!props.onReorder) return;
+
+    const currentIds = props.experiences.map((exp) => exp.id);
+    const currentIndex = currentIds.indexOf(id);
+
+    // Can't move down if already at the bottom
+    if (currentIndex >= currentIds.length - 1) return;
+
+    // Trigger animation
+    setAnimatingId(id);
+
+    // Swap with next item
+    const newIds = [...currentIds];
+    [newIds[currentIndex], newIds[currentIndex + 1]] = [
+      newIds[currentIndex + 1],
+      newIds[currentIndex],
+    ];
+
+    // Call reorder handler
+    props.onReorder(newIds);
+
+    // Clear animation after transition completes
+    setTimeout(() => setAnimatingId(null), 300);
+  };
+
+  const canMoveUp = (id: string): boolean => {
+    const currentIndex = props.experiences.findIndex((exp) => exp.id === id);
+    return currentIndex > 0;
+  };
+
+  const canMoveDown = (id: string): boolean => {
+    const currentIndex = props.experiences.findIndex((exp) => exp.id === id);
+    return currentIndex < props.experiences.length - 1;
+  };
 
   return (
     <div
@@ -108,10 +196,15 @@ export const ExperienceViewer: Component<ExperienceViewerProps> = (props) => {
               experience={experience}
               theme={theme()}
               isHovered={hoveredCardId() === experience.id}
+              isAnimating={animatingId() === experience.id}
               onMouseEnter={() => setHoveredCardId(experience.id)}
               onMouseLeave={() => setHoveredCardId(null)}
               onEdit={() => props.onEdit(experience)}
-              onDelete={() => props.onDelete(experience.id)}
+              onDelete={() => handleDeleteClick(experience.id)}
+              onMoveUp={() => handleMoveUp(experience.id)}
+              onMoveDown={() => handleMoveDown(experience.id)}
+              canMoveUp={canMoveUp(experience.id)}
+              canMoveDown={canMoveDown(experience.id)}
             />
           )}
         </For>
@@ -150,6 +243,106 @@ export const ExperienceViewer: Component<ExperienceViewerProps> = (props) => {
           <IconPlus size={24} color="#FFFFFF" />
         </button>
       </Show>
+
+      {/* Delete Confirmation Modal */}
+      <Show when={deleteConfirmId() !== null}>
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            'align-items': 'center',
+            'justify-content': 'center',
+            'z-index': 1000,
+            padding: '20px',
+          }}
+          onClick={handleCancelDelete}
+        >
+          <div
+            style={{
+              background: theme().colors.surface || '#1F2937',
+              border: `2px solid #EF4444`,
+              'border-radius': '16px',
+              padding: '32px',
+              'max-width': '500px',
+              width: '100%',
+              'box-shadow': '0 20px 60px rgba(0, 0, 0, 0.5)',
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              style={{
+                display: 'flex',
+                'align-items': 'center',
+                gap: '12px',
+                'margin-bottom': '16px',
+              }}
+            >
+              <IconTrash size={24} color="#EF4444" />
+              <h3
+                style={{
+                  margin: 0,
+                  'font-size': '24px',
+                  color: '#EF4444',
+                  'font-family': theme().fonts.heading,
+                }}
+              >
+                Delete Work Experience?
+              </h3>
+            </div>
+
+            <p
+              style={{
+                margin: '0 0 24px',
+                'font-size': '16px',
+                color: theme().colors.text,
+                'line-height': '1.6',
+              }}
+            >
+              Are you sure you want to delete this work experience? This action cannot be undone.
+            </p>
+
+            <div style={{ display: 'flex', gap: '12px', 'justify-content': 'flex-end' }}>
+              <button
+                onClick={handleCancelDelete}
+                style={{
+                  padding: '12px 24px',
+                  background: 'rgba(255, 255, 255, 0.05)',
+                  border: `1px solid ${theme().colors.border}`,
+                  'border-radius': '10px',
+                  color: theme().colors.text,
+                  'font-size': '15px',
+                  'font-weight': '600',
+                  cursor: 'pointer',
+                  'font-family': theme().fonts.body,
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                style={{
+                  padding: '12px 24px',
+                  background: '#EF4444',
+                  border: 'none',
+                  'border-radius': '10px',
+                  color: '#FFFFFF',
+                  'font-size': '15px',
+                  'font-weight': '600',
+                  cursor: 'pointer',
+                  'font-family': theme().fonts.body,
+                }}
+              >
+                Delete Permanently
+              </button>
+            </div>
+          </div>
+        </div>
+      </Show>
     </div>
   );
 };
@@ -162,10 +355,15 @@ interface ExperienceCardProps {
   experience: WorkExperience;
   theme: ThemeType;
   isHovered: boolean;
+  isAnimating?: boolean;
   onMouseEnter: () => void;
   onMouseLeave: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+  canMoveUp?: boolean;
+  canMoveDown?: boolean;
 }
 
 const ExperienceCard: Component<ExperienceCardProps> = (props) => {
@@ -179,12 +377,16 @@ const ExperienceCard: Component<ExperienceCardProps> = (props) => {
       style={{
         position: 'relative',
         overflow: 'visible',
+        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        transform: props.isAnimating ? 'scale(0.98)' : 'none',
       }}
     >
       <div
         onMouseEnter={props.onMouseEnter}
         onMouseLeave={props.onMouseLeave}
-        style={{ position: 'relative' }}
+        style={{
+          position: 'relative',
+        }}
       >
         {/* Card Header with Actions */}
         <div
@@ -203,6 +405,7 @@ const ExperienceCard: Component<ExperienceCardProps> = (props) => {
               'font-weight': '700',
               color: props.theme.colors.text,
               'font-family': props.theme.fonts.heading,
+              flex: 1,
             }}
           >
             {props.experience.company}
@@ -217,6 +420,47 @@ const ExperienceCard: Component<ExperienceCardProps> = (props) => {
               transition: `opacity ${pipelineAnimations.fast}`,
             }}
           >
+            {/* Move Up/Down Arrows */}
+            <Show when={props.onMoveUp && props.onMoveDown}>
+              <div style={{ display: 'flex', 'flex-direction': 'column', gap: '2px' }}>
+                <ActionButton
+                  icon={
+                    <IconChevronUp
+                      size={14}
+                      color={
+                        props.canMoveUp ? props.theme.colors.textMuted : props.theme.colors.border
+                      }
+                    />
+                  }
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (props.canMoveUp) props.onMoveUp?.();
+                  }}
+                  theme={props.theme}
+                  label="Move up"
+                  variant="default"
+                  disabled={!props.canMoveUp}
+                />
+                <ActionButton
+                  icon={
+                    <IconChevronDown
+                      size={14}
+                      color={
+                        props.canMoveDown ? props.theme.colors.textMuted : props.theme.colors.border
+                      }
+                    />
+                  }
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (props.canMoveDown) props.onMoveDown?.();
+                  }}
+                  theme={props.theme}
+                  label="Move down"
+                  variant="default"
+                  disabled={!props.canMoveDown}
+                />
+              </div>
+            </Show>
             <ActionButton
               icon={<IconEdit size={16} color={props.theme.colors.textMuted} />}
               onClick={(e) => {
@@ -431,12 +675,14 @@ interface ActionButtonProps {
   theme: ThemeType;
   label: string;
   variant?: 'default' | 'danger';
+  disabled?: boolean;
 }
 
 const ActionButton: Component<ActionButtonProps> = (props) => {
   const [isHovered, setIsHovered] = createSignal(false);
 
   const hoverBg = () => {
+    if (props.disabled) return 'rgba(255, 255, 255, 0.02)';
     if (props.variant === 'danger') {
       return 'rgba(239, 68, 68, 0.2)';
     }
@@ -444,6 +690,7 @@ const ActionButton: Component<ActionButtonProps> = (props) => {
   };
 
   const borderColor = () => {
+    if (props.disabled) return props.theme.colors.border;
     if (isHovered() && props.variant === 'danger') {
       return '#EF4444';
     }
@@ -455,11 +702,12 @@ const ActionButton: Component<ActionButtonProps> = (props) => {
 
   return (
     <button
-      onClick={props.onClick}
-      onMouseEnter={() => setIsHovered(true)}
+      onClick={props.disabled ? undefined : props.onClick}
+      onMouseEnter={() => !props.disabled && setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       title={props.label}
       class="pipeline-btn"
+      disabled={props.disabled}
       style={{
         display: 'flex',
         'align-items': 'center',
@@ -467,14 +715,16 @@ const ActionButton: Component<ActionButtonProps> = (props) => {
         width: '32px',
         height: '32px',
         'border-radius': '8px',
-        background: isHovered() ? hoverBg() : 'rgba(255, 255, 255, 0.05)',
+        background: isHovered() && !props.disabled ? hoverBg() : 'rgba(255, 255, 255, 0.05)',
         border: `1px solid ${borderColor()}`,
-        cursor: 'pointer',
+        cursor: props.disabled ? 'not-allowed' : 'pointer',
+        opacity: props.disabled ? 0.4 : 1,
         transition: `all ${pipelineAnimations.normal} ${pipelineAnimations.flow}`,
-        transform: isHovered() ? 'translateY(-1px) scale(1.05)' : 'none',
-        'box-shadow': isHovered()
-          ? `0 4px 8px ${props.variant === 'danger' ? '#EF444420' : `${props.theme.colors.primary}20`}`
-          : 'none',
+        transform: isHovered() && !props.disabled ? 'translateY(-1px) scale(1.05)' : 'none',
+        'box-shadow':
+          isHovered() && !props.disabled
+            ? `0 4px 8px ${props.variant === 'danger' ? '#EF444420' : `${props.theme.colors.primary}20`}`
+            : 'none',
       }}
     >
       {props.icon}
