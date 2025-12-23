@@ -5,10 +5,10 @@ import { JustInCaseApp } from './components/justincase/JustInCaseApp';
 import { TempoApp } from './components/tempo/TempoApp';
 import { FriendlyApp } from './components/friendly/FriendlyApp';
 import { ManifestApp } from './components/manifest/ManifestApp';
-import { AugmentApp } from './components/augment/AugmentApp';
+import { TenureApp } from './components/tenure/TenureApp';
 import { LolApp } from './components/lol/LolApp';
 
-type AppTab = 'nurture' | 'justincase' | 'tempo' | 'friendly' | 'manifest' | 'augment' | 'lol';
+type AppTab = 'nurture' | 'justincase' | 'tempo' | 'friendly' | 'manifest' | 'tenure' | 'lol';
 type Timeline = 'now' | 'next' | 'later';
 
 interface AppInfo {
@@ -77,11 +77,11 @@ const apps: AppInfo[] = [
     status: 'coming-soon',
   },
   {
-    id: 'augment',
-    name: 'Augment',
-    description: 'Career intelligence & job tracking',
+    id: 'tenure',
+    name: 'Tenure',
+    description: 'Your lifelong career companion',
     elevatorPitch:
-      'Build deep self-knowledge of your professional identity. Track job applications from discovery to offer, and grow your career story over a lifetime. IO psychology-powered insights for every stage of your career.',
+      "Your always-on career companion. Discover what you want, prepare for opportunities, track applications with a smart pipeline, and stay ready for what's next - whether you're actively searching or happily employed.",
     designSystem: 'Maximalist',
     color: '#9333EA',
     timeline: 'next',
@@ -2040,7 +2040,7 @@ export const AppPage: Component = () => {
     tempo: TempoApp,
     friendly: FriendlyApp,
     manifest: ManifestApp,
-    augment: AugmentApp,
+    tenure: TenureApp,
     lol: LolApp,
   };
 
@@ -2064,8 +2064,8 @@ export const AppPage: Component = () => {
       <Show when={appId() === 'manifest'}>
         <ManifestApp />
       </Show>
-      <Show when={appId() === 'augment'}>
-        <AugmentApp />
+      <Show when={appId() === 'tenure'}>
+        <TenureApp />
       </Show>
       <Show when={appId() === 'lol'}>
         <LolApp />
