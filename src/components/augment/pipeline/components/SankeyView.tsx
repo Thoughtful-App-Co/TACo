@@ -631,20 +631,22 @@ export const SankeyView: Component<SankeyViewProps> = (props) => {
                         if (hasApps) {
                           setHoveredNode(node.id);
                           const rect = (e.currentTarget as SVGGElement).getBoundingClientRect();
-                          const screenMidpoint = window.innerWidth / 2;
-                          const nodeCenter = rect.left + rect.width / 2;
+                          const tooltipWidth = 320; // max-width of tooltip
+                          const padding = 20;
 
-                          // If node is on right side of screen, position tooltip to the left
-                          // If node is on left side, position tooltip to the right
-                          const tooltipX =
-                            nodeCenter > screenMidpoint
-                              ? rect.left - 20 // Position to left of node
-                              : rect.right + 20; // Position to right of node
+                          // Check if tooltip would overflow right edge of screen
+                          const wouldOverflowRight =
+                            rect.right + padding + tooltipWidth > window.innerWidth;
+
+                          // Position tooltip to left if it would overflow right, otherwise to right
+                          const tooltipX = wouldOverflowRight
+                            ? rect.left - padding // Position to left of node
+                            : rect.right + padding; // Position to right of node
 
                           setTooltipPosition({
                             x: tooltipX,
                             y: rect.top + rect.height / 2,
-                            alignRight: nodeCenter > screenMidpoint,
+                            alignRight: wouldOverflowRight,
                           });
                         }
                       }}
