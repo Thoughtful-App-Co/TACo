@@ -1,10 +1,10 @@
 import { Theme } from './types';
 
-// AUGMENT - Maximalism Design System
+// TENURE - Maximalism Design System
 // Rich patterns, visual density, abundant detail
 // Inspired by: Baroque, Memphis Design, Versace
 export const maximalist: Theme = {
-  name: 'augment',
+  name: 'tenure',
   colors: {
     primary: '#D946EF', // Fuchsia 500
     secondary: '#8B5CF6', // Violet 500
@@ -76,13 +76,13 @@ export const maxPatterns = {
 // CSS custom properties generator
 export const maximalistCSS = `
   :root {
-    --augment-primary: ${maximalist.colors.primary};
-    --augment-secondary: ${maximalist.colors.secondary};
-    --augment-accent: ${maximalist.colors.accent};
-    --augment-bg: ${maximalist.colors.background};
-    --augment-surface: ${maximalist.colors.surface};
-    --augment-text: ${maximalist.colors.text};
-    --augment-text-muted: ${maximalist.colors.textMuted};
-    --augment-border: ${maximalist.colors.border};
+    --tenure-primary: ${maximalist.colors.primary};
+    --tenure-secondary: ${maximalist.colors.secondary};
+    --tenure-accent: ${maximalist.colors.accent};
+    --tenure-bg: ${maximalist.colors.background};
+    --tenure-surface: ${maximalist.colors.surface};
+    --tenure-text: ${maximalist.colors.text};
+    --tenure-text-muted: ${maximalist.colors.textMuted};
+    --tenure-border: ${maximalist.colors.border};
   }
 `;
