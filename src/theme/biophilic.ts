@@ -15,8 +15,9 @@ export const biophilic: Theme = {
     border: '#D4E5DD', // Lichen
   },
   fonts: {
-    body: "'DM Sans', system-ui, sans-serif",
-    heading: "'DM Sans', system-ui, sans-serif",
+    heading: "'Dosis', system-ui, sans-serif",
+    subheading: "'Gafata', Georgia, serif",
+    body: "'Gafata', Georgia, serif",
   },
   spacing: {
     xs: '4px',

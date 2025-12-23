@@ -16,8 +16,9 @@ export const papermorphic: Theme = {
     border: '#E0E0E0', // Fold line
   },
   fonts: {
-    body: "'Roboto', system-ui, sans-serif",
-    heading: "'Roboto', system-ui, sans-serif",
+    heading: "'Dosis', system-ui, sans-serif",
+    subheading: "'Gafata', Georgia, serif",
+    body: "'Gafata', Georgia, serif",
   },
   spacing: {
     xs: '4px',

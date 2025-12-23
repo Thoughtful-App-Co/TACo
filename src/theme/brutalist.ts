@@ -16,8 +16,9 @@ export const brutalist: Theme = {
     border: '#000000', // Hard edge
   },
   fonts: {
-    body: "'IBM Plex Mono', 'Courier New', monospace",
-    heading: "'Arial Black', 'Helvetica Neue', sans-serif",
+    heading: "'Dosis', system-ui, sans-serif",
+    subheading: "'Gafata', Georgia, serif",
+    body: "'Gafata', Georgia, serif",
   },
   spacing: {
     xs: '4px',

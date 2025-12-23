@@ -16,8 +16,9 @@ export const liquid: Theme = {
     border: '#E2E8F0', // Foam white
   },
   fonts: {
-    body: "'Plus Jakarta Sans', system-ui, sans-serif",
-    heading: "'Plus Jakarta Sans', system-ui, sans-serif",
+    heading: "'Dosis', system-ui, sans-serif",
+    subheading: "'Gafata', Georgia, serif",
+    body: "'Gafata', Georgia, serif",
   },
   spacing: {
     xs: '4px',

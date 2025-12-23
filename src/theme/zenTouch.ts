@@ -19,8 +19,9 @@ export const zenTouch: Theme = {
     border: '#1E293B', // Subtle, modern borders
   },
   fonts: {
-    body: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-    heading: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
+    heading: "'Dosis', system-ui, sans-serif",
+    subheading: "'Gafata', Georgia, serif",
+    body: "'Gafata', Georgia, serif",
   },
   spacing: {
     xs: '4px',

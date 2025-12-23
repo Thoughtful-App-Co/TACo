@@ -16,8 +16,9 @@ export const tempo: Theme = {
     border: '#2D2D2D', // Subtle border
   },
   fonts: {
-    body: "'Inter', system-ui, sans-serif",
-    heading: "'Inter', system-ui, sans-serif",
+    heading: "'Dosis', system-ui, sans-serif",
+    subheading: "'Gafata', Georgia, serif",
+    body: "'Gafata', Georgia, serif",
   },
   spacing: {
     xs: '4px',

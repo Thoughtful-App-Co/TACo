@@ -24,8 +24,9 @@ export const ThemeSchema = z.object({
     })
     .optional(),
   fonts: z.object({
-    body: z.string(),
     heading: z.string(),
+    subheading: z.string(),
+    body: z.string(),
   }),
   spacing: z.object({
     xs: z.string(),

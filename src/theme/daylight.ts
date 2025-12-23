@@ -15,8 +15,9 @@ export const daylight: Theme = {
     border: '#E8E8E4', // Paper edge
   },
   fonts: {
-    body: "'Crimson Pro', Georgia, 'Times New Roman', serif",
-    heading: "'DM Sans', system-ui, sans-serif",
+    heading: "'Dosis', system-ui, sans-serif",
+    subheading: "'Gafata', Georgia, serif",
+    body: "'Gafata', Georgia, serif",
   },
   spacing: {
     xs: '4px',

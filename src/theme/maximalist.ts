@@ -24,8 +24,9 @@ export const maximalist: Theme = {
     conventional: '#06B6D4', // Cyan (Cool)
   },
   fonts: {
-    body: "'Space Grotesk', system-ui, sans-serif",
-    heading: "'Playfair Display', Georgia, serif",
+    heading: "'Dosis', system-ui, sans-serif",
+    subheading: "'Gafata', Georgia, serif",
+    body: "'Gafata', Georgia, serif",
   },
   spacing: {
     xs: '4px',
