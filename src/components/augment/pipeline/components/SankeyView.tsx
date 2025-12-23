@@ -81,7 +81,7 @@ export const SankeyView: Component<SankeyViewProps> = (props) => {
   // Interactive state
   const [hoveredNode, setHoveredNode] = createSignal<ApplicationStatus | null>(null);
   const [hoveredLink, setHoveredLink] = createSignal<string | null>(null);
-  const [tooltipPosition, setTooltipPosition] = createSignal({ x: 0, y: 0 });
+  const [tooltipPosition, setTooltipPosition] = createSignal({ x: 0, y: 0, alignRight: false });
 
   // Count applications by status
   const statusCounts = createMemo(() => {
@@ -631,9 +631,20 @@ export const SankeyView: Component<SankeyViewProps> = (props) => {
                         if (hasApps) {
                           setHoveredNode(node.id);
                           const rect = (e.currentTarget as SVGGElement).getBoundingClientRect();
+                          const screenMidpoint = window.innerWidth / 2;
+                          const nodeCenter = rect.left + rect.width / 2;
+
+                          // If node is on right side of screen, position tooltip to the left
+                          // If node is on left side, position tooltip to the right
+                          const tooltipX =
+                            nodeCenter > screenMidpoint
+                              ? rect.left - 20 // Position to left of node
+                              : rect.right + 20; // Position to right of node
+
                           setTooltipPosition({
-                            x: rect.right + 20,
+                            x: tooltipX,
                             y: rect.top + rect.height / 2,
+                            alignRight: nodeCenter > screenMidpoint,
                           });
                         }
                       }}

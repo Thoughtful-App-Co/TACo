@@ -17,7 +17,7 @@ interface SankeyTooltipProps {
   status: ApplicationStatus;
   applications: JobApplication[];
   theme: () => typeof liquidAugment;
-  position: { x: number; y: number };
+  position: { x: number; y: number; alignRight?: boolean };
 }
 
 const DESIGN = {
@@ -107,7 +107,9 @@ export const SankeyTooltip: Component<SankeyTooltipProps> = (props) => {
         position: 'fixed',
         top: `${props.position.y}px`,
         left: `${props.position.x}px`,
-        transform: 'translate(-50%, -50%)',
+        transform: props.position.alignRight
+          ? 'translate(-100%, -50%)' // Align right edge to position
+          : 'translateY(-50%)', // Align left edge to position
         'min-width': '280px',
         'max-width': '320px',
         background: 'linear-gradient(135deg, rgba(15, 15, 22, 0.98), rgba(10, 10, 15, 0.98))',
@@ -163,7 +165,7 @@ export const SankeyTooltip: Component<SankeyTooltipProps> = (props) => {
           padding: `${DESIGN.spacing.sm}px ${DESIGN.spacing.md}px`,
         }}
       >
-        <For each={Array.from(appsByDomain().entries())}>
+        <For each={Array.from(appsByDomain().entries()).slice(0, 3)}>
           {([domain, apps], domainIndex) => (
             <div
               style={{
@@ -192,7 +194,7 @@ export const SankeyTooltip: Component<SankeyTooltipProps> = (props) => {
 
               {/* Apps in this domain */}
               <div style={{ 'margin-top': `${DESIGN.spacing.xs}px` }}>
-                <For each={apps.slice(0, 6)}>
+                <For each={apps.slice(0, 3)}>
                   {(app, index) => (
                     <div
                       style={{
@@ -234,7 +236,7 @@ export const SankeyTooltip: Component<SankeyTooltipProps> = (props) => {
                 </For>
 
                 {/* Overflow for this domain */}
-                {apps.length > 6 && (
+                {apps.length > 3 && (
                   <div
                     style={{
                       'font-size': '10px',
@@ -244,7 +246,7 @@ export const SankeyTooltip: Component<SankeyTooltipProps> = (props) => {
                       'margin-top': `${DESIGN.spacing.xs}px`,
                     }}
                   >
-                    +{apps.length - 6} more
+                    +{apps.length - 3} more
                   </div>
                 )}
               </div>
