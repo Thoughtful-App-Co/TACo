@@ -233,7 +233,7 @@ export interface PipelineSettings {
   apiKey?: string; // For BYOK
   apiProvider?: 'anthropic' | 'openai';
 
-  // Default landing tab for /augment route
+  // Default landing tab for /tenure route
   defaultLandingTab: 'discover' | 'prepare' | 'prospect' | 'prosper';
 
   // Sync
