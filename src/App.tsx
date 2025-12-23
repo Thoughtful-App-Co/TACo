@@ -47,7 +47,7 @@ const apps: AppInfo[] = [
       'Never forget a birthday or let a friendship fade. Gentle reminders and interaction tracking.',
     designSystem: 'Biophilic',
     color: '#2D5A45',
-    timeline: 'now',
+    timeline: 'next',
     releaseDate: 'Q1 2026',
     status: 'alpha',
   },
@@ -84,9 +84,10 @@ const apps: AppInfo[] = [
       "Your always-on career companion. Discover what you want, prepare for opportunities, track applications with a smart pipeline, and stay ready for what's next - whether you're actively searching or happily employed.",
     designSystem: 'Maximalist',
     color: '#9333EA',
-    timeline: 'next',
+    timeline: 'now',
     releaseDate: 'Q1 2027',
     status: 'coming-soon',
+    logo: '/tenure/tenure_logo.png',
   },
   // LATER - Future plans
   {
@@ -134,7 +135,7 @@ const timelineConfig: Record<Timeline, { label: string; description: string; col
 // First app in each timeline for navigation (fallback logic)
 const firstAppByTimeline: Record<string, AppTab> = {
   now: 'tempo',
-  next: 'friendly',
+  next: 'justincase',
   later: 'manifest',
 };
 
@@ -409,7 +410,7 @@ const AppItem: Component<{ app: AppInfo; onClick: () => void }> = (props) => {
           }}
         >
           <Show
-            when={props.app.id === 'tempo'}
+            when={props.app.logo}
             fallback={
               <span style={{ color: 'white', 'font-size': '12px', 'font-weight': '600' }}>
                 {props.app.name[0]}
@@ -417,9 +418,9 @@ const AppItem: Component<{ app: AppInfo; onClick: () => void }> = (props) => {
             }
           >
             <img
-              src="/tempo/tempo_logo.png"
-              alt="Tempo"
-              style={{ width: '18px', height: '18px', 'object-fit': 'contain' }}
+              src={props.app.logo}
+              alt={props.app.name}
+              style={{ width: '23px', height: '23px', 'object-fit': 'contain' }}
             />
           </Show>
         </div>
@@ -506,11 +507,11 @@ const AppItem: Component<{ app: AppInfo; onClick: () => void }> = (props) => {
                 'font-size': '14px',
               }}
             >
-              <Show when={props.app.id === 'tempo'} fallback={props.app.name.charAt(0)}>
+              <Show when={props.app.logo} fallback={props.app.name.charAt(0)}>
                 <img
-                  src="/tempo/tempo_logo.png"
-                  alt="Tempo"
-                  style={{ width: '20px', height: '20px', 'object-fit': 'contain' }}
+                  src={props.app.logo}
+                  alt={props.app.name}
+                  style={{ width: '26px', height: '26px', 'object-fit': 'contain' }}
                 />
               </Show>
             </div>
@@ -1947,16 +1948,16 @@ const TabNavigation: Component<{
                         'font-weight': '700',
                         color: 'white',
                         'box-shadow': `0 8px 24px ${app.color}40`,
-                        padding: app.id === 'tempo' ? '4px' : '0',
+                        padding: app.logo ? '4px' : '0',
                       }}
                     >
-                      <Show when={app.id === 'tempo'} fallback={app.name.charAt(0)}>
+                      <Show when={app.logo} fallback={app.name.charAt(0)}>
                         <img
-                          src="/tempo/tempo_logo.png"
-                          alt="Tempo Logo"
+                          src={app.logo}
+                          alt={`${app.name} Logo`}
                           style={{
-                            height: '32px',
-                            width: '32px',
+                            height: '42px',
+                            width: '42px',
                             'object-fit': 'contain',
                           }}
                         />

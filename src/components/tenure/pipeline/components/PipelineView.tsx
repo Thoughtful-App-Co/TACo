@@ -117,18 +117,20 @@ export const PipelineView: Component<PipelineViewProps> = (props) => {
                   style={{
                     margin: '0 0 4px',
                     'font-size': '28px',
-                    'font-family': "'Playfair Display', Georgia, serif",
+                    'font-family': theme().fonts.heading,
                     'font-weight': '700',
                     color: theme().colors.text,
                   }}
                 >
-                  Pipeline
+                  {pipelineStore.state.profile?.name
+                    ? `${pipelineStore.state.profile.name}'s Job Pipeline`
+                    : 'Job Pipeline'}
                 </h1>
                 <p
                   style={{
                     margin: 0,
-                    'font-size': '14px',
-                    'font-family': "'Space Grotesk', system-ui, sans-serif",
+                    'font-size': '17px',
+                    'font-family': theme().fonts.body,
                     color: theme().colors.textMuted,
                   }}
                 >

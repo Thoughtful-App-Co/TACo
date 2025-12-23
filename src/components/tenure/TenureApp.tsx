@@ -219,7 +219,7 @@ const CartoonBadge: Component<{ fit: number }> = (props) => {
         border: styles().border,
         padding: '4px 12px',
         'font-family': maximalist.fonts.body,
-        'font-size': '12px',
+        'font-size': '15px',
         'text-transform': 'uppercase',
         transform: styles().transform,
         'font-weight': 'bold',
@@ -306,7 +306,7 @@ const JobDetailModal: Component<{ job: OnetCareerDetails; onClose: () => void }>
                 padding: '4px 8px',
                 'border-radius': '4px',
                 'font-weight': 'bold',
-                'font-size': '12px',
+                'font-size': '15px',
                 'margin-right': '8px',
               }}
             >
@@ -321,7 +321,7 @@ const JobDetailModal: Component<{ job: OnetCareerDetails; onClose: () => void }>
                 padding: '4px 8px',
                 'border-radius': '4px',
                 'font-weight': 'bold',
-                'font-size': '12px',
+                'font-size': '15px',
               }}
             >
               Green Economy
@@ -339,7 +339,7 @@ const JobDetailModal: Component<{ job: OnetCareerDetails; onClose: () => void }>
           >
             What they do
           </h3>
-          <p style={{ 'line-height': '1.6', 'font-size': '16px', color: '#ccc' }}>
+          <p style={{ 'line-height': '1.6', 'font-size': '18px', color: '#ccc' }}>
             {props.job.what_they_do}
           </p>
         </div>
@@ -380,7 +380,7 @@ const JobDetailModal: Component<{ job: OnetCareerDetails; onClose: () => void }>
                       background: 'rgba(255,255,255,0.1)',
                       padding: '4px 12px',
                       'border-radius': '16px',
-                      'font-size': '12px',
+                      'font-size': '15px',
                       color: '#ccc',
                     }}
                   >
@@ -532,7 +532,7 @@ const RadarChart: Component<{ scores: RiasecScoreWithDetails }> = (props) => {
                 text-anchor="middle"
                 dominant-baseline="middle"
                 font-family={maximalist.fonts.heading}
-                font-size="12px"
+                font-size="15px"
                 font-weight="bold"
                 style={{ 'text-transform': 'uppercase', 'letter-spacing': '1px' }}
               >
@@ -557,7 +557,7 @@ const RadarChart: Component<{ scores: RiasecScoreWithDetails }> = (props) => {
             padding: '8px 12px',
             'border-radius': '8px',
             color: 'white',
-            'font-size': '12px',
+            'font-size': '15px',
             'z-index': 10,
             'pointer-events': 'none',
             'box-shadow': `0 0 10px ${hoveredPoint()!.color}40`,
@@ -649,7 +649,7 @@ const JobCard: Component<{ job: JobMatch }> = (props) => {
               <p
                 style={{
                   margin: 0,
-                  'font-size': '14px',
+                  'font-size': '17px',
                   color: 'rgba(255,255,255,0.85)',
                 }}
               >
@@ -712,7 +712,7 @@ const JobCard: Component<{ job: JobMatch }> = (props) => {
                 display: 'flex',
                 'justify-content': 'space-between',
                 'margin-bottom': '6px',
-                'font-size': '12px',
+                'font-size': '15px',
               }}
             >
               <span style={{ color: maximalist.colors.textMuted }}>Strength Fit</span>
@@ -745,7 +745,7 @@ const JobCard: Component<{ job: JobMatch }> = (props) => {
                 display: 'flex',
                 'justify-content': 'space-between',
                 'margin-bottom': '6px',
-                'font-size': '12px',
+                'font-size': '15px',
               }}
             >
               <span style={{ color: maximalist.colors.textMuted }}>Culture Fit</span>
@@ -782,7 +782,7 @@ const JobCard: Component<{ job: JobMatch }> = (props) => {
                   padding: '6px 14px',
                   background: currentTheme().gradients.primary,
                   'border-radius': '20px',
-                  'font-size': '12px',
+                  'font-size': '15px',
                   color: currentTheme().colors.textOnPrimary,
                   'font-weight': '500',
                 }}
@@ -798,7 +798,7 @@ const JobCard: Component<{ job: JobMatch }> = (props) => {
                   padding: '6px 14px',
                   background: `${maximalist.colors.border}`,
                   'border-radius': '20px',
-                  'font-size': '12px',
+                  'font-size': '15px',
                   color: maximalist.colors.text,
                   'font-weight': '500',
                 }}
@@ -828,7 +828,7 @@ const JobCard: Component<{ job: JobMatch }> = (props) => {
             <span
               style={{
                 'font-family': maximalist.fonts.body,
-                'font-size': '14px',
+                'font-size': '17px',
                 color: maximalist.colors.text,
               }}
             >
@@ -849,7 +849,7 @@ const JobCard: Component<{ job: JobMatch }> = (props) => {
               border: 'none',
               'border-radius': maximalist.radii.md,
               color: currentTheme().colors.textOnPrimary,
-              'font-size': '14px',
+              'font-size': '17px',
               'font-weight': '600',
               cursor: 'pointer',
               'box-shadow': currentTheme().shadows.sm,
@@ -864,7 +864,7 @@ const JobCard: Component<{ job: JobMatch }> = (props) => {
               border: `2px solid ${maximalist.colors.border}`,
               'border-radius': maximalist.radii.md,
               color: maximalist.colors.text,
-              'font-size': '14px',
+              'font-size': '17px',
               'font-weight': '600',
               cursor: 'pointer',
             }}
@@ -1289,9 +1289,71 @@ export const TenureApp: Component = () => {
                 'box-shadow': currentTheme().shadows.md,
               }}
             >
-              <svg width="28" height="28" viewBox="0 0 24 24" fill={currentTheme().colors.primary}>
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+              <div
+                style={{
+                  height: '52px',
+                  width: '52px',
+                  'background-color': currentTheme().colors.primary,
+                  '-webkit-mask': 'url(/tenure/tenure_logo.png) center/contain no-repeat',
+                  mask: 'url(/tenure/tenure_logo.png) center/contain no-repeat',
+                }}
+              />
+
+              {/* OPTION 2: "T" Upward Arrow - T shape integrated with growth arrow
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                <path
+                  d="M4 7h16"
+                  stroke={currentTheme().colors.primary}
+                  stroke-width="3"
+                  stroke-linecap="round"
+                />
+                <path
+                  d="M12 7v11"
+                  stroke={currentTheme().colors.primary}
+                  stroke-width="3"
+                  stroke-linecap="round"
+                />
+                <path
+                  d="M8 14l4-3 4 3"
+                  stroke={currentTheme().colors.primary}
+                  stroke-width="2.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  fill="none"
+                />
+                <path
+                  d="M9 17l3-2.5 3 2.5"
+                  stroke={currentTheme().colors.primary}
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  fill="none"
+                  opacity="0.6"
+                />
+                <circle cx="12" cy="20" r="2" fill={currentTheme().colors.primary} />
               </svg>
+              */}
+
+              {/* OPTION 3: "T" Staircase - T with ascending steps on vertical stem
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                <rect x="4" y="5" width="16" height="3" rx="1.5" fill={currentTheme().colors.primary} />
+                <path
+                  d="M10 8v3h4v-3M10 11v3h4v-3M10 14v3h4v-3M10 17v4h4v-4"
+                  stroke={currentTheme().colors.primary}
+                  stroke-width="0"
+                  fill={currentTheme().colors.primary}
+                  fill-opacity="0.3"
+                />
+                <rect x="10" y="8" width="1.5" height="13" fill={currentTheme().colors.primary} />
+                <rect x="12.5" y="8" width="1.5" height="13" fill={currentTheme().colors.primary} />
+                <path
+                  d="M8 11h2M8 14h2M8 17h2M14 11h2M14 14h2M14 17h2"
+                  stroke={currentTheme().colors.primary}
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                />
+              </svg>
+              */}
             </div>
             <div>
               <h1
@@ -1313,7 +1375,7 @@ export const TenureApp: Component = () => {
               <p
                 style={{
                   margin: 0,
-                  'font-size': '14px',
+                  'font-size': '17px',
                   color: maximalist.colors.textMuted,
                 }}
               >
@@ -1556,7 +1618,7 @@ export const TenureApp: Component = () => {
                 <p
                   style={{
                     margin: 0,
-                    'font-size': '16px',
+                    'font-size': '18px',
                     color: maximalist.colors.textMuted,
                   }}
                 >
@@ -1648,7 +1710,7 @@ export const TenureApp: Component = () => {
                   <p
                     style={{
                       margin: '0 0 32px 0',
-                      'font-size': '16px',
+                      'font-size': '18px',
                       color: maximalist.colors.textMuted,
                       'line-height': '1.6',
                     }}
@@ -1666,7 +1728,7 @@ export const TenureApp: Component = () => {
                       border: 'none',
                       'border-radius': maximalist.radii.md,
                       color: currentTheme().colors.textOnPrimary,
-                      'font-size': '16px',
+                      'font-size': '18px',
                       'font-weight': '700',
                       cursor: isLoading() ? 'wait' : 'pointer',
                       'box-shadow': currentTheme().shadows.md,
@@ -1704,7 +1766,7 @@ export const TenureApp: Component = () => {
                       'align-items': 'center',
                     }}
                   >
-                    <span style={{ color: maximalist.colors.textMuted, 'font-size': '14px' }}>
+                    <span style={{ color: maximalist.colors.textMuted, 'font-size': '17px' }}>
                       Question {currentQuestionIndex() + 1} of 60
                     </span>
                     <span style={{ color: maximalist.colors.accent, 'font-weight': '600' }}>
@@ -1797,7 +1859,7 @@ export const TenureApp: Component = () => {
                                     ? '🙂'
                                     : '😍'}
                           </span>
-                          <span style={{ 'font-size': '12px', 'text-align': 'center' }}>
+                          <span style={{ 'font-size': '15px', 'text-align': 'center' }}>
                             {opt.label}
                           </span>
                         </button>
@@ -1836,7 +1898,7 @@ export const TenureApp: Component = () => {
                     <h2
                       style={{
                         color: maximalist.colors.accent,
-                        'font-size': '14px',
+                        'font-size': '17px',
                         'text-transform': 'uppercase',
                         'letter-spacing': '2px',
                         'margin-bottom': '12px',
@@ -1982,7 +2044,7 @@ export const TenureApp: Component = () => {
                             <p
                               style={{
                                 color: maximalist.colors.textMuted,
-                                'font-size': '14px',
+                                'font-size': '17px',
                                 'line-height': '1.5',
                                 margin: 0,
                               }}
@@ -2081,7 +2143,7 @@ export const TenureApp: Component = () => {
                             <div
                               style={{
                                 color: maximalist.colors.textMuted,
-                                'font-size': '12px',
+                                'font-size': '15px',
                                 'margin-bottom': '16px',
                               }}
                             >
@@ -2130,7 +2192,7 @@ export const TenureApp: Component = () => {
                         border: `1px solid ${currentTheme().colors.border}`,
                         'border-radius': maximalist.radii.md,
                         color: currentTheme().colors.textMuted,
-                        'font-size': '14px',
+                        'font-size': '17px',
                         cursor: 'pointer',
                         transition: 'all 0.2s',
                       }}
@@ -2154,7 +2216,7 @@ export const TenureApp: Component = () => {
                       'border-top': `1px solid ${maximalist.colors.border}`,
                       'text-align': 'center',
                       color: maximalist.colors.textMuted,
-                      'font-size': '12px',
+                      'font-size': '15px',
                       'line-height': '1.5',
                     }}
                   >
@@ -2215,7 +2277,7 @@ export const TenureApp: Component = () => {
               >
                 Prosper: Career Journal
               </h2>
-              <p style={{ color: maximalist.colors.textMuted, 'font-size': '16px' }}>
+              <p style={{ color: maximalist.colors.textMuted, 'font-size': '18px' }}>
                 Quarterly check-ins and accomplishment tracking while employed.
               </p>
               <div
