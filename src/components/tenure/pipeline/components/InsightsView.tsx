@@ -173,11 +173,11 @@ export const InsightsView: Component<InsightsViewProps> = (props) => {
         style={{
           display: 'inline-flex',
           gap: '4px',
-          background: 'linear-gradient(135deg, rgba(15, 15, 18, 0.95), rgba(10, 10, 12, 0.98))',
+          background: 'linear-gradient(135deg, rgba(15, 15, 18, 1), rgba(10, 10, 12, 1))',
           padding: '6px',
           'border-radius': '14px',
-          border: '1px solid rgba(255, 255, 255, 0.1)',
-          'box-shadow': 'inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 4px 16px rgba(0, 0, 0, 0.25)',
+          border: '1px solid rgba(255, 255, 255, 0.15)',
+          'box-shadow': 'inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 4px 16px rgba(0, 0, 0, 0.35)',
           'margin-bottom': '28px',
         }}
       >
@@ -200,23 +200,23 @@ export const InsightsView: Component<InsightsViewProps> = (props) => {
                 padding: '12px 24px',
                 background:
                   activeTab() === tab.id
-                    ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.07))'
+                    ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.12))'
                     : 'transparent',
                 color: '#FFFFFF',
                 border:
                   activeTab() === tab.id
-                    ? '1px solid rgba(255, 255, 255, 0.25)'
+                    ? '1px solid rgba(255, 255, 255, 0.35)'
                     : '1px solid transparent',
                 'border-radius': '10px',
                 cursor: 'pointer',
                 'font-size': '14px',
                 'font-family': "'Space Grotesk', system-ui, sans-serif",
                 'font-weight': activeTab() === tab.id ? '600' : '400',
-                opacity: activeTab() === tab.id ? 1 : 0.6,
+                opacity: activeTab() === tab.id ? 1 : 0.7,
                 transition: `all ${pipelineAnimations.normal} cubic-bezier(0.4, 0, 0.2, 1)`,
                 'box-shadow':
                   activeTab() === tab.id
-                    ? 'inset 0 1px 0 rgba(255, 255, 255, 0.12), 0 2px 8px rgba(0, 0, 0, 0.2)'
+                    ? 'inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 2px 8px rgba(0, 0, 0, 0.3)'
                     : 'none',
                 position: 'relative',
                 overflow: 'hidden',
@@ -230,7 +230,7 @@ export const InsightsView: Component<InsightsViewProps> = (props) => {
                   width: '24px',
                   height: '24px',
                   'border-radius': '6px',
-                  background: activeTab() === tab.id ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                  background: activeTab() === tab.id ? 'rgba(255, 255, 255, 0.15)' : 'transparent',
                   transition: `all ${pipelineAnimations.fast}`,
                 }}
               >
@@ -247,7 +247,7 @@ export const InsightsView: Component<InsightsViewProps> = (props) => {
                     width: '40%',
                     height: '2px',
                     background:
-                      'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent)',
+                      'linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.7), transparent)',
                     'border-radius': '1px',
                   }}
                 />
