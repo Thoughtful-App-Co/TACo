@@ -422,44 +422,42 @@ const ExperienceCard: Component<ExperienceCardProps> = (props) => {
           >
             {/* Move Up/Down Arrows */}
             <Show when={props.onMoveUp && props.onMoveDown}>
-              <div style={{ display: 'flex', 'flex-direction': 'column', gap: '2px' }}>
-                <ActionButton
-                  icon={
-                    <IconChevronUp
-                      size={14}
-                      color={
-                        props.canMoveUp ? props.theme.colors.textMuted : props.theme.colors.border
-                      }
-                    />
-                  }
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (props.canMoveUp) props.onMoveUp?.();
-                  }}
-                  theme={props.theme}
-                  label="Move up"
-                  variant="default"
-                  disabled={!props.canMoveUp}
-                />
-                <ActionButton
-                  icon={
-                    <IconChevronDown
-                      size={14}
-                      color={
-                        props.canMoveDown ? props.theme.colors.textMuted : props.theme.colors.border
-                      }
-                    />
-                  }
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (props.canMoveDown) props.onMoveDown?.();
-                  }}
-                  theme={props.theme}
-                  label="Move down"
-                  variant="default"
-                  disabled={!props.canMoveDown}
-                />
-              </div>
+              <ActionButton
+                icon={
+                  <IconChevronUp
+                    size={14}
+                    color={
+                      props.canMoveUp ? props.theme.colors.textMuted : props.theme.colors.border
+                    }
+                  />
+                }
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (props.canMoveUp) props.onMoveUp?.();
+                }}
+                theme={props.theme}
+                label="Move up"
+                variant="default"
+                disabled={!props.canMoveUp}
+              />
+              <ActionButton
+                icon={
+                  <IconChevronDown
+                    size={14}
+                    color={
+                      props.canMoveDown ? props.theme.colors.textMuted : props.theme.colors.border
+                    }
+                  />
+                }
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (props.canMoveDown) props.onMoveDown?.();
+                }}
+                theme={props.theme}
+                label="Move down"
+                variant="default"
+                disabled={!props.canMoveDown}
+              />
             </Show>
             <ActionButton
               icon={<IconEdit size={16} color={props.theme.colors.textMuted} />}

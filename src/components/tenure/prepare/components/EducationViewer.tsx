@@ -334,55 +334,42 @@ export const EducationViewer: Component<EducationViewerProps> = (props) => {
                   <div style={actionsContainerStyle(isHovered())}>
                     {/* Move Up/Down Arrows */}
                     <Show when={props.onReorder}>
-                      <div
+                      <button
+                        onClick={() => canMoveUp(edu.id) && handleMoveUp(edu.id)}
                         style={{
-                          display: 'flex',
-                          'flex-direction': 'column',
-                          gap: '2px',
-                          'margin-right': '8px',
+                          ...actionButtonStyle('edit'),
+                          opacity: canMoveUp(edu.id) ? 1 : 0.4,
+                          cursor: canMoveUp(edu.id) ? 'pointer' : 'not-allowed',
                         }}
+                        title="Move up"
+                        class="pipeline-btn"
+                        disabled={!canMoveUp(edu.id)}
                       >
-                        <button
-                          onClick={() => canMoveUp(edu.id) && handleMoveUp(edu.id)}
-                          style={{
-                            ...actionButtonStyle('edit'),
-                            padding: '4px',
-                            height: '20px',
-                            opacity: canMoveUp(edu.id) ? 1 : 0.4,
-                            cursor: canMoveUp(edu.id) ? 'pointer' : 'not-allowed',
-                          }}
-                          title="Move up"
-                          class="pipeline-btn"
-                          disabled={!canMoveUp(edu.id)}
-                        >
-                          <IconChevronUp
-                            size={14}
-                            color={
-                              canMoveUp(edu.id) ? theme().colors.textMuted : theme().colors.border
-                            }
-                          />
-                        </button>
-                        <button
-                          onClick={() => canMoveDown(edu.id) && handleMoveDown(edu.id)}
-                          style={{
-                            ...actionButtonStyle('edit'),
-                            padding: '4px',
-                            height: '20px',
-                            opacity: canMoveDown(edu.id) ? 1 : 0.4,
-                            cursor: canMoveDown(edu.id) ? 'pointer' : 'not-allowed',
-                          }}
-                          title="Move down"
-                          class="pipeline-btn"
-                          disabled={!canMoveDown(edu.id)}
-                        >
-                          <IconChevronDown
-                            size={14}
-                            color={
-                              canMoveDown(edu.id) ? theme().colors.textMuted : theme().colors.border
-                            }
-                          />
-                        </button>
-                      </div>
+                        <IconChevronUp
+                          size={14}
+                          color={
+                            canMoveUp(edu.id) ? theme().colors.textMuted : theme().colors.border
+                          }
+                        />
+                      </button>
+                      <button
+                        onClick={() => canMoveDown(edu.id) && handleMoveDown(edu.id)}
+                        style={{
+                          ...actionButtonStyle('edit'),
+                          opacity: canMoveDown(edu.id) ? 1 : 0.4,
+                          cursor: canMoveDown(edu.id) ? 'pointer' : 'not-allowed',
+                        }}
+                        title="Move down"
+                        class="pipeline-btn"
+                        disabled={!canMoveDown(edu.id)}
+                      >
+                        <IconChevronDown
+                          size={14}
+                          color={
+                            canMoveDown(edu.id) ? theme().colors.textMuted : theme().colors.border
+                          }
+                        />
+                      </button>
                     </Show>
                     <button
                       onClick={() => props.onEdit(edu)}
