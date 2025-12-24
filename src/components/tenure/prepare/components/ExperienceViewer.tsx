@@ -652,7 +652,7 @@ const ExperienceCard: Component<ExperienceCardProps> = (props) => {
                     'margin-bottom': '4px',
                   }}
                 >
-                  • {achievement}
+                  {achievement}
                 </div>
               )}
             </For>

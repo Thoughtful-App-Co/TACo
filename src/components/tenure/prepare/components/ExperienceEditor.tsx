@@ -47,6 +47,7 @@ export const ExperienceEditor: Component<ExperienceEditorProps> = (props) => {
   const [description, setDescription] = createSignal('');
   const [skillsInput, setSkillsInput] = createSignal('');
   const [achievementsInput, setAchievementsInput] = createSignal('');
+  const [bulletPointsInput, setBulletPointsInput] = createSignal('');
 
   // Validation state
   const [errors, setErrors] = createSignal<Record<string, string>>({});
@@ -66,6 +67,7 @@ export const ExperienceEditor: Component<ExperienceEditorProps> = (props) => {
         setDescription(props.experience.description || '');
         setSkillsInput(props.experience.skills?.join(', ') || '');
         setAchievementsInput(props.experience.achievements?.join('\n') || '');
+        setBulletPointsInput(props.experience.bulletPoints?.join('\n') || '');
       } else {
         // Add mode - clear fields
         resetForm();
@@ -85,6 +87,7 @@ export const ExperienceEditor: Component<ExperienceEditorProps> = (props) => {
     setDescription('');
     setSkillsInput('');
     setAchievementsInput('');
+    setBulletPointsInput('');
   };
 
   const validate = (): boolean => {
@@ -119,6 +122,12 @@ export const ExperienceEditor: Component<ExperienceEditorProps> = (props) => {
       .map((a) => a.trim())
       .filter((a) => a.length > 0);
 
+    // Parse bullet points from newline-separated string
+    const bulletPoints = bulletPointsInput()
+      .split('\n')
+      .map((b) => b.trim().replace(/^[•\-\*]\s*/, '')) // Strip any leading bullet chars
+      .filter((b) => b.length > 0);
+
     const experience: Omit<WorkExperience, 'id'> = {
       company: company().trim(),
       title: title().trim(),
@@ -129,6 +138,7 @@ export const ExperienceEditor: Component<ExperienceEditorProps> = (props) => {
       description: description().trim(),
       skills,
       achievements,
+      bulletPoints,
     };
 
     props.onSave(experience);
@@ -364,6 +374,32 @@ export const ExperienceEditor: Component<ExperienceEditorProps> = (props) => {
             }}
           >
             Separate skills with commas
+          </p>
+        </div>
+
+        {/* Bullet Points */}
+        <div>
+          <label style={labelStyle()}>Bullet Points</label>
+          <textarea
+            value={bulletPointsInput()}
+            onInput={(e) => setBulletPointsInput(e.currentTarget.value)}
+            placeholder="Enter each bullet point on a new line..."
+            rows={4}
+            style={{
+              ...inputStyle(),
+              resize: 'vertical',
+              'line-height': '1.5',
+            }}
+          />
+          <p
+            style={{
+              margin: '4px 0 0',
+              'font-size': '11px',
+              color: theme().colors.textMuted,
+              'font-family': "'Space Grotesk', system-ui, sans-serif",
+            }}
+          >
+            Key responsibilities and accomplishments (one per line)
           </p>
         </div>
 

@@ -112,7 +112,7 @@ Return a JSON object with this EXACT structure:
         "description": "Brief role description",
         "skills": ["skill1", "skill2"],
         "achievements": ["achievement 1", "achievement 2"],
-        "bulletPoints": ["• Bullet point 1", "• Bullet point 2"]
+        "bulletPoints": ["Bullet point 1", "Bullet point 2"]
       }
     ],
     "education": [
