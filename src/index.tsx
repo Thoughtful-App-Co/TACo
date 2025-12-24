@@ -6,7 +6,7 @@ import { App, LandingPage, AppPage } from './App';
 // Configure PDF.js worker globally
 // This must be done before any PDF parsing occurs
 import * as pdfjsLib from 'pdfjs-dist';
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
 
 // Global styles
 const globalStyles = document.createElement('style');

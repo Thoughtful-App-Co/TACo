@@ -39,7 +39,7 @@ export async function extractTextFromPDF(file: File): Promise<ExtractionResult> 
     // Ensure worker is configured (defensive check)
     if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
       console.log('[PDF Extractor] Worker not configured, setting up...');
-      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
     } else {
       console.log(
         '[PDF Extractor] Worker already configured:',
@@ -55,9 +55,12 @@ export async function extractTextFromPDF(file: File): Promise<ExtractionResult> 
     console.log('[PDF Extractor] Loading PDF document...');
     const loadingTask = pdfjsLib.getDocument({
       data: arrayBuffer,
-      standardFontDataUrl: `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/standard_fonts/`,
-      cMapUrl: `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/cmaps/`,
+      // Use unpkg CDN which has the font files (cdnjs returns 403)
+      standardFontDataUrl: `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/standard_fonts/`,
+      cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/cmaps/`,
       cMapPacked: true,
+      // Disable font loading for text-only extraction (improves performance)
+      disableFontFace: true,
     });
     const pdf = await loadingTask.promise;
     console.log('[PDF Extractor] PDF loaded successfully, pages:', pdf.numPages);
