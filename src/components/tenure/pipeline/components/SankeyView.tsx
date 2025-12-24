@@ -5,6 +5,12 @@
  *
  * Uses d3-sankey for proper Sankey layout calculations where node heights
  * are proportional to their values (application counts).
+ *
+ * Key Features:
+ * - Cumulative flow model: if an app is at stage N, it implies flow through stages 1 to N-1
+ * - Ghost links for empty paths to show pipeline structure
+ * - Gradient fills on links transitioning from source to target color
+ * - Proper empty state with full pipeline structure visible
  */
 
 import { Component, createMemo, createSignal, For, Show } from 'solid-js';
@@ -38,10 +44,32 @@ interface SankeyLinkData {
   source: ApplicationStatus;
   target: ApplicationStatus;
   value: number;
+  isGhost: boolean; // Whether this is a ghost link (0 actual flow)
 }
 
-// Flow stages reference (used for understanding pipeline structure)
-// ['saved'] -> ['applied'] -> ['screening'] -> ['interviewing'] -> ['offered'] -> ['accepted', 'rejected', 'withdrawn']
+// Pipeline stages in order
+const PIPELINE_STAGES: ApplicationStatus[] = [
+  'saved',
+  'applied',
+  'screening',
+  'interviewing',
+  'offered',
+];
+
+// Terminal stages that branch from the main pipeline
+const TERMINAL_STAGES: ApplicationStatus[] = ['accepted', 'rejected', 'withdrawn'];
+
+// Stage index lookup for cumulative calculations
+const STAGE_INDEX: Record<ApplicationStatus, number> = {
+  saved: 0,
+  applied: 1,
+  screening: 2,
+  interviewing: 3,
+  offered: 4,
+  accepted: 5,
+  rejected: 5, // Same level as accepted (terminal)
+  withdrawn: 5,
+};
 
 // Design tokens
 const SANKEY_DESIGN = {
@@ -69,8 +97,15 @@ const SANKEY_DESIGN = {
     width: 900,
     height: 400,
     nodeWidth: 24,
-    nodePadding: 16,
-    margin: { top: 40, right: 20, bottom: 20, left: 20 },
+    nodePadding: 20,
+    margin: { top: 40, right: 120, bottom: 20, left: 20 },
+  },
+  links: {
+    minWidth: 4, // Minimum link width for visibility
+    maxWidth: 60, // Maximum link width to maintain readability
+    ghostOpacity: 0.1, // Opacity for ghost links
+    normalOpacity: 0.35,
+    hoverOpacity: 0.7,
   },
 };
 
@@ -103,141 +138,138 @@ export const SankeyView: Component<SankeyViewProps> = (props) => {
     return counts;
   });
 
-  // Build the Sankey graph data
-  const sankeyData = createMemo(() => {
-    const counts = statusCounts();
-    const apps = applications();
+  // Calculate cumulative "flow through" counts
+  // An app at stage N implies it passed through stages 0 to N-1
+  const flowThroughCounts = createMemo(() => {
+    // For each stage, count apps that are at that stage OR beyond
+    // saved: all apps (everyone starts here)
+    // applied: apps at applied, screening, interviewing, offered, accepted, rejected
+    // screening: apps at screening, interviewing, offered, accepted, (rejected if got to screening)
+    // etc.
 
-    // Create nodes for each status that has applications or is a key stage
+    const flowThrough: Record<ApplicationStatus, number> = {
+      saved: 0,
+      applied: 0,
+      screening: 0,
+      interviewing: 0,
+      offered: 0,
+      accepted: 0,
+      rejected: 0,
+      withdrawn: 0,
+    };
+
+    // Count apps that reached each stage (cumulative)
+    for (const app of applications()) {
+      const currentStageIndex = STAGE_INDEX[app.status];
+
+      // This app has "flowed through" all stages up to its current position
+      for (let i = 0; i <= currentStageIndex && i < PIPELINE_STAGES.length; i++) {
+        flowThrough[PIPELINE_STAGES[i]]++;
+      }
+
+      // Terminal stages get their exact counts
+      if (app.status === 'accepted') flowThrough.accepted++;
+      if (app.status === 'rejected') flowThrough.rejected++;
+      if (app.status === 'withdrawn') flowThrough.withdrawn++;
+    }
+
+    return flowThrough;
+  });
+
+  // Build the Sankey graph data with cumulative flow links
+  const sankeyData = createMemo(() => {
+    const currentCounts = statusCounts();
+    const flowThrough = flowThroughCounts();
+    const hasAnyApplications = applications().length > 0;
+
+    // Always create nodes for all pipeline stages (for structure visibility)
     const nodes: SankeyNodeData[] = [];
     const nodeIdMap = new Map<ApplicationStatus, number>();
 
-    // Always include these core stages
-    const coreStatuses: ApplicationStatus[] = [
-      'saved',
-      'applied',
-      'screening',
-      'interviewing',
-      'offered',
-      'accepted',
-      'rejected',
-    ];
-
-    coreStatuses.forEach((status) => {
-      // Include if has count OR is in the linear path and adjacent nodes have counts
-      const hasCount = counts[status] > 0;
-      const isInPath =
-        status === 'saved' ||
-        status === 'applied' ||
-        status === 'screening' ||
-        status === 'interviewing' ||
-        status === 'offered';
-
-      if (hasCount || isInPath) {
-        nodeIdMap.set(status, nodes.length);
-        nodes.push({
-          id: status,
-          name: STATUS_LABELS[status],
-          count: counts[status],
-          color: statusColors[status]?.text || '#FFFFFF',
-        });
-      }
+    // Add main pipeline stages
+    PIPELINE_STAGES.forEach((status) => {
+      nodeIdMap.set(status, nodes.length);
+      nodes.push({
+        id: status,
+        name: STATUS_LABELS[status],
+        count: currentCounts[status],
+        color: statusColors[status]?.text || '#FFFFFF',
+      });
     });
 
-    // Build links based on status history or implied flow
-    const linkMap = new Map<string, number>();
+    // Add terminal stages if they have applications, or always show accepted
+    const terminalToShow: ApplicationStatus[] = ['accepted'];
+    if (currentCounts.rejected > 0) terminalToShow.push('rejected');
+    if (currentCounts.withdrawn > 0) terminalToShow.push('withdrawn');
 
-    // Analyze actual status history
-    for (const app of apps) {
-      if (app.statusHistory && app.statusHistory.length > 1) {
-        for (let i = 0; i < app.statusHistory.length - 1; i++) {
-          const from = app.statusHistory[i].status;
-          const to = app.statusHistory[i + 1].status;
-          // Only create link if both nodes exist
-          if (nodeIdMap.has(from) && nodeIdMap.has(to)) {
-            const key = `${from}->${to}`;
-            linkMap.set(key, (linkMap.get(key) || 0) + 1);
-          }
-        }
-      }
-    }
+    terminalToShow.forEach((status) => {
+      nodeIdMap.set(status, nodes.length);
+      nodes.push({
+        id: status,
+        name: STATUS_LABELS[status],
+        count: currentCounts[status],
+        color: statusColors[status]?.text || '#FFFFFF',
+      });
+    });
 
-    // If no history, create implied flows based on current counts
-    // The idea: applications "flow" forward through the pipeline
-    if (linkMap.size === 0) {
-      // Calculate cumulative flow - each stage's count represents what flowed there
-      // For Sankey, we need to show the flow between adjacent stages
-
-      // Flow from saved -> applied (everyone who applied came from saved)
-      if (counts.applied > 0) {
-        linkMap.set('saved->applied', counts.applied);
-      }
-
-      // Flow from applied -> screening
-      if (counts.screening > 0) {
-        linkMap.set('applied->screening', counts.screening);
-      }
-
-      // Flow from screening -> interviewing
-      if (counts.interviewing > 0) {
-        linkMap.set('screening->interviewing', counts.interviewing);
-      }
-
-      // Flow from interviewing -> offered
-      if (counts.offered > 0) {
-        linkMap.set('interviewing->offered', counts.offered);
-      }
-
-      // Flow from offered -> accepted
-      if (counts.accepted > 0) {
-        linkMap.set('offered->accepted', counts.accepted);
-      }
-
-      // Flow from interviewing -> rejected
-      if (counts.rejected > 0) {
-        linkMap.set('interviewing->rejected', counts.rejected);
-      }
-
-      // If we still have no links but have applications, create minimal links
-      // to show the nodes in proper positions
-      if (linkMap.size === 0 && apps.length > 0) {
-        // Find the furthest stage with applications and create a chain
-        const stageOrder: ApplicationStatus[] = [
-          'saved',
-          'applied',
-          'screening',
-          'interviewing',
-          'offered',
-        ];
-        let lastStageWithApps = -1;
-
-        stageOrder.forEach((status, idx) => {
-          if (counts[status] > 0) {
-            lastStageWithApps = idx;
-          }
-        });
-
-        // Create links from saved to the furthest stage
-        for (let i = 0; i < lastStageWithApps; i++) {
-          const from = stageOrder[i];
-          const to = stageOrder[i + 1];
-          // Use the count of whichever has more to ensure visible links
-          const flowValue = Math.max(counts[from], counts[to], 1);
-          linkMap.set(`${from}->${to}`, flowValue);
-        }
-      }
-    }
-
-    // Convert to links array
+    // Build links with cumulative flow model
     const links: SankeyLinkData[] = [];
-    linkMap.forEach((value, key) => {
-      const [from, to] = key.split('->') as [ApplicationStatus, ApplicationStatus];
-      if (value > 0) {
-        links.push({ source: from, target: to, value });
-      }
+
+    // Main pipeline flow: saved -> applied -> screening -> interviewing -> offered
+    for (let i = 0; i < PIPELINE_STAGES.length - 1; i++) {
+      const from = PIPELINE_STAGES[i];
+      const to = PIPELINE_STAGES[i + 1];
+
+      // Flow through this link = apps that reached the target stage or beyond
+      // This represents how many apps "flowed through" this connection
+      const targetFlowThrough = flowThrough[to];
+
+      // Determine if this is a ghost link (no actual flow)
+      const isGhost = targetFlowThrough === 0;
+
+      // Value must be > 0 for d3-sankey, use 0.5 for ghost links
+      const value = isGhost ? 0.5 : targetFlowThrough;
+
+      links.push({
+        source: from,
+        target: to,
+        value,
+        isGhost,
+      });
+    }
+
+    // Terminal branches from offered stage
+    // offered -> accepted
+    const acceptedFlow = currentCounts.accepted;
+    links.push({
+      source: 'offered',
+      target: 'accepted',
+      value: acceptedFlow > 0 ? acceptedFlow : 0.5,
+      isGhost: acceptedFlow === 0,
     });
 
-    return { nodes, links, nodeIdMap };
+    // Add rejected link from interviewing if there are rejected apps
+    // (Most rejections happen after interviews)
+    if (currentCounts.rejected > 0 && nodeIdMap.has('rejected')) {
+      links.push({
+        source: 'interviewing',
+        target: 'rejected',
+        value: currentCounts.rejected,
+        isGhost: false,
+      });
+    }
+
+    // Add withdrawn link from applied if there are withdrawn apps
+    if (currentCounts.withdrawn > 0 && nodeIdMap.has('withdrawn')) {
+      links.push({
+        source: 'applied',
+        target: 'withdrawn',
+        value: currentCounts.withdrawn,
+        isGhost: false,
+      });
+    }
+
+    return { nodes, links, nodeIdMap, hasAnyApplications };
   });
 
   // Calculate Sankey layout using d3-sankey
@@ -260,47 +292,15 @@ export const SankeyView: Component<SankeyViewProps> = (props) => {
       ])
       .nodeSort((a, b) => {
         // Custom sort to maintain logical order within columns
-        const order: ApplicationStatus[] = [
-          'saved',
-          'applied',
-          'screening',
-          'interviewing',
-          'offered',
-          'accepted',
-          'rejected',
-          'withdrawn',
-        ];
-        return order.indexOf(a.id) - order.indexOf(b.id);
+        // Terminal stages should be sorted: accepted first, then rejected, then withdrawn
+        if (TERMINAL_STAGES.includes(a.id) && TERMINAL_STAGES.includes(b.id)) {
+          const terminalOrder = ['accepted', 'rejected', 'withdrawn'];
+          return terminalOrder.indexOf(a.id) - terminalOrder.indexOf(b.id);
+        }
+        return STAGE_INDEX[a.id] - STAGE_INDEX[b.id];
       });
 
-    // Generate the layout
     try {
-      // d3-sankey requires at least one link to position nodes properly
-      // If we have nodes but no links, we need to handle this case
-      if (links.length === 0) {
-        // Return nodes with manual positioning when no links exist
-        const nodeCount = nodes.length;
-        const availableWidth = svg.width - svg.margin.left - svg.margin.right - svg.nodeWidth;
-        const stepX = nodeCount > 1 ? availableWidth / (nodeCount - 1) : 0;
-
-        const positionedNodes = nodes.map((node, i) => ({
-          ...node,
-          x0: svg.margin.left + i * stepX,
-          x1: svg.margin.left + i * stepX + svg.nodeWidth,
-          y0: svg.margin.top + 50,
-          y1: svg.margin.top + 50 + Math.max(40, node.count * 30),
-          sourceLinks: [],
-          targetLinks: [],
-          value: node.count,
-          index: i,
-          depth: i,
-          height: 0,
-          layer: i,
-        }));
-
-        return { nodes: positionedNodes, links: [] };
-      }
-
       const graph = sankeyGenerator({
         nodes: nodes.map((d) => ({ ...d })),
         links: links.map((d) => ({ ...d })),
@@ -308,19 +308,22 @@ export const SankeyView: Component<SankeyViewProps> = (props) => {
 
       return graph;
     } catch (e) {
-      // Fallback if sankey fails (e.g., circular dependencies)
       console.warn('Sankey layout failed:', e);
 
-      // Return nodes with basic positioning
+      // Fallback: position nodes manually in a horizontal line
+      const nodeCount = nodes.length;
+      const availableWidth = svg.width - svg.margin.left - svg.margin.right - svg.nodeWidth;
+      const stepX = nodeCount > 1 ? availableWidth / (nodeCount - 1) : 0;
+
       const positionedNodes = nodes.map((node, i) => ({
         ...node,
-        x0: svg.margin.left + i * 150,
-        x1: svg.margin.left + i * 150 + svg.nodeWidth,
+        x0: svg.margin.left + i * stepX,
+        x1: svg.margin.left + i * stepX + svg.nodeWidth,
         y0: svg.margin.top + 50,
-        y1: svg.margin.top + 50 + Math.max(40, node.count * 30),
+        y1: svg.margin.top + 50 + Math.max(40, (node.count || 1) * 20),
         sourceLinks: [],
         targetLinks: [],
-        value: node.count,
+        value: node.count || 1,
         index: i,
         depth: i,
         height: 0,
@@ -333,6 +336,19 @@ export const SankeyView: Component<SankeyViewProps> = (props) => {
 
   // Get link path generator
   const linkPath = sankeyLinkHorizontal();
+
+  // Calculate link width with min/max constraints
+  const getLinkWidth = (link: SankeyLink<SankeyNodeData, SankeyLinkData>) => {
+    const baseWidth = link.width || 0;
+    const { minWidth, maxWidth } = SANKEY_DESIGN.links;
+
+    // For ghost links, use minimum width
+    if ((link as unknown as SankeyLinkData).isGhost) {
+      return minWidth;
+    }
+
+    return Math.max(minWidth, Math.min(maxWidth, baseWidth));
+  };
 
   // Get applications for a specific status
   const getApplicationsForStatus = (status: ApplicationStatus) => {
@@ -348,6 +364,10 @@ export const SankeyView: Component<SankeyViewProps> = (props) => {
     if (link && (link.startsWith(`${nodeId}->`) || link.endsWith(`->${nodeId}`))) return true;
     return false;
   };
+
+  // Generate unique gradient IDs for links
+  const getLinkGradientId = (sourceId: string, targetId: string) =>
+    `sankey-link-gradient-${sourceId}-${targetId}`;
 
   return (
     <div
@@ -445,49 +465,8 @@ export const SankeyView: Component<SankeyViewProps> = (props) => {
           </div>
         </header>
 
-        {/* Sankey SVG */}
-        <Show
-          when={applications().length > 0}
-          fallback={
-            <div
-              style={{
-                'text-align': 'center',
-                padding: `${SANKEY_DESIGN.spacing.xl * 2}px ${SANKEY_DESIGN.spacing.lg}px`,
-                color: liquidTenure.colors.textMuted,
-              }}
-            >
-              <div
-                style={{
-                  width: '64px',
-                  height: '64px',
-                  margin: '0 auto 16px',
-                  background: 'rgba(255, 255, 255, 0.03)',
-                  'border-radius': '16px',
-                  display: 'flex',
-                  'align-items': 'center',
-                  'justify-content': 'center',
-                }}
-              >
-                <svg
-                  width="28"
-                  height="28"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                >
-                  <path d="M4 4h6v6H4zM14 4h6v6h-6zM4 14h6v6H4zM17 14v7M14 17h6" />
-                </svg>
-              </div>
-              <p style={{ margin: 0, 'font-size': '15px' }}>
-                Add jobs to visualize your pipeline flow
-              </p>
-              <p style={{ margin: '8px 0 0', 'font-size': '13px', opacity: 0.6 }}>
-                Node heights will reflect application counts
-              </p>
-            </div>
-          }
-        >
+        {/* Sankey SVG - Always show structure, even when empty */}
+        <div style={{ position: 'relative' }}>
           <svg
             width="100%"
             viewBox={`0 0 ${SANKEY_DESIGN.svg.width} ${SANKEY_DESIGN.svg.height}`}
@@ -505,7 +484,16 @@ export const SankeyView: Component<SankeyViewProps> = (props) => {
                 </feMerge>
               </filter>
 
-              {/* Gradient definitions for each status */}
+              {/* Subtle glow for hover */}
+              <filter id="sankey-subtle-glow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="2" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+
+              {/* Node gradient definitions */}
               <For each={Object.keys(statusColors) as ApplicationStatus[]}>
                 {(status) => (
                   <linearGradient
@@ -519,6 +507,35 @@ export const SankeyView: Component<SankeyViewProps> = (props) => {
                     <stop offset="100%" stop-color={statusColors[status].text} stop-opacity="0.6" />
                   </linearGradient>
                 )}
+              </For>
+
+              {/* Link gradient definitions - source to target color transition */}
+              <For
+                each={
+                  sankeyLayout().links as Array<
+                    SankeyLink<SankeyNodeData, SankeyLinkData> & {
+                      source: SankeyNode<SankeyNodeData, SankeyLinkData>;
+                      target: SankeyNode<SankeyNodeData, SankeyLinkData>;
+                    }
+                  >
+                }
+              >
+                {(link) => {
+                  const sourceNode = link.source;
+                  const targetNode = link.target;
+                  return (
+                    <linearGradient
+                      id={getLinkGradientId(sourceNode.id, targetNode.id)}
+                      x1="0%"
+                      y1="0%"
+                      x2="100%"
+                      y2="0%"
+                    >
+                      <stop offset="0%" stop-color={sourceNode.color} />
+                      <stop offset="100%" stop-color={targetNode.color} />
+                    </linearGradient>
+                  );
+                }}
               </For>
             </defs>
 
@@ -538,13 +555,21 @@ export const SankeyView: Component<SankeyViewProps> = (props) => {
                   const sourceNode = link.source;
                   const targetNode = link.target;
                   const linkId = `${sourceNode.id}->${targetNode.id}`;
+                  const isGhost = (link as unknown as SankeyLinkData).isGhost;
                   const isHighlighted =
                     hoveredLink() === linkId ||
                     hoveredNode() === sourceNode.id ||
                     hoveredNode() === targetNode.id;
 
                   const pathD = linkPath(link as never);
-                  const strokeColor = targetNode.color;
+                  const linkWidth = getLinkWidth(link);
+                  const gradientId = getLinkGradientId(sourceNode.id, targetNode.id);
+
+                  // Calculate opacity based on ghost/highlight state
+                  const baseOpacity = isGhost
+                    ? SANKEY_DESIGN.links.ghostOpacity
+                    : SANKEY_DESIGN.links.normalOpacity;
+                  const opacity = isHighlighted ? SANKEY_DESIGN.links.hoverOpacity : baseOpacity;
 
                   return (
                     <g
@@ -555,55 +580,74 @@ export const SankeyView: Component<SankeyViewProps> = (props) => {
                       onMouseEnter={() => setHoveredLink(linkId)}
                       onMouseLeave={() => setHoveredLink(null)}
                     >
-                      {/* Link background for hover area */}
+                      {/* Link background for larger hover area */}
                       <path
                         d={pathD || ''}
-                        stroke={strokeColor}
-                        stroke-width={Math.max((link.width || 0) + 8, 12)}
-                        stroke-opacity="0"
+                        stroke="transparent"
+                        stroke-width={Math.max(linkWidth + 12, 16)}
                       />
 
-                      {/* Outer glow */}
+                      {/* Outer glow on hover */}
+                      <Show when={isHighlighted && !isGhost}>
+                        <path
+                          d={pathD || ''}
+                          stroke={`url(#${gradientId})`}
+                          stroke-width={linkWidth + 6}
+                          stroke-opacity={0.2}
+                          filter="url(#sankey-subtle-glow)"
+                          style={{ transition: `stroke-opacity ${SANKEY_DESIGN.timing.fast}` }}
+                        />
+                      </Show>
+
+                      {/* Main link with gradient */}
                       <path
                         d={pathD || ''}
-                        stroke={strokeColor}
-                        stroke-width={(link.width || 0) + 4}
-                        stroke-opacity={isHighlighted ? 0.2 : 0.05}
-                        style={{ transition: `stroke-opacity ${SANKEY_DESIGN.timing.fast}` }}
+                        stroke={`url(#${gradientId})`}
+                        stroke-width={linkWidth}
+                        stroke-opacity={opacity}
+                        stroke-linecap="round"
+                        style={{
+                          transition: `stroke-opacity ${SANKEY_DESIGN.timing.fast}, stroke-width ${SANKEY_DESIGN.timing.fast}`,
+                        }}
                       />
 
-                      {/* Main link */}
-                      <path
-                        d={pathD || ''}
-                        stroke={strokeColor}
-                        stroke-width={link.width || 0}
-                        stroke-opacity={isHighlighted ? 0.7 : 0.35}
-                        style={{ transition: `stroke-opacity ${SANKEY_DESIGN.timing.fast}` }}
-                      />
+                      {/* Inner highlight line for depth */}
+                      <Show when={!isGhost}>
+                        <path
+                          d={pathD || ''}
+                          stroke={targetNode.color}
+                          stroke-width={Math.max(2, linkWidth / 5)}
+                          stroke-opacity={isHighlighted ? 0.8 : 0.4}
+                          stroke-linecap="round"
+                          filter={isHighlighted ? 'url(#sankey-subtle-glow)' : undefined}
+                          style={{ transition: `stroke-opacity ${SANKEY_DESIGN.timing.fast}` }}
+                        />
+                      </Show>
 
-                      {/* Inner highlight */}
-                      <path
-                        d={pathD || ''}
-                        stroke={strokeColor}
-                        stroke-width={Math.max(2, (link.width || 0) / 4)}
-                        stroke-opacity={isHighlighted ? 1 : 0.6}
-                        filter={isHighlighted ? 'url(#sankey-glow)' : undefined}
-                        style={{ transition: `stroke-opacity ${SANKEY_DESIGN.timing.fast}` }}
-                      />
-
-                      {/* Flow count on hover */}
-                      <Show when={isHighlighted && link.value > 0}>
-                        <text
-                          x={((sourceNode.x1 || 0) + (targetNode.x0 || 0)) / 2}
-                          y={((link.y0 || 0) + (link.y1 || 0)) / 2 - 8}
-                          text-anchor="middle"
-                          fill={strokeColor}
-                          font-size="13"
-                          font-family={SANKEY_DESIGN.fonts.body}
-                          font-weight="600"
-                        >
-                          {link.value}
-                        </text>
+                      {/* Flow count label on hover */}
+                      <Show when={isHighlighted && !isGhost && link.value > 0}>
+                        <g>
+                          {/* Background pill for readability */}
+                          <rect
+                            x={((sourceNode.x1 || 0) + (targetNode.x0 || 0)) / 2 - 16}
+                            y={((link.y0 || 0) + (link.y1 || 0)) / 2 - 22}
+                            width="32"
+                            height="18"
+                            rx="9"
+                            fill="rgba(0, 0, 0, 0.7)"
+                          />
+                          <text
+                            x={((sourceNode.x1 || 0) + (targetNode.x0 || 0)) / 2}
+                            y={((link.y0 || 0) + (link.y1 || 0)) / 2 - 10}
+                            text-anchor="middle"
+                            fill={targetNode.color}
+                            font-size="12"
+                            font-family={SANKEY_DESIGN.fonts.body}
+                            font-weight="600"
+                          >
+                            {Math.round(link.value)}
+                          </text>
+                        </g>
                       </Show>
                     </g>
                   );
@@ -616,7 +660,7 @@ export const SankeyView: Component<SankeyViewProps> = (props) => {
               <For each={sankeyLayout().nodes as Array<SankeyNode<SankeyNodeData, SankeyLinkData>>}>
                 {(node) => {
                   const nodeWidth = (node.x1 || 0) - (node.x0 || 0);
-                  const nodeHeight = (node.y1 || 0) - (node.y0 || 0);
+                  const nodeHeight = Math.max(30, (node.y1 || 0) - (node.y0 || 0));
                   const highlighted = isNodeHighlighted(node.id);
                   const hasApps = node.count > 0;
 
@@ -631,17 +675,15 @@ export const SankeyView: Component<SankeyViewProps> = (props) => {
                         if (hasApps) {
                           setHoveredNode(node.id);
                           const rect = (e.currentTarget as SVGGElement).getBoundingClientRect();
-                          const tooltipWidth = 320; // max-width of tooltip
+                          const tooltipWidth = 320;
                           const padding = 20;
 
-                          // Check if tooltip would overflow right edge of screen
                           const wouldOverflowRight =
                             rect.right + padding + tooltipWidth > window.innerWidth;
 
-                          // Position tooltip to left if it would overflow right, otherwise to right
                           const tooltipX = wouldOverflowRight
-                            ? rect.left - padding // Position to left of node
-                            : rect.right + padding; // Position to right of node
+                            ? rect.left - padding
+                            : rect.right + padding;
 
                           setTooltipPosition({
                             x: tooltipX,
@@ -659,14 +701,14 @@ export const SankeyView: Component<SankeyViewProps> = (props) => {
                       role="button"
                       aria-label={`${node.name}: ${node.count} applications`}
                     >
-                      {/* Node glow */}
+                      {/* Node glow on hover */}
                       <Show when={hasApps && highlighted === true}>
                         <rect
-                          x={(node.x0 || 0) - 3}
-                          y={(node.y0 || 0) - 3}
-                          width={nodeWidth + 6}
-                          height={nodeHeight + 6}
-                          rx="6"
+                          x={(node.x0 || 0) - 4}
+                          y={(node.y0 || 0) - 4}
+                          width={nodeWidth + 8}
+                          height={nodeHeight + 8}
+                          rx="8"
                           fill="none"
                           stroke={node.color}
                           stroke-width="2"
@@ -681,51 +723,111 @@ export const SankeyView: Component<SankeyViewProps> = (props) => {
                         y={node.y0 || 0}
                         width={nodeWidth}
                         height={nodeHeight}
-                        rx="4"
+                        rx="6"
                         fill={
-                          hasApps ? `url(#sankey-gradient-${node.id})` : 'rgba(255,255,255,0.05)'
+                          hasApps ? `url(#sankey-gradient-${node.id})` : 'rgba(255,255,255,0.03)'
                         }
                         stroke={node.color}
                         stroke-width={hasApps ? (highlighted === true ? 2 : 1) : 0.5}
-                        stroke-opacity={hasApps ? (highlighted === true ? 1 : 0.6) : 0.2}
+                        stroke-opacity={hasApps ? (highlighted === true ? 1 : 0.6) : 0.15}
                         style={{ transition: `all ${SANKEY_DESIGN.timing.fast}` }}
                       />
 
                       {/* Node label - right of node */}
                       <text
-                        x={(node.x1 || 0) + 8}
-                        y={(node.y0 || 0) + nodeHeight / 2}
+                        x={(node.x1 || 0) + 10}
+                        y={(node.y0 || 0) + nodeHeight / 2 - 6}
                         dominant-baseline="middle"
                         fill={hasApps ? liquidTenure.colors.text : liquidTenure.colors.textMuted}
                         font-size="12"
                         font-family={SANKEY_DESIGN.fonts.body}
                         font-weight="500"
-                        opacity={hasApps ? 1 : 0.5}
+                        opacity={hasApps ? 1 : 0.4}
                       >
                         {node.name}
                       </text>
 
-                      {/* Count badge - inside or next to node */}
-                      <Show when={node.count > 0}>
-                        <text
-                          x={(node.x1 || 0) + 8}
-                          y={(node.y0 || 0) + nodeHeight / 2 + 16}
-                          dominant-baseline="middle"
-                          fill={node.color}
-                          font-size="14"
-                          font-family={SANKEY_DESIGN.fonts.heading}
-                          font-weight="700"
-                        >
-                          {node.count}
-                        </text>
-                      </Show>
+                      {/* Count - below label */}
+                      <text
+                        x={(node.x1 || 0) + 10}
+                        y={(node.y0 || 0) + nodeHeight / 2 + 10}
+                        dominant-baseline="middle"
+                        fill={hasApps ? node.color : 'rgba(255,255,255,0.2)'}
+                        font-size="16"
+                        font-family={SANKEY_DESIGN.fonts.heading}
+                        font-weight="700"
+                      >
+                        {node.count}
+                      </text>
                     </g>
                   );
                 }}
               </For>
             </g>
           </svg>
-        </Show>
+
+          {/* Empty state overlay message */}
+          <Show when={applications().length === 0}>
+            <div
+              style={{
+                position: 'absolute',
+                top: '50%',
+                left: '50%',
+                transform: 'translate(-50%, -50%)',
+                'text-align': 'center',
+                background: 'rgba(15, 15, 22, 0.9)',
+                padding: `${SANKEY_DESIGN.spacing.lg}px ${SANKEY_DESIGN.spacing.xl}px`,
+                'border-radius': `${SANKEY_DESIGN.radii.lg}px`,
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                'backdrop-filter': 'blur(8px)',
+                'max-width': '300px',
+              }}
+            >
+              <div
+                style={{
+                  width: '48px',
+                  height: '48px',
+                  margin: '0 auto 12px',
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  'border-radius': '12px',
+                  display: 'flex',
+                  'align-items': 'center',
+                  'justify-content': 'center',
+                }}
+              >
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke={statusColors.applied.text}
+                  stroke-width="1.5"
+                >
+                  <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
+                </svg>
+              </div>
+              <p
+                style={{
+                  margin: 0,
+                  'font-size': '14px',
+                  color: liquidTenure.colors.text,
+                  'font-weight': '500',
+                }}
+              >
+                Pipeline Flow Visualization
+              </p>
+              <p
+                style={{
+                  margin: '8px 0 0',
+                  'font-size': '12px',
+                  color: liquidTenure.colors.textMuted,
+                }}
+              >
+                Add jobs to see how applications flow through your pipeline stages
+              </p>
+            </div>
+          </Show>
+        </div>
 
         {/* Node Hover Tooltip */}
         <Show when={hoveredNode()}>

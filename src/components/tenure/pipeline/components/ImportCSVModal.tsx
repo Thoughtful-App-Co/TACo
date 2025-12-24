@@ -515,7 +515,7 @@ export const ImportCSVModal: Component<ImportCSVModalProps> = (props) => {
                   }}
                 >
                   Upload a CSV file with your job applications. We'll automatically detect columns
-                  like Company, Role, Status, URL, and Location.
+                  like Company, Role, Status, URL, Location, Department, Salary, and more.
                 </p>
 
                 {/* Drop Zone */}
@@ -646,6 +646,9 @@ export const ImportCSVModal: Component<ImportCSVModalProps> = (props) => {
                       'Status',
                       'URL',
                       'Location',
+                      'Location Type',
+                      'Department',
+                      'Salary',
                       'Notes',
                       'Applied Date',
                     ].map((col) => (
