@@ -8,10 +8,6 @@ import { App, LandingPage, AppPage } from './App';
 import * as pdfjsLib from 'pdfjs-dist';
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
 
-// Also configure pdf-parse worker
-(globalThis as any).pdfjsWorker =
-  `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
-
 // Global styles
 const globalStyles = document.createElement('style');
 globalStyles.textContent = `

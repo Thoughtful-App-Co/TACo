@@ -2,7 +2,7 @@
  * File Extractor Service - Client-side text extraction from PDF/DOCX
  *
  * Uses browser-compatible libraries:
- * - pdf-parse v2 for PDF extraction (works in browser)
+ * - pdfjs-dist for PDF extraction (configured globally in src/index.tsx)
  * - mammoth for DOCX extraction
  *
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
@@ -25,47 +25,79 @@ export interface ExtractionResult {
 // ============================================================================
 
 /**
- * Extract text from a PDF file using pdf-parse v2
+ * Extract text from a PDF file using pdfjs-dist directly
  * Note: PDF.js worker is configured globally in src/index.tsx
  */
 export async function extractTextFromPDF(file: File): Promise<ExtractionResult> {
+  console.log('[PDF Extractor] Starting extraction for:', file.name);
+
   try {
-    // Configure PDF.js worker for pdf-parse
-    // pdf-parse uses its own worker system
-    import('pdfjs-dist')
-      .then((pdfjsLib: any) => {
-        // Configure worker URL for pdf-parse
-        const workerUrl = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+    // Import pdfjs-dist - worker is already configured in src/index.tsx
+    const pdfjsLib = await import('pdfjs-dist');
+    console.log('[PDF Extractor] pdfjs-dist loaded, version:', pdfjsLib.version);
 
-        // Set on globalThis for pdf-parse to find
-        (globalThis as any).pdfjsWorker = workerUrl;
-
-      })
-      .catch((err) => {
-      });
-
-    // Import pdf-parse after worker configuration
-    const { PDFParse } = await import('pdf-parse');
+    // Ensure worker is configured (defensive check)
+    if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
+      console.log('[PDF Extractor] Worker not configured, setting up...');
+      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+    } else {
+      console.log(
+        '[PDF Extractor] Worker already configured:',
+        pdfjsLib.GlobalWorkerOptions.workerSrc
+      );
+    }
 
     // Read file as ArrayBuffer
     const arrayBuffer = await file.arrayBuffer();
+    console.log('[PDF Extractor] File read as ArrayBuffer, size:', arrayBuffer.byteLength, 'bytes');
 
-    // Create parser with buffer
-    const parser = new PDFParse({ data: new Uint8Array(arrayBuffer) });
+    // Load the PDF document with standard font data for font handling
+    console.log('[PDF Extractor] Loading PDF document...');
+    const loadingTask = pdfjsLib.getDocument({
+      data: arrayBuffer,
+      standardFontDataUrl: `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/standard_fonts/`,
+      cMapUrl: `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/cmaps/`,
+      cMapPacked: true,
+    });
+    const pdf = await loadingTask.promise;
+    console.log('[PDF Extractor] PDF loaded successfully, pages:', pdf.numPages);
 
-    // Extract text
-    const result = await parser.getText();
+    // Extract text from all pages
+    const textParts: string[] = [];
 
-    const text = result.text || '';
+    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+      console.log(`[PDF Extractor] Extracting text from page ${pageNum}/${pdf.numPages}...`);
+      const page = await pdf.getPage(pageNum);
+      const textContent = await page.getTextContent();
+      const pageText = textContent.items
+        .map((item: any) => ('str' in item ? item.str : ''))
+        .join(' ');
+      textParts.push(pageText);
+      console.log(`[PDF Extractor] Page ${pageNum} extracted, ${pageText.length} characters`);
+    }
+
+    const text = textParts.join('\n\n');
     const wordCount = text.split(/\s+/).filter((w: string) => w.length > 0).length;
+
+    console.log('[PDF Extractor] Extraction complete!', {
+      totalText: text.length,
+      wordCount,
+      pageCount: pdf.numPages,
+      preview: text.substring(0, 200),
+    });
 
     return {
       success: true,
       text,
-      pageCount: result.total,
+      pageCount: pdf.numPages,
       wordCount,
     };
   } catch (error) {
+    console.error('[PDF Extractor] Error:', error);
+    console.error(
+      '[PDF Extractor] Error stack:',
+      error instanceof Error ? error.stack : 'No stack'
+    );
     return {
       success: false,
       text: '',

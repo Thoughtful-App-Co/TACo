@@ -65,7 +65,7 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     let resumeText = content;
     if (contentType === 'pdf' || contentType === 'docx') {
       // For now, we'll assume the content is already extracted text
-      // In production, you'd use pdf-parse or mammoth here
+      // In production, you'd use pdfjs-dist or mammoth here
       if (content.startsWith('data:')) {
         // Base64 encoded - would need server-side extraction
         return new Response(
@@ -84,16 +84,18 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     const message = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 4096,
-      temperature: 0.3, // Lower temperature for more consistent parsing
+      temperature: 0.1, // Very low temperature for consistent JSON output
+      system:
+        'You are a precise resume parsing assistant. You MUST respond with ONLY valid JSON. Do not include any explanatory text, markdown formatting, or code blocks. Output raw JSON only.',
       messages: [
         {
           role: 'user',
-          content: `You are a resume parsing expert. Parse the following resume and extract structured information.
+          content: `Parse the following resume and return ONLY a valid JSON object (no markdown, no code blocks, no explanatory text).
 
 RESUME TEXT:
 ${resumeText}
 
-Extract and return a JSON object with the following structure (ensure all fields are present, use empty arrays if no data found):
+Return a JSON object with this EXACT structure:
 
 {
   "parsed": {
@@ -149,15 +151,17 @@ Extract and return a JSON object with the following structure (ensure all fields
   "confidence": 85
 }
 
-IMPORTANT:
-- Generate unique IDs using format: "exp-1", "edu-1", "proj-1", etc.
-- Parse dates carefully and convert to ISO 8601 format
-- Infer location type (remote/hybrid/onsite) from context clues
-- Extract quantifiable achievements separately (e.g., "increased sales by 30%")
-- Categorize keywords by type
-- Return confidence score (0-100) based on how well-structured the resume is
-- Ensure all required fields exist, use null or empty arrays as appropriate
-- Return ONLY valid JSON, no additional text`,
+CRITICAL REQUIREMENTS:
+1. Return ONLY the JSON object - no explanations, no markdown, no code blocks
+2. Generate unique IDs using format: "exp-1", "edu-1", "proj-1", etc.
+3. Parse dates carefully and convert to ISO 8601 format
+4. Infer location type (remote/hybrid/onsite) from context clues
+5. Extract quantifiable achievements separately (e.g., "increased sales by 30%")
+6. Categorize keywords by type
+7. Return confidence score (0-100) based on how well-structured the resume is
+8. Ensure all required fields exist, use null or empty arrays as appropriate
+9. Output must be parseable by JSON.parse() - test it mentally before responding
+10. Start your response with { and end with } - nothing else`,
         },
       ],
     });
@@ -168,22 +172,83 @@ IMPORTANT:
       throw new Error('No text content in AI response');
     }
 
-    console.log('[Resume Parser] Raw AI response:', responseText.substring(0, 200));
+    console.log(
+      '[Resume Parser] Raw AI response (first 500 chars):',
+      responseText.substring(0, 500)
+    );
+    console.log(
+      '[Resume Parser] Raw AI response (last 500 chars):',
+      responseText.substring(Math.max(0, responseText.length - 500))
+    );
+    console.log('[Resume Parser] Total response length:', responseText.length);
 
     // Parse and validate response
     let parsedData: any;
     try {
-      // Claude might wrap JSON in markdown code blocks
-      const jsonMatch =
-        responseText.match(/```json\n?([\s\S]*?)\n?```/) ||
-        responseText.match(/```\n?([\s\S]*?)\n?```/);
-      const jsonText = jsonMatch ? jsonMatch[1] : responseText;
+      let jsonText = responseText.trim();
 
-      parsedData = JSON.parse(jsonText.trim());
+      // Remove markdown code blocks if present
+      const jsonMatch =
+        jsonText.match(/```json\s*\n?([\s\S]*?)\n?```/) ||
+        jsonText.match(/```\s*\n?([\s\S]*?)\n?```/);
+
+      if (jsonMatch) {
+        jsonText = jsonMatch[1].trim();
+        console.log('[Resume Parser] Extracted JSON from code block');
+      }
+
+      // Remove any leading/trailing text before { or after }
+      const jsonStart = jsonText.indexOf('{');
+      const jsonEnd = jsonText.lastIndexOf('}');
+
+      if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+        jsonText = jsonText.substring(jsonStart, jsonEnd + 1);
+        console.log('[Resume Parser] Extracted JSON between braces');
+      }
+
+      console.log('[Resume Parser] Attempting to parse JSON, length:', jsonText.length);
+      console.log('[Resume Parser] JSON preview (first 300 chars):', jsonText.substring(0, 300));
+
+      parsedData = JSON.parse(jsonText);
     } catch (parseError) {
       console.error('[Resume Parser] JSON parse error:', parseError);
-      console.error('[Resume Parser] Raw response:', responseText);
-      throw new Error('Failed to parse AI response as JSON');
+      console.error('[Resume Parser] Full raw response:', responseText);
+      console.error('[Resume Parser] Response type:', typeof responseText);
+      console.error('[Resume Parser] Response starts with:', responseText.substring(0, 100));
+      console.error(
+        '[Resume Parser] Response ends with:',
+        responseText.substring(responseText.length - 100)
+      );
+
+      // Try to save the problematic response for debugging
+      return new Response(
+        JSON.stringify({
+          success: false,
+          error: 'Failed to parse AI response as JSON',
+          debugInfo: {
+            parseError: parseError instanceof Error ? parseError.message : String(parseError),
+            responseLength: responseText.length,
+            responsePreview: responseText.substring(0, 500),
+            responseSuffix: responseText.substring(Math.max(0, responseText.length - 200)),
+          },
+          parsed: {
+            experience: [],
+            education: [],
+            skills: [],
+            certifications: [],
+          },
+          keywords: {
+            technical: [],
+            soft: [],
+            industry: [],
+            tools: [],
+          },
+        }),
+        {
+          status: 500,
+          headers: { 'Content-Type': 'application/json' },
+        }
+      );
     }
 
     // Validate structure

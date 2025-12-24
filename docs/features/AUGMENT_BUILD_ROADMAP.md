@@ -122,19 +122,18 @@ ANTHROPIC_API_KEY=sk-ant-api03-your-key-here
 **Status:** Currently only supports pasted text  
 **Implementation needed:**
 
-- [ ] Add PDF parsing library (e.g., `pdf-parse` or `pdfjs-dist`)
-- [ ] Add DOCX parsing library (e.g., `mammoth`)
+- [x] Add PDF parsing library (`pdfjs-dist`)
+- [x] Add DOCX parsing library (`mammoth`)
 - [ ] Update `/api/resume/parse` endpoint to extract text from binary files
 - [ ] Handle base64 encoded file uploads
-- [ ] Add file size/page limits (security)
+- [x] Add file size/page limits (security)
 - [ ] Test with various resume formats (single/multi-column, tables, etc.)
 
-**Libraries to evaluate:**
+**Libraries used:**
 
-- `pdf-parse` - Node.js PDF parser (works in CF Workers?)
-- `pdfjs-dist` - Mozilla's PDF.js (browser + server)
-- `mammoth` - DOCX to HTML/text converter
-- Alternative: Use external service (PDFLayer API, etc.)
+- `pdfjs-dist` - Mozilla's PDF.js (browser-compatible, configured globally)
+- `mammoth` - DOCX to HTML/text converter (browser-compatible)
+- Client-side extraction using file-extractor.service.ts
 
 #### Wizard Components
 

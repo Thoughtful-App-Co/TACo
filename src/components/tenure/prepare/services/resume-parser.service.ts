@@ -33,6 +33,13 @@ export interface ParseResumeResponse {
  * Parse resume using AI
  */
 export async function parseResume(request: ParseResumeRequest): Promise<ParseResumeResponse> {
+  console.log('[Resume Parser API] Starting API call to /api/resume/parse');
+  console.log('[Resume Parser API] Request:', {
+    contentLength: request.content.length,
+    contentType: request.contentType,
+    fileName: request.fileName,
+  });
+
   try {
     const response = await fetch('/api/resume/parse', {
       method: 'POST',
@@ -42,14 +49,67 @@ export async function parseResume(request: ParseResumeRequest): Promise<ParseRes
       body: JSON.stringify(request),
     });
 
+    console.log('[Resume Parser API] Response status:', response.status, response.statusText);
+
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
+      console.error('[Resume Parser API] Error response:', errorData);
+
+      // If there's debug info, log it prominently
+      if (errorData.debugInfo) {
+        console.error('[Resume Parser API] === DEBUG INFO ===');
+        console.error('[Resume Parser API] Parse Error:', errorData.debugInfo.parseError);
+        console.error('[Resume Parser API] Response Length:', errorData.debugInfo.responseLength);
+        console.error('[Resume Parser API] Response Preview:', errorData.debugInfo.responsePreview);
+        console.error('[Resume Parser API] Response Suffix:', errorData.debugInfo.responseSuffix);
+        console.error('[Resume Parser API] === END DEBUG INFO ===');
+      }
+
       throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
     }
 
     const data: ParseResumeResponse = await response.json();
+
+    // Check if the response indicates success
+    if (!data.success && data.error) {
+      console.error('[Resume Parser API] API returned error:', data.error);
+
+      // Log debug info if present
+      if ((data as any).debugInfo) {
+        console.error('[Resume Parser API] === DEBUG INFO ===');
+        console.error('[Resume Parser API] Parse Error:', (data as any).debugInfo.parseError);
+        console.error(
+          '[Resume Parser API] Response Length:',
+          (data as any).debugInfo.responseLength
+        );
+        console.error(
+          '[Resume Parser API] Response Preview:',
+          (data as any).debugInfo.responsePreview
+        );
+        console.error(
+          '[Resume Parser API] Response Suffix:',
+          (data as any).debugInfo.responseSuffix
+        );
+        console.error('[Resume Parser API] === END DEBUG INFO ===');
+      }
+    }
+
+    console.log('[Resume Parser API] Success! Parsed data:', {
+      success: data.success,
+      experienceCount: data.parsed?.experience?.length || 0,
+      educationCount: data.parsed?.education?.length || 0,
+      skillsCount: data.parsed?.skills?.length || 0,
+      confidence: data.confidence,
+    });
     return data;
   } catch (error) {
+    console.error('[Resume Parser API] Exception caught:', error);
+    console.error('[Resume Parser API] Error details:', {
+      name: error instanceof Error ? error.name : 'Unknown',
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+
     return {
       success: false,
       parsed: {
@@ -80,7 +140,7 @@ export async function extractTextFromFile(file: File): Promise<string> {
   }
 
   // For PDF/DOCX, we'll send to server for extraction
-  // This is a placeholder - actual implementation would use pdf-parse or mammoth
+  // This is a placeholder - actual implementation would use pdfjs-dist or mammoth
   const formData = new FormData();
   formData.append('file', file);
 
