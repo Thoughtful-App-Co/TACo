@@ -32,13 +32,16 @@ export const HeroSection: Component = () => {
 
       <h1
         style={{
+          margin: `0 0 ${tokens.spacing.sm} 0`,
           'font-size': 'clamp(36px, 6vw, 64px)',
           'font-weight': '400',
           'line-height': '1.1',
           'font-family': tokens.fonts.brand,
-          margin: `0 auto ${tokens.spacing.sm} auto`,
-          // Just use solid coral color - gradient text is too unreliable
-          color: tokens.colors.accent.coral,
+          'letter-spacing': '-1px',
+          background: `linear-gradient(135deg, ${tokens.colors.accent.coral}, ${tokens.colors.accent.yellow}, ${tokens.colors.accent.teal})`,
+          '-webkit-background-clip': 'text',
+          '-webkit-text-fill-color': 'transparent',
+          'background-clip': 'text',
         }}
       >
         Build your perfect plan
