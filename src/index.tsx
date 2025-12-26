@@ -2,6 +2,7 @@
 import { render } from 'solid-js/web';
 import { Router, Route } from '@solidjs/router';
 import { App, LandingPage, AppPage } from './App';
+import { PricingPage } from './components/PricingPage';
 
 // Configure PDF.js worker globally
 // This must be done before any PDF parsing occurs
@@ -169,6 +170,7 @@ if (root) {
     () => (
       <Router root={App}>
         <Route path="/" component={LandingPage} />
+        <Route path="/pricing" component={PricingPage} />
         {/* All app routes - :appId handles base path, /* captures any sub-paths */}
         <Route path="/:appId/*" component={AppPage} />
       </Router>

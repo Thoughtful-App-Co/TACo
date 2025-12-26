@@ -7,6 +7,7 @@ import { FriendlyApp } from './components/friendly/FriendlyApp';
 import { ManifestApp } from './components/manifest/ManifestApp';
 import { TenureApp } from './components/tenure/TenureApp';
 import { LolApp } from './components/lol/LolApp';
+import { PricingPage } from './components/PricingPage';
 
 type AppTab = 'nurture' | 'justincase' | 'tempo' | 'friendly' | 'manifest' | 'tenure' | 'lol';
 type Timeline = 'now' | 'next' | 'later';
@@ -1240,6 +1241,19 @@ const LandingPage: Component = () => {
                 gap: '24px',
               }}
             >
+              <A
+                href="/pricing"
+                style={{
+                  'font-size': '13px',
+                  color: 'rgba(255,255,255,0.3)',
+                  'text-decoration': 'none',
+                  transition: 'color 0.2s ease',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = 'rgba(255,255,255,0.6)')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = 'rgba(255,255,255,0.3)')}
+              >
+                Pricing
+              </A>
               <a
                 href="#"
                 style={{
