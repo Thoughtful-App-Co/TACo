@@ -22,7 +22,6 @@ import { SankeyTooltip } from './SankeyTooltip';
 import {
   JobApplication,
   ApplicationStatus,
-  ACTIVE_STATUSES,
   STATUS_LABELS,
 } from '../../../../schemas/pipeline.schema';
 
@@ -85,9 +84,9 @@ const SANKEY_DESIGN = {
     xl: 32,
   },
   radii: {
-    sm: 6,
-    md: 10,
-    lg: 14,
+    sm: 4,
+    md: 4,
+    lg: 4,
   },
   timing: {
     fast: pipelineAnimations.fast,
@@ -104,7 +103,7 @@ const SANKEY_DESIGN = {
     minWidth: 4, // Minimum link width for visibility
     maxWidth: 60, // Maximum link width to maintain readability
     ghostOpacity: 0.1, // Opacity for ghost links
-    normalOpacity: 0.35,
+    normalOpacity: 0.45,
     hoverOpacity: 0.7,
   },
 };
@@ -385,7 +384,7 @@ export const SankeyView: Component<SankeyViewProps> = (props) => {
             ${liquidTenure.glass.background}, 
             rgba(15, 15, 22, 0.98))`,
           border: liquidTenure.glass.border,
-          'border-radius': `${SANKEY_DESIGN.radii.lg}px`,
+          'border-radius': '4px',
           position: 'relative',
           overflow: 'hidden',
         }}
@@ -476,8 +475,8 @@ export const SankeyView: Component<SankeyViewProps> = (props) => {
           >
             <defs>
               {/* Glow filter */}
-              <filter id="sankey-glow" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur stdDeviation="4" result="blur" />
+              <filter id="sankey-glow" x="-25%" y="-25%" width="150%" height="150%">
+                <feGaussianBlur stdDeviation="2" result="blur" />
                 <feMerge>
                   <feMergeNode in="blur" />
                   <feMergeNode in="SourceGraphic" />
@@ -485,12 +484,17 @@ export const SankeyView: Component<SankeyViewProps> = (props) => {
               </filter>
 
               {/* Subtle glow for hover */}
-              <filter id="sankey-subtle-glow" x="-20%" y="-20%" width="140%" height="140%">
-                <feGaussianBlur stdDeviation="2" result="blur" />
+              <filter id="sankey-subtle-glow" x="-15%" y="-15%" width="130%" height="130%">
+                <feGaussianBlur stdDeviation="1" result="blur" />
                 <feMerge>
                   <feMergeNode in="blur" />
                   <feMergeNode in="SourceGraphic" />
                 </feMerge>
+              </filter>
+
+              {/* Subtle node shadow for depth */}
+              <filter id="node-shadow" x="-10%" y="-10%" width="120%" height="130%">
+                <feDropShadow dx="0" dy="2" stdDeviation="2" flood-opacity="0.25" />
               </filter>
 
               {/* Node gradient definitions */}
@@ -592,7 +596,7 @@ export const SankeyView: Component<SankeyViewProps> = (props) => {
                         <path
                           d={pathD || ''}
                           stroke={`url(#${gradientId})`}
-                          stroke-width={linkWidth + 6}
+                          stroke-width={linkWidth * 1.2}
                           stroke-opacity={0.2}
                           filter="url(#sankey-subtle-glow)"
                           style={{ transition: `stroke-opacity ${SANKEY_DESIGN.timing.fast}` }}
@@ -616,7 +620,7 @@ export const SankeyView: Component<SankeyViewProps> = (props) => {
                         <path
                           d={pathD || ''}
                           stroke={targetNode.color}
-                          stroke-width={Math.max(2, linkWidth / 5)}
+                          stroke-width={Math.min(2, linkWidth * 0.15)}
                           stroke-opacity={isHighlighted ? 0.8 : 0.4}
                           stroke-linecap="round"
                           filter={isHighlighted ? 'url(#sankey-subtle-glow)' : undefined}
@@ -633,7 +637,7 @@ export const SankeyView: Component<SankeyViewProps> = (props) => {
                             y={((link.y0 || 0) + (link.y1 || 0)) / 2 - 22}
                             width="32"
                             height="18"
-                            rx="9"
+                            rx="6"
                             fill="rgba(0, 0, 0, 0.7)"
                           />
                           <text
@@ -708,7 +712,7 @@ export const SankeyView: Component<SankeyViewProps> = (props) => {
                           y={(node.y0 || 0) - 4}
                           width={nodeWidth + 8}
                           height={nodeHeight + 8}
-                          rx="8"
+                          rx="4"
                           fill="none"
                           stroke={node.color}
                           stroke-width="2"
@@ -723,13 +727,14 @@ export const SankeyView: Component<SankeyViewProps> = (props) => {
                         y={node.y0 || 0}
                         width={nodeWidth}
                         height={nodeHeight}
-                        rx="6"
+                        rx="4"
                         fill={
                           hasApps ? `url(#sankey-gradient-${node.id})` : 'rgba(255,255,255,0.03)'
                         }
                         stroke={node.color}
-                        stroke-width={hasApps ? (highlighted === true ? 2 : 1) : 0.5}
+                        stroke-width="1.5"
                         stroke-opacity={hasApps ? (highlighted === true ? 1 : 0.6) : 0.15}
+                        filter={hasApps ? 'url(#node-shadow)' : undefined}
                         style={{ transition: `all ${SANKEY_DESIGN.timing.fast}` }}
                       />
 
@@ -777,7 +782,7 @@ export const SankeyView: Component<SankeyViewProps> = (props) => {
                 'text-align': 'center',
                 background: 'rgba(15, 15, 22, 0.9)',
                 padding: `${SANKEY_DESIGN.spacing.lg}px ${SANKEY_DESIGN.spacing.xl}px`,
-                'border-radius': `${SANKEY_DESIGN.radii.lg}px`,
+                'border-radius': '8px',
                 border: '1px solid rgba(255, 255, 255, 0.08)',
                 'backdrop-filter': 'blur(8px)',
                 'max-width': '300px',
@@ -839,159 +844,7 @@ export const SankeyView: Component<SankeyViewProps> = (props) => {
           />
         </Show>
       </FluidCard>
-
-      {/* Status Cards Grid */}
-      <div
-        style={{
-          display: 'grid',
-          'grid-template-columns': 'repeat(auto-fit, minmax(140px, 1fr))',
-          gap: `${SANKEY_DESIGN.spacing.md}px`,
-        }}
-        role="list"
-        aria-label="Status summary cards"
-      >
-        <For each={ACTIVE_STATUSES}>
-          {(status) => (
-            <StatusCard
-              status={status}
-              count={statusCounts()[status]}
-              applications={getApplicationsForStatus(status)}
-              theme={theme}
-              onSelectJob={props.onSelectJob}
-            />
-          )}
-        </For>
-      </div>
     </div>
-  );
-};
-
-// Status card sub-component
-interface StatusCardProps {
-  status: ApplicationStatus;
-  count: number;
-  applications: JobApplication[];
-  theme: () => typeof liquidTenure;
-  onSelectJob: (job: JobApplication) => void;
-}
-
-const StatusCard: Component<StatusCardProps> = (props) => {
-  const color = () => statusColors[props.status]?.text || liquidTenure.colors.text;
-  const hasApps = () => props.count > 0;
-
-  return (
-    <FluidCard
-      hoverable
-      glowColor={color()}
-      onClick={() => {
-        if (props.applications.length > 0) {
-          props.onSelectJob(props.applications[0]);
-        }
-      }}
-      style={{
-        padding: `${SANKEY_DESIGN.spacing.lg}px ${SANKEY_DESIGN.spacing.md}px`,
-        cursor: hasApps() ? 'pointer' : 'default',
-        opacity: hasApps() ? 1 : 0.45,
-        border: `1px solid ${hasApps() ? `${color()}30` : 'rgba(255, 255, 255, 0.05)'}`,
-        background: hasApps()
-          ? `linear-gradient(145deg, ${color()}0A, transparent 70%)`
-          : 'rgba(18, 18, 24, 0.5)',
-        'border-radius': `${SANKEY_DESIGN.radii.lg}px`,
-        position: 'relative',
-        overflow: 'hidden',
-        transition: `all ${SANKEY_DESIGN.timing.normal}`,
-      }}
-    >
-      {/* Top accent */}
-      <Show when={hasApps()}>
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: '20%',
-            right: '20%',
-            height: '2px',
-            background: `linear-gradient(90deg, transparent, ${color()}50, transparent)`,
-            'border-radius': '0 0 2px 2px',
-          }}
-        />
-      </Show>
-
-      <div
-        style={{
-          display: 'flex',
-          'flex-direction': 'column',
-          'align-items': 'center',
-          gap: `${SANKEY_DESIGN.spacing.sm}px`,
-        }}
-      >
-        <div
-          style={{
-            'font-size': '36px',
-            'font-family': SANKEY_DESIGN.fonts.heading,
-            'font-weight': '700',
-            color: hasApps() ? color() : 'rgba(255, 255, 255, 0.2)',
-            'text-shadow': hasApps() ? `0 0 24px ${color()}30` : 'none',
-            'line-height': '1',
-          }}
-        >
-          {props.count}
-        </div>
-
-        <div
-          style={{
-            'font-size': '11px',
-            'font-family': SANKEY_DESIGN.fonts.body,
-            'text-transform': 'uppercase',
-            'letter-spacing': '0.1em',
-            color: hasApps() ? 'rgba(255, 255, 255, 0.7)' : 'rgba(255, 255, 255, 0.3)',
-            'font-weight': '500',
-          }}
-        >
-          {STATUS_LABELS[props.status]}
-        </div>
-
-        <Show when={props.applications.length > 0}>
-          <div
-            style={{
-              'margin-top': `${SANKEY_DESIGN.spacing.sm}px`,
-              'padding-top': `${SANKEY_DESIGN.spacing.sm}px`,
-              'border-top': `1px solid ${color()}18`,
-              width: '100%',
-            }}
-          >
-            <div
-              style={{
-                'font-size': '12px',
-                'font-family': SANKEY_DESIGN.fonts.body,
-                color: liquidTenure.colors.text,
-                'white-space': 'nowrap',
-                overflow: 'hidden',
-                'text-overflow': 'ellipsis',
-                'font-weight': '500',
-                'text-align': 'center',
-              }}
-            >
-              {props.applications[0].companyName}
-            </div>
-            <div
-              style={{
-                'font-size': '11px',
-                'font-family': SANKEY_DESIGN.fonts.body,
-                color: liquidTenure.colors.textMuted,
-                'white-space': 'nowrap',
-                overflow: 'hidden',
-                'text-overflow': 'ellipsis',
-                'margin-top': '2px',
-                'text-align': 'center',
-              }}
-            >
-              {props.applications[0].roleName}
-            </div>
-          </div>
-        </Show>
-      </div>
-    </FluidCard>
   );
 };
 
