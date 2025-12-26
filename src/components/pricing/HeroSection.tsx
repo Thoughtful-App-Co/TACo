@@ -16,6 +16,20 @@ export const HeroSection: Component = () => {
         margin: '0 auto',
       }}
     >
+      {/* Subheader */}
+      <div
+        style={{
+          'font-size': '13px',
+          'font-weight': '600',
+          'letter-spacing': '1.5px',
+          'text-transform': 'uppercase',
+          color: tokens.colors.textDim,
+          'margin-bottom': tokens.spacing.md,
+        }}
+      >
+        All Free w/ Options
+      </div>
+
       <h1
         style={{
           margin: 0,
@@ -23,19 +37,19 @@ export const HeroSection: Component = () => {
           'font-weight': '400',
           'line-height': '1.1',
           'font-family': tokens.fonts.brand,
-          'margin-bottom': tokens.spacing.md,
+          'margin-bottom': tokens.spacing.sm,
         }}
       >
-        {/* FIX: Removed gradient overlay block, applied gradient directly to text */}
+        {/* FIXED: Use proper gradient text technique */}
         <span
           style={{
             background: `linear-gradient(135deg, ${tokens.colors.accent.coral}, ${tokens.colors.accent.yellow}, ${tokens.colors.accent.teal})`,
             '-webkit-background-clip': 'text',
             '-webkit-text-fill-color': 'transparent',
             'background-clip': 'text',
-            // Fallback for browsers that don't support background-clip: text
-            color: tokens.colors.text,
-            display: 'inline-block', // Critical for gradient clip to work properly
+            // Ensure gradient is applied as background, not fill
+            '-moz-background-clip': 'text',
+            '-moz-text-fill-color': 'transparent',
           }}
         >
           Build your perfect plan
@@ -48,9 +62,12 @@ export const HeroSection: Component = () => {
           'font-size': '18px',
           color: tokens.colors.textMuted,
           'line-height': '1.6',
+          'max-width': '500px',
+          'margin-left': 'auto',
+          'margin-right': 'auto',
         }}
       >
-        Check off what you need. See your savings in real time.
+        Everything is free. Option to augment.
       </p>
     </section>
   );

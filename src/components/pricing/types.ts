@@ -13,6 +13,7 @@ export interface TooltipContent {
   title: string;
   description: string;
   features: string[];
+  why?: string; // Optional "why" explanation for non-technical users
 }
 
 export interface FAQItem {

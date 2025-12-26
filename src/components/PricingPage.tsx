@@ -19,6 +19,7 @@ import {
   HeroSection,
   ExtrasSection,
   InfoIcon,
+  WhyCard,
   tokens,
   availableApps,
   tooltipContent,
@@ -191,6 +192,9 @@ export const PricingPage: Component = () => {
                 setActiveTooltip={setActiveTooltip}
               />
             </div>
+
+            {/* Why this costs money */}
+            <WhyCard text="Running servers costs us real money—storage, bandwidth, maintenance. We pass those costs directly to you at near-cost pricing. No markup, no games." />
 
             {/* All Apps Option */}
             <div
@@ -447,6 +451,9 @@ export const PricingPage: Component = () => {
                 setActiveTooltip={setActiveTooltip}
               />
             </div>
+
+            {/* Why TACo Club */}
+            <WhyCard text="We want superfans to get rewarded, not gouged. Your $25/mo or $500 lifetime pays for your server costs forever and helps fund development of new features." />
 
             <div
               style={{

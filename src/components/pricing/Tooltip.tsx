@@ -169,6 +169,42 @@ export const Tooltip: Component<TooltipProps> = (props) => {
               )}
             </For>
           </ul>
+
+          {/* "Why" section - for non-technical users */}
+          <Show when={props.content.why}>
+            <div
+              style={{
+                'margin-top': tokens.spacing.lg,
+                'padding-top': tokens.spacing.md,
+                'border-top': `1px solid ${tokens.colors.border}`,
+              }}
+            >
+              <div
+                style={{
+                  'font-size': '11px',
+                  'font-weight': '700',
+                  'letter-spacing': '0.5px',
+                  'text-transform': 'uppercase',
+                  color: tokens.colors.accent.coral,
+                  'margin-bottom': tokens.spacing.xs,
+                }}
+              >
+                Why this costs what it does
+              </div>
+              <p
+                style={{
+                  margin: 0,
+                  'font-size': '12px',
+                  color: tokens.colors.textMuted,
+                  'line-height': '1.6',
+                  'letter-spacing': '0.005em',
+                  'font-style': 'italic',
+                }}
+              >
+                {props.content.why}
+              </p>
+            </div>
+          </Show>
         </div>
 
         {/* Subtle corner accent */}

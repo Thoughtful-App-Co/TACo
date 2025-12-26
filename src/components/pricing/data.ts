@@ -22,6 +22,7 @@ export const tooltipContent: Record<string, TooltipContent> = {
       '2-year cold storage if you leave',
       'Priority support',
     ],
+    why: 'Running servers costs us real money—storage, bandwidth, maintenance. We pass those costs directly to you at near-cost pricing. No markup, no games.',
   },
   extras: {
     title: 'App Extras',
@@ -32,6 +33,7 @@ export const tooltipContent: Record<string, TooltipContent> = {
       'Usage-based or monthly billing',
       'Cancel anytime',
     ],
+    why: 'AI API calls cost us money per request. We pay Anthropic directly for Claude. You can BYOK (free) or pay us to manage it for you.',
   },
   // App-specific extras tooltips
   tempoExtras: {
@@ -45,6 +47,7 @@ export const tooltipContent: Record<string, TooltipContent> = {
       'Usage analytics & insights',
       'Priority API access',
     ],
+    why: "Every task refinement, brain dump, and organization uses Claude API. We cover those costs so you don't have to manage API keys.",
   },
   tenureExtras: {
     title: 'Tenure Extras',
@@ -57,6 +60,7 @@ export const tooltipContent: Record<string, TooltipContent> = {
       '$1 per additional mutation',
       'Export in multiple formats',
     ],
+    why: 'Each mutation costs us ~$0.80 in AI credits. We charge $1 to cover costs and keep the lights on. 5 included = $4 value for $12/year.',
   },
   nurtureExtras: {
     title: 'Nurture Extras',
@@ -68,6 +72,7 @@ export const tooltipContent: Record<string, TooltipContent> = {
       'Network analytics',
       'Integration with calendar & email',
     ],
+    why: 'Contact enrichment and relationship insights use AI analysis. We pay per contact analyzed to give you meaningful networking intelligence.',
   },
   tacoClub: {
     title: 'Loco TACo Club',
@@ -80,6 +85,7 @@ export const tooltipContent: Record<string, TooltipContent> = {
       'Direct influence on our roadmap',
       'Only 10,000 spots available',
     ],
+    why: 'We want superfans to get rewarded, not gouged. Your $25/mo or $500 lifetime pays for your server costs forever and helps fund development of new features.',
   },
 };
 
