@@ -48,7 +48,7 @@ export const ExtrasSection: Component<ExtrasSectionProps> = (props) => {
       </div>
 
       {/* Why extras cost money */}
-      <WhyCard text="AI API calls cost us money per request. We pay Anthropic directly for Claude. You can BYOK (free) or pay us to manage it for you." />
+      <WhyCard text="Developer time to build and maintain features, plus inference costs for AI processing. You can BYOK (free) or pay us to manage it for you." />
 
       <div style={{ display: 'flex', 'flex-direction': 'column', gap: tokens.spacing.md }}>
         {/* Tempo Extras - WITH APP-SPECIFIC TOOLTIP */}

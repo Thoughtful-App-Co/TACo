@@ -22,7 +22,38 @@ export const tooltipContent: Record<string, TooltipContent> = {
       '2-year cold storage if you leave',
       'Priority support',
     ],
-    why: 'Running servers costs us real money—storage, bandwidth, maintenance. We pass those costs directly to you at near-cost pricing. No markup, no games.',
+    why: 'Running servers costs real money—storage, bandwidth, and maintenance. We pass those infrastructure costs directly to you with no markup.',
+  },
+  // Individual app sync tooltips
+  tempoSync: {
+    title: 'Tempo Sync & Backup',
+    description: 'Your tasks, sessions, and brain dumps backed up and synced.',
+    features: [
+      'All Tempo data in the cloud',
+      'Sync across desktop, mobile, tablet',
+      'Never lose a task or thought',
+      'Works offline, syncs when online',
+    ],
+  },
+  tenureSync: {
+    title: 'Tenure Sync & Backup',
+    description: 'Your resumes, applications, and job pipeline always safe.',
+    features: [
+      'All Tenure data backed up',
+      'Resume versions synced everywhere',
+      'Job applications tracked across devices',
+      'Interview prep notes accessible anywhere',
+    ],
+  },
+  nurtureSync: {
+    title: 'Nurture Sync & Backup',
+    description: 'Your contacts and relationships protected and available.',
+    features: [
+      'Contact database in the cloud',
+      'Relationship notes synced',
+      'Never lose touch with your network',
+      'Access from any device',
+    ],
   },
   extras: {
     title: 'App Extras',
@@ -33,7 +64,7 @@ export const tooltipContent: Record<string, TooltipContent> = {
       'Usage-based or monthly billing',
       'Cancel anytime',
     ],
-    why: 'AI API calls cost us money per request. We pay Anthropic directly for Claude. You can BYOK (free) or pay us to manage it for you.',
+    why: 'Developer time to build and maintain features, plus inference costs for AI processing. You can BYOK (free) or pay us to manage it for you.',
   },
   // App-specific extras tooltips
   tempoExtras: {
@@ -47,7 +78,7 @@ export const tooltipContent: Record<string, TooltipContent> = {
       'Usage analytics & insights',
       'Priority API access',
     ],
-    why: "Every task refinement, brain dump, and organization uses Claude API. We cover those costs so you don't have to manage API keys.",
+    why: "Development time to build smart task features, plus inference costs for Claude API processing. We handle the complexity so you don't have to.",
   },
   tenureExtras: {
     title: 'Tenure Extras',
@@ -57,10 +88,10 @@ export const tooltipContent: Record<string, TooltipContent> = {
       'Job-specific tailoring',
       'Role archetype transformations',
       'ATS optimization',
-      '$1 per additional mutation',
+      'Additional mutations available',
       'Export in multiple formats',
     ],
-    why: 'Each mutation costs us ~$0.80 in AI credits. We charge $1 to cover costs and keep the lights on. 5 included = $4 value for $12/year.',
+    why: 'Developer time building resume intelligence, plus inference costs for each AI-powered transformation and job matching analysis.',
   },
   nurtureExtras: {
     title: 'Nurture Extras',
@@ -72,20 +103,20 @@ export const tooltipContent: Record<string, TooltipContent> = {
       'Network analytics',
       'Integration with calendar & email',
     ],
-    why: 'Contact enrichment and relationship insights use AI analysis. We pay per contact analyzed to give you meaningful networking intelligence.',
+    why: 'Development time for relationship intelligence features, plus inference costs for contact enrichment and networking analysis.',
   },
   tacoClub: {
     title: 'Loco TACo Club',
-    description: 'The ultimate membership for TACo superfans.',
+    description: 'Our way of rewarding early believers who help build this ecosystem.',
     features: [
-      'Lifetime benefits after 24 months or $500',
+      'Lifetime benefits after 24 months',
       '75% off all Extras forever',
       'Free Sync & Backup for all apps',
       'Founding member exclusive merch',
       'Direct influence on our roadmap',
       'Only 10,000 spots available',
     ],
-    why: 'We want superfans to get rewarded, not gouged. Your $25/mo or $500 lifetime pays for your server costs forever and helps fund development of new features.',
+    why: "We want to reward our early adopters and believers. Your support now helps us build the foundation, and in return you get legacy benefits forever. You're not just a customer—you're part of creating this ecosystem.",
   },
 };
 

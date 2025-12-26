@@ -194,7 +194,7 @@ export const PricingPage: Component = () => {
             </div>
 
             {/* Why this costs money */}
-            <WhyCard text="Running servers costs us real money—storage, bandwidth, maintenance. We pass those costs directly to you at near-cost pricing. No markup, no games." />
+            <WhyCard text="Running servers costs real money—storage, bandwidth, and maintenance. We pass those infrastructure costs directly to you with no markup." />
 
             {/* All Apps Option */}
             <div
@@ -390,12 +390,32 @@ export const PricingPage: Component = () => {
                       <div
                         style={{
                           flex: 1,
-                          'font-size': '15px',
-                          'font-weight': '600',
-                          color: tokens.colors.text,
+                          display: 'flex',
+                          'align-items': 'center',
+                          gap: tokens.spacing.sm,
                         }}
                       >
-                        {app.name}
+                        <span
+                          style={{
+                            'font-size': '15px',
+                            'font-weight': '600',
+                            color: tokens.colors.text,
+                          }}
+                        >
+                          {app.name}
+                        </span>
+                        <div
+                          onClick={(e) => e.stopPropagation()}
+                          style={{ display: 'inline-flex' }}
+                        >
+                          <InfoIcon
+                            content={tooltipContent[`${app.id}Sync` as keyof typeof tooltipContent]}
+                            tooltipKey={`${app.id}Sync`}
+                            activeTooltip={activeTooltip}
+                            setActiveTooltip={setActiveTooltip}
+                            position="right"
+                          />
+                        </div>
                       </div>
 
                       <div
@@ -453,7 +473,7 @@ export const PricingPage: Component = () => {
             </div>
 
             {/* Why TACo Club */}
-            <WhyCard text="We want superfans to get rewarded, not gouged. Your $25/mo or $500 lifetime pays for your server costs forever and helps fund development of new features." />
+            <WhyCard text="We want to reward our early adopters and believers. Your support now helps us build the foundation, and in return you get legacy benefits forever. You're not just a customer—you're part of creating this ecosystem." />
 
             <div
               style={{
