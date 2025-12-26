@@ -32,28 +32,26 @@ export const HeroSection: Component = () => {
 
       <h1
         style={{
-          margin: 0,
           'font-size': 'clamp(36px, 6vw, 64px)',
           'font-weight': '400',
           'line-height': '1.1',
           'font-family': tokens.fonts.brand,
-          'margin-bottom': tokens.spacing.sm,
+          // Apply gradient to text
+          background: `linear-gradient(135deg, ${tokens.colors.accent.coral}, ${tokens.colors.accent.yellow}, ${tokens.colors.accent.teal})`,
+          '-webkit-background-clip': 'text',
+          '-webkit-text-fill-color': 'transparent',
+          'background-clip': 'text',
+          '-moz-background-clip': 'text',
+          '-moz-text-fill-color': 'transparent',
+          // Layout
+          width: 'fit-content',
+          margin: `0 auto ${tokens.spacing.sm} auto`,
+          // Force background to only show through text
+          'box-decoration-break': 'clone',
+          '-webkit-box-decoration-break': 'clone',
         }}
       >
-        {/* FIXED: Use proper gradient text technique */}
-        <span
-          style={{
-            background: `linear-gradient(135deg, ${tokens.colors.accent.coral}, ${tokens.colors.accent.yellow}, ${tokens.colors.accent.teal})`,
-            '-webkit-background-clip': 'text',
-            '-webkit-text-fill-color': 'transparent',
-            'background-clip': 'text',
-            // Ensure gradient is applied as background, not fill
-            '-moz-background-clip': 'text',
-            '-moz-text-fill-color': 'transparent',
-          }}
-        >
-          Build your perfect plan
-        </span>
+        Build your perfect plan
       </h1>
 
       <p
