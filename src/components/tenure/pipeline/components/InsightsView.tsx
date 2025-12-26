@@ -22,11 +22,7 @@ import {
 } from '../ui/Icons';
 import { FluidCard } from '../ui';
 import { pipelineStore } from '../store';
-import {
-  JobApplication,
-  ACTIVE_STATUSES,
-  ApplicationStatus,
-} from '../../../../schemas/pipeline.schema';
+import { JobApplication, ApplicationStatus } from '../../../../schemas/pipeline.schema';
 
 interface InsightsViewProps {
   currentTheme: () => Partial<typeof liquidTenure> & typeof liquidTenure;
@@ -38,19 +34,6 @@ type InsightsTab = 'flow' | 'analytics' | 'trends';
 export const InsightsView: Component<InsightsViewProps> = (props) => {
   const theme = () => props.currentTheme();
   const [activeTab, setActiveTab] = createSignal<InsightsTab>('flow');
-
-  // Compute stats from pipelineStore
-  const stats = createMemo(() => {
-    const apps = pipelineStore.state.applications;
-    const active = apps.filter((app) => ACTIVE_STATUSES.includes(app.status));
-    const total = apps.length;
-    const interviewing = apps.filter((app) => app.status === 'interviewing').length;
-    const offers = apps.filter(
-      (app) => app.status === 'offered' || app.status === 'accepted'
-    ).length;
-
-    return { total, active: active.length, interviewing, offers };
-  });
 
   const tabs = [
     {
@@ -93,79 +76,6 @@ export const InsightsView: Component<InsightsViewProps> = (props) => {
 
   return (
     <div style={{ padding: '32px', 'max-width': '1400px' }}>
-      {/* Enhanced Header Section */}
-      <div style={{ 'margin-bottom': '32px' }}>
-        <div
-          style={{
-            display: 'flex',
-            'justify-content': 'space-between',
-            'align-items': 'flex-start',
-            'flex-wrap': 'wrap',
-            gap: '24px',
-          }}
-        >
-          {/* Title and Subtitle */}
-          <div>
-            <h1
-              style={{
-                margin: '0 0 8px',
-                'font-size': '32px',
-                'font-family': "'Playfair Display', Georgia, serif",
-                'font-weight': '700',
-                color: theme().colors.text,
-              }}
-            >
-              Insights
-            </h1>
-            <p
-              style={{
-                margin: 0,
-                'font-size': '15px',
-                'font-family': "'Space Grotesk', system-ui, sans-serif",
-                color: theme().colors.textMuted,
-                'max-width': '400px',
-                'line-height': '1.5',
-              }}
-            >
-              Understand your job search performance with pipeline analytics, conversion rates, and
-              activity trends
-            </p>
-          </div>
-
-          {/* Quick Stats */}
-          <div style={{ display: 'flex', gap: '16px', 'flex-wrap': 'wrap' }}>
-            <QuickStat
-              label="Total Applications"
-              value={stats().total}
-              icon={IconBriefcase}
-              color={statusColors.applied.text}
-              theme={theme}
-            />
-            <QuickStat
-              label="Active Pipeline"
-              value={stats().active}
-              icon={IconPipeline}
-              color={statusColors.screening.text}
-              theme={theme}
-            />
-            <QuickStat
-              label="Interviewing"
-              value={stats().interviewing}
-              icon={IconMessage}
-              color={statusColors.interviewing.text}
-              theme={theme}
-            />
-            <QuickStat
-              label="Offers"
-              value={stats().offers}
-              icon={IconStar}
-              color={statusColors.offered.text}
-              theme={theme}
-            />
-          </div>
-        </div>
-      </div>
-
       {/* Enhanced Tab Navigation */}
       <div
         role="tablist"
@@ -285,82 +195,70 @@ export const InsightsView: Component<InsightsViewProps> = (props) => {
   );
 };
 
-// Quick Stat Component for Header
-interface QuickStatProps {
-  label: string;
-  value: number;
-  icon: Component<{ size?: number; color?: string }>;
-  color: string;
-  theme: () => typeof liquidTenure;
-}
-
-const QuickStat: Component<QuickStatProps> = (props) => {
-  return (
-    <div
-      style={{
-        display: 'flex',
-        'align-items': 'center',
-        gap: '12px',
-        padding: '12px 16px',
-        background: 'rgba(255, 255, 255, 0.03)',
-        border: '1px solid rgba(255, 255, 255, 0.08)',
-        'border-radius': '12px',
-        transition: `all ${pipelineAnimations.fast}`,
-      }}
-    >
-      <div
-        style={{
-          width: '36px',
-          height: '36px',
-          'border-radius': '10px',
-          background: `${props.color}15`,
-          border: `1px solid ${props.color}30`,
-          display: 'flex',
-          'align-items': 'center',
-          'justify-content': 'center',
-        }}
-      >
-        <props.icon size={18} color={props.color} />
-      </div>
-      <div>
-        <div
-          style={{
-            'font-size': '20px',
-            'font-weight': '700',
-            'font-family': "'Space Grotesk', system-ui, sans-serif",
-            color: props.theme().colors.text,
-            'line-height': '1.2',
-          }}
-        >
-          {props.value}
-        </div>
-        <div
-          style={{
-            'font-size': '11px',
-            'font-family': "'Space Grotesk', system-ui, sans-serif",
-            color: props.theme().colors.textMuted,
-            'text-transform': 'uppercase',
-            'letter-spacing': '0.5px',
-          }}
-        >
-          {props.label}
-        </div>
-      </div>
-    </div>
-  );
-};
-
 // Analytics Tab Component
 interface TabProps {
   theme: () => typeof liquidTenure;
 }
 
+// Pipeline stage progression order for calculating conversions
+const PIPELINE_STAGES: ApplicationStatus[] = [
+  'saved',
+  'applied',
+  'screening',
+  'interviewing',
+  'offered',
+  'accepted',
+];
+
+// Helper to get the highest stage index an app has reached
+function getHighestReachedStageIndex(app: JobApplication): number {
+  const currentStatus = app.status;
+  const currentIndex = PIPELINE_STAGES.indexOf(currentStatus);
+
+  // If app is in a normal pipeline stage, it has reached all stages up to current
+  if (currentIndex >= 0) {
+    return currentIndex;
+  }
+
+  // For rejected/withdrawn apps, determine the last "good" stage they reached
+  if (currentStatus === 'rejected' || currentStatus === 'withdrawn') {
+    // Use rejectedAtStatus if available
+    if (app.rejectedAtStatus) {
+      const rejectedIndex = PIPELINE_STAGES.indexOf(app.rejectedAtStatus);
+      if (rejectedIndex >= 0) {
+        return rejectedIndex;
+      }
+    }
+
+    // Fallback: check statusHistory for the highest pipeline stage reached
+    if (app.statusHistory && app.statusHistory.length > 0) {
+      let maxIndex = -1;
+      for (const h of app.statusHistory) {
+        const idx = PIPELINE_STAGES.indexOf(h.status);
+        if (idx > maxIndex) {
+          maxIndex = idx;
+        }
+      }
+      if (maxIndex >= 0) {
+        return maxIndex;
+      }
+    }
+
+    // Default fallback: assume at least 'saved' stage was reached
+    return 0; // 'saved' is index 0
+  }
+
+  return -1; // Unknown status
+}
+
 const AnalyticsTab: Component<TabProps> = (props) => {
   const theme = () => props.theme();
 
-  // Compute actual stats from store for preview
-  const funnelStats = createMemo(() => {
+  // Compute comprehensive analytics from store
+  const analytics = createMemo(() => {
     const apps = pipelineStore.state.applications;
+
+    // Count apps at each current status
     const statusCounts: Record<ApplicationStatus, number> = {
       saved: 0,
       applied: 0,
@@ -376,8 +274,154 @@ const AnalyticsTab: Component<TabProps> = (props) => {
       statusCounts[app.status]++;
     });
 
+    // Count apps that have ever reached each stage (for funnel analysis)
+    const reachedStage: Record<ApplicationStatus, number> = {
+      saved: 0,
+      applied: 0,
+      screening: 0,
+      interviewing: 0,
+      offered: 0,
+      accepted: 0,
+      rejected: 0,
+      withdrawn: 0,
+    };
+
+    // For each app, mark all stages up to (and including) their highest reached stage
+    apps.forEach((app) => {
+      const highestIndex = getHighestReachedStageIndex(app);
+
+      if (highestIndex >= 0) {
+        // App reached all stages up to highestIndex
+        for (let i = 0; i <= highestIndex; i++) {
+          reachedStage[PIPELINE_STAGES[i]]++;
+        }
+      }
+    });
+
     const total = apps.length;
-    return { statusCounts, total };
+
+    // Apps that applied (not just saved)
+    const totalApplied = reachedStage.applied;
+
+    // Apps that got any response (screening or beyond)
+    const totalResponded = reachedStage.screening;
+
+    // Apps that reached interviewing
+    const totalInterviewing = reachedStage.interviewing;
+
+    // Apps that got offers
+    const totalOffered = reachedStage.offered;
+
+    // Calculate key rates
+    const responseRate = totalApplied > 0 ? (totalResponded / totalApplied) * 100 : 0;
+    const interviewRate = totalApplied > 0 ? (totalInterviewing / totalApplied) * 100 : 0;
+    const offerRate = totalInterviewing > 0 ? (totalOffered / totalInterviewing) * 100 : 0;
+
+    // Calculate average time to offer from statusHistory
+    let avgTimeToOffer: number | null = null;
+    const offerTimes: number[] = [];
+
+    const offeredIndex = PIPELINE_STAGES.indexOf('offered');
+    const offeredApps = apps.filter((app) => getHighestReachedStageIndex(app) >= offeredIndex);
+    offeredApps.forEach((app) => {
+      if (app.statusHistory && app.statusHistory.length > 0) {
+        const appliedEntry = app.statusHistory.find((h) => h.status === 'applied');
+        const offeredEntry = app.statusHistory.find((h) => h.status === 'offered');
+
+        if (appliedEntry && offeredEntry) {
+          const appliedDate = new Date(appliedEntry.timestamp);
+          const offeredDate = new Date(offeredEntry.timestamp);
+          const days = Math.floor(
+            (offeredDate.getTime() - appliedDate.getTime()) / (1000 * 60 * 60 * 24)
+          );
+          if (days >= 0) {
+            offerTimes.push(days);
+          }
+        }
+      } else if (app.appliedAt) {
+        // Fallback: use appliedAt and updatedAt if no history
+        const appliedDate = new Date(app.appliedAt);
+        const offeredDate = new Date(app.updatedAt);
+        const days = Math.floor(
+          (offeredDate.getTime() - appliedDate.getTime()) / (1000 * 60 * 60 * 24)
+        );
+        if (days >= 0) {
+          offerTimes.push(days);
+        }
+      }
+    });
+
+    if (offerTimes.length > 0) {
+      avgTimeToOffer = Math.round(offerTimes.reduce((a, b) => a + b, 0) / offerTimes.length);
+    }
+
+    // Stage-to-stage conversion rates
+    const conversions = {
+      savedToApplied:
+        reachedStage.saved > 0 ? (reachedStage.applied / reachedStage.saved) * 100 : 0,
+      appliedToScreening:
+        reachedStage.applied > 0 ? (reachedStage.screening / reachedStage.applied) * 100 : 0,
+      screeningToInterviewing:
+        reachedStage.screening > 0 ? (reachedStage.interviewing / reachedStage.screening) * 100 : 0,
+      interviewingToOffered:
+        reachedStage.interviewing > 0
+          ? (reachedStage.offered / reachedStage.interviewing) * 100
+          : 0,
+      offeredToAccepted:
+        reachedStage.offered > 0 ? (reachedStage.accepted / reachedStage.offered) * 100 : 0,
+    };
+
+    // Drop-off rates (inverse of conversion)
+    const dropoffs = {
+      saved: 100 - conversions.savedToApplied,
+      applied: 100 - conversions.appliedToScreening,
+      screening: 100 - conversions.screeningToInterviewing,
+      interviewing: 100 - conversions.interviewingToOffered,
+      offered: 100 - conversions.offeredToAccepted,
+    };
+
+    // Calculate average duration at each stage
+    const stageDurations: Record<string, number | null> = {};
+    PIPELINE_STAGES.forEach((stage) => {
+      const durations: number[] = [];
+      apps.forEach((app) => {
+        if (app.statusHistory && app.statusHistory.length > 1) {
+          const stageEntry = app.statusHistory.find((h) => h.status === stage);
+          if (stageEntry) {
+            const stageIndex = app.statusHistory.findIndex((h) => h.status === stage);
+            const nextEntry = app.statusHistory[stageIndex + 1];
+            if (nextEntry) {
+              const stageDate = new Date(stageEntry.timestamp);
+              const nextDate = new Date(nextEntry.timestamp);
+              const days = Math.floor(
+                (nextDate.getTime() - stageDate.getTime()) / (1000 * 60 * 60 * 24)
+              );
+              if (days >= 0) {
+                durations.push(days);
+              }
+            }
+          }
+        }
+      });
+      stageDurations[stage] =
+        durations.length > 0
+          ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length)
+          : null;
+    });
+
+    return {
+      statusCounts,
+      reachedStage,
+      total,
+      totalApplied,
+      responseRate,
+      interviewRate,
+      offerRate,
+      avgTimeToOffer,
+      conversions,
+      dropoffs,
+      stageDurations,
+    };
   });
 
   // Funnel stages for conversion visualization
@@ -420,71 +464,21 @@ const AnalyticsTab: Component<TabProps> = (props) => {
     },
   ];
 
+  // Helper to format percentage
+  const formatPercent = (value: number): string => {
+    if (isNaN(value) || !isFinite(value)) return '0';
+    return Math.round(value).toString();
+  };
+
+  // Helper to format duration
+  const formatDuration = (days: number | null): string => {
+    if (days === null) return 'N/A';
+    return `${days} days`;
+  };
+
   return (
     <div style={{ display: 'flex', 'flex-direction': 'column', gap: '24px' }}>
-      {/* Coming Soon Banner */}
-      <FluidCard variant="outlined" style={{ 'border-color': 'rgba(59, 130, 246, 0.3)' }}>
-        <div style={{ display: 'flex', 'align-items': 'center', gap: '16px' }}>
-          <div
-            style={{
-              width: '48px',
-              height: '48px',
-              'border-radius': '12px',
-              background: 'rgba(59, 130, 246, 0.15)',
-              border: '1px solid rgba(59, 130, 246, 0.3)',
-              display: 'flex',
-              'align-items': 'center',
-              'justify-content': 'center',
-              'flex-shrink': 0,
-            }}
-          >
-            <IconTrendingUp size={24} color="#60A5FA" />
-          </div>
-          <div style={{ flex: 1 }}>
-            <h3
-              style={{
-                margin: '0 0 4px',
-                'font-size': '16px',
-                'font-family': "'Playfair Display', Georgia, serif",
-                'font-weight': '600',
-                color: theme().colors.text,
-              }}
-            >
-              Analytics Dashboard Coming Soon
-            </h3>
-            <p
-              style={{
-                margin: 0,
-                'font-size': '13px',
-                'font-family': "'Space Grotesk', system-ui, sans-serif",
-                color: theme().colors.textMuted,
-                'line-height': '1.5',
-              }}
-            >
-              Deep conversion analytics, success rate tracking, and performance insights are on the
-              way
-            </p>
-          </div>
-          <div
-            style={{
-              padding: '6px 12px',
-              background: 'rgba(59, 130, 246, 0.15)',
-              border: '1px solid rgba(59, 130, 246, 0.3)',
-              'border-radius': '6px',
-              'font-size': '11px',
-              'font-family': "'Space Grotesk', system-ui, sans-serif",
-              color: '#60A5FA',
-              'text-transform': 'uppercase',
-              'letter-spacing': '0.5px',
-              'font-weight': '600',
-            }}
-          >
-            Preview
-          </div>
-        </div>
-      </FluidCard>
-
-      {/* Conversion Funnel Preview */}
+      {/* Conversion Funnel */}
       <FluidCard variant="default">
         <div style={{ 'margin-bottom': '20px' }}>
           <h4
@@ -514,15 +508,30 @@ const AnalyticsTab: Component<TabProps> = (props) => {
         <div style={{ display: 'flex', 'flex-direction': 'column', gap: '12px' }}>
           <For each={funnelStages}>
             {(stage, index) => {
-              const count = () => funnelStats().statusCounts[stage.status];
-              const total = () => funnelStats().total;
-              const percentage = () => (total() > 0 ? Math.round((count() / total()) * 100) : 0);
-              const prevCount = () =>
-                index() > 0
-                  ? funnelStats().statusCounts[funnelStages[index() - 1].status]
-                  : total();
-              const conversionRate = () =>
-                prevCount() > 0 ? Math.round((count() / prevCount()) * 100) : 0;
+              const reached = () => analytics().reachedStage[stage.status];
+              const total = () => analytics().total;
+              const percentage = () => (total() > 0 ? Math.round((reached() / total()) * 100) : 0);
+
+              // Get conversion rate from previous stage
+              const getConversionRate = (): number => {
+                const idx = index();
+                if (idx === 0) return 100; // First stage, no conversion
+                const conversionData = analytics().conversions;
+                switch (idx) {
+                  case 1:
+                    return conversionData.savedToApplied;
+                  case 2:
+                    return conversionData.appliedToScreening;
+                  case 3:
+                    return conversionData.screeningToInterviewing;
+                  case 4:
+                    return conversionData.interviewingToOffered;
+                  case 5:
+                    return conversionData.offeredToAccepted;
+                  default:
+                    return 0;
+                }
+              };
 
               return (
                 <div style={{ display: 'flex', 'align-items': 'center', gap: '16px' }}>
@@ -582,7 +591,7 @@ const AnalyticsTab: Component<TabProps> = (props) => {
                           background: stage.color.gradient,
                           'border-radius': '8px',
                           transition: `width ${pipelineAnimations.slow} ease`,
-                          opacity: count() > 0 ? 1 : 0.3,
+                          opacity: reached() > 0 ? 1 : 0.3,
                         }}
                       />
                       {/* Count Badge */}
@@ -595,11 +604,11 @@ const AnalyticsTab: Component<TabProps> = (props) => {
                           'font-size': '13px',
                           'font-family': "'Space Grotesk', system-ui, sans-serif",
                           'font-weight': '600',
-                          color: count() > 0 ? '#FFFFFF' : theme().colors.textMuted,
-                          'text-shadow': count() > 0 ? '0 1px 2px rgba(0,0,0,0.3)' : 'none',
+                          color: reached() > 0 ? '#FFFFFF' : theme().colors.textMuted,
+                          'text-shadow': reached() > 0 ? '0 1px 2px rgba(0,0,0,0.3)' : 'none',
                         }}
                       >
-                        {count() > 0 ? count() : '--'}
+                        {reached()}
                       </div>
                     </div>
                   </div>
@@ -618,21 +627,21 @@ const AnalyticsTab: Component<TabProps> = (props) => {
                         style={{
                           padding: '4px 8px',
                           background:
-                            conversionRate() > 0
+                            getConversionRate() > 0
                               ? 'rgba(16, 185, 129, 0.15)'
                               : 'rgba(255, 255, 255, 0.05)',
                           border:
-                            conversionRate() > 0
+                            getConversionRate() > 0
                               ? '1px solid rgba(16, 185, 129, 0.3)'
                               : '1px solid rgba(255, 255, 255, 0.1)',
                           'border-radius': '4px',
                           'font-size': '11px',
                           'font-family': "'Space Grotesk', system-ui, sans-serif",
-                          color: conversionRate() > 0 ? '#34D399' : theme().colors.textMuted,
+                          color: getConversionRate() > 0 ? '#34D399' : theme().colors.textMuted,
                           'font-weight': '600',
                         }}
                       >
-                        {conversionRate() > 0 ? `${conversionRate()}%` : '--'}
+                        {formatPercent(getConversionRate())}%
                       </div>
                     </Show>
                   </div>
@@ -643,7 +652,7 @@ const AnalyticsTab: Component<TabProps> = (props) => {
         </div>
       </FluidCard>
 
-      {/* Key Metrics Preview */}
+      {/* Key Metrics */}
       <div
         style={{
           display: 'grid',
@@ -651,45 +660,51 @@ const AnalyticsTab: Component<TabProps> = (props) => {
           gap: '16px',
         }}
       >
-        <MetricPreviewCard
+        <MetricCard
           title="Response Rate"
           description="Applications that received any response"
-          placeholder="--"
+          value={formatPercent(analytics().responseRate)}
           unit="%"
           icon={IconSend}
           color={statusColors.applied.text}
           theme={theme}
+          hasData={analytics().totalApplied > 0}
         />
-        <MetricPreviewCard
+        <MetricCard
           title="Interview Rate"
           description="Applications that reached interview"
-          placeholder="--"
+          value={formatPercent(analytics().interviewRate)}
           unit="%"
           icon={IconMessage}
           color={statusColors.interviewing.text}
           theme={theme}
+          hasData={analytics().totalApplied > 0}
         />
-        <MetricPreviewCard
+        <MetricCard
           title="Offer Rate"
           description="Interviews that resulted in offer"
-          placeholder="--"
+          value={formatPercent(analytics().offerRate)}
           unit="%"
           icon={IconStar}
           color={statusColors.offered.text}
           theme={theme}
+          hasData={analytics().reachedStage.interviewing > 0}
         />
-        <MetricPreviewCard
+        <MetricCard
           title="Avg. Time to Offer"
           description="Days from application to offer"
-          placeholder="--"
-          unit=" days"
+          value={
+            analytics().avgTimeToOffer !== null ? analytics().avgTimeToOffer!.toString() : 'N/A'
+          }
+          unit={analytics().avgTimeToOffer !== null ? ' days' : ''}
           icon={IconClock}
           color={statusColors.screening.text}
           theme={theme}
+          hasData={analytics().avgTimeToOffer !== null}
         />
       </div>
 
-      {/* Stage Breakdown Preview */}
+      {/* Stage Breakdown */}
       <FluidCard variant="default">
         <div
           style={{
@@ -804,88 +819,109 @@ const AnalyticsTab: Component<TabProps> = (props) => {
 
         {/* Table Rows */}
         <For each={funnelStages}>
-          {(stage) => (
-            <div
-              style={{
-                display: 'grid',
-                'grid-template-columns': '1fr 80px 100px 100px',
-                gap: '16px',
-                padding: '14px 16px',
-                'border-bottom': '1px solid rgba(255, 255, 255, 0.05)',
-                transition: `background ${pipelineAnimations.fast}`,
-              }}
-            >
-              <div style={{ display: 'flex', 'align-items': 'center', gap: '10px' }}>
+          {(stage, index) => {
+            const dropoffKeys = [
+              'saved',
+              'applied',
+              'screening',
+              'interviewing',
+              'offered',
+            ] as const;
+            const dropoffKey = index() < 5 ? dropoffKeys[index()] : undefined;
+            const dropoff = () => (dropoffKey ? analytics().dropoffs[dropoffKey] : null);
+            const duration = () => analytics().stageDurations[stage.status];
+
+            return (
+              <div
+                style={{
+                  display: 'grid',
+                  'grid-template-columns': '1fr 80px 100px 100px',
+                  gap: '16px',
+                  padding: '14px 16px',
+                  'border-bottom': '1px solid rgba(255, 255, 255, 0.05)',
+                  transition: `background ${pipelineAnimations.fast}`,
+                }}
+              >
+                <div style={{ display: 'flex', 'align-items': 'center', gap: '10px' }}>
+                  <div
+                    style={{
+                      width: '8px',
+                      height: '8px',
+                      'border-radius': '50%',
+                      background: stage.color.gradient,
+                    }}
+                  />
+                  <span
+                    style={{
+                      'font-size': '14px',
+                      'font-family': "'Space Grotesk', system-ui, sans-serif",
+                      color: theme().colors.text,
+                    }}
+                  >
+                    {stage.label}
+                  </span>
+                </div>
                 <div
-                  style={{
-                    width: '8px',
-                    height: '8px',
-                    'border-radius': '50%',
-                    background: stage.color.gradient,
-                  }}
-                />
-                <span
                   style={{
                     'font-size': '14px',
                     'font-family': "'Space Grotesk', system-ui, sans-serif",
-                    color: theme().colors.text,
+                    color:
+                      analytics().reachedStage[stage.status] > 0
+                        ? theme().colors.text
+                        : theme().colors.textMuted,
+                    'text-align': 'center',
+                    'font-weight': analytics().reachedStage[stage.status] > 0 ? '600' : '400',
                   }}
                 >
-                  {stage.label}
-                </span>
+                  {analytics().reachedStage[stage.status]}
+                </div>
+                <div
+                  style={{
+                    'font-size': '14px',
+                    'font-family': "'Space Grotesk', system-ui, sans-serif",
+                    color: theme().colors.textMuted,
+                    'text-align': 'center',
+                  }}
+                >
+                  {formatDuration(duration())}
+                </div>
+                <div
+                  style={{
+                    'font-size': '14px',
+                    'font-family': "'Space Grotesk', system-ui, sans-serif",
+                    color:
+                      dropoff() !== null && dropoff()! > 50
+                        ? '#F87171'
+                        : dropoff() !== null && dropoff()! > 25
+                          ? '#FBBF24'
+                          : theme().colors.textMuted,
+                    'text-align': 'center',
+                  }}
+                >
+                  {dropoff() !== null ? `${formatPercent(dropoff()!)}%` : '--'}
+                </div>
               </div>
-              <div
-                style={{
-                  'font-size': '14px',
-                  'font-family': "'Space Grotesk', system-ui, sans-serif",
-                  color: theme().colors.textMuted,
-                  'text-align': 'center',
-                }}
-              >
-                {funnelStats().statusCounts[stage.status] > 0
-                  ? funnelStats().statusCounts[stage.status]
-                  : '--'}
-              </div>
-              <div
-                style={{
-                  'font-size': '14px',
-                  'font-family': "'Space Grotesk', system-ui, sans-serif",
-                  color: theme().colors.textMuted,
-                  'text-align': 'center',
-                }}
-              >
-                -- days
-              </div>
-              <div
-                style={{
-                  'font-size': '14px',
-                  'font-family': "'Space Grotesk', system-ui, sans-serif",
-                  color: theme().colors.textMuted,
-                  'text-align': 'center',
-                }}
-              >
-                --%
-              </div>
-            </div>
-          )}
+            );
+          }}
         </For>
       </FluidCard>
     </div>
   );
 };
 
-// Metric Preview Card for Analytics
-interface MetricPreviewCardProps {
+// Metric Card for Analytics
+interface MetricCardProps {
   title: string;
   description: string;
-  placeholder: string;
+  value: string;
   unit: string;
   icon: Component<{ size?: number; color?: string }>;
   color: string;
   theme: () => typeof liquidTenure;
+  hasData: boolean;
 }
 
-const MetricPreviewCard: Component<MetricPreviewCardProps> = (props) => {
+const MetricCard: Component<MetricCardProps> = (props) => {
   return (
     <FluidCard variant="stat" accentColor={props.color}>
       <div style={{ display: 'flex', 'flex-direction': 'column', gap: '12px' }}>
@@ -918,11 +954,11 @@ const MetricPreviewCard: Component<MetricPreviewCardProps> = (props) => {
               'font-size': '28px',
               'font-weight': '700',
               'font-family': "'Space Grotesk', system-ui, sans-serif",
-              color: props.theme().colors.textMuted,
+              color: props.hasData ? props.theme().colors.text : props.theme().colors.textMuted,
               'line-height': '1.2',
             }}
           >
-            {props.placeholder}
+            {props.value}
             <span style={{ 'font-size': '16px', 'font-weight': '400' }}>{props.unit}</span>
           </div>
           <div
