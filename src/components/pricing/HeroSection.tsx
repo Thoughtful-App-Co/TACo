@@ -36,20 +36,9 @@ export const HeroSection: Component = () => {
           'font-weight': '400',
           'line-height': '1.1',
           'font-family': tokens.fonts.brand,
-          width: 'fit-content',
           margin: `0 auto ${tokens.spacing.sm} auto`,
-          // Solid color first as fallback (will show if gradient clip fails)
+          // Just use solid coral color - gradient text is too unreliable
           color: tokens.colors.accent.coral,
-          // Then try gradient text (will override if supported)
-          background: `linear-gradient(135deg, ${tokens.colors.accent.coral}, ${tokens.colors.accent.yellow}, ${tokens.colors.accent.teal})`,
-          'background-clip': 'text',
-          '-webkit-background-clip': 'text',
-          '-webkit-text-fill-color': 'transparent',
-          '-moz-background-clip': 'text',
-          '-moz-text-fill-color': 'transparent',
-          // Prevent background bleeding
-          'background-size': '100%',
-          display: 'inline-block',
         }}
       >
         Build your perfect plan
