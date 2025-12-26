@@ -20,33 +20,23 @@ interface TooltipProps {
 export const Tooltip: Component<TooltipProps> = (props) => {
   const pos = props.position || 'bottom';
 
-  // Position calculations - dynamically adjust to avoid cutoff
+  // Position calculations - prefer top positioning to keep tooltips in viewport
   const positionStyles = () => {
     switch (pos) {
       case 'bottom':
-        // Center tooltip horizontally
-        return {
-          top: 'calc(100% + 12px)',
-          left: '50%',
-          transform: 'translateX(-50%)',
-        };
-      case 'top':
+      case 'right':
+        // Default to showing ABOVE the trigger to stay in viewport
         return {
           bottom: 'calc(100% + 12px)',
           left: '50%',
           transform: 'translateX(-50%)',
         };
+      case 'top':
       case 'left':
         return {
-          right: 'calc(100% + 12px)',
-          top: '50%',
-          transform: 'translateY(-50%)',
-        };
-      case 'right':
-        return {
-          left: 'calc(100% + 12px)',
-          top: '50%',
-          transform: 'translateY(-50%)',
+          bottom: 'calc(100% + 12px)',
+          left: '50%',
+          transform: 'translateX(-50%)',
         };
     }
   };
@@ -240,47 +230,23 @@ export const Tooltip: Component<TooltipProps> = (props) => {
         />
       </div>
 
-      {/* Tooltip arrow - centered */}
-      <Show when={pos === 'bottom' || pos === 'top'}>
-        <div
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            ...(pos === 'bottom'
-              ? { top: '-6px', left: '50%', 'margin-left': '-6px' }
-              : { bottom: '-6px', left: '50%', 'margin-left': '-6px' }),
-            width: '12px',
-            height: '12px',
-            background: tokens.colors.backgroundLight,
-            border: `1.5px solid ${tokens.colors.borderLight}`,
-            transform: 'rotate(45deg)',
-            ...(pos === 'bottom'
-              ? { 'border-bottom': 'none', 'border-right': 'none' }
-              : { 'border-top': 'none', 'border-left': 'none' }),
-          }}
-        />
-      </Show>
-
-      {/* Tooltip arrow for left/right positions */}
-      <Show when={pos === 'left' || pos === 'right'}>
-        <div
-          aria-hidden="true"
-          style={{
-            position: 'absolute',
-            ...(pos === 'right'
-              ? { left: '-6px', top: '50%', 'margin-top': '-6px' }
-              : { right: '-6px', top: '50%', 'margin-top': '-6px' }),
-            width: '12px',
-            height: '12px',
-            background: tokens.colors.backgroundLight,
-            border: `1.5px solid ${tokens.colors.borderLight}`,
-            transform: 'rotate(45deg)',
-            ...(pos === 'right'
-              ? { 'border-left': 'none', 'border-bottom': 'none' }
-              : { 'border-right': 'none', 'border-top': 'none' }),
-          }}
-        />
-      </Show>
+      {/* Tooltip arrow - always pointing down since tooltip shows above */}
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          bottom: '-6px',
+          left: '50%',
+          'margin-left': '-6px',
+          width: '12px',
+          height: '12px',
+          background: tokens.colors.backgroundLight,
+          border: `1.5px solid ${tokens.colors.borderLight}`,
+          transform: 'rotate(45deg)',
+          'border-top': 'none',
+          'border-left': 'none',
+        }}
+      />
     </div>
   );
 };
