@@ -8,7 +8,7 @@
  * - Accessibility: B (Keyboard navigation support needed)
  */
 
-import { Component, For, Show } from 'solid-js';
+import { Component, For, Show, createSignal, onMount } from 'solid-js';
 import type { TooltipContent } from './types';
 import { tokens } from './tokens';
 
@@ -18,31 +18,51 @@ interface TooltipProps {
 }
 
 export const Tooltip: Component<TooltipProps> = (props) => {
-  const pos = props.position || 'bottom';
+  let tooltipRef: HTMLDivElement | undefined;
+  const [showAbove, setShowAbove] = createSignal(true); // Default to above
 
-  // Position calculations - prefer top positioning to keep tooltips in viewport
+  onMount(() => {
+    if (!tooltipRef) return;
+
+    // Get the tooltip's bounding rect
+    const rect = tooltipRef.getBoundingClientRect();
+    const viewportHeight = window.innerHeight;
+
+    // Check if showing above would clip at top
+    const wouldClipTop = rect.top < 0;
+
+    // Check if showing below would clip at bottom
+    const parentRect = tooltipRef.parentElement?.getBoundingClientRect();
+    const wouldClipBottom = parentRect
+      ? parentRect.bottom + rect.height + 12 > viewportHeight
+      : false;
+
+    // Prefer above, but switch to below if it clips at top and won't clip at bottom
+    if (wouldClipTop && !wouldClipBottom) {
+      setShowAbove(false);
+    }
+  });
+
+  // Position calculations - dynamically adjust based on viewport
   const positionStyles = () => {
-    switch (pos) {
-      case 'bottom':
-      case 'right':
-        // Default to showing ABOVE the trigger to stay in viewport
-        return {
-          bottom: 'calc(100% + 12px)',
-          left: '50%',
-          transform: 'translateX(-50%)',
-        };
-      case 'top':
-      case 'left':
-        return {
-          bottom: 'calc(100% + 12px)',
-          left: '50%',
-          transform: 'translateX(-50%)',
-        };
+    if (showAbove()) {
+      return {
+        bottom: 'calc(100% + 12px)',
+        left: '50%',
+        transform: 'translateX(-50%)',
+      };
+    } else {
+      return {
+        top: 'calc(100% + 12px)',
+        left: '50%',
+        transform: 'translateX(-50%)',
+      };
     }
   };
 
   return (
     <div
+      ref={tooltipRef}
       role="tooltip"
       style={{
         position: 'absolute',
@@ -230,21 +250,22 @@ export const Tooltip: Component<TooltipProps> = (props) => {
         />
       </div>
 
-      {/* Tooltip arrow - always pointing down since tooltip shows above */}
+      {/* Tooltip arrow - points down if above, up if below */}
       <div
         aria-hidden="true"
         style={{
           position: 'absolute',
-          bottom: '-6px',
-          left: '50%',
-          'margin-left': '-6px',
+          ...(showAbove()
+            ? { bottom: '-6px', left: '50%', 'margin-left': '-6px' }
+            : { top: '-6px', left: '50%', 'margin-left': '-6px' }),
           width: '12px',
           height: '12px',
           background: tokens.colors.backgroundLight,
           border: `1.5px solid ${tokens.colors.borderLight}`,
           transform: 'rotate(45deg)',
-          'border-top': 'none',
-          'border-left': 'none',
+          ...(showAbove()
+            ? { 'border-top': 'none', 'border-left': 'none' }
+            : { 'border-bottom': 'none', 'border-right': 'none' }),
         }}
       />
     </div>
