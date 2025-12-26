@@ -849,7 +849,7 @@ export const JobDetailSidebar: Component<JobDetailSidebarProps> = (props) => {
                           <span
                             style={{
                               position: 'absolute',
-                              left: '14px',
+                              left: '12px',
                               top: '50%',
                               transform: 'translateY(-50%)',
                               color: theme().colors.textMuted,
@@ -868,7 +868,10 @@ export const JobDetailSidebar: Component<JobDetailSidebarProps> = (props) => {
                               setSalarySingle(formatted);
                             }}
                             placeholder="e.g., 120,000"
-                            style={{ ...inputStyle(), 'padding-left': '36px' }}
+                            style={{
+                              ...inputStyle(),
+                              'text-indent': '24px',
+                            }}
                           />
                         </div>
                       </div>
@@ -883,7 +886,7 @@ export const JobDetailSidebar: Component<JobDetailSidebarProps> = (props) => {
                           <span
                             style={{
                               position: 'absolute',
-                              left: '14px',
+                              left: '12px',
                               top: '50%',
                               transform: 'translateY(-50%)',
                               color: theme().colors.textMuted,
@@ -902,7 +905,10 @@ export const JobDetailSidebar: Component<JobDetailSidebarProps> = (props) => {
                               setSalaryMin(formatted);
                             }}
                             placeholder="e.g., 100,000"
-                            style={{ ...inputStyle(), 'padding-left': '36px' }}
+                            style={{
+                              ...inputStyle(),
+                              'text-indent': '24px',
+                            }}
                           />
                         </div>
                       </div>
@@ -912,7 +918,7 @@ export const JobDetailSidebar: Component<JobDetailSidebarProps> = (props) => {
                           <span
                             style={{
                               position: 'absolute',
-                              left: '14px',
+                              left: '12px',
                               top: '50%',
                               transform: 'translateY(-50%)',
                               color: theme().colors.textMuted,
@@ -931,7 +937,10 @@ export const JobDetailSidebar: Component<JobDetailSidebarProps> = (props) => {
                               setSalaryMax(formatted);
                             }}
                             placeholder="e.g., 140,000"
-                            style={{ ...inputStyle(), 'padding-left': '36px' }}
+                            style={{
+                              ...inputStyle(),
+                              'text-indent': '24px',
+                            }}
                           />
                         </div>
                       </div>
