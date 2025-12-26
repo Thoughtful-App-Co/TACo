@@ -34,6 +34,7 @@ export const PricingPage: Component = () => {
   // Cart state
   const [selectedSyncApps, setSelectedSyncApps] = createSignal<string[]>([]);
   const [syncAllApps, setSyncAllApps] = createSignal(false);
+  const [syncAnnual, setSyncAnnual] = createSignal(false); // Monthly vs Annual for sync
   const [selectedExtras, setSelectedExtras] = createSignal<string[]>([]);
   const [tempoAnnual, setTempoAnnual] = createSignal(false);
   const [tacoClubTier, setTacoClubTier] = createSignal<TacoClubTier>('none');
@@ -69,8 +70,17 @@ export const PricingPage: Component = () => {
 
   // Pricing calculations
   const syncCost = createMemo(() => {
-    if (syncAllApps()) return 35;
-    return selectedSyncApps().length * 20;
+    // Monthly: $2/mo per app OR $3.50/mo all apps
+    // Annual: $20/year per app OR $35/year all apps
+    if (syncAnnual()) {
+      // Annual pricing
+      if (syncAllApps()) return 35;
+      return selectedSyncApps().length * 20;
+    } else {
+      // Monthly pricing
+      if (syncAllApps()) return 42; // $3.50/mo × 12 months
+      return selectedSyncApps().length * 24; // $2/mo × 12 months
+    }
   });
 
   const extrasCost = createMemo(() => {
@@ -282,15 +292,79 @@ export const PricingPage: Component = () => {
                 </div>
               </div>
 
-              <div style={{ 'text-align': 'right' }}>
+              <div
+                style={{
+                  'text-align': 'right',
+                  display: 'flex',
+                  'flex-direction': 'column',
+                  'align-items': 'flex-end',
+                  gap: '6px',
+                }}
+              >
+                <div style={{ display: 'flex', 'align-items': 'center', gap: '8px' }}>
+                  <span style={{ 'font-size': '11px', color: tokens.colors.textDim }}>Monthly</span>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSyncAnnual(!syncAnnual());
+                    }}
+                    style={{
+                      padding: '2px',
+                      background: tokens.colors.surface,
+                      border: `1px solid ${tokens.colors.border}`,
+                      'border-radius': '12px',
+                      display: 'flex',
+                      'align-items': 'center',
+                      cursor: 'pointer',
+                      position: 'relative',
+                      width: '40px',
+                      height: '20px',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: '16px',
+                        height: '16px',
+                        'border-radius': '50%',
+                        background: syncAnnual() ? tokens.colors.success : tokens.colors.textDim,
+                        position: 'absolute',
+                        left: syncAnnual() ? '21px' : '2px',
+                        transition: 'left 0.2s ease, background 0.2s ease',
+                      }}
+                    />
+                  </button>
+                  <span
+                    style={{
+                      'font-size': '11px',
+                      color: syncAnnual() ? tokens.colors.success : tokens.colors.textDim,
+                    }}
+                  >
+                    Annual
+                  </span>
+                </div>
                 <div
-                  style={{ 'font-size': '24px', 'font-weight': '700', color: tokens.colors.text }}
+                  style={{
+                    'font-size': '20px',
+                    'font-weight': '700',
+                    color: tokens.colors.text,
+                  }}
                 >
-                  $35
+                  {syncAnnual() ? '$35' : '$3.50'}
+                  <span
+                    style={{
+                      'font-size': '14px',
+                      'font-weight': '500',
+                      color: tokens.colors.textMuted,
+                    }}
+                  >
+                    /{syncAnnual() ? 'year' : 'mo'}
+                  </span>
                 </div>
-                <div style={{ 'font-size': '12px', color: tokens.colors.textDim }}>
-                  /year ($2.92/mo)
-                </div>
+                <Show when={syncAnnual()}>
+                  <div style={{ 'font-size': '11px', color: tokens.colors.success }}>
+                    Save $7/year
+                  </div>
+                </Show>
               </div>
             </div>
 
@@ -432,10 +506,7 @@ export const PricingPage: Component = () => {
                             color: tokens.colors.text,
                           }}
                         >
-                          $20/year
-                        </div>
-                        <div style={{ 'font-size': '11px', color: tokens.colors.textDim }}>
-                          ($1.67/mo)
+                          {syncAnnual() ? '$20/year' : '$2/mo'}
                         </div>
                       </div>
                     </div>
