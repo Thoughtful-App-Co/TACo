@@ -5,7 +5,6 @@
 
 import { Component, Show } from 'solid-js';
 import { InfoIcon } from './Tooltip';
-import { WhyCard } from './WhyCard';
 import { tokens } from './tokens';
 import { tooltipContent } from './data';
 
@@ -46,9 +45,6 @@ export const ExtrasSection: Component<ExtrasSectionProps> = (props) => {
           tooltipKey="extras"
         />
       </div>
-
-      {/* Why extras cost money */}
-      <WhyCard text="Developer time to build and maintain features, plus inference costs for AI processing. You can BYOK (free) or pay us to manage it for you." />
 
       <div style={{ display: 'flex', 'flex-direction': 'column', gap: tokens.spacing.md }}>
         {/* Tempo Extras - WITH APP-SPECIFIC TOOLTIP */}
