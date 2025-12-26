@@ -68,7 +68,7 @@ export const Tooltip: Component<TooltipProps> = (props) => {
       <div
         style={{
           position: 'relative',
-          padding: tokens.spacing.xl,
+          padding: tokens.spacing.lg, // Reduced from xl (32px) to lg (24px)
           background: `linear-gradient(135deg, ${tokens.colors.backgroundLight} 0%, rgba(26, 26, 46, 0.95) 100%)`,
           border: `1.5px solid ${tokens.colors.borderLight}`,
           'border-radius': tokens.radius.lg,
@@ -112,13 +112,13 @@ export const Tooltip: Component<TooltipProps> = (props) => {
           {/* Title - Strong hierarchy */}
           <h4
             style={{
-              margin: `0 0 ${tokens.spacing.sm} 0`,
-              'font-size': '16px',
+              margin: `0 0 ${tokens.spacing.xs} 0`, // Reduced from sm (8px) to xs (4px)
+              'font-size': '15px', // Slightly smaller
               'font-weight': '700',
               color: tokens.colors.text,
               'font-family': tokens.fonts.brand,
               'letter-spacing': '-0.01em',
-              'line-height': '1.3',
+              'line-height': '1.2', // Tighter line height
             }}
           >
             {props.content.title}
@@ -127,10 +127,10 @@ export const Tooltip: Component<TooltipProps> = (props) => {
           {/* Description */}
           <p
             style={{
-              margin: `0 0 ${tokens.spacing.lg} 0`,
-              'font-size': '13px',
+              margin: `0 0 ${tokens.spacing.md} 0`, // Reduced from lg (24px) to md (16px)
+              'font-size': '12px', // Slightly smaller
               color: tokens.colors.textMuted,
-              'line-height': '1.6',
+              'line-height': '1.5', // Tighter line height
               'letter-spacing': '0.005em',
             }}
           >
@@ -143,7 +143,7 @@ export const Tooltip: Component<TooltipProps> = (props) => {
             style={{
               height: '1px',
               background: `linear-gradient(90deg, transparent, ${tokens.colors.border}, transparent)`,
-              margin: `0 0 ${tokens.spacing.md} 0`,
+              margin: `0 0 ${tokens.spacing.sm} 0`, // Reduced from md (16px) to sm (8px)
             }}
           />
 
@@ -155,19 +155,19 @@ export const Tooltip: Component<TooltipProps> = (props) => {
               'list-style': 'none',
               display: 'flex',
               'flex-direction': 'column',
-              gap: tokens.spacing.sm,
+              gap: tokens.spacing.xs, // Reduced from sm (8px) to xs (4px)
             }}
           >
             <For each={props.content.features}>
               {(feature) => (
                 <li
                   style={{
-                    'font-size': '13px',
+                    'font-size': '12px', // Slightly smaller
                     color: tokens.colors.textMuted,
                     display: 'flex',
-                    gap: tokens.spacing.sm,
+                    gap: tokens.spacing.xs, // Reduced gap
                     'align-items': 'flex-start',
-                    'line-height': '1.5',
+                    'line-height': '1.4', // Tighter line height
                   }}
                 >
                   {/* Checkmark with subtle animation on mount */}
@@ -192,19 +192,19 @@ export const Tooltip: Component<TooltipProps> = (props) => {
           <Show when={props.content.why}>
             <div
               style={{
-                'margin-top': tokens.spacing.lg,
-                'padding-top': tokens.spacing.md,
+                'margin-top': tokens.spacing.md, // Reduced from lg (24px) to md (16px)
+                'padding-top': tokens.spacing.sm, // Reduced from md (16px) to sm (8px)
                 'border-top': `1px solid ${tokens.colors.border}`,
               }}
             >
               <div
                 style={{
-                  'font-size': '11px',
+                  'font-size': '10px',
                   'font-weight': '700',
                   'letter-spacing': '0.5px',
                   'text-transform': 'uppercase',
                   color: tokens.colors.accent.coral,
-                  'margin-bottom': tokens.spacing.xs,
+                  'margin-bottom': '2px', // Minimal spacing
                 }}
               >
                 Why this costs what it does
@@ -212,9 +212,9 @@ export const Tooltip: Component<TooltipProps> = (props) => {
               <p
                 style={{
                   margin: 0,
-                  'font-size': '12px',
+                  'font-size': '11px', // Slightly smaller
                   color: tokens.colors.textMuted,
-                  'line-height': '1.6',
+                  'line-height': '1.4', // Tighter line height
                   'letter-spacing': '0.005em',
                   'font-style': 'italic',
                 }}
