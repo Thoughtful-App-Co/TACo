@@ -24,6 +24,20 @@ export const tooltipContent: Record<string, TooltipContent> = {
     ],
     why: 'Running servers costs real money—storage, bandwidth, and maintenance. We pass those infrastructure costs directly to you with no markup.',
   },
+  // All apps sync tooltip
+  allAppsSync: {
+    title: 'All Apps Sync & Backup',
+    description: 'Everything backed up and synced across all your devices.',
+    features: [
+      'Covers all current and future TACo apps',
+      'Automatic cloud backups for everything',
+      'Cross-device sync in real-time',
+      'Email backup on cancellation',
+      '2-year cold storage if you leave',
+      'Best value - future apps included',
+    ],
+    why: 'Running servers costs real money—storage, bandwidth, and maintenance. We pass those infrastructure costs directly to you with no markup.',
+  },
   // Individual app sync tooltips
   tempoSync: {
     title: 'Tempo Sync & Backup',

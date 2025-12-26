@@ -248,6 +248,14 @@ export const PricingPage: Component = () => {
                   }}
                 >
                   All Apps Sync & Backup
+                  <div onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex' }}>
+                    <InfoIcon
+                      content={tooltipContent.allAppsSync}
+                      tooltipKey="allAppsSync"
+                      activeTooltip={activeTooltip}
+                      setActiveTooltip={setActiveTooltip}
+                    />
+                  </div>
                   <span
                     style={{
                       padding: `${tokens.spacing.xs} ${tokens.spacing.sm}`,
@@ -280,7 +288,9 @@ export const PricingPage: Component = () => {
                 >
                   $35
                 </div>
-                <div style={{ 'font-size': '12px', color: tokens.colors.textDim }}>/year</div>
+                <div style={{ 'font-size': '12px', color: tokens.colors.textDim }}>
+                  /year ($2.92/mo)
+                </div>
               </div>
             </div>
 
@@ -414,14 +424,19 @@ export const PricingPage: Component = () => {
                         </div>
                       </div>
 
-                      <div
-                        style={{
-                          'font-size': '15px',
-                          'font-weight': '600',
-                          color: tokens.colors.textMuted,
-                        }}
-                      >
-                        $20/year
+                      <div style={{ 'text-align': 'right' }}>
+                        <div
+                          style={{
+                            'font-size': '15px',
+                            'font-weight': '600',
+                            color: tokens.colors.text,
+                          }}
+                        >
+                          $20/year
+                        </div>
+                        <div style={{ 'font-size': '11px', color: tokens.colors.textDim }}>
+                          ($1.67/mo)
+                        </div>
                       </div>
                     </div>
                   )}
