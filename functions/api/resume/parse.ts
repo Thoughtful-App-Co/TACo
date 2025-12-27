@@ -83,7 +83,7 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     // Call Claude to parse the resume
     const message = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
-      max_tokens: 4096,
+      max_tokens: 16384,
       temperature: 0.1, // Very low temperature for consistent JSON output
       system:
         'You are a precise resume parsing assistant. You MUST respond with ONLY valid JSON. Do not include any explanatory text, markdown formatting, or code blocks. Output raw JSON only.',

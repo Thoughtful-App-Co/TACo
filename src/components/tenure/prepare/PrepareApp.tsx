@@ -10,6 +10,7 @@ import { ResumeUploader } from './components/ResumeUploader';
 import { ParseReviewPanel } from './components/ParseReviewPanel';
 import { ExperienceEditor } from './components/ExperienceEditor';
 import { EducationEditor } from './components/EducationEditor';
+import { ToastContainer } from './components/Toast';
 import { WorkExperience, Education } from '../../../schemas/pipeline.schema';
 import { IconTrash } from '../pipeline/ui/Icons';
 
@@ -361,7 +362,6 @@ export const PrepareApp: Component<PrepareAppProps> = (props) => {
         </Show>
       </Show>
 
-
       {/* Delete Confirmation Modal */}
       <Show when={showDeleteConfirm()}>
         <div
@@ -480,6 +480,9 @@ export const PrepareApp: Component<PrepareAppProps> = (props) => {
         education={editingEducation()}
         onSave={handleSaveEducation}
       />
+
+      {/* Toast Notifications */}
+      <ToastContainer />
     </div>
   );
 };

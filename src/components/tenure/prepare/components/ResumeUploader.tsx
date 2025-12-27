@@ -4,11 +4,12 @@
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
-import { Component, createSignal, Show } from 'solid-js';
+import { Component, createSignal, Show, onMount } from 'solid-js';
 import { prepareStore } from '../store';
 import { parseResume } from '../services/resume-parser.service';
 import { extractTextFromFile } from '../services/file-extractor.service';
 import { IconUpload, IconFileText, IconCheck, IconAlert, IconX } from '../../pipeline/ui/Icons';
+import { toastStore } from './toast-store';
 
 interface ResumeUploaderProps {
   onParseComplete?: () => void;
@@ -41,6 +42,11 @@ export const ResumeUploader: Component<ResumeUploaderProps> = (props) => {
   const [uploadError, setUploadError] = createSignal<string | null>(null);
   const [pastedText, setPastedText] = createSignal('');
   const [uploadMode, setUploadMode] = createSignal<'file' | 'text'>('file');
+
+  // Set toast primary color to match theme
+  onMount(() => {
+    toastStore.setPrimaryColor(theme().colors.primary);
+  });
 
   // Store state
   const isUploading = () => prepareStore.state.isUploading;
@@ -176,6 +182,31 @@ export const ResumeUploader: Component<ResumeUploaderProps> = (props) => {
     prepareStore.setParsing(true);
     prepareStore.setParseProgress(0);
 
+    // Show loading toast with progress
+    const loader = toastStore.promise('Analyzing your resume with AI...', { showProgress: true });
+
+    // Progress simulation - slowly increase from 0 to 90 over ~25 seconds
+    let currentProgress = 0;
+    const progressInterval = setInterval(() => {
+      // Increase progress more slowly as we get higher
+      const increment =
+        currentProgress < 30 ? 4 : currentProgress < 60 ? 3 : currentProgress < 80 ? 2 : 1;
+      currentProgress = Math.min(currentProgress + increment, 90);
+      loader.setProgress(currentProgress);
+      prepareStore.setParseProgress(currentProgress);
+
+      // Update status messages at milestones
+      if (currentProgress >= 20 && currentProgress < 25) {
+        loader.update('Extracting work experience...');
+      } else if (currentProgress >= 40 && currentProgress < 45) {
+        loader.update('Identifying skills and keywords...');
+      } else if (currentProgress >= 60 && currentProgress < 65) {
+        loader.update('Analyzing education history...');
+      } else if (currentProgress >= 80 && currentProgress < 85) {
+        loader.update('Categorizing expertise areas...');
+      }
+    }, 1000);
+
     try {
       // Get or create master resume
       if (!prepareStore.hasMasterResume()) {
@@ -201,6 +232,9 @@ export const ResumeUploader: Component<ResumeUploaderProps> = (props) => {
             : 'text',
         fileName,
       });
+
+      // Clear progress interval on completion
+      clearInterval(progressInterval);
 
       console.log('[ResumeUploader] AI parsing result:', {
         success: result.success,
@@ -242,11 +276,26 @@ export const ResumeUploader: Component<ResumeUploaderProps> = (props) => {
       prepareStore.setParseProgress(100);
       prepareStore.setParsing(false);
 
+      // Show success toast
+      const experienceCount = result.parsed?.experience?.length || 0;
+      const skillsCount = result.parsed?.skills?.length || 0;
+      loader.setProgress(100);
+      loader.success(
+        `Resume parsed successfully! Found ${experienceCount} experiences and ${skillsCount} skills.`
+      );
+
       // Callback
       props.onParseComplete?.();
     } catch (error) {
-      prepareStore.setError(error instanceof Error ? error.message : 'Parsing failed');
+      // Clear progress interval on error
+      clearInterval(progressInterval);
+
+      const errorMessage = error instanceof Error ? error.message : 'Parsing failed';
+      prepareStore.setError(errorMessage);
       prepareStore.setParsing(false);
+
+      // Show error toast
+      loader.error(errorMessage);
     }
   };
 

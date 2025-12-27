@@ -1,5 +1,5 @@
 /**
- * Tenure - Lifelong Career Companion
+ * Tenure - Eternal Career Companion
  *
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  *
@@ -1379,7 +1379,7 @@ export const TenureApp: Component = () => {
                   color: maximalist.colors.textMuted,
                 }}
               >
-                Lifelong Career Companion
+                Eternal Career Companion
               </p>
             </div>
           </div>
