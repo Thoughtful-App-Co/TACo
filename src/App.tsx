@@ -692,12 +692,7 @@ const LandingPage: Component = () => {
 
         <h1
           style={{
-            margin: '0 0 6px 0',
-            'font-size': isMobile() ? '11px' : '13px',
-            'font-weight': '600',
-            'letter-spacing': isMobile() ? '1.5px' : '2px',
             'text-transform': 'uppercase',
-            color: 'rgba(255,255,255,0.5)',
             margin: '0 0 10px 0',
             'font-size': 'clamp(24px, 4vw, 36px)',
             'font-weight': '400',
@@ -1304,8 +1299,8 @@ const LandingPage: Component = () => {
               }}
             >
               © {new Date().getFullYear()} Thoughtful App Co.
-              {isMobile() ? '' : ' Technology for Human Good.'}
-              © 2025 Thoughtful App Co. Technology for Human Good.
+              {isMobile() ? '' : ' Technology for Human Good.'}© 2025 Thoughtful App Co. Technology
+              for Human Good.
             </p>
             <div
               style={{
@@ -1999,12 +1994,6 @@ const TabNavigation: Component<{
                 <div style={{ 'min-width': 0 }}>
                   <h2
                     style={{
-                      'font-size': isMobile() ? '18px' : 'clamp(24px, 4vw, 36px)',
-                      'font-weight': '700',
-                      color: 'white',
-                      margin: 0,
-                      'line-height': 1.2,
-                      'font-family': navTokens.typography.fontFamily,
                       'white-space': 'nowrap',
                       overflow: 'hidden',
                       'text-overflow': 'ellipsis',
