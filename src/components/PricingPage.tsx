@@ -1281,8 +1281,7 @@ export const PricingPage: Component = () => {
                   'max-width': '280px',
                 }}
               >
-                Building technology that enables, not enslaves. An open contribution venture
-                studio.
+                Building technology that enables, not enslaves. An open contribution venture studio.
               </p>
               {/* Social Links */}
               <div style={{ display: 'flex', gap: '12px' }}>
@@ -1481,7 +1480,14 @@ export const PricingPage: Component = () => {
                         />
                         {app.name}
                         <span style={{ 'font-size': '11px', color: 'rgba(255,255,255,0.3)' }}>
-                          — {app.id === 'tempo' ? 'AI task timer' : app.id === 'tenure' ? 'Career companion' : app.id === 'nurture' ? 'Relationship CRM' : ''}
+                          —{' '}
+                          {app.id === 'tempo'
+                            ? 'A.D.H.D Task Master'
+                            : app.id === 'tenure'
+                              ? 'Eternal Career Companion'
+                              : app.id === 'nurture'
+                                ? 'Relationship Management'
+                                : ''}
                         </span>
                       </A>
                     </li>

@@ -76,9 +76,9 @@ Complete documentation for the Tempo time-management application built with Soli
 
 ## Apps in TACo Ecosystem
 
-- **Tempo** - AI task timer for natural rhythm productivity
-- **Augment** - Career intelligence & job tracking (RIASEC assessment, pipeline management, lifetime career companion)
-- **Nurture** - Relationship CRM
+- **Tempo** - A.D.H.D Task Master for natural rhythm productivity
+- **Tenure** - Eternal Career Companion (RIASEC assessment, pipeline management, lifetime career companion)
+- **Nurture** - Relationship Management
 - **FriendLy** - Friendship calendar
 - **JustInCase** - Small claims helper
 - **Manifest** - Picky matchmaking

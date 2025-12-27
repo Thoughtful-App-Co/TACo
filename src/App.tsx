@@ -30,9 +30,9 @@ const apps: AppInfo[] = [
   {
     id: 'tempo',
     name: 'Tempo',
-    description: 'AI task timer',
+    description: 'A.D.H.D Task Master',
     elevatorPitch:
-      "Work with your natural rhythm, not against it. Tempo uses AI to learn when you're most productive.",
+      'Enter your tasks, get a real action plan. Tempo will ensure we turn to-do lists into actions. Activate "Annoy Me Mode" to get some really awesome results...',
     designSystem: 'Dark Mode',
     color: '#5E6AD2',
     timeline: 'now',
@@ -43,7 +43,7 @@ const apps: AppInfo[] = [
   {
     id: 'nurture',
     name: 'Nurture',
-    description: 'Relationship CRM',
+    description: 'Relationship Management',
     elevatorPitch:
       'Never forget a birthday or let a friendship fade. Gentle reminders and interaction tracking.',
     designSystem: 'Biophilic',
@@ -80,9 +80,9 @@ const apps: AppInfo[] = [
   {
     id: 'tenure',
     name: 'Tenure',
-    description: 'Your lifelong career companion',
+    description: 'Eternal Career Companion',
     elevatorPitch:
-      "Your always-on career companion. Discover what you want, prepare for opportunities, track applications with a smart pipeline, and stay ready for what's next - whether you're actively searching or happily employed.",
+      "Career help is not an effective money maker for corporations and LinkedIn charging you $30 a month to find a job is criminal. Tenure is about life-long career aid, find out what you want to be when you grow up, write specialized resumes w/ Resume Mutator, and, actively track and apply for jobs with our Prospect job pipeline.",
     designSystem: 'Maximalist',
     color: '#9333EA',
     timeline: 'now',
