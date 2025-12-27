@@ -74,7 +74,7 @@ export const BRAIN_DUMP_DURATION_RULES = {
  */
 export const TASK_PROCESSING_RULES = {
   // Task Types - Use the imported type
-  VALID_TYPES: ['focus', 'learning', 'review', 'break', 'research'] as Array<TaskType>,
+  VALID_TYPES: ['focus', 'learning', 'review', 'break', 'research', 'social'] as Array<TaskType>,
 
   // Task Splitting
   SPLIT_CONDITIONS: {

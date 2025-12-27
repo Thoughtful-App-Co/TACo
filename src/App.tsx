@@ -7,8 +7,17 @@ import { FriendlyApp } from './components/friendly/FriendlyApp';
 import { ManifestApp } from './components/manifest/ManifestApp';
 import { AugmentApp } from './components/augment/AugmentApp';
 import { LolApp } from './components/lol/LolApp';
+import { PaperTrailApp } from './components/papertrail/PaperTrailApp';
 
-type AppTab = 'nurture' | 'justincase' | 'tempo' | 'friendly' | 'manifest' | 'augment' | 'lol';
+type AppTab =
+  | 'nurture'
+  | 'justincase'
+  | 'tempo'
+  | 'friendly'
+  | 'manifest'
+  | 'augment'
+  | 'lol'
+  | 'papertrail';
 type Timeline = 'now' | 'next' | 'later';
 
 interface AppInfo {
@@ -109,6 +118,18 @@ const apps: AppInfo[] = [
     color: '#2196F3',
     timeline: 'later',
     releaseDate: 'Q3 2026',
+    status: 'coming-soon',
+  },
+  {
+    id: 'papertrail',
+    name: 'Paper Trail',
+    description: 'News changelog',
+    elevatorPitch:
+      'Track what was said vs. what was true. Graph-first news aggregation with correction tracking.',
+    designSystem: 'Paper Trail',
+    color: '#FFE500',
+    timeline: 'later',
+    releaseDate: 'TBD',
     status: 'coming-soon',
   },
 ];
@@ -269,6 +290,8 @@ const IsometricCard: Component<{
               color: 'white',
               'font-weight': 'bold',
               'box-shadow': `0 4px 12px ${props.app.color}60`,
+              'text-shadow':
+                '0 0 2px rgba(0,0,0,0.8), 0 0 4px rgba(0,0,0,0.5), 1px 1px 0 rgba(0,0,0,0.3)',
             }}
           >
             {props.app.name[0]}
@@ -411,7 +434,15 @@ const AppItem: Component<{ app: AppInfo; onClick: () => void }> = (props) => {
           <Show
             when={props.app.id === 'tempo'}
             fallback={
-              <span style={{ color: 'white', 'font-size': '12px', 'font-weight': '600' }}>
+              <span
+                style={{
+                  color: 'white',
+                  'font-size': '12px',
+                  'font-weight': '600',
+                  'text-shadow':
+                    '0 0 2px rgba(0,0,0,0.8), 0 0 4px rgba(0,0,0,0.5), 1px 1px 0 rgba(0,0,0,0.3)',
+                }}
+              >
                 {props.app.name[0]}
               </span>
             }
@@ -504,6 +535,8 @@ const AppItem: Component<{ app: AppInfo; onClick: () => void }> = (props) => {
                 color: 'white',
                 'font-weight': '700',
                 'font-size': '14px',
+                'text-shadow':
+                  '0 0 2px rgba(0,0,0,0.8), 0 0 4px rgba(0,0,0,0.5), 1px 1px 0 rgba(0,0,0,0.3)',
               }}
             >
               <Show when={props.app.id === 'tempo'} fallback={props.app.name.charAt(0)}>
@@ -555,6 +588,15 @@ const AppItem: Component<{ app: AppInfo; onClick: () => void }> = (props) => {
 // Main Landing Page with Manifesto
 const LandingPage: Component = () => {
   const navigate = useNavigate();
+
+  // Mobile detection
+  const [isMobile, setIsMobile] = createSignal(window.innerWidth <= 768);
+
+  createEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    onCleanup(() => window.removeEventListener('resize', handleResize));
+  });
 
   return (
     <div
@@ -608,7 +650,7 @@ const LandingPage: Component = () => {
       <header
         style={{
           'text-align': 'center',
-          padding: '80px 24px 50px',
+          padding: isMobile() ? '60px 20px 40px' : '80px 24px 50px',
           position: 'relative',
           'z-index': 1,
         }}
@@ -616,18 +658,23 @@ const LandingPage: Component = () => {
         {/* Logo */}
         <div
           style={{
-            width: '72px',
-            height: '72px',
+            width: isMobile() ? '56px' : '72px',
+            height: isMobile() ? '56px' : '72px',
             margin: '0 auto 20px',
             background: 'linear-gradient(135deg, #FF6B6B 0%, #FFE66D 50%, #4ECDC4 100%)',
-            'border-radius': '18px',
+            'border-radius': isMobile() ? '14px' : '18px',
             display: 'flex',
             'align-items': 'center',
             'justify-content': 'center',
             'box-shadow': '0 8px 32px rgba(255,107,107,0.3)',
           }}
         >
-          <svg width="42" height="42" viewBox="0 0 24 24" fill="none">
+          <svg
+            width={isMobile() ? '32' : '42'}
+            height={isMobile() ? '32' : '42'}
+            viewBox="0 0 24 24"
+            fill="none"
+          >
             <path
               d="M12 3C7.5 3 4 6 4 9C4 10.5 4.5 12 6 13.5C7.5 15 9.5 16 12 16C14.5 16 16.5 15 18 13.5C19.5 12 20 10.5 20 9C20 6 16.5 3 12 3Z"
               fill="white"
@@ -645,6 +692,7 @@ const LandingPage: Component = () => {
 
         <h1
           style={{
+            'text-transform': 'uppercase',
             margin: '0 0 10px 0',
             'font-size': 'clamp(24px, 4vw, 36px)',
             'font-weight': '400',
@@ -659,7 +707,7 @@ const LandingPage: Component = () => {
         <h2
           style={{
             margin: '0 0 20px 0',
-            'font-size': 'clamp(28px, 4vw, 48px)',
+            'font-size': isMobile() ? '24px' : 'clamp(28px, 4vw, 48px)',
             'font-weight': '700',
             'line-height': '1.1',
             'letter-spacing': '-1px',
@@ -676,9 +724,10 @@ const LandingPage: Component = () => {
           style={{
             margin: '0 auto 8px',
             'max-width': '600px',
-            'font-size': '16px',
+            'font-size': isMobile() ? '14px' : '16px',
             'line-height': '1.6',
             color: 'rgba(255,255,255,0.6)',
+            padding: isMobile() ? '0 8px' : '0',
           }}
         >
           A marketplace of applications respecting your time, attention, and autonomy.
@@ -686,18 +735,20 @@ const LandingPage: Component = () => {
         <p
           style={{
             margin: '0 auto',
-            'font-size': '13px',
+            'font-size': isMobile() ? '11px' : '13px',
             color: 'rgba(255,255,255,0.4)',
           }}
         >
-          Human-First • Local-First • Design-First • Open Contribution
+          {isMobile()
+            ? 'Human-First • Local-First • Open'
+            : 'Human-First • Local-First • Design-First • Open Contribution'}
         </p>
       </header>
 
       {/* App Marketplace */}
       <section
         style={{
-          padding: '20px 24px 80px',
+          padding: isMobile() ? '16px 16px 60px' : '20px 24px 80px',
           'max-width': '1000px',
           margin: '0 auto',
           position: 'relative',
@@ -707,8 +758,8 @@ const LandingPage: Component = () => {
         <div
           style={{
             display: 'grid',
-            'grid-template-columns': 'repeat(3, 1fr)',
-            gap: '24px',
+            'grid-template-columns': isMobile() ? '1fr' : 'repeat(3, 1fr)',
+            gap: isMobile() ? '16px' : '24px',
           }}
         >
           <For each={['now', 'next', 'later'] as Timeline[]}>
@@ -721,8 +772,8 @@ const LandingPage: Component = () => {
                   style={{
                     background: 'rgba(255,255,255,0.02)',
                     border: '1px solid rgba(255,255,255,0.06)',
-                    'border-radius': '16px',
-                    padding: '20px',
+                    'border-radius': isMobile() ? '12px' : '16px',
+                    padding: isMobile() ? '16px' : '20px',
                   }}
                 >
                   {/* Section Header */}
@@ -731,8 +782,8 @@ const LandingPage: Component = () => {
                       display: 'flex',
                       'align-items': 'center',
                       gap: '8px',
-                      'margin-bottom': '16px',
-                      'padding-bottom': '12px',
+                      'margin-bottom': isMobile() ? '12px' : '16px',
+                      'padding-bottom': isMobile() ? '10px' : '12px',
                       'border-bottom': '1px solid rgba(255,255,255,0.06)',
                     }}
                   >
@@ -743,16 +794,24 @@ const LandingPage: Component = () => {
                         'border-radius': '50%',
                         background: config.color,
                         'box-shadow': `0 0 8px ${config.color}`,
+                        'flex-shrink': 0,
                       }}
                     />
-                    <span style={{ 'font-size': '14px', 'font-weight': '600', color: 'white' }}>
+                    <span
+                      style={{
+                        'font-size': isMobile() ? '13px' : '14px',
+                        'font-weight': '600',
+                        color: 'white',
+                      }}
+                    >
                       {config.label}
                     </span>
                     <span
                       style={{
-                        'font-size': '11px',
+                        'font-size': isMobile() ? '10px' : '11px',
                         color: 'rgba(255,255,255,0.4)',
                         'margin-left': 'auto',
+                        'text-align': 'right',
                       }}
                     >
                       {config.description}
@@ -760,7 +819,13 @@ const LandingPage: Component = () => {
                   </div>
 
                   {/* App List */}
-                  <div style={{ display: 'flex', 'flex-direction': 'column', gap: '4px' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      'flex-direction': 'column',
+                      gap: isMobile() ? '2px' : '4px',
+                    }}
+                  >
                     <For each={quadrantApps}>
                       {(app) => <AppItem app={app} onClick={() => navigate(`/${app.id}`)} />}
                     </For>
@@ -775,7 +840,7 @@ const LandingPage: Component = () => {
       {/* Footer */}
       <footer
         style={{
-          padding: '60px 24px 40px',
+          padding: isMobile() ? '40px 20px 32px' : '60px 24px 40px',
           background: 'rgba(0,0,0,0.3)',
           'border-top': '1px solid rgba(255,255,255,0.08)',
         }}
@@ -790,9 +855,9 @@ const LandingPage: Component = () => {
           <div
             style={{
               display: 'grid',
-              'grid-template-columns': 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: '40px',
-              'margin-bottom': '48px',
+              'grid-template-columns': isMobile() ? '1fr' : 'repeat(auto-fit, minmax(200px, 1fr))',
+              gap: isMobile() ? '32px' : '40px',
+              'margin-bottom': isMobile() ? '32px' : '48px',
             }}
           >
             {/* Brand Column */}
@@ -1215,28 +1280,32 @@ const LandingPage: Component = () => {
           {/* Bottom Bar */}
           <div
             style={{
-              'padding-top': '24px',
+              'padding-top': isMobile() ? '20px' : '24px',
               'border-top': '1px solid rgba(255,255,255,0.08)',
               display: 'flex',
-              'justify-content': 'space-between',
+              'flex-direction': isMobile() ? 'column' : 'row',
+              'justify-content': isMobile() ? 'center' : 'space-between',
               'align-items': 'center',
               'flex-wrap': 'wrap',
-              gap: '16px',
+              gap: isMobile() ? '12px' : '16px',
+              'text-align': isMobile() ? 'center' : 'left',
             }}
           >
             <p
               style={{
                 margin: 0,
-                'font-size': '13px',
+                'font-size': isMobile() ? '11px' : '13px',
                 color: 'rgba(255,255,255,0.3)',
               }}
             >
-              © 2025 Thoughtful App Co. Technology for Human Good.
+              © {new Date().getFullYear()} Thoughtful App Co.
+              {isMobile() ? '' : ' Technology for Human Good.'}© 2025 Thoughtful App Co. Technology
+              for Human Good.
             </p>
             <div
               style={{
                 display: 'flex',
-                gap: '24px',
+                gap: isMobile() ? '16px' : '24px',
               }}
             >
               <a
@@ -1394,6 +1463,16 @@ const TabNavigation: Component<{
   const [mobileMenuOpen, setMobileMenuOpen] = createSignal(false);
   const [menuTimeline, setMenuTimeline] = createSignal<Timeline>(props.activeTimeline);
 
+  // Mobile detection
+  const [isMobile, setIsMobile] = createSignal(window.innerWidth <= 768);
+
+  // Update on resize
+  createEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth <= 768);
+    window.addEventListener('resize', handleResize);
+    onCleanup(() => window.removeEventListener('resize', handleResize));
+  });
+
   // Drag state
   const [menuPos, setMenuPos] = createSignal({ x: 16, y: 16 });
   const [isDragging, setIsDragging] = createSignal(false);
@@ -1417,47 +1496,69 @@ const TabNavigation: Component<{
     }
   });
 
-  const handleMouseDown = (e: MouseEvent) => {
-    // Check if clicking resize handle (we'll add a class or id to check)
-    const target = e.target as HTMLElement;
+  // Unified start handler for mouse and touch
+  const handlePointerStart = (clientX: number, clientY: number, target: HTMLElement) => {
     if (target.closest('.resize-handle')) {
-      e.stopPropagation();
-      e.preventDefault();
       setIsResizing(true);
-      setResizeStart({ x: e.clientX, y: e.clientY, initialSize: menuSize() });
+      setResizeStart({ x: clientX, y: clientY, initialSize: menuSize() });
     } else {
       setIsDragging(true);
-      setDragStart({ x: e.clientX, y: e.clientY });
+      setDragStart({ x: clientX, y: clientY });
       setInitialPos(menuPos());
-      e.preventDefault();
     }
   };
 
-  const handleWindowMouseMove = (e: MouseEvent) => {
+  const handleMouseDown = (e: MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (target.closest('.resize-handle')) {
+      e.stopPropagation();
+    }
+    e.preventDefault();
+    handlePointerStart(e.clientX, e.clientY, target);
+  };
+
+  const handleTouchStart = (e: TouchEvent) => {
+    const touch = e.touches[0];
+    const target = e.target as HTMLElement;
+    if (target.closest('.resize-handle')) {
+      e.stopPropagation();
+    }
+    handlePointerStart(touch.clientX, touch.clientY, target);
+  };
+
+  // Unified move handler
+  const handlePointerMove = (clientX: number, clientY: number) => {
     if (isDragging()) {
-      const dx = e.clientX - dragStart().x;
-      const dy = e.clientY - dragStart().y;
+      const dx = clientX - dragStart().x;
+      const dy = clientY - dragStart().y;
       setMenuPos({
         x: Math.max(16, Math.min(window.innerWidth - menuSize() - 16, initialPos().x + dx)),
         y: Math.max(16, Math.min(window.innerHeight - menuSize() - 16, initialPos().y + dy)),
       });
     } else if (isResizing()) {
-      const dx = e.clientX - resizeStart().x;
-      const dy = e.clientY - resizeStart().y;
-      // Use the larger of dx/dy to keep aspect ratio 1:1 if we want, or just diagonal
-      // Let's assume uniform scaling based on diagonal movement
+      const dx = clientX - resizeStart().x;
+      const dy = clientY - resizeStart().y;
       const delta = (dx + dy) / 2;
       const newSize = Math.max(32, Math.min(120, resizeStart().initialSize + delta));
       setMenuSize(newSize);
     }
   };
 
-  const handleWindowMouseUp = (e: MouseEvent) => {
+  const handleWindowMouseMove = (e: MouseEvent) => {
+    handlePointerMove(e.clientX, e.clientY);
+  };
+
+  const handleWindowTouchMove = (e: TouchEvent) => {
+    const touch = e.touches[0];
+    handlePointerMove(touch.clientX, touch.clientY);
+  };
+
+  // Unified end handler
+  const handlePointerEnd = (clientX: number, clientY: number) => {
     if (isDragging()) {
       setIsDragging(false);
-      // If moved less than 5px, treat as click
-      const dx = e.clientX - dragStart().x;
-      const dy = e.clientY - dragStart().y;
+      const dx = clientX - dragStart().x;
+      const dy = clientY - dragStart().y;
       if (Math.abs(dx) < 5 && Math.abs(dy) < 5) {
         setMobileMenuOpen(!mobileMenuOpen());
       }
@@ -1466,14 +1567,27 @@ const TabNavigation: Component<{
     }
   };
 
-  // Attach drag listeners
+  const handleWindowMouseUp = (e: MouseEvent) => {
+    handlePointerEnd(e.clientX, e.clientY);
+  };
+
+  const handleWindowTouchEnd = (e: TouchEvent) => {
+    const touch = e.changedTouches[0];
+    handlePointerEnd(touch.clientX, touch.clientY);
+  };
+
+  // Attach drag/touch listeners
   createEffect(() => {
-    if (isDragging()) {
+    if (isDragging() || isResizing()) {
       window.addEventListener('mousemove', handleWindowMouseMove);
       window.addEventListener('mouseup', handleWindowMouseUp);
+      window.addEventListener('touchmove', handleWindowTouchMove, { passive: true });
+      window.addEventListener('touchend', handleWindowTouchEnd);
     } else {
       window.removeEventListener('mousemove', handleWindowMouseMove);
       window.removeEventListener('mouseup', handleWindowMouseUp);
+      window.removeEventListener('touchmove', handleWindowTouchMove);
+      window.removeEventListener('touchend', handleWindowTouchEnd);
     }
   });
 
@@ -1481,6 +1595,8 @@ const TabNavigation: Component<{
   onCleanup(() => {
     window.removeEventListener('mousemove', handleWindowMouseMove);
     window.removeEventListener('mouseup', handleWindowMouseUp);
+    window.removeEventListener('touchmove', handleWindowTouchMove);
+    window.removeEventListener('touchend', handleWindowTouchEnd);
   });
 
   const handleTimelineChange = (timeline: Timeline) => {
@@ -1507,123 +1623,198 @@ const TabNavigation: Component<{
     onCleanup(() => window.removeEventListener('keydown', handleGlobalKeyDown));
   });
 
+  // Mobile menu button size (fixed, larger for easy tapping)
+  const mobileButtonSize = 52;
+
   return (
     <>
-      {/* Draggable Hamburger Button */}
-      <button
-        onMouseDown={handleMouseDown}
-        aria-label={mobileMenuOpen() ? 'Close menu' : 'Open menu'}
-        style={{
-          position: 'fixed',
-          top: `${menuPos().y}px`,
-          left: `${menuPos().x}px`,
-          'z-index': 2002,
-          width: `${menuSize()}px`,
-          height: `${menuSize()}px`,
-          display: 'flex',
-          'align-items': 'center',
-          'justify-content': 'center',
-          background: mobileMenuOpen() ? 'rgba(255,255,255,0.1)' : 'rgba(255, 255, 255, 0.9)',
-          'backdrop-filter': 'blur(12px)',
-          '-webkit-backdrop-filter': 'blur(12px)',
-          'border-radius': '50%',
-          border: mobileMenuOpen()
-            ? '1px solid rgba(255,255,255,0.2)'
-            : `1px solid ${navTokens.neutrals[200]}`,
-          'box-shadow': mobileMenuOpen()
-            ? 'none'
-            : isDragging()
-              ? navTokens.shadows.dropdown
-              : navTokens.shadows.nav,
-          cursor: isDragging() ? 'grabbing' : 'grab',
-
-          // Persistent visibility
-          opacity: 1,
-          'pointer-events': 'auto',
-          transform: 'scale(1)',
-
-          transition:
-            isDragging() || isResizing() ? 'none' : 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-          color: mobileMenuOpen() ? 'white' : navTokens.brand.dark,
-          overflow: 'hidden',
-        }}
-        onMouseEnter={(e) => {
-          if (!mobileMenuOpen() && !isDragging() && !isResizing()) {
-            e.currentTarget.style.transform = 'scale(1.1) rotate(5deg)';
-            e.currentTarget.style.boxShadow = navTokens.shadows.dropdown;
-          }
-        }}
-        onMouseLeave={(e) => {
-          if (!isDragging() && !isResizing()) {
-            e.currentTarget.style.transform = 'scale(1) rotate(0deg)';
-            e.currentTarget.style.boxShadow = mobileMenuOpen() ? 'none' : navTokens.shadows.nav;
-          }
-        }}
-      >
-        {/* Resize Handle */}
-        <div
-          class="resize-handle"
-          style={{
-            position: 'absolute',
-            bottom: '0',
-            right: '0',
-            width: '16px',
-            height: '16px',
-            cursor: 'nwse-resize',
-            'z-index': 10,
-            display: 'flex',
-            'align-items': 'flex-end',
-            'justify-content': 'flex-end',
-            padding: '3px',
-            opacity: 0,
-            transition: 'opacity 0.2s ease',
-          }}
-          onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
-          onMouseLeave={(e) => (e.currentTarget.style.opacity = '0')}
-        >
-          <div
+      {/* Menu Button - Different behavior for mobile vs desktop */}
+      <Show
+        when={isMobile()}
+        fallback={
+          /* Desktop: Draggable/Resizable Button */
+          <button
+            onMouseDown={handleMouseDown}
+            onTouchStart={handleTouchStart}
+            aria-label={mobileMenuOpen() ? 'Close menu' : 'Open menu'}
             style={{
-              width: '6px',
-              height: '6px',
-              'border-right': `2px solid ${mobileMenuOpen() ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.3)'}`,
-              'border-bottom': `2px solid ${mobileMenuOpen() ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.3)'}`,
-              'border-bottom-right-radius': '2px',
+              position: 'fixed',
+              top: `${menuPos().y}px`,
+              left: `${menuPos().x}px`,
+              'z-index': 2002,
+              width: `${menuSize()}px`,
+              height: `${menuSize()}px`,
+              display: 'flex',
+              'align-items': 'center',
+              'justify-content': 'center',
+              background: mobileMenuOpen() ? 'rgba(255,255,255,0.1)' : 'rgba(255, 255, 255, 0.9)',
+              'backdrop-filter': 'blur(12px)',
+              '-webkit-backdrop-filter': 'blur(12px)',
+              'border-radius': '50%',
+              border: mobileMenuOpen()
+                ? '1px solid rgba(255,255,255,0.2)'
+                : `1px solid ${navTokens.neutrals[200]}`,
+              'box-shadow': mobileMenuOpen()
+                ? 'none'
+                : isDragging()
+                  ? navTokens.shadows.dropdown
+                  : navTokens.shadows.nav,
+              cursor: isDragging() ? 'grabbing' : 'grab',
+              opacity: 1,
+              'pointer-events': 'auto',
+              transform: 'scale(1)',
+              transition:
+                isDragging() || isResizing() ? 'none' : 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+              color: mobileMenuOpen() ? 'white' : navTokens.brand.dark,
+              overflow: 'hidden',
             }}
-          />
-        </div>
+            onMouseEnter={(e) => {
+              if (!mobileMenuOpen() && !isDragging() && !isResizing()) {
+                e.currentTarget.style.transform = 'scale(1.1) rotate(5deg)';
+                e.currentTarget.style.boxShadow = navTokens.shadows.dropdown;
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isDragging() && !isResizing()) {
+                e.currentTarget.style.transform = 'scale(1) rotate(0deg)';
+                e.currentTarget.style.boxShadow = mobileMenuOpen() ? 'none' : navTokens.shadows.nav;
+              }
+            }}
+          >
+            {/* Resize Handle */}
+            <div
+              class="resize-handle"
+              style={{
+                position: 'absolute',
+                bottom: '0',
+                right: '0',
+                width: '16px',
+                height: '16px',
+                cursor: 'nwse-resize',
+                'z-index': 10,
+                display: 'flex',
+                'align-items': 'flex-end',
+                'justify-content': 'flex-end',
+                padding: '3px',
+                opacity: 0,
+                transition: 'opacity 0.2s ease',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
+              onMouseLeave={(e) => (e.currentTarget.style.opacity = '0')}
+            >
+              <div
+                style={{
+                  width: '6px',
+                  height: '6px',
+                  'border-right': `2px solid ${mobileMenuOpen() ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.3)'}`,
+                  'border-bottom': `2px solid ${mobileMenuOpen() ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.3)'}`,
+                  'border-bottom-right-radius': '2px',
+                }}
+              />
+            </div>
 
-        <svg
-          width={menuSize() * 0.5}
-          height={menuSize() * 0.5}
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
+            <svg
+              width={menuSize() * 0.5}
+              height={menuSize() * 0.5}
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              style={{
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                transform: mobileMenuOpen() ? 'rotate(90deg)' : 'rotate(0deg)',
+              }}
+            >
+              <Show
+                when={mobileMenuOpen()}
+                fallback={
+                  <>
+                    <rect x="3" y="3" width="7" height="7" rx="1" />
+                    <rect x="14" y="3" width="7" height="7" rx="1" />
+                    <rect x="14" y="14" width="7" height="7" rx="1" />
+                    <rect x="3" y="14" width="7" height="7" rx="1" />
+                  </>
+                }
+              >
+                <>
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </>
+              </Show>
+            </svg>
+          </button>
+        }
+      >
+        {/* Mobile: Fixed position button in bottom-right corner */}
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen())}
+          aria-label={mobileMenuOpen() ? 'Close menu' : 'Open menu'}
           style={{
+            position: 'fixed',
+            bottom: '20px',
+            right: '20px',
+            'z-index': 2002,
+            width: `${mobileButtonSize}px`,
+            height: `${mobileButtonSize}px`,
+            display: 'flex',
+            'align-items': 'center',
+            'justify-content': 'center',
+            background: mobileMenuOpen()
+              ? 'rgba(255,255,255,0.15)'
+              : 'linear-gradient(135deg, #FF6B6B 0%, #FFE66D 50%, #4ECDC4 100%)',
+            'backdrop-filter': mobileMenuOpen() ? 'blur(12px)' : 'none',
+            '-webkit-backdrop-filter': mobileMenuOpen() ? 'blur(12px)' : 'none',
+            'border-radius': '50%',
+            border: mobileMenuOpen() ? '1px solid rgba(255,255,255,0.3)' : 'none',
+            'box-shadow': mobileMenuOpen()
+              ? 'none'
+              : '0 4px 20px rgba(255, 107, 107, 0.4), 0 2px 8px rgba(0,0,0,0.2)',
+            cursor: 'pointer',
+            opacity: 1,
+            'pointer-events': 'auto',
             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            transform: mobileMenuOpen() ? 'rotate(90deg)' : 'rotate(0deg)',
+            color: 'white',
+            // Larger touch target (invisible padding)
+            padding: 0,
           }}
         >
-          <Show
-            when={mobileMenuOpen()}
-            fallback={
-              <>
-                <rect x="3" y="3" width="7" height="7" rx="1" />
-                <rect x="14" y="3" width="7" height="7" rx="1" />
-                <rect x="14" y="14" width="7" height="7" rx="1" />
-                <rect x="3" y="14" width="7" height="7" rx="1" />
-              </>
-            }
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            style={{
+              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+              transform: mobileMenuOpen() ? 'rotate(90deg)' : 'rotate(0deg)',
+            }}
           >
-            <>
-              <line x1="18" y1="6" x2="6" y2="18" />
-              <line x1="6" y1="6" x2="18" y2="18" />
-            </>
-          </Show>
-        </svg>
-      </button>
+            <Show
+              when={mobileMenuOpen()}
+              fallback={
+                <>
+                  {/* 4-square grid icon */}
+                  <rect x="3" y="3" width="7" height="7" rx="1" />
+                  <rect x="14" y="3" width="7" height="7" rx="1" />
+                  <rect x="14" y="14" width="7" height="7" rx="1" />
+                  <rect x="3" y="14" width="7" height="7" rx="1" />
+                </>
+              }
+            >
+              <>
+                {/* X close icon */}
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </>
+            </Show>
+          </svg>
+        </button>
+      </Show>
 
       {/* Full Screen Immersive Menu */}
       <Show when={mobileMenuOpen()}>
@@ -1637,46 +1828,93 @@ const TabNavigation: Component<{
             background: '#0F0F1A',
             'z-index': 2001,
             display: 'flex',
+            'flex-direction': isMobile() ? 'column' : 'row',
             animation: 'fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
           }}
         >
-          {/* Left Column - Triangle */}
-          <div
-            onClick={() => setMobileMenuOpen(false)}
-            role="button"
-            tabIndex={0}
-            aria-label="Close menu"
-            style={{
-              position: 'relative',
-              width: '40%',
-              height: '100%',
-              background: `linear-gradient(135deg, ${navTokens.brand.coral}, ${navTokens.brand.yellow}, ${navTokens.brand.teal})`,
-              'clip-path': 'polygon(0 0, 100% 0, 60% 100%, 0 100%)',
-              cursor: 'pointer',
-              display: 'flex',
-              'align-items': 'center',
-              'justify-content': 'center',
-              'z-index': 2,
-              transition: 'filter 0.3s ease',
-            }}
-            onMouseEnter={(e) => (e.currentTarget.style.filter = 'brightness(1.1)')}
-            onMouseLeave={(e) => (e.currentTarget.style.filter = 'brightness(1)')}
-          >
+          {/* Left Column - Triangle (hidden on mobile, replaced with top bar) */}
+          <Show when={!isMobile()}>
             <div
+              onClick={() => setMobileMenuOpen(false)}
+              role="button"
+              tabIndex={0}
+              aria-label="Close menu"
               style={{
-                'font-size': 'clamp(80px, 15vw, 200px)',
-                color: 'rgba(255,255,255,0.2)',
-                'font-weight': '900',
-                transform: 'rotate(-90deg)',
-                'white-space': 'nowrap',
-                'pointer-events': 'none',
-                'user-select': 'none',
-                'letter-spacing': '20px',
+                position: 'relative',
+                width: '40%',
+                height: '100%',
+                background: `linear-gradient(135deg, ${navTokens.brand.coral}, ${navTokens.brand.yellow}, ${navTokens.brand.teal})`,
+                'clip-path': 'polygon(0 0, 100% 0, 60% 100%, 0 100%)',
+                cursor: 'pointer',
+                display: 'flex',
+                'align-items': 'center',
+                'justify-content': 'center',
+                'z-index': 2,
+                transition: 'filter 0.3s ease',
+              }}
+              onMouseEnter={(e) => (e.currentTarget.style.filter = 'brightness(1.1)')}
+              onMouseLeave={(e) => (e.currentTarget.style.filter = 'brightness(1)')}
+            >
+              <div
+                style={{
+                  'font-size': 'clamp(80px, 15vw, 200px)',
+                  color: 'rgba(255,255,255,0.2)',
+                  'font-weight': '900',
+                  transform: 'rotate(-90deg)',
+                  'white-space': 'nowrap',
+                  'pointer-events': 'none',
+                  'user-select': 'none',
+                  'letter-spacing': '20px',
+                }}
+              >
+                CLOSE
+              </div>
+            </div>
+          </Show>
+
+          {/* Mobile Top Bar - Gradient strip with swipe-down close hint */}
+          <Show when={isMobile()}>
+            <div
+              onClick={() => setMobileMenuOpen(false)}
+              role="button"
+              tabIndex={0}
+              aria-label="Close menu"
+              style={{
+                width: '100%',
+                height: '80px',
+                background: `linear-gradient(135deg, ${navTokens.brand.coral}, ${navTokens.brand.yellow}, ${navTokens.brand.teal})`,
+                display: 'flex',
+                'align-items': 'center',
+                'justify-content': 'center',
+                'flex-shrink': 0,
+                cursor: 'pointer',
+                position: 'relative',
               }}
             >
-              CLOSE
+              {/* Swipe indicator pill */}
+              <div
+                style={{
+                  width: '40px',
+                  height: '5px',
+                  'border-radius': '3px',
+                  background: 'rgba(255,255,255,0.5)',
+                  position: 'absolute',
+                  bottom: '12px',
+                }}
+              />
+              <span
+                style={{
+                  color: 'rgba(255,255,255,0.8)',
+                  'font-size': '14px',
+                  'font-weight': '600',
+                  'text-transform': 'uppercase',
+                  'letter-spacing': '2px',
+                }}
+              >
+                Tap to close
+              </span>
             </div>
-          </div>
+          </Show>
 
           {/* Right Column - Content */}
           <div
@@ -1684,19 +1922,21 @@ const TabNavigation: Component<{
               flex: 1,
               display: 'flex',
               'flex-direction': 'column',
-              padding: '40px 60px',
-              'justify-content': 'center',
+              padding: isMobile() ? '24px 20px' : '40px 60px',
+              'justify-content': isMobile() ? 'flex-start' : 'center',
               'overflow-y': 'auto',
             }}
           >
             {/* Header */}
             <div
               style={{
-                'margin-bottom': '48px',
+                'margin-bottom': isMobile() ? '24px' : '48px',
                 animation: 'slideDown 0.4s ease forwards',
                 display: 'flex',
                 'align-items': 'center',
                 'justify-content': 'space-between',
+                'flex-wrap': isMobile() ? 'wrap' : 'nowrap',
+                gap: isMobile() ? '12px' : '0',
               }}
             >
               {/* Logo and Company Name - Clickable Home Button */}
@@ -1706,13 +1946,17 @@ const TabNavigation: Component<{
                 style={{
                   display: 'flex',
                   'align-items': 'center',
-                  gap: '16px',
+                  gap: isMobile() ? '12px' : '16px',
                   'text-decoration': 'none',
                   transition: 'all 0.3s ease',
+                  flex: isMobile() ? '1' : 'auto',
+                  'min-width': 0,
                 }}
                 onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateX(4px)';
-                  e.currentTarget.style.opacity = '0.8';
+                  if (!isMobile()) {
+                    e.currentTarget.style.transform = 'translateX(4px)';
+                    e.currentTarget.style.opacity = '0.8';
+                  }
                 }}
                 onMouseLeave={(e) => {
                   e.currentTarget.style.transform = 'translateX(0)';
@@ -1722,19 +1966,20 @@ const TabNavigation: Component<{
                 {/* Logo */}
                 <div
                   style={{
-                    width: '56px',
-                    height: '56px',
-                    'border-radius': '14px',
+                    width: isMobile() ? '44px' : '56px',
+                    height: isMobile() ? '44px' : '56px',
+                    'border-radius': isMobile() ? '12px' : '14px',
                     background: `linear-gradient(135deg, ${navTokens.brand.coral}, ${navTokens.brand.yellow}, ${navTokens.brand.teal})`,
                     display: 'flex',
                     'align-items': 'center',
                     'justify-content': 'center',
                     'box-shadow': '0 8px 24px rgba(0,0,0,0.3)',
+                    'flex-shrink': 0,
                   }}
                 >
                   <svg
-                    width="32"
-                    height="32"
+                    width={isMobile() ? '24' : '32'}
+                    height={isMobile() ? '24' : '32'}
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="white"
@@ -1746,9 +1991,12 @@ const TabNavigation: Component<{
                     <polyline points="9 22 9 12 15 12 15 22" />
                   </svg>
                 </div>
-                <div>
+                <div style={{ 'min-width': 0 }}>
                   <h2
                     style={{
+                      'white-space': 'nowrap',
+                      overflow: 'hidden',
+                      'text-overflow': 'ellipsis',
                       'font-size': 'clamp(24px, 4vw, 36px)',
                       'font-weight': '400',
                       color: 'white',
@@ -1757,13 +2005,13 @@ const TabNavigation: Component<{
                       'font-family': navTokens.typography.brandFamily,
                     }}
                   >
-                    Thoughtful App Co.
+                    {isMobile() ? 'Thoughtful App Co.' : 'Thoughtful App Co.'}
                   </h2>
                   <div
                     style={{
-                      'font-size': '14px',
+                      'font-size': isMobile() ? '12px' : '14px',
                       color: 'rgba(255,255,255,0.5)',
-                      'margin-top': '4px',
+                      'margin-top': '2px',
                     }}
                   >
                     Apps that care
@@ -1775,14 +2023,12 @@ const TabNavigation: Component<{
               <button
                 onClick={() => {
                   setMobileMenuOpen(false);
-                  // Navigate to settings/profile - for now just close menu
-                  // TODO: Add actual settings route when available
                   navigate('/settings');
                 }}
                 aria-label="Settings"
                 style={{
-                  width: '48px',
-                  height: '48px',
+                  width: isMobile() ? '40px' : '48px',
+                  height: isMobile() ? '40px' : '48px',
                   'border-radius': '50%',
                   background: 'rgba(255,255,255,0.05)',
                   border: '1px solid rgba(255,255,255,0.1)',
@@ -1792,6 +2038,7 @@ const TabNavigation: Component<{
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
                   color: 'rgba(255,255,255,0.7)',
+                  'flex-shrink': 0,
                 }}
                 onMouseEnter={(e) => {
                   e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
@@ -1805,8 +2052,8 @@ const TabNavigation: Component<{
                 }}
               >
                 <svg
-                  width="24"
-                  height="24"
+                  width={isMobile() ? '20' : '24'}
+                  height={isMobile() ? '20' : '24'}
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
@@ -1824,11 +2071,12 @@ const TabNavigation: Component<{
             <div
               style={{
                 display: 'flex',
-                gap: '40px',
-                'margin-bottom': '48px',
+                gap: isMobile() ? '0' : '40px',
+                'margin-bottom': isMobile() ? '24px' : '48px',
                 'border-bottom': '1px solid rgba(255,255,255,0.1)',
-                'padding-bottom': '16px',
+                'padding-bottom': isMobile() ? '12px' : '16px',
                 animation: 'slideDown 0.5s ease forwards',
+                'justify-content': isMobile() ? 'space-between' : 'flex-start',
               }}
             >
               <For each={['now', 'next', 'later'] as Timeline[]}>
@@ -1836,16 +2084,22 @@ const TabNavigation: Component<{
                   <button
                     onClick={() => handleTimelineChange(timeline)}
                     style={{
-                      background: 'transparent',
+                      background:
+                        isMobile() && menuTimeline() === timeline
+                          ? `${navTokens.timelineColors[timeline].primary}20`
+                          : 'transparent',
                       border: 'none',
                       color: menuTimeline() === timeline ? 'white' : 'rgba(255,255,255,0.4)',
-                      'font-size': '20px',
+                      'font-size': isMobile() ? '14px' : '20px',
                       'font-weight': menuTimeline() === timeline ? '600' : '400',
                       cursor: 'pointer',
                       transition: 'all 0.3s ease',
                       position: 'relative',
-                      padding: '8px 0',
+                      padding: isMobile() ? '10px 16px' : '8px 0',
                       'font-family': navTokens.typography.fontFamily,
+                      'border-radius': isMobile() ? '20px' : '0',
+                      flex: isMobile() ? '1' : 'auto',
+                      'max-width': isMobile() ? '100px' : 'none',
                     }}
                     onMouseEnter={(e) => (e.currentTarget.style.color = 'white')}
                     onMouseLeave={(e) => {
@@ -1854,7 +2108,7 @@ const TabNavigation: Component<{
                     }}
                   >
                     {timelineConfig[timeline].label}
-                    <Show when={menuTimeline() === timeline}>
+                    <Show when={menuTimeline() === timeline && !isMobile()}>
                       <div
                         style={{
                           position: 'absolute',
@@ -1878,40 +2132,45 @@ const TabNavigation: Component<{
             <div
               style={{
                 display: 'grid',
-                'grid-template-columns': 'repeat(auto-fill, minmax(240px, 1fr))',
-                gap: '24px',
+                'grid-template-columns': isMobile()
+                  ? 'repeat(auto-fill, minmax(140px, 1fr))'
+                  : 'repeat(auto-fill, minmax(240px, 1fr))',
+                gap: isMobile() ? '12px' : '24px',
                 width: '100%',
                 animation: 'slideDown 0.6s ease forwards',
+                'padding-bottom': isMobile() ? '24px' : '0',
               }}
             >
               {filteredApps().map((app, index) => (
                 <button
                   onClick={() => handleAppClick(app.id)}
                   style={{
-                    padding: '32px',
+                    padding: isMobile() ? '16px' : '32px',
                     background: 'rgba(255,255,255,0.03)',
                     border: '1px solid rgba(255,255,255,0.08)',
-                    'border-radius': '24px',
+                    'border-radius': isMobile() ? '16px' : '24px',
                     display: 'flex',
                     'flex-direction': 'column',
-                    'align-items': 'flex-start',
-                    gap: '16px',
+                    'align-items': isMobile() ? 'center' : 'flex-start',
+                    gap: isMobile() ? '12px' : '16px',
                     transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                     'animation-delay': `${0.1 * index}s`,
                     cursor: 'pointer',
-                    'text-align': 'left',
+                    'text-align': isMobile() ? 'center' : 'left',
                     position: 'relative',
                     overflow: 'hidden',
                   }}
                   onMouseEnter={(e) => {
-                    e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)';
-                    e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
-                    e.currentTarget.style.borderColor = app.color;
-                    e.currentTarget.style.boxShadow = `0 12px 32px -8px ${app.color}30`;
-                    const arrow = e.currentTarget.querySelector('.arrow-icon') as HTMLElement;
-                    if (arrow) {
-                      arrow.style.opacity = '1';
-                      arrow.style.transform = 'translateX(0)';
+                    if (!isMobile()) {
+                      e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)';
+                      e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
+                      e.currentTarget.style.borderColor = app.color;
+                      e.currentTarget.style.boxShadow = `0 12px 32px -8px ${app.color}30`;
+                      const arrow = e.currentTarget.querySelector('.arrow-icon') as HTMLElement;
+                      if (arrow) {
+                        arrow.style.opacity = '1';
+                        arrow.style.transform = 'translateX(0)';
+                      }
                     }
                   }}
                   onMouseLeave={(e) => {
@@ -1925,29 +2184,41 @@ const TabNavigation: Component<{
                       arrow.style.transform = 'translateX(-10px)';
                     }
                   }}
+                  // Add active state for touch feedback
+                  onTouchStart={(e) => {
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
+                    e.currentTarget.style.borderColor = app.color;
+                  }}
+                  onTouchEnd={(e) => {
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
+                  }}
                 >
+                  {/* Mobile: Centered layout, Desktop: Spread layout */}
                   <div
                     style={{
                       display: 'flex',
                       'align-items': 'center',
-                      'justify-content': 'space-between',
+                      'justify-content': isMobile() ? 'center' : 'space-between',
                       width: '100%',
                     }}
                   >
                     <div
                       style={{
-                        width: '48px',
-                        height: '48px',
-                        'border-radius': '14px',
+                        width: isMobile() ? '44px' : '48px',
+                        height: isMobile() ? '44px' : '48px',
+                        'border-radius': isMobile() ? '12px' : '14px',
                         background: app.color,
                         display: 'flex',
                         'align-items': 'center',
                         'justify-content': 'center',
-                        'font-size': '20px',
+                        'font-size': isMobile() ? '18px' : '20px',
                         'font-weight': '700',
                         color: 'white',
                         'box-shadow': `0 8px 24px ${app.color}40`,
                         padding: app.id === 'tempo' ? '4px' : '0',
+                        'text-shadow':
+                          '0 0 2px rgba(0,0,0,0.8), 0 0 4px rgba(0,0,0,0.5), 1px 1px 0 rgba(0,0,0,0.3)',
                       }}
                     >
                       <Show when={app.id === 'tempo'} fallback={app.name.charAt(0)}>
@@ -1955,61 +2226,67 @@ const TabNavigation: Component<{
                           src="/tempo/tempo_logo.png"
                           alt="Tempo Logo"
                           style={{
-                            height: '32px',
-                            width: '32px',
+                            height: isMobile() ? '26px' : '32px',
+                            width: isMobile() ? '26px' : '32px',
                             'object-fit': 'contain',
                           }}
                         />
                       </Show>
                     </div>
 
-                    <div
-                      class="arrow-icon"
-                      style={{
-                        opacity: 0,
-                        transform: 'translateX(-10px)',
-                        transition: 'all 0.3s ease',
-                        color: 'white',
-                      }}
-                    >
-                      <svg
-                        width="24"
-                        height="24"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
+                    {/* Arrow icon - hidden on mobile */}
+                    <Show when={!isMobile()}>
+                      <div
+                        class="arrow-icon"
+                        style={{
+                          opacity: 0,
+                          transform: 'translateX(-10px)',
+                          transition: 'all 0.3s ease',
+                          color: 'white',
+                        }}
                       >
-                        <line x1="5" y1="12" x2="19" y2="12" />
-                        <polyline points="12 5 19 12 12 19" />
-                      </svg>
-                    </div>
+                        <svg
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                        >
+                          <line x1="5" y1="12" x2="19" y2="12" />
+                          <polyline points="12 5 19 12 12 19" />
+                        </svg>
+                      </div>
+                    </Show>
                   </div>
 
                   <div>
                     <div
                       style={{
-                        'font-size': '20px',
+                        'font-size': isMobile() ? '14px' : '20px',
                         'font-weight': '600',
                         color: 'white',
-                        'margin-bottom': '6px',
+                        'margin-bottom': isMobile() ? '4px' : '6px',
                         'font-family': navTokens.typography.fontFamily,
                       }}
                     >
                       {app.name}
                     </div>
-                    <div
-                      style={{
-                        'font-size': '14px',
-                        color: 'rgba(255,255,255,0.5)',
-                        'line-height': '1.5',
-                        'font-family': navTokens.typography.fontFamily,
-                      }}
-                    >
-                      {app.description}
-                    </div>
+                    {/* Description - hidden on mobile for compact view */}
+                    <Show when={!isMobile()}>
+                      <div
+                        style={{
+                          'font-size': '14px',
+                          color: 'rgba(255,255,255,0.5)',
+                          'line-height': '1.5',
+                          'font-family': navTokens.typography.fontFamily,
+                        }}
+                      >
+                        {app.description}
+                      </div>
+                    </Show>
                   </div>
                 </button>
               ))}
@@ -2042,6 +2319,7 @@ export const AppPage: Component = () => {
     manifest: ManifestApp,
     augment: AugmentApp,
     lol: LolApp,
+    papertrail: PaperTrailApp,
   };
 
   return (
@@ -2069,6 +2347,9 @@ export const AppPage: Component = () => {
       </Show>
       <Show when={appId() === 'lol'}>
         <LolApp />
+      </Show>
+      <Show when={appId() === 'papertrail'}>
+        <PaperTrailApp />
       </Show>
     </>
   );

@@ -235,6 +235,7 @@ const ALLOWED_TASK_CATEGORIES: Exclude<TaskCategory, 'break'>[] = [
   'learning',
   'review',
   'research',
+  'social',
 ];
 
 const ProcessedTaskSchema = z.object({
@@ -371,7 +372,7 @@ Provide the result as a JSON object with this EXACT structure:
           "title": "Task title",
           "duration": number (minutes),
           "isFrog": boolean (true for high priority),
-          "taskCategory": "focus" | "learning" | "review" | "research",
+          "taskCategory": "focus" | "learning" | "review" | "research" | "social",
           "projectType": "string (optional)",
           "isFlexible": boolean,
           "needsSplitting": boolean (for tasks > 60 minutes),
