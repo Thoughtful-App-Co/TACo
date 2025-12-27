@@ -698,6 +698,12 @@ const LandingPage: Component = () => {
             'letter-spacing': isMobile() ? '1.5px' : '2px',
             'text-transform': 'uppercase',
             color: 'rgba(255,255,255,0.5)',
+            margin: '0 0 10px 0',
+            'font-size': 'clamp(24px, 4vw, 36px)',
+            'font-weight': '400',
+            'letter-spacing': '1px',
+            'font-family': navTokens.typography.brandFamily,
+            color: 'rgba(255,255,255,0.7)',
           }}
         >
           Thoughtful App Co.
@@ -897,8 +903,9 @@ const LandingPage: Component = () => {
                 </div>
                 <span
                   style={{
-                    'font-size': '16px',
-                    'font-weight': '600',
+                    'font-size': '18px',
+                    'font-weight': '400',
+                    'font-family': navTokens.typography.brandFamily,
                     color: 'white',
                   }}
                 >
@@ -1298,6 +1305,7 @@ const LandingPage: Component = () => {
             >
               © {new Date().getFullYear()} Thoughtful App Co.
               {isMobile() ? '' : ' Technology for Human Good.'}
+              © 2025 Thoughtful App Co. Technology for Human Good.
             </p>
             <div
               style={{
@@ -1351,6 +1359,7 @@ const navTokens = {
   // Typography - DM Sans for body, modular scale 1.125
   typography: {
     fontFamily: "'DM Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    brandFamily: "'Shupp', 'DM Sans', system-ui, sans-serif",
     sizes: {
       xs: '11px',
       sm: '12px',
@@ -1999,6 +2008,12 @@ const TabNavigation: Component<{
                       'white-space': 'nowrap',
                       overflow: 'hidden',
                       'text-overflow': 'ellipsis',
+                      'font-size': 'clamp(24px, 4vw, 36px)',
+                      'font-weight': '400',
+                      color: 'white',
+                      margin: 0,
+                      'line-height': 1.2,
+                      'font-family': navTokens.typography.brandFamily,
                     }}
                   >
                     {isMobile() ? 'Thoughtful App Co.' : 'Thoughtful App Co.'}
