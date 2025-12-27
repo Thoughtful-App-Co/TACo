@@ -4,7 +4,7 @@
 const apps = {
   nurture: {
     name: 'Nurture',
-    description: 'Relationship CRM',
+    description: 'Relationship Management',
     elevatorPitch:
       'Never forget a birthday or let a friendship fade. Nurture helps you maintain meaningful relationships with gentle reminders and interaction tracking.',
   },
@@ -16,9 +16,9 @@ const apps = {
   },
   tempo: {
     name: 'Tempo',
-    description: 'AI task timer',
+    description: 'A.D.H.D Task Master',
     elevatorPitch:
-      "Work with your natural rhythm, not against it. Tempo uses AI to learn when you're most productive and schedules tasks accordingly.",
+      'Enter your tasks, get a real action plan. Tempo will ensure we turn to-do lists into actions. Activate "Annoy Me Mode" to get some really awesome results...',
   },
   friendly: {
     name: 'FriendLy',
@@ -26,11 +26,11 @@ const apps = {
     elevatorPitch:
       'Coordinate hangouts without the group chat chaos. FriendLy finds the perfect time for everyone to meet up.',
   },
-  augment: {
-    name: 'Augment',
-    description: 'IO psychology jobs',
+  tenure: {
+    name: 'Tenure',
+    description: 'Eternal Career Companion',
     elevatorPitch:
-      'Find work that actually fits you. Augment matches your personality and work style to careers using IO psychology principles.',
+      'Career help is not an effective money maker for corporations and LinkedIn charging you $30 a month to find a job is criminal. Tenure is about life-long career aid, find out what you want to be when you grow up, write specialized resumes w/ Resume Mutator, and, actively track and apply for jobs with our Prospect job pipeline.',
   },
   manifest: {
     name: 'Manifest',
