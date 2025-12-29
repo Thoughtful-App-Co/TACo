@@ -246,3 +246,104 @@ export async function getInterestProfilerCareers(
     return [];
   }
 }
+
+// ============================================================================
+// OCCUPATION-SPECIFIC DATA (For Resume Mutation)
+// ============================================================================
+
+export interface OnetOccupationSkills {
+  skills: { name: string; level: number; importance: number }[];
+  knowledge: { name: string; level: number; importance: number }[];
+  abilities: { name: string; level: number; importance: number }[];
+  technologies: string[];
+  tasks: string[];
+}
+
+/**
+ * Fetch skills, knowledge, abilities, technologies, and tasks for a specific occupation
+ * 
+ * This is used during resume mutation to get industry-specific context
+ * 
+ * @param occupationCode - O*NET-SOC code (e.g., "29-1141.00" for Registered Nurses)
+ */
+export async function getOccupationDetails(
+  occupationCode: string
+): Promise<OnetOccupationSkills | null> {
+  try {
+    const [skillsRes, knowledgeRes, abilitiesRes, techRes, tasksRes] = await Promise.all([
+      fetch(`${BASE_URL}/ws/online/occupations/${occupationCode}/summary/skills`, {
+        headers: { 'X-API-Key': API_KEY },
+      }),
+      fetch(`${BASE_URL}/ws/online/occupations/${occupationCode}/summary/knowledge`, {
+        headers: { 'X-API-Key': API_KEY },
+      }),
+      fetch(`${BASE_URL}/ws/online/occupations/${occupationCode}/summary/abilities`, {
+        headers: { 'X-API-Key': API_KEY },
+      }),
+      fetch(`${BASE_URL}/ws/online/occupations/${occupationCode}/summary/technology_skills`, {
+        headers: { 'X-API-Key': API_KEY },
+      }),
+      fetch(`${BASE_URL}/ws/online/occupations/${occupationCode}/summary/tasks`, {
+        headers: { 'X-API-Key': API_KEY },
+      }),
+    ]);
+
+    const skills = skillsRes.ok ? (await skillsRes.json()).element || [] : [];
+    const knowledge = knowledgeRes.ok ? (await knowledgeRes.json()).element || [] : [];
+    const abilities = abilitiesRes.ok ? (await abilitiesRes.json()).element || [] : [];
+    const tech = techRes.ok ? (await techRes.json()).category || [] : [];
+    const tasks = tasksRes.ok ? (await tasksRes.json()).task || [] : [];
+
+    return {
+      skills: skills.map((s: any) => ({
+        name: s.name,
+        level: s.score?.value || 0,
+        importance: s.score?.importance || 0,
+      })),
+      knowledge: knowledge.map((k: any) => ({
+        name: k.name,
+        level: k.score?.value || 0,
+        importance: k.score?.importance || 0,
+      })),
+      abilities: abilities.map((a: any) => ({
+        name: a.name,
+        level: a.score?.value || 0,
+        importance: a.score?.importance || 0,
+      })),
+      technologies: tech.flatMap((c: any) => c.example?.map((e: any) => e.name) || []),
+      tasks: tasks.map((t: any) => t.statement || ''),
+    };
+  } catch (error) {
+    console.error('Failed to fetch occupation details:', error);
+    return null;
+  }
+}
+
+/**
+ * Search for occupation by job title
+ * 
+ * This helps users find the right occupation code when they only have a job title
+ * 
+ * @param title - Job title search term (e.g., "nurse", "software engineer")
+ */
+export async function searchOccupationByTitle(
+  title: string
+): Promise<{ code: string; title: string }[]> {
+  try {
+    const response = await fetch(
+      `${BASE_URL}/ws/online/search?keyword=${encodeURIComponent(title)}`,
+      { headers: { 'X-API-Key': API_KEY } }
+    );
+
+    if (!response.ok) return [];
+
+    const data = await response.json();
+    return (data.occupation || []).map((o: any) => ({
+      code: o.code,
+      title: o.title,
+    }));
+  } catch (error) {
+    console.error('Failed to search occupations:', error);
+    return [];
+  }
+}
