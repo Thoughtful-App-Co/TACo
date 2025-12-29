@@ -6,6 +6,7 @@
 
 import { maximalist, maxGradients } from '../../../../theme/maximalist';
 import { liquid, liquidAnimations, liquidGradients } from '../../../../theme/liquid';
+import { semanticColors } from '../../../../theme/semantic-colors';
 
 // ============================================================================
 // LIQUID ANIMATIONS
@@ -91,40 +92,40 @@ export const statusColors = {
 };
 
 // ============================================================================
-// AGING INDICATOR COLORS
+// AGING INDICATOR COLORS (now from semantic-colors.ts)
 // ============================================================================
 
 export const agingColors = {
   fresh: {
-    color: liquid.colors.primary,
-    bg: 'rgba(59, 130, 246, 0.15)',
-    border: 'rgba(59, 130, 246, 0.3)',
+    color: semanticColors.info.base,
+    bg: semanticColors.info.bg,
+    border: semanticColors.info.border,
     pulse: false,
   },
   warning: {
-    color: '#F59E0B',
-    bg: 'rgba(245, 158, 11, 0.15)',
-    border: 'rgba(245, 158, 11, 0.3)',
+    color: semanticColors.warning.base,
+    bg: semanticColors.warning.bg,
+    border: semanticColors.warning.border,
     pulse: true,
   },
   critical: {
-    color: '#EF4444',
-    bg: 'rgba(239, 68, 68, 0.15)',
-    border: 'rgba(239, 68, 68, 0.3)',
+    color: semanticColors.error.base,
+    bg: semanticColors.error.bg,
+    border: semanticColors.error.border,
     pulse: true,
   },
 };
 
 // ============================================================================
-// SCORE COLORS
+// SCORE COLORS (now from semantic-colors.ts)
 // ============================================================================
 
 export const scoreColors = {
-  excellent: { color: '#10B981', label: 'Excellent Match' }, // 80-100
-  good: { color: '#22D3EE', label: 'Good Match' }, // 60-79
-  moderate: { color: '#FBBF24', label: 'Moderate Match' }, // 40-59
-  weak: { color: '#F97316', label: 'Weak Match' }, // 20-39
-  poor: { color: '#EF4444', label: 'Poor Match' }, // 0-19
+  excellent: { color: semanticColors.success.base, label: 'Excellent Match' }, // 80-100
+  good: { color: semanticColors.optimal.base, label: 'Good Match' }, // 60-79
+  moderate: { color: semanticColors.warning.light, label: 'Moderate Match' }, // 40-59
+  weak: { color: semanticColors.warning.base, label: 'Weak Match' }, // 20-39
+  poor: { color: semanticColors.error.base, label: 'Poor Match' }, // 0-19
 };
 
 export function getScoreColor(score: number): { color: string; label: string } {

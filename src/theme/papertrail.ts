@@ -30,8 +30,9 @@ export const papertrail: Theme = {
     border: '#000000', // BLACK borders - thick and bold
   },
   fonts: {
-    body: "'Inter', 'Helvetica Neue', 'Arial', sans-serif",
     heading: "'Inter', 'Helvetica Neue', 'Arial', sans-serif",
+    subheading: "'Inter', 'Helvetica Neue', 'Arial', sans-serif",
+    body: "'Inter', 'Helvetica Neue', 'Arial', sans-serif",
   },
   spacing: {
     xs: '4px',
