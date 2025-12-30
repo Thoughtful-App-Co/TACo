@@ -37,6 +37,7 @@ import { maximalist, maxPalette, maxGradients } from '../../theme/maximalist';
 import { PipelineView, pipelineStore, Sidebar, SidebarView } from './pipeline';
 import { PrepareApp } from './prepare';
 import { FeatureFlags, DEFAULT_FEATURE_FLAGS } from '../../schemas/pipeline.schema';
+import { TenureThemeProvider } from './TenureThemeProvider';
 
 // Helper to get RGB string from hex
 const hexToRgb = (hex: string) => {
@@ -1214,92 +1215,93 @@ export const TenureApp: Component = () => {
   };
 
   return (
-    <div
-      style={{
-        'min-height': '100vh',
-        background: maximalist.colors.background,
-        'font-family': maximalist.fonts.body,
-        color: maximalist.colors.text,
-        position: 'relative',
-        'overflow-x': 'hidden',
-      }}
-    >
-      {/* Decorative background elements */}
+    <TenureThemeProvider>
       <div
         style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          'pointer-events': 'none',
-          'background-image': dynamicPatterns().zigzag,
-          opacity: 0.5,
+          'min-height': '100vh',
+          background: maximalist.colors.background,
+          'font-family': maximalist.fonts.body,
+          color: maximalist.colors.text,
+          position: 'relative',
+          'overflow-x': 'hidden',
         }}
-      />
-
-      {/* Gradient orbs */}
-      <div
-        style={{
-          position: 'fixed',
-          top: '-200px',
-          right: '-100px',
-          width: '500px',
-          height: '500px',
-          background: `radial-gradient(circle, ${currentTheme().colors.primary}40, transparent 70%)`,
-          'border-radius': '50%',
-          filter: 'blur(60px)',
-        }}
-      />
-      <div
-        style={{
-          position: 'fixed',
-          bottom: '-150px',
-          left: '-50px',
-          width: '400px',
-          height: '400px',
-          background: `radial-gradient(circle, ${currentTheme().colors.secondary}30, transparent 70%)`,
-          'border-radius': '50%',
-          filter: 'blur(60px)',
-        }}
-      />
-
-      <div style={{ position: 'relative', 'z-index': 1 }}>
-        {/* Header */}
-        <header
+      >
+        {/* Decorative background elements */}
+        <div
           style={{
-            padding: '24px 32px 32px',
-            display: 'flex',
-            'justify-content': 'space-between',
-            'align-items': 'center',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            'pointer-events': 'none',
+            'background-image': dynamicPatterns().zigzag,
+            opacity: 0.5,
           }}
-        >
-          <div style={{ display: 'flex', 'align-items': 'center', gap: '16px' }}>
-            {/* Logo with dynamic colored border */}
-            <div
-              style={{
-                width: '56px',
-                height: '56px',
-                'border-radius': '16px',
-                background: 'transparent',
-                border: `2px solid ${currentTheme().colors.primary}`,
-                display: 'flex',
-                'align-items': 'center',
-                'justify-content': 'center',
-                'box-shadow': currentTheme().shadows.md,
-              }}
-            >
+        />
+
+        {/* Gradient orbs */}
+        <div
+          style={{
+            position: 'fixed',
+            top: '-200px',
+            right: '-100px',
+            width: '500px',
+            height: '500px',
+            background: `radial-gradient(circle, ${currentTheme().colors.primary}40, transparent 70%)`,
+            'border-radius': '50%',
+            filter: 'blur(60px)',
+          }}
+        />
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '-150px',
+            left: '-50px',
+            width: '400px',
+            height: '400px',
+            background: `radial-gradient(circle, ${currentTheme().colors.secondary}30, transparent 70%)`,
+            'border-radius': '50%',
+            filter: 'blur(60px)',
+          }}
+        />
+
+        <div style={{ position: 'relative', 'z-index': 1 }}>
+          {/* Header */}
+          <header
+            style={{
+              padding: '24px 32px 32px',
+              display: 'flex',
+              'justify-content': 'space-between',
+              'align-items': 'center',
+            }}
+          >
+            <div style={{ display: 'flex', 'align-items': 'center', gap: '16px' }}>
+              {/* Logo with dynamic colored border */}
               <div
                 style={{
-                  height: '52px',
-                  width: '52px',
-                  'background-color': currentTheme().colors.primary,
-                  '-webkit-mask': 'url(/tenure/tenure_logo.png) center/contain no-repeat',
-                  mask: 'url(/tenure/tenure_logo.png) center/contain no-repeat',
+                  width: '56px',
+                  height: '56px',
+                  'border-radius': '16px',
+                  background: 'transparent',
+                  border: `2px solid ${currentTheme().colors.primary}`,
+                  display: 'flex',
+                  'align-items': 'center',
+                  'justify-content': 'center',
+                  'box-shadow': currentTheme().shadows.md,
                 }}
-              />
+              >
+                <div
+                  style={{
+                    height: '52px',
+                    width: '52px',
+                    'background-color': currentTheme().colors.primary,
+                    '-webkit-mask': 'url(/tenure/tenure_logo.png) center/contain no-repeat',
+                    mask: 'url(/tenure/tenure_logo.png) center/contain no-repeat',
+                  }}
+                />
 
-              {/* OPTION 2: "T" Upward Arrow - T shape integrated with growth arrow
+                {/* OPTION 2: "T" Upward Arrow - T shape integrated with growth arrow
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
                 <path
                   d="M4 7h16"
@@ -1334,7 +1336,7 @@ export const TenureApp: Component = () => {
               </svg>
               */}
 
-              {/* OPTION 3: "T" Staircase - T with ascending steps on vertical stem
+                {/* OPTION 3: "T" Staircase - T with ascending steps on vertical stem
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
                 <rect x="4" y="5" width="16" height="3" rx="1.5" fill={currentTheme().colors.primary} />
                 <path
@@ -1354,979 +1356,1051 @@ export const TenureApp: Component = () => {
                 />
               </svg>
               */}
-            </div>
-            <div>
-              <h1
-                style={{
-                  margin: 0,
-                  'font-family': maximalist.fonts.heading,
-                  'font-size': '32px',
-                  'font-weight': '700',
-                  'background-image': currentTheme().gradients.primary,
-                  '-webkit-background-clip': 'text',
-                  'background-clip': 'text',
-                  color: 'transparent',
-                  display: 'inline-block',
-                  '-webkit-text-fill-color': 'transparent',
-                }}
-              >
-                Tenure
-              </h1>
-              <p
-                style={{
-                  margin: 0,
-                  'font-size': '17px',
-                  color: maximalist.colors.textMuted,
-                }}
-              >
-                Eternal Career Companion
-              </p>
-            </div>
-          </div>
-
-          {/* Tab Navigation in Header */}
-          <div
-            style={{
-              display: 'flex',
-              gap: '10px',
-              padding: '6px',
-              background: 'rgba(255, 255, 255, 0.03)',
-              'border-radius': '12px',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-            }}
-          >
-            <For
-              each={(() => {
-                const tabs: ('Discover' | 'Prepare' | 'Prospect' | 'Prosper' | 'Matches')[] = [];
-                if (featureFlags().showDiscover) tabs.push('Discover');
-                if (featureFlags().showPrepare) tabs.push('Prepare');
-                if (featureFlags().showProspect) tabs.push('Prospect');
-                if (featureFlags().showProsper) tabs.push('Prosper');
-                if (featureFlags().showMatches) tabs.push('Matches');
-                return tabs;
-              })()}
-            >
-              {(tab) => {
-                const getIcon = () => {
-                  if (tab === 'Discover') return <IconSearch size={18} />;
-                  if (tab === 'Prepare') return <IconFileText size={18} />;
-                  if (tab === 'Prospect') return <IconGrid size={18} />;
-                  if (tab === 'Prosper') return <IconBriefcase size={18} />;
-                  if (tab === 'Matches') return <IconStar size={18} />;
-                  return null;
-                };
-
-                return (
-                  <button
-                    onClick={() => handleTabChange(tab)}
-                    style={{
-                      display: 'flex',
-                      'align-items': 'center',
-                      gap: '8px',
-                      padding: '12px 24px',
-                      background:
-                        activeTab() === tab ? currentTheme().gradients.primary : 'transparent',
-                      border: 'none',
-                      'border-radius': '9px',
-                      color:
-                        activeTab() === tab
-                          ? currentTheme().colors.textOnPrimary
-                          : maximalist.colors.textMuted,
-                      'font-size': '15px',
-                      'font-weight': '600',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                      outline: 'none',
-                      transform: 'scale(1)',
-                    }}
-                    onMouseEnter={(e) => {
-                      if (activeTab() !== tab) {
-                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-                        e.currentTarget.style.transform = 'scale(1.02)';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (activeTab() !== tab) {
-                        e.currentTarget.style.background = 'transparent';
-                        e.currentTarget.style.transform = 'scale(1)';
-                      }
-                    }}
-                  >
-                    {getIcon()}
-                    {tab}
-                  </button>
-                );
-              }}
-            </For>
-          </div>
-
-          <div style={{ display: 'flex', 'align-items': 'center', gap: '12px' }}>
-            {/* Profile button */}
-            <button
-              onClick={() => setSidebarView(sidebarView() === 'profile' ? null : 'profile')}
-              class="header-icon-btn"
-              style={{
-                width: '44px',
-                height: '44px',
-                'border-radius': '12px',
-                background:
-                  sidebarView() === 'profile' ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-                border:
-                  sidebarView() === 'profile'
-                    ? `1px solid ${currentTheme().colors.primary}`
-                    : `1px solid ${maximalist.colors.border}`,
-                display: 'flex',
-                'align-items': 'center',
-                'justify-content': 'center',
-                cursor: 'pointer',
-                color:
-                  sidebarView() === 'profile'
-                    ? currentTheme().colors.primary
-                    : maximalist.colors.textMuted,
-                transition: 'all 0.2s ease',
-                position: 'relative',
-              }}
-              onMouseEnter={(e) => {
-                if (sidebarView() !== 'profile') {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                  e.currentTarget.style.borderColor = currentTheme().colors.primary;
-                  e.currentTarget.style.color = currentTheme().colors.text;
-                  e.currentTarget.style.transform = 'scale(1.05)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (sidebarView() !== 'profile') {
-                  e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.borderColor = maximalist.colors.border;
-                  e.currentTarget.style.color = maximalist.colors.textMuted;
-                  e.currentTarget.style.transform = 'scale(1)';
-                }
-              }}
-              title="Profile"
-            >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                <circle cx="12" cy="7" r="4" />
-              </svg>
-              {/* Notification dot if no profile */}
-              <Show when={!pipelineStore.state.profile && sidebarView() !== 'profile'}>
-                <span
+              </div>
+              <div>
+                <h1
                   style={{
-                    position: 'absolute',
-                    top: '8px',
-                    right: '8px',
-                    width: '8px',
-                    height: '8px',
-                    'border-radius': '50%',
-                    background: '#F59E0B',
-                  }}
-                />
-              </Show>
-            </button>
-
-            {/* Settings button */}
-            <button
-              onClick={() => setSidebarView(sidebarView() === 'settings' ? null : 'settings')}
-              class="header-icon-btn"
-              style={{
-                width: '44px',
-                height: '44px',
-                'border-radius': '12px',
-                background:
-                  sidebarView() === 'settings' ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-                border:
-                  sidebarView() === 'settings'
-                    ? `1px solid ${currentTheme().colors.primary}`
-                    : `1px solid ${maximalist.colors.border}`,
-                display: 'flex',
-                'align-items': 'center',
-                'justify-content': 'center',
-                cursor: 'pointer',
-                color:
-                  sidebarView() === 'settings'
-                    ? currentTheme().colors.primary
-                    : maximalist.colors.textMuted,
-                transition: 'all 0.2s ease',
-              }}
-              onMouseEnter={(e) => {
-                if (sidebarView() !== 'settings') {
-                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                  e.currentTarget.style.borderColor = currentTheme().colors.primary;
-                  e.currentTarget.style.color = currentTheme().colors.text;
-                  e.currentTarget.style.transform = 'scale(1.05)';
-                }
-              }}
-              onMouseLeave={(e) => {
-                if (sidebarView() !== 'settings') {
-                  e.currentTarget.style.background = 'transparent';
-                  e.currentTarget.style.borderColor = maximalist.colors.border;
-                  e.currentTarget.style.color = maximalist.colors.textMuted;
-                  e.currentTarget.style.transform = 'scale(1)';
-                }
-              }}
-              title="Settings"
-            >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <circle cx="12" cy="12" r="3" />
-                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-              </svg>
-            </button>
-          </div>
-        </header>
-
-        {/* Tab navigation - maximalist pills */}
-        {/* Main content */}
-        <main
-          style={{
-            padding: activeTab() === 'Prospect' ? '0' : '0 32px 48px',
-            'max-width': activeTab() === 'Prospect' ? 'none' : '1400px',
-            margin: activeTab() === 'Prospect' ? '0' : '0 auto',
-            height: activeTab() === 'Prospect' ? 'calc(100vh - 100px)' : 'auto',
-          }}
-        >
-          {activeTab() === 'Matches' && (
-            <>
-              <div style={{ 'margin-bottom': '32px' }}>
-                <h2
-                  style={{
-                    margin: '0 0 8px 0',
+                    margin: 0,
                     'font-family': maximalist.fonts.heading,
-                    'font-size': '36px',
+                    'font-size': '32px',
                     'font-weight': '700',
+                    'background-image': currentTheme().gradients.primary,
+                    '-webkit-background-clip': 'text',
+                    'background-clip': 'text',
+                    color: 'transparent',
+                    display: 'inline-block',
+                    '-webkit-text-fill-color': 'transparent',
                   }}
                 >
-                  Matched Opportunities
-                </h2>
+                  Tenure
+                </h1>
                 <p
                   style={{
                     margin: 0,
-                    'font-size': '18px',
+                    'font-size': '17px',
                     color: maximalist.colors.textMuted,
                   }}
                 >
-                  Jobs that amplify your natural strengths and align with your values
+                  Eternal Career Companion
                 </p>
               </div>
+            </div>
 
-              <Show
-                when={jobs().length > 0}
-                fallback={
-                  <div
-                    style={{
-                      padding: '48px',
-                      'text-align': 'center',
-                      color: maximalist.colors.textMuted,
-                    }}
-                  >
-                    <p>Complete the Discover assessment to see your matched opportunities.</p>
-                    <button
-                      onClick={() => handleTabChange('Discover')}
-                      style={{
-                        'margin-top': '16px',
-                        padding: '12px 24px',
-                        background: currentTheme().gradients.primary,
-                        color: currentTheme().colors.textOnPrimary,
-                        border: 'none',
-                        'border-radius': maximalist.radii.md,
-                        'font-weight': 'bold',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      Go to Assessment
-                    </button>
-                  </div>
-                }
-              >
-                <div
-                  style={{
-                    display: 'grid',
-                    'grid-template-columns': 'repeat(auto-fill, minmax(400px, 1fr))',
-                    gap: '24px',
-                  }}
-                >
-                  <For each={jobs()}>{(job) => <JobCard job={job} />}</For>
-                </div>
-              </Show>
-            </>
-          )}
-
-          {activeTab() === 'Discover' && (
+            {/* Tab Navigation in Header */}
             <div
               style={{
-                'max-width': '800px',
-                margin: '0 auto',
-                'padding-top': '48px',
+                display: 'flex',
+                gap: '10px',
+                padding: '6px',
+                background: 'rgba(255, 255, 255, 0.03)',
+                'border-radius': '12px',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
               }}
             >
-              <Show when={assessmentState() === 'intro'}>
-                <div style={{ 'text-align': 'center' }}>
-                  <div
-                    style={{
-                      width: '120px',
-                      height: '120px',
-                      'border-radius': '50%',
-                      background: maxGradients.aurora,
-                      margin: '0 auto 32px',
-                      display: 'flex',
-                      'align-items': 'center',
-                      'justify-content': 'center',
-                      'box-shadow': currentTheme().shadows.lg,
-                    }}
-                  >
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="white">
-                      <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z" />
-                    </svg>
-                  </div>
+              <For
+                each={(() => {
+                  const tabs: ('Discover' | 'Prepare' | 'Prospect' | 'Prosper' | 'Matches')[] = [];
+                  if (featureFlags().showDiscover) tabs.push('Discover');
+                  if (featureFlags().showPrepare) tabs.push('Prepare');
+                  if (featureFlags().showProspect) tabs.push('Prospect');
+                  if (featureFlags().showProsper) tabs.push('Prosper');
+                  if (featureFlags().showMatches) tabs.push('Matches');
+                  return tabs;
+                })()}
+              >
+                {(tab) => {
+                  const getIcon = () => {
+                    if (tab === 'Discover') return <IconSearch size={18} />;
+                    if (tab === 'Prepare') return <IconFileText size={18} />;
+                    if (tab === 'Prospect') return <IconGrid size={18} />;
+                    if (tab === 'Prosper') return <IconBriefcase size={18} />;
+                    if (tab === 'Matches') return <IconStar size={18} />;
+                    return null;
+                  };
 
+                  return (
+                    <button
+                      onClick={() => handleTabChange(tab)}
+                      style={{
+                        display: 'flex',
+                        'align-items': 'center',
+                        gap: '8px',
+                        padding: '12px 24px',
+                        background:
+                          activeTab() === tab ? currentTheme().gradients.primary : 'transparent',
+                        border: 'none',
+                        'border-radius': '9px',
+                        color:
+                          activeTab() === tab
+                            ? currentTheme().colors.textOnPrimary
+                            : maximalist.colors.textMuted,
+                        'font-size': '15px',
+                        'font-weight': '600',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                        outline: 'none',
+                        transform: 'scale(1)',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (activeTab() !== tab) {
+                          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                          e.currentTarget.style.transform = 'scale(1.02)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (activeTab() !== tab) {
+                          e.currentTarget.style.background = 'transparent';
+                          e.currentTarget.style.transform = 'scale(1)';
+                        }
+                      }}
+                    >
+                      {getIcon()}
+                      {tab}
+                    </button>
+                  );
+                }}
+              </For>
+            </div>
+
+            <div style={{ display: 'flex', 'align-items': 'center', gap: '12px' }}>
+              {/* Profile button */}
+              <button
+                onClick={() => setSidebarView(sidebarView() === 'profile' ? null : 'profile')}
+                class="header-icon-btn"
+                style={{
+                  width: '44px',
+                  height: '44px',
+                  'border-radius': '12px',
+                  background:
+                    sidebarView() === 'profile' ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                  border:
+                    sidebarView() === 'profile'
+                      ? `1px solid ${currentTheme().colors.primary}`
+                      : `1px solid ${maximalist.colors.border}`,
+                  display: 'flex',
+                  'align-items': 'center',
+                  'justify-content': 'center',
+                  cursor: 'pointer',
+                  color:
+                    sidebarView() === 'profile'
+                      ? currentTheme().colors.primary
+                      : maximalist.colors.textMuted,
+                  transition: 'all 0.2s ease',
+                  position: 'relative',
+                }}
+                onMouseEnter={(e) => {
+                  if (sidebarView() !== 'profile') {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                    e.currentTarget.style.borderColor = currentTheme().colors.primary;
+                    e.currentTarget.style.color = currentTheme().colors.text;
+                    e.currentTarget.style.transform = 'scale(1.05)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (sidebarView() !== 'profile') {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.borderColor = maximalist.colors.border;
+                    e.currentTarget.style.color = maximalist.colors.textMuted;
+                    e.currentTarget.style.transform = 'scale(1)';
+                  }
+                }}
+                title="Profile"
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                {/* Notification dot if no profile */}
+                <Show when={!pipelineStore.state.profile && sidebarView() !== 'profile'}>
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: '8px',
+                      right: '8px',
+                      width: '8px',
+                      height: '8px',
+                      'border-radius': '50%',
+                      background: '#F59E0B',
+                    }}
+                  />
+                </Show>
+              </button>
+
+              {/* Settings button */}
+              <button
+                onClick={() => setSidebarView(sidebarView() === 'settings' ? null : 'settings')}
+                class="header-icon-btn"
+                style={{
+                  width: '44px',
+                  height: '44px',
+                  'border-radius': '12px',
+                  background:
+                    sidebarView() === 'settings' ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                  border:
+                    sidebarView() === 'settings'
+                      ? `1px solid ${currentTheme().colors.primary}`
+                      : `1px solid ${maximalist.colors.border}`,
+                  display: 'flex',
+                  'align-items': 'center',
+                  'justify-content': 'center',
+                  cursor: 'pointer',
+                  color:
+                    sidebarView() === 'settings'
+                      ? currentTheme().colors.primary
+                      : maximalist.colors.textMuted,
+                  transition: 'all 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  if (sidebarView() !== 'settings') {
+                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                    e.currentTarget.style.borderColor = currentTheme().colors.primary;
+                    e.currentTarget.style.color = currentTheme().colors.text;
+                    e.currentTarget.style.transform = 'scale(1.05)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (sidebarView() !== 'settings') {
+                    e.currentTarget.style.background = 'transparent';
+                    e.currentTarget.style.borderColor = maximalist.colors.border;
+                    e.currentTarget.style.color = maximalist.colors.textMuted;
+                    e.currentTarget.style.transform = 'scale(1)';
+                  }
+                }}
+                title="Settings"
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                </svg>
+              </button>
+            </div>
+          </header>
+
+          {/* Tab navigation - maximalist pills */}
+          {/* Main content */}
+          <main
+            style={{
+              padding: activeTab() === 'Prospect' ? '0' : '0 32px 48px',
+              'max-width': activeTab() === 'Prospect' ? 'none' : '1400px',
+              margin: activeTab() === 'Prospect' ? '0' : '0 auto',
+              height: activeTab() === 'Prospect' ? 'calc(100vh - 100px)' : 'auto',
+            }}
+          >
+            {activeTab() === 'Matches' && (
+              <>
+                <div style={{ 'margin-bottom': '32px' }}>
                   <h2
                     style={{
-                      margin: '0 0 16px 0',
+                      margin: '0 0 8px 0',
                       'font-family': maximalist.fonts.heading,
-                      'font-size': '32px',
+                      'font-size': '36px',
                       'font-weight': '700',
                     }}
                   >
-                    Discover Your Strengths
+                    Matched Opportunities
                   </h2>
-
                   <p
                     style={{
-                      margin: '0 0 32px 0',
+                      margin: 0,
                       'font-size': '18px',
                       color: maximalist.colors.textMuted,
-                      'line-height': '1.6',
                     }}
                   >
-                    Take the O*NET Interest Profiler to uncover your unique strengths profile. This
-                    60-question assessment provides personalized insights into your work interests.
+                    Jobs that amplify your natural strengths and align with your values
                   </p>
-
-                  <button
-                    onClick={startAssessment}
-                    disabled={isLoading()}
-                    style={{
-                      padding: '18px 48px',
-                      background: currentTheme().gradients.primary,
-                      border: 'none',
-                      'border-radius': maximalist.radii.md,
-                      color: currentTheme().colors.textOnPrimary,
-                      'font-size': '18px',
-                      'font-weight': '700',
-                      cursor: isLoading() ? 'wait' : 'pointer',
-                      'box-shadow': currentTheme().shadows.md,
-                      display: 'inline-flex',
-                      'align-items': 'center',
-                      gap: '12px',
-                      opacity: isLoading() ? 0.7 : 1,
-                    }}
-                  >
-                    <Show when={!isLoading()} fallback="Loading...">
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M8 5v14l11-7z" />
-                      </svg>
-                      Start Assessment
-                    </Show>
-                  </button>
                 </div>
-              </Show>
 
-              <Show when={assessmentState() === 'questions' && questions().length > 0}>
-                <div
-                  style={{
-                    background: maximalist.colors.surface,
-                    padding: '40px',
-                    'border-radius': maximalist.radii.lg,
-                    border: `2px solid ${maximalist.colors.border}`,
-                    'box-shadow': currentTheme().shadows.lg,
-                  }}
-                >
-                  <div
-                    style={{
-                      'margin-bottom': '24px',
-                      display: 'flex',
-                      'justify-content': 'space-between',
-                      'align-items': 'center',
-                    }}
-                  >
-                    <span style={{ color: maximalist.colors.textMuted, 'font-size': '17px' }}>
-                      Question {currentQuestionIndex() + 1} of 60
-                    </span>
-                    <span style={{ color: maximalist.colors.accent, 'font-weight': '600' }}>
-                      {Math.round((currentQuestionIndex() / 60) * 100)}% Complete
-                    </span>
-                  </div>
-
-                  {/* Progress Bar */}
-                  <div
-                    style={{
-                      height: '6px',
-                      background: 'rgba(255,255,255,0.1)',
-                      'border-radius': '3px',
-                      'margin-bottom': '40px',
-                      overflow: 'hidden',
-                    }}
-                  >
+                <Show
+                  when={jobs().length > 0}
+                  fallback={
                     <div
                       style={{
-                        height: '100%',
-                        width: `${(currentQuestionIndex() / 60) * 100}%`,
-                        background: currentTheme().gradients.primary,
-                        transition: 'width 0.3s ease',
+                        padding: '48px',
+                        'text-align': 'center',
+                        color: maximalist.colors.textMuted,
                       }}
-                    />
-                  </div>
-
-                  <h3
-                    style={{
-                      'font-family': maximalist.fonts.heading,
-                      'font-size': '28px',
-                      'margin-bottom': '48px',
-                      'text-align': 'center',
-                      'line-height': '1.4',
-                    }}
-                  >
-                    {questions()[currentQuestionIndex()].text}
-                  </h3>
-
+                    >
+                      <p>Complete the Discover assessment to see your matched opportunities.</p>
+                      <button
+                        onClick={() => handleTabChange('Discover')}
+                        style={{
+                          'margin-top': '16px',
+                          padding: '12px 24px',
+                          background: currentTheme().gradients.primary,
+                          color: currentTheme().colors.textOnPrimary,
+                          border: 'none',
+                          'border-radius': maximalist.radii.md,
+                          'font-weight': 'bold',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        Go to Assessment
+                      </button>
+                    </div>
+                  }
+                >
                   <div
                     style={{
                       display: 'grid',
-                      'grid-template-columns': 'repeat(5, 1fr)',
-                      gap: '12px',
-                      'margin-bottom': '24px',
+                      'grid-template-columns': 'repeat(auto-fill, minmax(400px, 1fr))',
+                      gap: '24px',
                     }}
                   >
-                    <For
-                      each={[
-                        { val: 1, label: 'Strongly Dislike', color: '#EF4444' },
-                        { val: 2, label: 'Dislike', color: '#F87171' },
-                        { val: 3, label: 'Unsure', color: '#9CA3AF' },
-                        { val: 4, label: 'Like', color: '#34D399' },
-                        { val: 5, label: 'Strongly Like', color: '#10B981' },
-                      ]}
-                    >
-                      {(opt) => (
-                        <button
-                          onClick={() => handleAnswer(opt.val)}
-                          style={{
-                            padding: '16px 8px',
-                            background: 'rgba(255,255,255,0.05)',
-                            border: `2px solid ${opt.color}`,
-                            'border-radius': maximalist.radii.md,
-                            color: 'white',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s',
-                            display: 'flex',
-                            'flex-direction': 'column',
-                            'align-items': 'center',
-                            gap: '8px',
-                          }}
-                          onMouseEnter={(e) =>
-                            (e.currentTarget.style.background = `${opt.color}20`)
-                          }
-                          onMouseLeave={(e) =>
-                            (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')
-                          }
-                        >
-                          <span
-                            style={{ 'font-size': '24px', 'font-weight': 'bold', color: opt.color }}
-                          >
-                            {opt.val === 1
-                              ? '😡'
-                              : opt.val === 2
-                                ? '🙁'
-                                : opt.val === 3
-                                  ? '😐'
-                                  : opt.val === 4
-                                    ? '🙂'
-                                    : '😍'}
-                          </span>
-                          <span style={{ 'font-size': '15px', 'text-align': 'center' }}>
-                            {opt.label}
-                          </span>
-                        </button>
-                      )}
-                    </For>
+                    <For each={jobs()}>{(job) => <JobCard job={job} />}</For>
                   </div>
-                </div>
-              </Show>
+                </Show>
+              </>
+            )}
 
-              <Show when={assessmentState() === 'results' && riasecScore()}>
-                <div
-                  style={{
-                    'max-width': '1000px',
-                    margin: '0 auto',
-                    'text-align': 'left',
-                  }}
-                >
-                  {/* Archetype Hero Section */}
-                  <div
-                    style={{
-                      background: `linear-gradient(180deg, ${maximalist.colors.surface} 0%, rgba(30, 30, 30, 0) 100%)`,
-                      'border-radius': maximalist.radii.lg,
-                      padding: '48px',
-                      'margin-bottom': '40px',
-                      position: 'relative',
-                      overflow: 'hidden',
-                      'box-shadow': currentTheme().shadows.lg,
-                      border: `1px solid ${maximalist.colors.border}`,
-                      'text-align': 'center',
-                    }}
-                  >
-                    <div style={{ 'margin-bottom': '32px' }}>
-                      <RadarChart scores={riasecScore()!} />
+            {activeTab() === 'Discover' && (
+              <div
+                style={{
+                  'max-width': '800px',
+                  margin: '0 auto',
+                  'padding-top': '48px',
+                }}
+              >
+                <Show when={assessmentState() === 'intro'}>
+                  <div style={{ 'text-align': 'center' }}>
+                    <div
+                      style={{
+                        width: '120px',
+                        height: '120px',
+                        'border-radius': '50%',
+                        background: maxGradients.aurora,
+                        margin: '0 auto 32px',
+                        display: 'flex',
+                        'align-items': 'center',
+                        'justify-content': 'center',
+                        'box-shadow': currentTheme().shadows.lg,
+                      }}
+                    >
+                      <svg width="48" height="48" viewBox="0 0 24 24" fill="white">
+                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z" />
+                      </svg>
                     </div>
 
                     <h2
                       style={{
-                        color: maximalist.colors.accent,
-                        'font-size': '17px',
-                        'text-transform': 'uppercase',
-                        'letter-spacing': '2px',
-                        'margin-bottom': '12px',
-                        'font-weight': '600',
-                        display: 'flex',
-                        'align-items': 'center',
-                        'justify-content': 'center',
-                        gap: '12px',
-                      }}
-                    >
-                      <span
-                        style={{ color: (maximalist.riasec as any)[hybridArchetype()!.types[0]] }}
-                      >
-                        {hybridArchetype()!.types[0]}
-                      </span>
-                      <span style={{ color: maximalist.colors.textMuted }}>+</span>
-                      <span
-                        style={{ color: (maximalist.riasec as any)[hybridArchetype()!.types[1]] }}
-                      >
-                        {hybridArchetype()!.types[1]}
-                      </span>
-                    </h2>
-
-                    <h1
-                      style={{
+                        margin: '0 0 16px 0',
                         'font-family': maximalist.fonts.heading,
-                        'font-size': '56px',
-                        'margin-bottom': '24px',
+                        'font-size': '32px',
                         'font-weight': '700',
-                        background: currentTheme().gradients.primary,
-                        '-webkit-background-clip': 'text',
-                        'background-clip': 'text',
-                        color: 'transparent',
-                        filter: 'drop-shadow(0 0 20px rgba(255,255,255,0.2))',
-                        // Fallback for readability if gradient fails or clip not supported
-                        'text-shadow': '0 0 1px rgba(255,255,255,0.5)',
                       }}
                     >
-                      {hybridArchetype()?.title}
-                    </h1>
+                      Discover Your Strengths
+                    </h2>
 
                     <p
                       style={{
-                        color: maximalist.colors.text,
-                        'font-size': '20px',
+                        margin: '0 0 32px 0',
+                        'font-size': '18px',
+                        color: maximalist.colors.textMuted,
                         'line-height': '1.6',
-                        'max-width': '600px',
-                        margin: '0 auto 32px',
                       }}
                     >
-                      {hybridArchetype()?.description}
+                      Take the O*NET Interest Profiler to uncover your unique strengths profile.
+                      This 60-question assessment provides personalized insights into your work
+                      interests.
                     </p>
-                  </div>
 
-                  {/* Detailed Breakdown */}
-                  <h3
-                    style={{
-                      'font-family': maximalist.fonts.heading,
-                      'font-size': '32px',
-                      'margin-bottom': '24px',
-                      color: maximalist.colors.text,
-                    }}
-                  >
-                    Full Profile Breakdown
-                  </h3>
-
-                  <div
-                    style={{
-                      display: 'grid',
-                      'grid-template-columns': 'repeat(auto-fit, minmax(280px, 1fr))',
-                      gap: '24px',
-                      'margin-bottom': '48px',
-                    }}
-                  >
-                    <For each={sortedScores()}>
-                      {(item) => {
-                        const riasecColor = (maximalist.riasec as any)[item.key];
-                        return (
-                          <div
-                            style={{
-                              background: 'rgba(255,255,255,0.03)',
-                              padding: '24px',
-                              'border-radius': maximalist.radii.lg,
-                              border: `1px solid ${riasecColor}40`,
-                              position: 'relative',
-                              overflow: 'hidden',
-                              transition: 'transform 0.2s',
-                            }}
-                            onMouseEnter={(e) => (e.currentTarget.style.transform = 'scale(1.02)')}
-                            onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
-                          >
-                            <div
-                              style={{
-                                display: 'flex',
-                                'justify-content': 'space-between',
-                                'align-items': 'center',
-                                'margin-bottom': '16px',
-                              }}
-                            >
-                              <h4
-                                style={{
-                                  'font-size': '20px',
-                                  'font-weight': '700',
-                                  color: riasecColor,
-                                  margin: 0,
-                                  'font-family': maximalist.fonts.heading,
-                                  'text-transform': 'uppercase',
-                                  'letter-spacing': '1px',
-                                }}
-                              >
-                                {item.title}
-                              </h4>
-                              <div
-                                style={{
-                                  'font-size': '24px',
-                                  'font-weight': 'bold',
-                                  color: 'white',
-                                }}
-                              >
-                                {item.score}
-                              </div>
-                            </div>
-
-                            {/* Bar */}
-                            <div
-                              style={{
-                                height: '4px',
-                                background: 'rgba(255,255,255,0.1)',
-                                'border-radius': '2px',
-                                'margin-bottom': '16px',
-                              }}
-                            >
-                              <div
-                                style={{
-                                  width: `${(item.score / 40) * 100}%`,
-                                  height: '100%',
-                                  background: riasecColor,
-                                  'box-shadow': `0 0 10px ${riasecColor}`,
-                                }}
-                              />
-                            </div>
-
-                            <p
-                              style={{
-                                color: maximalist.colors.textMuted,
-                                'font-size': '17px',
-                                'line-height': '1.5',
-                                margin: 0,
-                              }}
-                            >
-                              {item.description}
-                            </p>
-                          </div>
-                        );
-                      }}
-                    </For>
-                  </div>
-
-                  {/* Career Matches */}
-                  <h3
-                    style={{
-                      'font-family': maximalist.fonts.heading,
-                      'font-size': '32px',
-                      'margin-bottom': '24px',
-                      color: maximalist.colors.text,
-                    }}
-                  >
-                    Recommended Careers
-                  </h3>
-
-                  <div
-                    style={{
-                      display: 'grid',
-                      'grid-template-columns': 'repeat(auto-fill, minmax(300px, 1fr))',
-                      gap: '24px',
-                      'margin-bottom': '48px',
-                    }}
-                  >
-                    <Show
-                      when={!isLoading()}
-                      fallback={
-                        <div style={{ 'grid-column': '1/-1', 'text-align': 'center' }}>
-                          Loading recommendations...
-                        </div>
-                      }
-                    >
-                      <For each={careerMatches()}>
-                        {(career) => (
-                          <div
-                            style={{
-                              background: 'rgba(255,255,255,0.03)',
-                              'border-radius': maximalist.radii.md,
-                              padding: '24px',
-                              border: `1px solid ${maximalist.colors.border}`,
-                              transition: 'transform 0.2s',
-                              cursor: 'pointer',
-                            }}
-                            onMouseEnter={(e) =>
-                              (e.currentTarget.style.transform = 'translateY(-4px)')
-                            }
-                            onMouseLeave={(e) =>
-                              (e.currentTarget.style.transform = 'translateY(0)')
-                            }
-                          >
-                            <div
-                              style={{
-                                display: 'flex',
-                                'justify-content': 'space-between',
-                                'align-items': 'flex-start',
-                                'margin-bottom': '12px',
-                              }}
-                            >
-                              {career.tags.bright_outlook && (
-                                <span
-                                  style={{
-                                    background: `${maxPalette.teal}30`,
-                                    color: maxPalette.teal,
-                                    'font-size': '10px',
-                                    padding: '4px 8px',
-                                    'border-radius': '12px',
-                                    'font-weight': 'bold',
-                                    'text-transform': 'uppercase',
-                                  }}
-                                >
-                                  Bright Outlook
-                                </span>
-                              )}
-                              <CartoonBadge fit={career.fit} />
-                            </div>
-
-                            <h4
-                              style={{
-                                'font-size': '18px',
-                                'font-weight': '600',
-                                color: 'white',
-                                'margin-bottom': '8px',
-                              }}
-                            >
-                              {career.title}
-                            </h4>
-
-                            <div
-                              style={{
-                                color: maximalist.colors.textMuted,
-                                'font-size': '15px',
-                                'margin-bottom': '16px',
-                              }}
-                            >
-                              Code: {career.code}
-                            </div>
-
-                            <button
-                              onClick={() => handleJobClick(career.code)}
-                              disabled={isJobLoading()}
-                              style={{
-                                width: '100%',
-                                padding: '12px',
-                                background: 'transparent',
-                                border: `1px solid ${currentTheme().colors.primary}`,
-                                color: currentTheme().colors.primary,
-                                'border-radius': '8px',
-                                cursor: isJobLoading() ? 'wait' : 'pointer',
-                                'font-weight': '600',
-                                transition: 'all 0.2s',
-                                opacity: isJobLoading() ? 0.7 : 1,
-                              }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.background = currentTheme().colors.primary;
-                                e.currentTarget.style.color = currentTheme().colors.textOnPrimary;
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.background = 'transparent';
-                                e.currentTarget.style.color = currentTheme().colors.primary;
-                              }}
-                            >
-                              {isJobLoading() ? 'Loading...' : 'Explore Role'}
-                            </button>
-                          </div>
-                        )}
-                      </For>
-                    </Show>
-                  </div>
-
-                  {/* O*NET Attribution */}
-                  <div style={{ 'text-align': 'center', 'margin-top': '48px' }}>
                     <button
-                      onClick={resetAssessment}
+                      onClick={startAssessment}
+                      disabled={isLoading()}
                       style={{
-                        padding: '12px 24px',
-                        background: 'transparent',
-                        border: `1px solid ${currentTheme().colors.border}`,
+                        padding: '18px 48px',
+                        background: currentTheme().gradients.primary,
+                        border: 'none',
                         'border-radius': maximalist.radii.md,
-                        color: currentTheme().colors.textMuted,
-                        'font-size': '17px',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = currentTheme().colors.primary;
-                        e.currentTarget.style.color = currentTheme().colors.primary;
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = currentTheme().colors.border;
-                        e.currentTarget.style.color = currentTheme().colors.textMuted;
+                        color: currentTheme().colors.textOnPrimary,
+                        'font-size': '18px',
+                        'font-weight': '700',
+                        cursor: isLoading() ? 'wait' : 'pointer',
+                        'box-shadow': currentTheme().shadows.md,
+                        display: 'inline-flex',
+                        'align-items': 'center',
+                        gap: '12px',
+                        opacity: isLoading() ? 0.7 : 1,
                       }}
                     >
-                      Retake Assessment
+                      <Show when={!isLoading()} fallback="Loading...">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M8 5v14l11-7z" />
+                        </svg>
+                        Start Assessment
+                      </Show>
                     </button>
                   </div>
+                </Show>
 
-                  <footer
+                <Show when={assessmentState() === 'questions' && questions().length > 0}>
+                  <div
                     style={{
-                      'margin-top': '64px',
-                      'padding-top': '24px',
-                      'border-top': `1px solid ${maximalist.colors.border}`,
-                      'text-align': 'center',
-                      color: maximalist.colors.textMuted,
-                      'font-size': '15px',
-                      'line-height': '1.5',
+                      background: maximalist.colors.surface,
+                      padding: '40px',
+                      'border-radius': maximalist.radii.lg,
+                      border: `2px solid ${maximalist.colors.border}`,
+                      'box-shadow': currentTheme().shadows.lg,
                     }}
                   >
-                    <p style={{ 'max-width': '600px', margin: '0 auto' }}>
-                      This site incorporates information from O*NET Web Services by the U.S.
-                      Department of Labor, Employment and Training Administration (USDOL/ETA).
-                      O*NET® is a trademark of USDOL/ETA.
-                    </p>
-                  </footer>
-                </div>
-              </Show>
-            </div>
-          )}
+                    <div
+                      style={{
+                        'margin-bottom': '24px',
+                        display: 'flex',
+                        'justify-content': 'space-between',
+                        'align-items': 'center',
+                      }}
+                    >
+                      <span style={{ color: maximalist.colors.textMuted, 'font-size': '17px' }}>
+                        Question {currentQuestionIndex() + 1} of 60
+                      </span>
+                      <span style={{ color: maximalist.colors.accent, 'font-weight': '600' }}>
+                        {Math.round((currentQuestionIndex() / 60) * 100)}% Complete
+                      </span>
+                    </div>
 
-          {/* Prepare Tab - Resume Builder */}
-          {activeTab() === 'Prepare' && (
-            <PrepareApp
-              currentTheme={() => ({
-                colors: {
-                  ...currentTheme().colors,
-                  surface: 'rgba(255, 255, 255, 0.02)',
-                  success: '#10b981',
-                  error: '#ef4444',
-                },
-                fonts: maximalist.fonts,
-                gradients: currentTheme().gradients,
-              })}
-            />
-          )}
+                    {/* Progress Bar */}
+                    <div
+                      style={{
+                        height: '6px',
+                        background: 'rgba(255,255,255,0.1)',
+                        'border-radius': '3px',
+                        'margin-bottom': '40px',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <div
+                        style={{
+                          height: '100%',
+                          width: `${(currentQuestionIndex() / 60) * 100}%`,
+                          background: currentTheme().gradients.primary,
+                          transition: 'width 0.3s ease',
+                        }}
+                      />
+                    </div>
 
-          {/* Prospect Tab - Job Pipeline */}
-          {activeTab() === 'Prospect' && (
-            <PipelineView
-              currentTheme={() => ({
-                colors: {
-                  ...currentTheme().colors,
-                  surfaceLight: 'rgba(255, 255, 255, 0.03)',
-                  surfaceMedium: 'rgba(255, 255, 255, 0.06)',
-                  surfaceHover: 'rgba(255, 255, 255, 0.08)',
-                },
-                fonts: maximalist.fonts,
-                spacing: maximalist.spacing,
-              })}
-            />
-          )}
+                    <h3
+                      style={{
+                        'font-family': maximalist.fonts.heading,
+                        'font-size': '28px',
+                        'margin-bottom': '48px',
+                        'text-align': 'center',
+                        'line-height': '1.4',
+                      }}
+                    >
+                      {questions()[currentQuestionIndex()].text}
+                    </h3>
 
-          {/* Prosper Tab - Career Journal */}
-          {activeTab() === 'Prosper' && (
-            <div style={{ 'text-align': 'center', padding: '48px' }}>
-              <h2
-                style={{
-                  'font-family': maximalist.fonts.heading,
-                  'font-size': '36px',
-                  'font-weight': '700',
-                  color: currentTheme().colors.primary,
-                  'margin-bottom': '16px',
-                }}
-              >
-                Prosper: Career Journal
-              </h2>
-              <p style={{ color: maximalist.colors.textMuted, 'font-size': '18px' }}>
-                Quarterly check-ins and accomplishment tracking while employed.
-              </p>
-              <div
-                style={{
-                  'margin-top': '32px',
-                  padding: '24px',
-                  background: 'rgba(255, 255, 255, 0.03)',
-                  border: `1px solid ${maximalist.colors.border}`,
-                  'border-radius': '12px',
-                  'max-width': '600px',
-                  margin: '32px auto',
-                }}
-              >
-                <p style={{ color: maximalist.colors.text }}>
-                  🚧 Module coming soon - Phase 2 implementation
-                </p>
+                    <div
+                      style={{
+                        display: 'grid',
+                        'grid-template-columns': 'repeat(5, 1fr)',
+                        gap: '12px',
+                        'margin-bottom': '24px',
+                      }}
+                    >
+                      <For
+                        each={[
+                          { val: 1, label: 'Strongly Dislike', color: '#EF4444' },
+                          { val: 2, label: 'Dislike', color: '#F87171' },
+                          { val: 3, label: 'Unsure', color: '#9CA3AF' },
+                          { val: 4, label: 'Like', color: '#34D399' },
+                          { val: 5, label: 'Strongly Like', color: '#10B981' },
+                        ]}
+                      >
+                        {(opt) => (
+                          <button
+                            onClick={() => handleAnswer(opt.val)}
+                            style={{
+                              padding: '16px 8px',
+                              background: 'rgba(255,255,255,0.05)',
+                              border: `2px solid ${opt.color}`,
+                              'border-radius': maximalist.radii.md,
+                              color: 'white',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s',
+                              display: 'flex',
+                              'flex-direction': 'column',
+                              'align-items': 'center',
+                              gap: '8px',
+                            }}
+                            onMouseEnter={(e) =>
+                              (e.currentTarget.style.background = `${opt.color}20`)
+                            }
+                            onMouseLeave={(e) =>
+                              (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')
+                            }
+                          >
+                            <span
+                              style={{
+                                'font-size': '24px',
+                                'font-weight': 'bold',
+                                color: opt.color,
+                              }}
+                            >
+                              {opt.val === 1
+                                ? '😡'
+                                : opt.val === 2
+                                  ? '🙁'
+                                  : opt.val === 3
+                                    ? '😐'
+                                    : opt.val === 4
+                                      ? '🙂'
+                                      : '😍'}
+                            </span>
+                            <span style={{ 'font-size': '15px', 'text-align': 'center' }}>
+                              {opt.label}
+                            </span>
+                          </button>
+                        )}
+                      </For>
+                    </div>
+                  </div>
+                </Show>
+
+                <Show when={assessmentState() === 'results' && riasecScore()}>
+                  <div
+                    style={{
+                      'max-width': '1000px',
+                      margin: '0 auto',
+                      'text-align': 'left',
+                    }}
+                  >
+                    {/* Archetype Hero Section - Two Column Layout */}
+                    <div
+                      class="archetype-hero-section"
+                      style={{
+                        background: `linear-gradient(180deg, ${maximalist.colors.surface} 0%, rgba(30, 30, 30, 0) 100%)`,
+                        'border-radius': maximalist.radii.lg,
+                        padding: '40px',
+                        'margin-bottom': '40px',
+                        position: 'relative',
+                        overflow: 'hidden',
+                        'box-shadow': currentTheme().shadows.lg,
+                        border: `1px solid ${maximalist.colors.border}`,
+                      }}
+                    >
+                      <div
+                        class="archetype-hero-grid"
+                        style={{
+                          display: 'grid',
+                          'grid-template-columns': '300px 1fr',
+                          gap: '40px',
+                          'align-items': 'center',
+                        }}
+                      >
+                        {/* Left Column: Radar Chart */}
+                        <div class="radar-column" style={{ 'flex-shrink': 0 }}>
+                          <RadarChart scores={riasecScore()!} />
+                        </div>
+
+                        {/* Right Column: Archetype Info */}
+                        <div class="archetype-info-column" style={{ 'text-align': 'left' }}>
+                          <h2
+                            style={{
+                              color: maximalist.colors.accent,
+                              'font-size': '15px',
+                              'text-transform': 'uppercase',
+                              'letter-spacing': '2px',
+                              'margin-bottom': '8px',
+                              'font-weight': '600',
+                              display: 'flex',
+                              'align-items': 'center',
+                              gap: '12px',
+                            }}
+                          >
+                            <span
+                              style={{
+                                color: (maximalist.riasec as any)[hybridArchetype()!.types[0]],
+                              }}
+                            >
+                              {hybridArchetype()!.types[0]}
+                            </span>
+                            <span style={{ color: maximalist.colors.textMuted }}>+</span>
+                            <span
+                              style={{
+                                color: (maximalist.riasec as any)[hybridArchetype()!.types[1]],
+                              }}
+                            >
+                              {hybridArchetype()!.types[1]}
+                            </span>
+                          </h2>
+
+                          <h1
+                            style={{
+                              'font-family': maximalist.fonts.heading,
+                              'font-size': '48px',
+                              'margin-bottom': '16px',
+                              'font-weight': '700',
+                              background: currentTheme().gradients.primary,
+                              '-webkit-background-clip': 'text',
+                              'background-clip': 'text',
+                              color: 'transparent',
+                              filter: 'drop-shadow(0 0 20px rgba(255,255,255,0.2))',
+                              // Fallback for readability if gradient fails or clip not supported
+                              'text-shadow': '0 0 1px rgba(255,255,255,0.5)',
+                              'line-height': '1.1',
+                            }}
+                          >
+                            {hybridArchetype()?.title}
+                          </h1>
+
+                          <p
+                            style={{
+                              color: maximalist.colors.text,
+                              'font-size': '18px',
+                              'line-height': '1.6',
+                              margin: 0,
+                            }}
+                          >
+                            {hybridArchetype()?.description}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Detailed Breakdown */}
+                    <h3
+                      style={{
+                        'font-family': maximalist.fonts.heading,
+                        'font-size': '32px',
+                        'margin-bottom': '24px',
+                        color: maximalist.colors.text,
+                      }}
+                    >
+                      Full Profile Breakdown
+                    </h3>
+
+                    <div
+                      style={{
+                        display: 'grid',
+                        'grid-template-columns': 'repeat(auto-fit, minmax(280px, 1fr))',
+                        gap: '24px',
+                        'margin-bottom': '48px',
+                      }}
+                    >
+                      <For each={sortedScores()}>
+                        {(item) => {
+                          const riasecColor = (maximalist.riasec as any)[item.key];
+                          return (
+                            <div
+                              style={{
+                                background: 'rgba(255,255,255,0.03)',
+                                padding: '24px',
+                                'border-radius': maximalist.radii.lg,
+                                border: `1px solid ${riasecColor}40`,
+                                position: 'relative',
+                                overflow: 'hidden',
+                                transition: 'transform 0.2s',
+                              }}
+                              onMouseEnter={(e) =>
+                                (e.currentTarget.style.transform = 'scale(1.02)')
+                              }
+                              onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
+                            >
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  'justify-content': 'space-between',
+                                  'align-items': 'center',
+                                  'margin-bottom': '16px',
+                                }}
+                              >
+                                <h4
+                                  style={{
+                                    'font-size': '20px',
+                                    'font-weight': '700',
+                                    color: riasecColor,
+                                    margin: 0,
+                                    'font-family': maximalist.fonts.heading,
+                                    'text-transform': 'uppercase',
+                                    'letter-spacing': '1px',
+                                  }}
+                                >
+                                  {item.title}
+                                </h4>
+                                <div
+                                  style={{
+                                    'font-size': '24px',
+                                    'font-weight': 'bold',
+                                    color: 'white',
+                                  }}
+                                >
+                                  {item.score}
+                                </div>
+                              </div>
+
+                              {/* Bar */}
+                              <div
+                                style={{
+                                  height: '4px',
+                                  background: 'rgba(255,255,255,0.1)',
+                                  'border-radius': '2px',
+                                  'margin-bottom': '16px',
+                                }}
+                              >
+                                <div
+                                  style={{
+                                    width: `${(item.score / 40) * 100}%`,
+                                    height: '100%',
+                                    background: riasecColor,
+                                    'box-shadow': `0 0 10px ${riasecColor}`,
+                                  }}
+                                />
+                              </div>
+
+                              <p
+                                style={{
+                                  color: maximalist.colors.textMuted,
+                                  'font-size': '17px',
+                                  'line-height': '1.5',
+                                  margin: 0,
+                                }}
+                              >
+                                {item.description}
+                              </p>
+                            </div>
+                          );
+                        }}
+                      </For>
+                    </div>
+
+                    {/* Career Matches */}
+                    <h3
+                      style={{
+                        'font-family': maximalist.fonts.heading,
+                        'font-size': '32px',
+                        'margin-bottom': '24px',
+                        color: maximalist.colors.text,
+                      }}
+                    >
+                      Recommended Careers
+                    </h3>
+
+                    <div
+                      style={{
+                        display: 'grid',
+                        'grid-template-columns': 'repeat(auto-fill, minmax(300px, 1fr))',
+                        gap: '24px',
+                        'margin-bottom': '48px',
+                      }}
+                    >
+                      <Show
+                        when={!isLoading()}
+                        fallback={
+                          <div style={{ 'grid-column': '1/-1', 'text-align': 'center' }}>
+                            Loading recommendations...
+                          </div>
+                        }
+                      >
+                        <For each={careerMatches()}>
+                          {(career) => (
+                            <div
+                              style={{
+                                background: 'rgba(255,255,255,0.03)',
+                                'border-radius': maximalist.radii.md,
+                                padding: '24px',
+                                border: `1px solid ${maximalist.colors.border}`,
+                                transition: 'transform 0.2s',
+                                cursor: 'pointer',
+                              }}
+                              onMouseEnter={(e) =>
+                                (e.currentTarget.style.transform = 'translateY(-4px)')
+                              }
+                              onMouseLeave={(e) =>
+                                (e.currentTarget.style.transform = 'translateY(0)')
+                              }
+                            >
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  'justify-content': 'space-between',
+                                  'align-items': 'flex-start',
+                                  'margin-bottom': '12px',
+                                }}
+                              >
+                                {career.tags.bright_outlook && (
+                                  <span
+                                    style={{
+                                      background: `${maxPalette.teal}30`,
+                                      color: maxPalette.teal,
+                                      'font-size': '10px',
+                                      padding: '4px 8px',
+                                      'border-radius': '12px',
+                                      'font-weight': 'bold',
+                                      'text-transform': 'uppercase',
+                                    }}
+                                  >
+                                    Bright Outlook
+                                  </span>
+                                )}
+                                <CartoonBadge fit={career.fit} />
+                              </div>
+
+                              <h4
+                                style={{
+                                  'font-size': '18px',
+                                  'font-weight': '600',
+                                  color: 'white',
+                                  'margin-bottom': '8px',
+                                }}
+                              >
+                                {career.title}
+                              </h4>
+
+                              <div
+                                style={{
+                                  color: maximalist.colors.textMuted,
+                                  'font-size': '15px',
+                                  'margin-bottom': '16px',
+                                }}
+                              >
+                                Code: {career.code}
+                              </div>
+
+                              <button
+                                onClick={() => handleJobClick(career.code)}
+                                disabled={isJobLoading()}
+                                style={{
+                                  width: '100%',
+                                  padding: '12px',
+                                  background: 'transparent',
+                                  border: `1px solid ${currentTheme().colors.primary}`,
+                                  color: currentTheme().colors.primary,
+                                  'border-radius': '8px',
+                                  cursor: isJobLoading() ? 'wait' : 'pointer',
+                                  'font-weight': '600',
+                                  transition: 'all 0.2s',
+                                  opacity: isJobLoading() ? 0.7 : 1,
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.background = currentTheme().colors.primary;
+                                  e.currentTarget.style.color = currentTheme().colors.textOnPrimary;
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.background = 'transparent';
+                                  e.currentTarget.style.color = currentTheme().colors.primary;
+                                }}
+                              >
+                                {isJobLoading() ? 'Loading...' : 'Explore Role'}
+                              </button>
+                            </div>
+                          )}
+                        </For>
+                      </Show>
+                    </div>
+
+                    {/* O*NET Attribution */}
+                    <div style={{ 'text-align': 'center', 'margin-top': '48px' }}>
+                      <button
+                        onClick={resetAssessment}
+                        style={{
+                          padding: '12px 24px',
+                          background: 'transparent',
+                          border: `1px solid ${currentTheme().colors.border}`,
+                          'border-radius': maximalist.radii.md,
+                          color: currentTheme().colors.textMuted,
+                          'font-size': '17px',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s',
+                        }}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.borderColor = currentTheme().colors.primary;
+                          e.currentTarget.style.color = currentTheme().colors.primary;
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.borderColor = currentTheme().colors.border;
+                          e.currentTarget.style.color = currentTheme().colors.textMuted;
+                        }}
+                      >
+                        Retake Assessment
+                      </button>
+                    </div>
+
+                    <footer
+                      style={{
+                        'margin-top': '64px',
+                        'padding-top': '24px',
+                        'border-top': `1px solid ${maximalist.colors.border}`,
+                        'text-align': 'center',
+                        color: maximalist.colors.textMuted,
+                        'font-size': '15px',
+                        'line-height': '1.5',
+                      }}
+                    >
+                      <p style={{ 'max-width': '600px', margin: '0 auto' }}>
+                        This site incorporates information from O*NET Web Services by the U.S.
+                        Department of Labor, Employment and Training Administration (USDOL/ETA).
+                        O*NET® is a trademark of USDOL/ETA.
+                      </p>
+                    </footer>
+                  </div>
+                </Show>
               </div>
-            </div>
-          )}
-        </main>
+            )}
 
-        <Show when={selectedJob()}>
-          <JobDetailModal job={selectedJob()!} onClose={() => setSelectedJob(null)} />
-        </Show>
-      </div>
+            {/* Prepare Tab - Resume Builder */}
+            {activeTab() === 'Prepare' && (
+              <PrepareApp
+                currentTheme={() => ({
+                  colors: {
+                    ...currentTheme().colors,
+                    surface: 'rgba(255, 255, 255, 0.02)',
+                    success: '#10b981',
+                    error: '#ef4444',
+                  },
+                  fonts: maximalist.fonts,
+                  gradients: currentTheme().gradients,
+                })}
+              />
+            )}
 
-      {/* Sidebar for Profile/Settings */}
-      <Sidebar
-        isOpen={isSidebarOpen()}
-        view={sidebarView()}
-        onClose={() => setSidebarView(null)}
-        currentTheme={() =>
-          ({
-            ...currentTheme(),
-            colors: {
-              ...currentTheme().colors,
-              background: maximalist.colors.background,
-              surface: maximalist.colors.surface,
-              border: maximalist.colors.border,
-              text: maximalist.colors.text,
-              textMuted: maximalist.colors.textMuted,
-            },
-            fonts: maximalist.fonts,
-            spacing: maximalist.spacing,
-            radii: maximalist.radii,
-          }) as any
+            {/* Prospect Tab - Job Pipeline */}
+            {activeTab() === 'Prospect' && (
+              <PipelineView
+                currentTheme={() => ({
+                  colors: {
+                    ...currentTheme().colors,
+                    surfaceLight: 'rgba(255, 255, 255, 0.03)',
+                    surfaceMedium: 'rgba(255, 255, 255, 0.06)',
+                    surfaceHover: 'rgba(255, 255, 255, 0.08)',
+                  },
+                  fonts: maximalist.fonts,
+                  spacing: maximalist.spacing,
+                })}
+              />
+            )}
+
+            {/* Prosper Tab - Career Journal */}
+            {activeTab() === 'Prosper' && (
+              <div style={{ 'text-align': 'center', padding: '48px' }}>
+                <h2
+                  style={{
+                    'font-family': maximalist.fonts.heading,
+                    'font-size': '36px',
+                    'font-weight': '700',
+                    color: currentTheme().colors.primary,
+                    'margin-bottom': '16px',
+                  }}
+                >
+                  Prosper: Career Journal
+                </h2>
+                <p style={{ color: maximalist.colors.textMuted, 'font-size': '18px' }}>
+                  Quarterly check-ins and accomplishment tracking while employed.
+                </p>
+                <div
+                  style={{
+                    'margin-top': '32px',
+                    padding: '24px',
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    border: `1px solid ${maximalist.colors.border}`,
+                    'border-radius': '12px',
+                    'max-width': '600px',
+                    margin: '32px auto',
+                  }}
+                >
+                  <p style={{ color: maximalist.colors.text }}>
+                    🚧 Module coming soon - Phase 2 implementation
+                  </p>
+                </div>
+              </div>
+            )}
+          </main>
+
+          <Show when={selectedJob()}>
+            <JobDetailModal job={selectedJob()!} onClose={() => setSelectedJob(null)} />
+          </Show>
+        </div>
+
+        {/* Sidebar for Profile/Settings */}
+        <Sidebar
+          isOpen={isSidebarOpen()}
+          view={sidebarView()}
+          onClose={() => setSidebarView(null)}
+          currentTheme={() =>
+            ({
+              ...currentTheme(),
+              colors: {
+                ...currentTheme().colors,
+                background: maximalist.colors.background,
+                surface: maximalist.colors.surface,
+                border: maximalist.colors.border,
+                text: maximalist.colors.text,
+                textMuted: maximalist.colors.textMuted,
+              },
+              fonts: maximalist.fonts,
+              spacing: maximalist.spacing,
+              radii: maximalist.radii,
+            }) as any
+          }
+        />
+
+        {/* Responsive styles for archetype hero section */}
+        <style>{`
+        /* Mobile responsive layout */
+        @media (max-width: 768px) {
+          .archetype-hero-section {
+            padding: 24px !important;
+          }
+
+          .archetype-hero-grid {
+            grid-template-columns: 1fr !important;
+            gap: 24px !important;
+          }
+
+          .radar-column {
+            display: flex;
+            justify-content: center;
+          }
+
+          .archetype-info-column {
+            text-align: center !important;
+          }
+
+          .archetype-info-column h2 {
+            justify-content: center !important;
+          }
+
+          .archetype-info-column h1 {
+            font-size: 36px !important;
+          }
+
+          .archetype-info-column p {
+            font-size: 16px !important;
+          }
         }
-      />
-    </div>
+
+        /* Tablet-specific adjustments */
+        @media (min-width: 769px) and (max-width: 1024px) {
+          .archetype-hero-grid {
+            gap: 32px !important;
+          }
+
+          .archetype-info-column h1 {
+            font-size: 42px !important;
+          }
+        }
+      `}</style>
+      </div>
+    </TenureThemeProvider>
   );
 };
 
