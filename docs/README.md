@@ -12,6 +12,7 @@ Complete documentation for the Tempo time-management application built with Soli
 ### 🎨 Design System
 
 - **[Design System](./design/DESIGN_SYSTEM.md)** - Comprehensive design specifications, color palette, typography, components
+- **[Tooltip Positioning](./design/TOOLTIP_POSITIONING.md)** - **MANDATORY: Portal-based tooltip rendering guide**
 - **[Tempo Design System](./design/TEMPO_DESIGN.md)** - Tempo app-specific design tokens and component presets
 
 ### 👨‍💻 Development

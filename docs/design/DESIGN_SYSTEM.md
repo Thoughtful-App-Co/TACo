@@ -147,6 +147,26 @@ Intentionally subtle to maintain paper-like flatness:
 
 ## Shared Patterns
 
+### Tooltip Rendering (MANDATORY)
+
+**ALL tooltips MUST use SolidJS Portal.** This is a project-wide requirement.
+
+```typescript
+import { Portal } from 'solid-js/web';
+
+<Portal>
+  <Show when={showTooltip()}>
+    <div style={{ position: 'fixed', left: `${x}px`, top: `${y}px`, 'z-index': 10000 }}>
+      {/* Tooltip content */}
+    </div>
+  </Show>
+</Portal>
+```
+
+**Why:** Parent containers with `transform`, `filter`, or `overflow: hidden` break `position: fixed`. Portal renders at document root, escaping these issues.
+
+**Full documentation:** See [TOOLTIP_POSITIONING.md](./TOOLTIP_POSITIONING.md)
+
 ### Fitt's Law Optimizations
 
 1. **Touch targets**: Minimum 44px, primary actions 64px

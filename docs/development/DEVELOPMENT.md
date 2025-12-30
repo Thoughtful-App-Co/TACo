@@ -77,6 +77,27 @@ npm run validate
 - Use `createMemo` for computed values
 - Use `Show` and `For` for conditionals and loops
 - Avoid React patterns like `useState`
+- **ALWAYS use `<Portal>` for tooltips** (see below)
+
+### Tooltips (MANDATORY)
+
+**ALL tooltips MUST use SolidJS Portal.** This is a project-wide requirement.
+
+```typescript
+import { Portal } from 'solid-js/web';
+
+<Portal>
+  <Show when={showTooltip()}>
+    <div style={{ position: 'fixed', left: `${x}px`, top: `${y}px`, 'z-index': 10000 }}>
+      {/* Tooltip content */}
+    </div>
+  </Show>
+</Portal>
+```
+
+**Why:** Parent containers with `transform`, `filter`, or `overflow: hidden` break `position: fixed` positioning. Portal renders the tooltip at document root, escaping these container issues.
+
+**Full documentation:** See [Tooltip Positioning Guide](../design/TOOLTIP_POSITIONING.md)
 
 ### Formatting
 
