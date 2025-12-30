@@ -41,3 +41,6 @@ pages_build_output_dir = "dist"
 #   in the X-API-Key header
 # - Production secrets (ANTHROPIC_API_KEY) are set in Cloudflare Pages dashboard
 # - Local secrets are loaded from .dev.vars file
+# - BLS_API_KEY is required for labor market data features (employment stats,
+#   wages, job openings, unemployment, CPI). Register at:
+#   https://data.bls.gov/registrationEngine/

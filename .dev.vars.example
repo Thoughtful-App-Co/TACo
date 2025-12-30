@@ -17,3 +17,13 @@ GUARDIAN_API_KEY=your-guardian-api-key-here
 # Get yours from: https://gnews.io/
 # Free tier: 100 requests/day
 GNEWS_API_KEY=your-gnews-api-key-here
+
+# Bureau of Labor Statistics (BLS) API Key
+# Register at: https://data.bls.gov/registrationEngine/
+# v2 API Features (with registration key):
+#   - 500 requests per day
+#   - Up to 50 series per request
+#   - 20 years of data per request
+#   - Catalog data, calculations, and annual averages
+# Data includes: Employment statistics, wages, job openings, unemployment, CPI
+BLS_API_KEY=your-bls-registration-key-here
