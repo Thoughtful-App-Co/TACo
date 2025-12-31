@@ -10,7 +10,7 @@ export default defineConfig({
       includeAssets: ['fonts/**/*', 'tempo/**/*', 'tenure/**/*', 'icons/**/*', '*.png', '*.ico'],
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2,otf}'],
-        navigateFallback: '/offline.html',
+        navigateFallback: '/index.html',
         navigateFallbackDenylist: [/^\/api/],
         runtimeCaching: [
           // Google Fonts stylesheets
