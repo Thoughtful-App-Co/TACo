@@ -68,10 +68,55 @@ export const maxGradients = {
   vapor: `linear-gradient(135deg, #8B5CF6, #06B6D4)`, // Vaporwave
 };
 
-// Pattern SVG backgrounds
+// Pattern SVG backgrounds (legacy - prefer maxAurora for modern look)
 export const maxPatterns = {
   dots: `url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='2' cy='2' r='2' fill='%236366F1' fill-opacity='0.3'/%3E%3C/svg%3E")`,
   zigzag: `url("data:image/svg+xml,%3Csvg width='40' height='12' viewBox='0 0 40 12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 6 L10 0 L20 6 L30 0 L40 6 L40 12 L30 6 L20 12 L10 6 L0 12' fill='%23EC4899' fill-opacity='0.1'/%3E%3C/svg%3E")`,
+};
+
+// Liquid Glass Aurora Background System
+// Soft, animated aurora-like gradient backgrounds
+export const maxAurora = {
+  // Default neutral colors (before RIASEC assessment)
+  defaultPrimary: '#8B5CF6', // Violet
+  defaultSecondary: '#06B6D4', // Cyan
+
+  // Generate aurora mesh background from two colors
+  // Returns CSS for multiple layered radial gradients
+  mesh: (primary: string, secondary: string): string => `
+    radial-gradient(ellipse 80% 50% at 50% -10%, ${primary}18 0%, transparent 50%),
+    radial-gradient(ellipse 60% 80% at 100% 50%, ${secondary}12 0%, transparent 50%),
+    radial-gradient(ellipse 70% 60% at 0% 80%, ${primary}10 0%, transparent 50%),
+    radial-gradient(ellipse 50% 50% at 80% 100%, ${secondary}08 0%, transparent 50%)
+  `,
+
+  // Individual orb styles for animated elements
+  orbs: {
+    // Top center - largest, primary color
+    top: (color: string) => ({
+      background: `radial-gradient(ellipse 100% 60% at 50% 0%, ${color}20 0%, transparent 60%)`,
+      width: '100%',
+      height: '60%',
+      top: '-10%',
+      left: '0',
+    }),
+    // Right side - secondary color
+    right: (color: string) => ({
+      background: `radial-gradient(ellipse 50% 80% at 100% 50%, ${color}15 0%, transparent 60%)`,
+      width: '50%',
+      height: '100%',
+      top: '0',
+      right: '0',
+    }),
+    // Bottom left - primary color, subtle
+    bottomLeft: (color: string) => ({
+      background: `radial-gradient(ellipse 60% 50% at 0% 100%, ${color}12 0%, transparent 60%)`,
+      width: '60%',
+      height: '50%',
+      bottom: '0',
+      left: '0',
+    }),
+  },
 };
 
 // CSS custom properties generator
