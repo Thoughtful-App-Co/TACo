@@ -27,3 +27,7 @@ GNEWS_API_KEY=your-gnews-api-key-here
 #   - Catalog data, calculations, and annual averages
 # Data includes: Employment statistics, wages, job openings, unemployment, CPI
 BLS_API_KEY=your-bls-registration-key-here
+
+# Feature Flags (for development/staging)
+# Set to "true" to enable features not yet ready for production
+VITE_FEATURE_MATCHES=true
