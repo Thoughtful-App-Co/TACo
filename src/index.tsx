@@ -4,10 +4,18 @@ import { Router, Route } from '@solidjs/router';
 import { App, LandingPage, AppPage } from './App';
 import { PricingPage } from './components/PricingPage';
 
+// Initialize PWA service worker
+import { initPWA } from './lib/pwa/register';
+import { initInstallPrompt } from './lib/pwa/install-prompt';
+
 // Configure PDF.js worker globally
 // This must be done before any PDF parsing occurs
 import * as pdfjsLib from 'pdfjs-dist';
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
+
+// Initialize PWA
+initPWA();
+initInstallPrompt();
 
 // Global styles
 const globalStyles = document.createElement('style');

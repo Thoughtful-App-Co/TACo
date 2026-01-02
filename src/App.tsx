@@ -9,6 +9,12 @@ import { TenureApp } from './components/tenure/TenureApp';
 import { LolApp } from './components/lol/LolApp';
 import { PricingPage } from './components/PricingPage';
 import { PaperTrailApp } from './components/papertrail/PaperTrailApp';
+import { useManifestSwitcher } from './lib/pwa/manifest-switcher';
+import { useIOSMetaUpdater } from './lib/pwa/ios-meta';
+import { OfflineIndicator } from './components/common/OfflineIndicator';
+import { InstallBanner } from './components/common/InstallBanner';
+import { UpdateModal } from './components/common/UpdateModal';
+import { appMenuStore } from './stores/app-menu-store';
 
 type AppTab =
   | 'nurture'
@@ -1475,7 +1481,6 @@ const TabNavigation: Component<{
   activeTimeline: Timeline;
   activeTab: AppTab;
 }> = (props) => {
-  const [mobileMenuOpen, setMobileMenuOpen] = createSignal(false);
   const [menuTimeline, setMenuTimeline] = createSignal<Timeline>(props.activeTimeline);
 
   // Mobile detection
@@ -1488,17 +1493,6 @@ const TabNavigation: Component<{
     onCleanup(() => window.removeEventListener('resize', handleResize));
   });
 
-  // Drag state
-  const [menuPos, setMenuPos] = createSignal({ x: 16, y: 16 });
-  const [isDragging, setIsDragging] = createSignal(false);
-  const [dragStart, setDragStart] = createSignal({ x: 0, y: 0 });
-  const [initialPos, setInitialPos] = createSignal({ x: 0, y: 0 });
-
-  // Resize state
-  const [menuSize, setMenuSize] = createSignal(56);
-  const [isResizing, setIsResizing] = createSignal(false);
-  const [resizeStart, setResizeStart] = createSignal({ x: 0, y: 0, initialSize: 0 });
-
   const navigate = useNavigate();
 
   // Filtered apps for Hamburger Menu
@@ -1506,112 +1500,9 @@ const TabNavigation: Component<{
 
   // Sync menu timeline with active timeline when menu opens
   createEffect(() => {
-    if (mobileMenuOpen()) {
+    if (appMenuStore.isOpen()) {
       setMenuTimeline(props.activeTimeline);
     }
-  });
-
-  // Unified start handler for mouse and touch
-  const handlePointerStart = (clientX: number, clientY: number, target: HTMLElement) => {
-    if (target.closest('.resize-handle')) {
-      setIsResizing(true);
-      setResizeStart({ x: clientX, y: clientY, initialSize: menuSize() });
-    } else {
-      setIsDragging(true);
-      setDragStart({ x: clientX, y: clientY });
-      setInitialPos(menuPos());
-    }
-  };
-
-  const handleMouseDown = (e: MouseEvent) => {
-    const target = e.target as HTMLElement;
-    if (target.closest('.resize-handle')) {
-      e.stopPropagation();
-    }
-    e.preventDefault();
-    handlePointerStart(e.clientX, e.clientY, target);
-  };
-
-  const handleTouchStart = (e: TouchEvent) => {
-    const touch = e.touches[0];
-    const target = e.target as HTMLElement;
-    if (target.closest('.resize-handle')) {
-      e.stopPropagation();
-    }
-    handlePointerStart(touch.clientX, touch.clientY, target);
-  };
-
-  // Unified move handler
-  const handlePointerMove = (clientX: number, clientY: number) => {
-    if (isDragging()) {
-      const dx = clientX - dragStart().x;
-      const dy = clientY - dragStart().y;
-      setMenuPos({
-        x: Math.max(16, Math.min(window.innerWidth - menuSize() - 16, initialPos().x + dx)),
-        y: Math.max(16, Math.min(window.innerHeight - menuSize() - 16, initialPos().y + dy)),
-      });
-    } else if (isResizing()) {
-      const dx = clientX - resizeStart().x;
-      const dy = clientY - resizeStart().y;
-      const delta = (dx + dy) / 2;
-      const newSize = Math.max(32, Math.min(120, resizeStart().initialSize + delta));
-      setMenuSize(newSize);
-    }
-  };
-
-  const handleWindowMouseMove = (e: MouseEvent) => {
-    handlePointerMove(e.clientX, e.clientY);
-  };
-
-  const handleWindowTouchMove = (e: TouchEvent) => {
-    const touch = e.touches[0];
-    handlePointerMove(touch.clientX, touch.clientY);
-  };
-
-  // Unified end handler
-  const handlePointerEnd = (clientX: number, clientY: number) => {
-    if (isDragging()) {
-      setIsDragging(false);
-      const dx = clientX - dragStart().x;
-      const dy = clientY - dragStart().y;
-      if (Math.abs(dx) < 5 && Math.abs(dy) < 5) {
-        setMobileMenuOpen(!mobileMenuOpen());
-      }
-    } else if (isResizing()) {
-      setIsResizing(false);
-    }
-  };
-
-  const handleWindowMouseUp = (e: MouseEvent) => {
-    handlePointerEnd(e.clientX, e.clientY);
-  };
-
-  const handleWindowTouchEnd = (e: TouchEvent) => {
-    const touch = e.changedTouches[0];
-    handlePointerEnd(touch.clientX, touch.clientY);
-  };
-
-  // Attach drag/touch listeners
-  createEffect(() => {
-    if (isDragging() || isResizing()) {
-      window.addEventListener('mousemove', handleWindowMouseMove);
-      window.addEventListener('mouseup', handleWindowMouseUp);
-      window.addEventListener('touchmove', handleWindowTouchMove, { passive: true });
-      window.addEventListener('touchend', handleWindowTouchEnd);
-    } else {
-      window.removeEventListener('mousemove', handleWindowMouseMove);
-      window.removeEventListener('mouseup', handleWindowMouseUp);
-      window.removeEventListener('touchmove', handleWindowTouchMove);
-      window.removeEventListener('touchend', handleWindowTouchEnd);
-    }
-  });
-
-  // Cleanup on unmount
-  onCleanup(() => {
-    window.removeEventListener('mousemove', handleWindowMouseMove);
-    window.removeEventListener('mouseup', handleWindowMouseUp);
-    window.removeEventListener('touchmove', handleWindowTouchMove);
-    window.removeEventListener('touchend', handleWindowTouchEnd);
   });
 
   const handleTimelineChange = (timeline: Timeline) => {
@@ -1620,219 +1511,32 @@ const TabNavigation: Component<{
 
   const handleAppClick = (appId: AppTab) => {
     navigate(`/${appId}`);
-    setMobileMenuOpen(false);
+    appMenuStore.close();
   };
 
   // Global keyboard shortcuts
-  const handleGlobalKeyDown = (e: KeyboardEvent) => {
-    // Ctrl + Shift + H (Home)
-    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'h') {
-      e.preventDefault();
-      navigate('/');
-      setMobileMenuOpen(false);
-    }
-  };
-
   createEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      // Ctrl + Shift + H (Home)
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'h') {
+        e.preventDefault();
+        navigate('/');
+        appMenuStore.close();
+      }
+      // ESC to close menu
+      if (e.key === 'Escape' && appMenuStore.isOpen()) {
+        e.preventDefault();
+        appMenuStore.close();
+      }
+    };
     window.addEventListener('keydown', handleGlobalKeyDown);
     onCleanup(() => window.removeEventListener('keydown', handleGlobalKeyDown));
   });
 
-  // Mobile menu button size (fixed, larger for easy tapping)
-  const mobileButtonSize = 52;
-
   return (
     <>
-      {/* Menu Button - Different behavior for mobile vs desktop */}
-      <Show
-        when={isMobile()}
-        fallback={
-          /* Desktop: Draggable/Resizable Button */
-          <button
-            onMouseDown={handleMouseDown}
-            onTouchStart={handleTouchStart}
-            aria-label={mobileMenuOpen() ? 'Close menu' : 'Open menu'}
-            style={{
-              position: 'fixed',
-              top: `${menuPos().y}px`,
-              left: `${menuPos().x}px`,
-              'z-index': 2002,
-              width: `${menuSize()}px`,
-              height: `${menuSize()}px`,
-              display: 'flex',
-              'align-items': 'center',
-              'justify-content': 'center',
-              background: mobileMenuOpen() ? 'rgba(255,255,255,0.1)' : 'rgba(255, 255, 255, 0.9)',
-              'backdrop-filter': 'blur(12px)',
-              '-webkit-backdrop-filter': 'blur(12px)',
-              'border-radius': '50%',
-              border: mobileMenuOpen()
-                ? '1px solid rgba(255,255,255,0.2)'
-                : `1px solid ${navTokens.neutrals[200]}`,
-              'box-shadow': mobileMenuOpen()
-                ? 'none'
-                : isDragging()
-                  ? navTokens.shadows.dropdown
-                  : navTokens.shadows.nav,
-              cursor: isDragging() ? 'grabbing' : 'grab',
-              opacity: 1,
-              'pointer-events': 'auto',
-              transform: 'scale(1)',
-              transition:
-                isDragging() || isResizing() ? 'none' : 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-              color: mobileMenuOpen() ? 'white' : navTokens.brand.dark,
-              overflow: 'hidden',
-            }}
-            onMouseEnter={(e) => {
-              if (!mobileMenuOpen() && !isDragging() && !isResizing()) {
-                e.currentTarget.style.transform = 'scale(1.1) rotate(5deg)';
-                e.currentTarget.style.boxShadow = navTokens.shadows.dropdown;
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isDragging() && !isResizing()) {
-                e.currentTarget.style.transform = 'scale(1) rotate(0deg)';
-                e.currentTarget.style.boxShadow = mobileMenuOpen() ? 'none' : navTokens.shadows.nav;
-              }
-            }}
-          >
-            {/* Resize Handle */}
-            <div
-              class="resize-handle"
-              style={{
-                position: 'absolute',
-                bottom: '0',
-                right: '0',
-                width: '16px',
-                height: '16px',
-                cursor: 'nwse-resize',
-                'z-index': 10,
-                display: 'flex',
-                'align-items': 'flex-end',
-                'justify-content': 'flex-end',
-                padding: '3px',
-                opacity: 0,
-                transition: 'opacity 0.2s ease',
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
-              onMouseLeave={(e) => (e.currentTarget.style.opacity = '0')}
-            >
-              <div
-                style={{
-                  width: '6px',
-                  height: '6px',
-                  'border-right': `2px solid ${mobileMenuOpen() ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.3)'}`,
-                  'border-bottom': `2px solid ${mobileMenuOpen() ? 'rgba(255,255,255,0.5)' : 'rgba(0,0,0,0.3)'}`,
-                  'border-bottom-right-radius': '2px',
-                }}
-              />
-            </div>
-
-            <svg
-              width={menuSize() * 0.5}
-              height={menuSize() * 0.5}
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              style={{
-                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                transform: mobileMenuOpen() ? 'rotate(90deg)' : 'rotate(0deg)',
-              }}
-            >
-              <Show
-                when={mobileMenuOpen()}
-                fallback={
-                  <>
-                    <rect x="3" y="3" width="7" height="7" rx="1" />
-                    <rect x="14" y="3" width="7" height="7" rx="1" />
-                    <rect x="14" y="14" width="7" height="7" rx="1" />
-                    <rect x="3" y="14" width="7" height="7" rx="1" />
-                  </>
-                }
-              >
-                <>
-                  <line x1="18" y1="6" x2="6" y2="18" />
-                  <line x1="6" y1="6" x2="18" y2="18" />
-                </>
-              </Show>
-            </svg>
-          </button>
-        }
-      >
-        {/* Mobile: Fixed position button in bottom-right corner */}
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen())}
-          aria-label={mobileMenuOpen() ? 'Close menu' : 'Open menu'}
-          style={{
-            position: 'fixed',
-            bottom: '20px',
-            right: '20px',
-            'z-index': 2002,
-            width: `${mobileButtonSize}px`,
-            height: `${mobileButtonSize}px`,
-            display: 'flex',
-            'align-items': 'center',
-            'justify-content': 'center',
-            background: mobileMenuOpen()
-              ? 'rgba(255,255,255,0.15)'
-              : 'linear-gradient(135deg, #FF6B6B 0%, #FFE66D 50%, #4ECDC4 100%)',
-            'backdrop-filter': mobileMenuOpen() ? 'blur(12px)' : 'none',
-            '-webkit-backdrop-filter': mobileMenuOpen() ? 'blur(12px)' : 'none',
-            'border-radius': '50%',
-            border: mobileMenuOpen() ? '1px solid rgba(255,255,255,0.3)' : 'none',
-            'box-shadow': mobileMenuOpen()
-              ? 'none'
-              : '0 4px 20px rgba(255, 107, 107, 0.4), 0 2px 8px rgba(0,0,0,0.2)',
-            cursor: 'pointer',
-            opacity: 1,
-            'pointer-events': 'auto',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            color: 'white',
-            // Larger touch target (invisible padding)
-            padding: 0,
-          }}
-        >
-          <svg
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            style={{
-              transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-              transform: mobileMenuOpen() ? 'rotate(90deg)' : 'rotate(0deg)',
-            }}
-          >
-            <Show
-              when={mobileMenuOpen()}
-              fallback={
-                <>
-                  {/* 4-square grid icon */}
-                  <rect x="3" y="3" width="7" height="7" rx="1" />
-                  <rect x="14" y="3" width="7" height="7" rx="1" />
-                  <rect x="14" y="14" width="7" height="7" rx="1" />
-                  <rect x="3" y="14" width="7" height="7" rx="1" />
-                </>
-              }
-            >
-              <>
-                {/* X close icon */}
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </>
-            </Show>
-          </svg>
-        </button>
-      </Show>
-
-      {/* Full Screen Immersive Menu */}
-      <Show when={mobileMenuOpen()}>
+      {/* Full Screen Immersive Menu - No floating button, triggered by app logos */}
+      <Show when={appMenuStore.isOpen()}>
         <div
           style={{
             position: 'fixed',
@@ -1850,7 +1554,7 @@ const TabNavigation: Component<{
           {/* Left Column - Triangle (hidden on mobile, replaced with top bar) */}
           <Show when={!isMobile()}>
             <div
-              onClick={() => setMobileMenuOpen(false)}
+              onClick={() => appMenuStore.close()}
               role="button"
               tabIndex={0}
               aria-label="Close menu"
@@ -1858,7 +1562,7 @@ const TabNavigation: Component<{
                 position: 'relative',
                 width: '40%',
                 height: '100%',
-                background: `linear-gradient(135deg, ${navTokens.brand.coral}, ${navTokens.brand.yellow}, ${navTokens.brand.teal})`,
+                background: 'linear-gradient(135deg, #2D3748 0%, #1A202C 50%, #171923 100%)',
                 'clip-path': 'polygon(0 0, 100% 0, 60% 100%, 0 100%)',
                 cursor: 'pointer',
                 display: 'flex',
@@ -1873,7 +1577,7 @@ const TabNavigation: Component<{
               <div
                 style={{
                   'font-size': 'clamp(80px, 15vw, 200px)',
-                  color: 'rgba(255,255,255,0.2)',
+                  color: 'rgba(255,255,255,0.08)',
                   'font-weight': '900',
                   transform: 'rotate(-90deg)',
                   'white-space': 'nowrap',
@@ -1887,17 +1591,17 @@ const TabNavigation: Component<{
             </div>
           </Show>
 
-          {/* Mobile Top Bar - Gradient strip with swipe-down close hint */}
+          {/* Mobile Top Bar - Subdued dark gradient with close hint */}
           <Show when={isMobile()}>
             <div
-              onClick={() => setMobileMenuOpen(false)}
+              onClick={() => appMenuStore.close()}
               role="button"
               tabIndex={0}
               aria-label="Close menu"
               style={{
                 width: '100%',
-                height: '80px',
-                background: `linear-gradient(135deg, ${navTokens.brand.coral}, ${navTokens.brand.yellow}, ${navTokens.brand.teal})`,
+                height: '56px',
+                background: 'linear-gradient(135deg, #2D3748 0%, #1A202C 100%)',
                 display: 'flex',
                 'align-items': 'center',
                 'justify-content': 'center',
@@ -1912,15 +1616,15 @@ const TabNavigation: Component<{
                   width: '40px',
                   height: '5px',
                   'border-radius': '3px',
-                  background: 'rgba(255,255,255,0.5)',
+                  background: 'rgba(255,255,255,0.3)',
                   position: 'absolute',
                   bottom: '12px',
                 }}
               />
               <span
                 style={{
-                  color: 'rgba(255,255,255,0.8)',
-                  'font-size': '14px',
+                  color: 'rgba(255,255,255,0.6)',
+                  'font-size': '12px',
                   'font-weight': '600',
                   'text-transform': 'uppercase',
                   'letter-spacing': '2px',
@@ -1957,7 +1661,7 @@ const TabNavigation: Component<{
               {/* Logo and Company Name - Clickable Home Button */}
               <A
                 href="/"
-                onClick={() => setMobileMenuOpen(false)}
+                onClick={() => appMenuStore.close()}
                 style={{
                   display: 'flex',
                   'align-items': 'center',
@@ -2037,7 +1741,7 @@ const TabNavigation: Component<{
               {/* Settings Button */}
               <button
                 onClick={() => {
-                  setMobileMenuOpen(false);
+                  appMenuStore.close();
                   navigate('/settings');
                 }}
                 aria-label="Settings"
@@ -2372,7 +2076,20 @@ export const AppPage: Component = () => {
 
 // Root layout component - wraps all routes
 export const App: Component<{ children?: any }> = (props) => {
-  return <div style={{ 'min-height': '100vh' }}>{props.children}</div>;
+  // Initialize manifest switcher to change PWA manifest based on route
+  useManifestSwitcher();
+
+  // Update iOS meta tags based on route
+  useIOSMetaUpdater();
+
+  return (
+    <div style={{ 'min-height': '100vh' }}>
+      <OfflineIndicator />
+      <InstallBanner />
+      <UpdateModal />
+      {props.children}
+    </div>
+  );
 };
 
 // Re-export LandingPage for use in routes
