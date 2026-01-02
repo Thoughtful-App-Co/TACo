@@ -24,6 +24,7 @@ import { RepositoryView } from './components/RepositoryView';
 import { WorkExperience, Education } from '../../../schemas/pipeline.schema';
 import { ResumeVariant } from '../../../schemas/prepare.schema';
 import { IconTrash, IconFileText, IconSparkles, IconGrid } from '../pipeline/ui/Icons';
+import { ArrowLeftIcon } from 'solid-phosphor/bold';
 import {
   mutationService,
   prepareMutationRequest,
@@ -693,7 +694,7 @@ export const PrepareApp: Component<PrepareAppProps> = (props) => {
                 'font-family': theme().fonts.body,
               }}
             >
-              ← Back to Mode Selection
+              <ArrowLeftIcon width={16} height={16} /> Back to Mode Selection
             </button>
 
             <Show when={wizardMode() === 'job-description'}>

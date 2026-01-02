@@ -7,24 +7,35 @@
 import { createStore } from 'solid-js/store';
 import { createEffect } from 'solid-js';
 import {
+  // From common
+  WorkExperience,
+  Education,
+  // From prepare
   MasterResume,
   ResumeVariant,
   WizardState,
+  WizardStep,
+  QuantifiableMetric,
+  Project,
+  ResumeMutationRequest,
+  ResumeMutationResult,
+  MutationHistoryEntry,
   createEmptyMasterResume,
   createEmptyWizardState,
   generateId,
-} from '../../../schemas/prepare.schema';
-import { WorkExperience, Education } from '../../../schemas/pipeline.schema';
+} from '../../../schemas/tenure';
 
 // ============================================================================
 // STORAGE KEYS
 // ============================================================================
 
 const STORAGE_KEYS = {
-  masterResume: 'augment_prepare_master_resume',
-  variants: 'augment_prepare_variants',
-  wizardState: 'augment_prepare_wizard',
-  currentVariantId: 'augment_prepare_current_variant',
+  masterResume: 'tenure_prepare_master_resume',
+  variants: 'tenure_prepare_variants',
+  wizard: 'tenure_prepare_wizard',
+  currentVariant: 'tenure_prepare_current_variant',
+  currentMutation: 'tenure_prepare_current_mutation',
+  mutationHistory: 'tenure_prepare_mutation_history',
 };
 
 // ============================================================================
@@ -57,8 +68,7 @@ function loadFromStorage<T>(key: string, defaultValue: T): T {
       const parsed = JSON.parse(stored);
       return reviveDates(parsed);
     }
-  } catch (e) {
-  }
+  } catch (e) {}
   return defaultValue;
 }
 
@@ -87,8 +97,8 @@ function loadInitialState(): PrepareStoreState {
   return {
     masterResume: loadFromStorage<MasterResume | null>(STORAGE_KEYS.masterResume, null),
     variants: loadFromStorage<ResumeVariant[]>(STORAGE_KEYS.variants, []),
-    wizardState: loadFromStorage<WizardState>(STORAGE_KEYS.wizardState, createEmptyWizardState()),
-    currentVariantId: loadFromStorage<string | null>(STORAGE_KEYS.currentVariantId, null),
+    wizardState: loadFromStorage<WizardState>(STORAGE_KEYS.wizard, createEmptyWizardState()),
+    currentVariantId: loadFromStorage<string | null>(STORAGE_KEYS.currentVariant, null),
     isLoading: false,
     isUploading: false,
     isParsing: false,
@@ -119,12 +129,12 @@ createEffect(() => {
 });
 
 createEffect(() => {
-  localStorage.setItem(STORAGE_KEYS.wizardState, JSON.stringify(state.wizardState));
+  localStorage.setItem(STORAGE_KEYS.wizard, JSON.stringify(state.wizardState));
 });
 
 createEffect(() => {
   if (state.currentVariantId) {
-    localStorage.setItem(STORAGE_KEYS.currentVariantId, state.currentVariantId);
+    localStorage.setItem(STORAGE_KEYS.currentVariant, state.currentVariantId);
   }
 });
 
@@ -549,8 +559,8 @@ export const prepareStore = {
   resetAll: () => {
     localStorage.removeItem(STORAGE_KEYS.masterResume);
     localStorage.removeItem(STORAGE_KEYS.variants);
-    localStorage.removeItem(STORAGE_KEYS.wizardState);
-    localStorage.removeItem(STORAGE_KEYS.currentVariantId);
+    localStorage.removeItem(STORAGE_KEYS.wizard);
+    localStorage.removeItem(STORAGE_KEYS.currentVariant);
 
     setState({
       masterResume: null,
@@ -568,3 +578,165 @@ export const prepareStore = {
 };
 
 export default prepareStore;
+
+// ============================================================================
+// MUTATION STATE & ACTIONS (Added for Resume Mutation Feature)
+// ============================================================================
+
+import type { MutationResponse } from './services/mutation.service';
+
+// Extend the existing state (add these to PrepareStoreState)
+// currentMutation: MutationResponse | null;
+// mutationHistory: MutationHistoryEntry[];
+// isMutating: boolean;
+
+// Add to the store creation
+const [mutationState, setMutationState] = createStore<{
+  currentMutation: MutationResponse | null;
+  mutationHistory: MutationHistoryEntry[];
+  isMutating: boolean;
+}>({
+  currentMutation: loadFromStorage<MutationResponse | null>(STORAGE_KEYS.currentMutation, null),
+  mutationHistory: loadFromStorage<MutationHistoryEntry[]>(STORAGE_KEYS.mutationHistory, []),
+  isMutating: false,
+});
+
+// Persistence effects for mutation state
+createEffect(() => {
+  if (mutationState.currentMutation) {
+    localStorage.setItem(
+      STORAGE_KEYS.currentMutation,
+      JSON.stringify(mutationState.currentMutation)
+    );
+  } else {
+    localStorage.removeItem(STORAGE_KEYS.currentMutation);
+  }
+});
+
+createEffect(() => {
+  localStorage.setItem(STORAGE_KEYS.mutationHistory, JSON.stringify(mutationState.mutationHistory));
+});
+
+// Mutation actions to add to prepareStore
+export const mutationActions = {
+  // Get current mutation state
+  getCurrentMutation: () => mutationState.currentMutation,
+
+  // Set mutation loading state
+  setMutating: (isMutating: boolean) => {
+    setMutationState('isMutating', isMutating);
+  },
+
+  // Store mutation result
+  setCurrentMutation: (mutation: MutationResponse | null) => {
+    setMutationState('currentMutation', mutation);
+  },
+
+  // Clear current mutation
+  clearCurrentMutation: () => {
+    setMutationState('currentMutation', null);
+  },
+
+  // Add to history
+  addToMutationHistory: (entry: Omit<MutationHistoryEntry, 'id'>) => {
+    const newEntry: MutationHistoryEntry = {
+      ...entry,
+      id: generateId(),
+    };
+    setMutationState('mutationHistory', (history) => [newEntry, ...history]);
+  },
+
+  // Get mutation history
+  getMutationHistory: () => mutationState.mutationHistory,
+
+  // Clear history
+  clearMutationHistory: () => {
+    setMutationState('mutationHistory', []);
+  },
+
+  // Create variant from mutation
+  createVariantFromMutation: (
+    mutation: MutationResponse,
+    name: string,
+    targetRole?: string
+  ): ResumeVariant => {
+    if (!state.masterResume) {
+      throw new Error('Cannot create variant without master resume');
+    }
+
+    // Build the variant with mutated content
+    const variant: ResumeVariant = {
+      id: generateId(),
+      masterResumeId: state.masterResume.id,
+      name,
+      targetRole,
+      includedExperiences: [],
+      includedSkills:
+        mutation.mutations.skillsReordered || state.masterResume.parsedSections.skills,
+      includedMetrics: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      // Store mutation data in variant fields
+      keywordMatchScore: mutation.analysis.matchScoreAfter,
+      missingKeywords: mutation.analysis.missingKeywords,
+    };
+
+    setState('variants', (variants) => [...variants, variant]);
+    setState('currentVariantId', variant.id);
+
+    return variant;
+  },
+
+  // Apply individual mutation changes to master resume
+  applyMutationToMaster: (mutation: MutationResponse) => {
+    if (!state.masterResume) {
+      throw new Error('Cannot apply mutation without master resume');
+    }
+
+    // Apply summary mutation
+    if (mutation.mutations.summary) {
+      setState('masterResume', 'parsedSections', 'summary', mutation.mutations.summary.mutated);
+    }
+
+    // Apply experience mutations
+    for (const expMutation of mutation.mutations.experiences) {
+      const expIndex = state.masterResume.parsedSections.experience.findIndex(
+        (e) => e.id === expMutation.experienceId
+      );
+
+      if (expIndex !== -1) {
+        const mutatedBullets = expMutation.bullets.map((b) => b.mutated);
+        setState(
+          'masterResume',
+          'parsedSections',
+          'experience',
+          expIndex,
+          'bulletPoints',
+          mutatedBullets
+        );
+      }
+    }
+
+    // Reorder skills
+    if (mutation.mutations.skillsReordered.length > 0) {
+      setState('masterResume', 'parsedSections', 'skills', mutation.mutations.skillsReordered);
+    }
+
+    // Add suggested skills
+    if (mutation.mutations.skillsToAdd.length > 0) {
+      setState('masterResume', 'parsedSections', 'skills', (skills) => [
+        ...skills,
+        ...mutation.mutations.skillsToAdd,
+      ]);
+    }
+
+    setState('masterResume', 'updatedAt', new Date());
+  },
+};
+
+// Export combined store with mutation actions
+export const prepareStoreWithMutation = {
+  ...prepareStore,
+  ...mutationActions,
+  mutationState, // Expose mutation state separately
+};

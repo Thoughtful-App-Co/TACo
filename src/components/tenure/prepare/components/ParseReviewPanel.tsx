@@ -33,7 +33,7 @@ interface TabConfig {
 }
 
 // Extended theme type that includes the extra properties PrepareApp provides
-type ExtendedTheme = Theme & {
+export type ExtendedTheme = Theme & {
   colors: Theme['colors'] & {
     textOnPrimary: string;
     success: string;
