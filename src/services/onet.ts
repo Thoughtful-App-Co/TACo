@@ -1,3 +1,5 @@
+import { searchJobTitleMappings } from '../data/job-title-mappings';
+
 const BASE_URL = 'https://api-v2.onetcenter.org';
 const API_KEY = 'sKmBp-Jk05G-bmJzB-soNQQ';
 
@@ -19,6 +21,15 @@ export interface OnetSearchResponse {
   career: OnetCareer[];
 }
 
+export interface EnhancedOnetCareer extends OnetCareer {
+  /** Indicates where the result came from */
+  matchSource: 'mapped' | 'onet' | 'both';
+  /** For mapped results, the confidence level */
+  confidence?: 'high' | 'medium' | 'low';
+  /** The job title this was mapped from (if applicable) */
+  mappedFrom?: string;
+}
+
 export async function searchCareers(keyword: string): Promise<OnetCareer[]> {
   try {
     const response = await fetch(`${BASE_URL}/mnm/search?keyword=${encodeURIComponent(keyword)}`, {
@@ -38,6 +49,104 @@ export async function searchCareers(keyword: string): Promise<OnetCareer[]> {
     console.error('Failed to fetch from O*NET:', error);
     return [];
   }
+}
+
+/**
+ * Enhanced career search that combines local job title mappings with O*NET API results.
+ *
+ * This function:
+ * 1. First checks local job title mappings for the keyword
+ * 2. Also queries the O*NET API with the original keyword
+ * 3. Merges results, marking duplicates as 'both'
+ * 4. Prioritizes: high-confidence mapped, medium-confidence mapped, then O*NET direct
+ * 5. Returns max 15 deduplicated results
+ *
+ * @param keyword - The search term (job title, occupation, etc.)
+ * @returns Array of enhanced career results with match source information
+ */
+export async function searchCareersEnhanced(keyword: string): Promise<EnhancedOnetCareer[]> {
+  // Map to track results by SOC code for deduplication
+  const resultsBySoc = new Map<string, EnhancedOnetCareer>();
+
+  // Step 1: Get local job title mappings
+  const mappingResults = searchJobTitleMappings(keyword);
+
+  for (const match of mappingResults) {
+    for (const mapping of match.entry.mappings) {
+      const socCode = mapping.socCode;
+
+      // Only add if not already present (first match wins for mapped results)
+      if (!resultsBySoc.has(socCode)) {
+        resultsBySoc.set(socCode, {
+          code: socCode,
+          title: mapping.title,
+          href: `${BASE_URL}/mnm/careers/${socCode}`,
+          tags: {}, // Mapped results don't have tags; O*NET API will fill these if it returns the same code
+          matchSource: 'mapped',
+          confidence: mapping.confidence,
+          mappedFrom: match.jobTitle,
+        });
+      }
+    }
+  }
+
+  // Step 2: Query O*NET API (handle failures gracefully)
+  let onetResults: OnetCareer[] = [];
+  try {
+    onetResults = await searchCareers(keyword);
+  } catch (error) {
+    console.error('O*NET API failed, returning mapped results only:', error);
+  }
+
+  // Step 3: Merge O*NET results
+  for (const onetCareer of onetResults) {
+    const existing = resultsBySoc.get(onetCareer.code);
+
+    if (existing) {
+      // SOC code exists in mapped results - mark as 'both' and update tags
+      existing.matchSource = 'both';
+      existing.tags = onetCareer.tags; // Use O*NET's tags as they have real data
+    } else {
+      // New result from O*NET only
+      resultsBySoc.set(onetCareer.code, {
+        ...onetCareer,
+        matchSource: 'onet',
+      });
+    }
+  }
+
+  // Step 4: Convert to array and sort by priority
+  const allResults = Array.from(resultsBySoc.values());
+
+  allResults.sort((a, b) => {
+    // Priority order:
+    // 1. mapped/both with high confidence
+    // 2. mapped/both with medium confidence
+    // 3. mapped/both with low confidence
+    // 4. onet only
+
+    const getScore = (result: EnhancedOnetCareer): number => {
+      if (result.matchSource === 'onet') {
+        return 4; // Lowest priority
+      }
+      // 'mapped' or 'both'
+      switch (result.confidence) {
+        case 'high':
+          return 1;
+        case 'medium':
+          return 2;
+        case 'low':
+          return 3;
+        default:
+          return 4;
+      }
+    };
+
+    return getScore(a) - getScore(b);
+  });
+
+  // Step 5: Return max 15 results
+  return allResults.slice(0, 15);
 }
 
 export interface OnetQuestion {
@@ -261,9 +370,9 @@ export interface OnetOccupationSkills {
 
 /**
  * Fetch skills, knowledge, abilities, technologies, and tasks for a specific occupation
- * 
+ *
  * This is used during resume mutation to get industry-specific context
- * 
+ *
  * @param occupationCode - O*NET-SOC code (e.g., "29-1141.00" for Registered Nurses)
  */
 export async function getOccupationDetails(
@@ -321,9 +430,9 @@ export async function getOccupationDetails(
 
 /**
  * Search for occupation by job title
- * 
+ *
  * This helps users find the right occupation code when they only have a job title
- * 
+ *
  * @param title - Job title search term (e.g., "nurse", "software engineer")
  */
 export async function searchOccupationByTitle(
