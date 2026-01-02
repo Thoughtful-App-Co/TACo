@@ -18,15 +18,15 @@ import type {
   Dichotomy,
   CognitiveFunction,
   Temperament,
-} from '../schemas/jungian.schema';
+} from '../../../schemas/jungian.schema';
 import {
   getPreferenceStrength,
   scoreToPercentage,
   getCognitiveFunctions,
   getTemperament,
-} from '../schemas/jungian.schema';
-import { OEJTS_QUESTIONS } from '../data/oejts-questions';
-import { getJungianAssessment, updateJungianAssessment } from '../stores/assessment-store';
+} from '../../../schemas/jungian.schema';
+import { OEJTS_QUESTIONS } from '../../../data/oejts-questions';
+import { getJungianAssessment, updateJungianAssessment } from '../../../stores/assessment-store';
 
 /**
  * Calculate dichotomy score from answers

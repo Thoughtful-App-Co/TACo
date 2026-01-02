@@ -5,14 +5,14 @@ import {
   BfiAnswer,
   OCEAN_TRAIT_META,
   BFI_QUESTIONS_PER_TRAIT,
-} from '../schemas/ocean.schema';
-import { BFI_QUESTIONS_BY_TRAIT } from '../data/bfi-questions';
+} from '../../../schemas/ocean.schema';
+import { BFI_QUESTIONS_BY_TRAIT } from '../../../data/bfi-questions';
 import {
   getOceanAssessment,
   updateOceanAssessment,
   clearOceanAssessment,
   isOceanCompleted,
-} from '../stores/assessment-store';
+} from '../../../stores/assessment-store';
 
 /**
  * OCEAN/Big Five Scoring Service
