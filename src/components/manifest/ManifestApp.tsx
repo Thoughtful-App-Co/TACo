@@ -10,6 +10,7 @@
 
 import { Component, For, createSignal, Show } from 'solid-js';
 import { Profile, Match, SelfDiscovery } from '../../schemas/manifest.schema';
+import { AppMenuTrigger } from '../common/AppMenuTrigger';
 
 // --- DATA: DEEP CONNECTION FOCUS ---
 
@@ -587,7 +588,9 @@ export const ManifestApp: Component = () => {
         }}
       >
         <div style={{ display: 'inline-block', position: 'relative' }}>
-          <h1 style={styles.title}>Manifest.</h1>
+          <AppMenuTrigger>
+            <h1 style={styles.title}>Manifest.</h1>
+          </AppMenuTrigger>
           <div
             style={{
               position: 'absolute',

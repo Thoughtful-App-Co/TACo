@@ -11,6 +11,7 @@
 import { Component, For, createSignal } from 'solid-js';
 import { Case, Evidence } from '../../schemas/case.schema';
 import { daylight, highlights } from '../../theme/daylight';
+import { AppMenuTrigger } from '../common/AppMenuTrigger';
 
 const sampleCase: Case = {
   id: '1',
@@ -249,25 +250,27 @@ export const JustInCaseApp: Component = () => {
               'margin-bottom': '24px',
             }}
           >
-            <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
-              <rect
-                x="6"
-                y="4"
-                width="24"
-                height="28"
-                rx="2"
-                stroke={daylight.colors.primary}
-                stroke-width="2"
-                fill="none"
-              />
-              <path
-                d="M11 12H25M11 18H25M11 24H20"
-                stroke={daylight.colors.primary}
-                stroke-width="2"
-                stroke-linecap="round"
-              />
-              <circle cx="28" cy="28" r="6" fill={daylight.colors.accent} opacity="0.3" />
-            </svg>
+            <AppMenuTrigger>
+              <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+                <rect
+                  x="6"
+                  y="4"
+                  width="24"
+                  height="28"
+                  rx="2"
+                  stroke={daylight.colors.primary}
+                  stroke-width="2"
+                  fill="none"
+                />
+                <path
+                  d="M11 12H25M11 18H25M11 24H20"
+                  stroke={daylight.colors.primary}
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
+                <circle cx="28" cy="28" r="6" fill={daylight.colors.accent} opacity="0.3" />
+              </svg>
+            </AppMenuTrigger>
             <h1
               style={{
                 margin: 0,

@@ -5,10 +5,65 @@
 
 import type { App, TooltipContent, FAQItem } from './types';
 
+// Apps for sync/backup selection (active apps with pricing)
 export const availableApps: App[] = [
   { id: 'tempo', name: 'Tempo', color: '#5E6AD2', logo: '/tempo/tempo_logo.png' },
   { id: 'tenure', name: 'Tenure', color: '#9333EA', logo: '/tenure/tenure_logo.png' },
   { id: 'nurture', name: 'Nurture', color: '#2D5A45', logo: '' },
+];
+
+// All apps in homepage order (for footer navigation)
+export const allApps: App[] = [
+  {
+    id: 'tempo',
+    name: 'Tempo',
+    color: '#5E6AD2',
+    logo: '/tempo/tempo_logo.png',
+    description: 'A.D.H.D Task Master',
+  },
+  {
+    id: 'nurture',
+    name: 'Nurture',
+    color: '#2D5A45',
+    logo: '',
+    description: 'Relationship Management',
+  },
+  {
+    id: 'justincase',
+    name: 'JustInCase',
+    color: '#64748B',
+    logo: '',
+    description: 'Small claims helper',
+  },
+  {
+    id: 'friendly',
+    name: 'FriendLy',
+    color: '#3B82F6',
+    logo: '',
+    description: 'Friendship calendar',
+  },
+  {
+    id: 'tenure',
+    name: 'Tenure',
+    color: '#9333EA',
+    logo: '/tenure/tenure_logo.png',
+    description: 'Eternal Career Companion',
+  },
+  {
+    id: 'manifest',
+    name: 'Manifest',
+    color: '#000000',
+    logo: '',
+    description: 'Picky matchmaking',
+  },
+  { id: 'lol', name: 'LoL', color: '#2196F3', logo: '', description: 'Gamified chores' },
+  {
+    id: 'papertrail',
+    name: 'Paper Trail',
+    color: '#FFE500',
+    logo: '',
+    description: 'News changelog',
+  },
 ];
 
 export const tooltipContent: Record<string, TooltipContent> = {

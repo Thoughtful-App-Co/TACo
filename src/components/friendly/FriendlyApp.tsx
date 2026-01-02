@@ -12,6 +12,7 @@ import { Component, createSignal, For, Show, createMemo } from 'solid-js';
 import { zenTouch, modernTokens, zenAnimations } from '../../theme/zenTouch';
 import { store } from './store';
 import { TimeSlot, Booking, BADGES } from '../../schemas/friendly.schema';
+import { AppMenuTrigger } from '../common/AppMenuTrigger';
 
 // --- DESIGN TOKENS SHORTHAND ---
 const t = zenTouch;
@@ -1345,20 +1346,22 @@ const DashboardView: Component = () => {
           }}
         >
           <div>
-            <h1
-              style={{
-                margin: 0,
-                'font-size': m.fontSize['2xl'],
-                color: 'white',
-                'font-weight': m.fontWeight.bold,
-                // 'background': m.gradients.primary, // Removed for better contrast
-                // '-webkit-background-clip': 'text',
-                // '-webkit-text-fill-color': 'transparent',
-                // 'background-clip': 'text',
-              }}
-            >
-              FriendLy
-            </h1>
+            <AppMenuTrigger>
+              <h1
+                style={{
+                  margin: 0,
+                  'font-size': m.fontSize['2xl'],
+                  color: 'white',
+                  'font-weight': m.fontWeight.bold,
+                  // 'background': m.gradients.primary, // Removed for better contrast
+                  // '-webkit-background-clip': 'text',
+                  // '-webkit-text-fill-color': 'transparent',
+                  // 'background-clip': 'text',
+                }}
+              >
+                FriendLy
+              </h1>
+            </AppMenuTrigger>
             <div
               style={{
                 display: 'flex',

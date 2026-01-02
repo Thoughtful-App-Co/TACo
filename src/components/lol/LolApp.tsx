@@ -11,6 +11,7 @@
 import { Component, For, createSignal } from 'solid-js';
 import { Chore, HouseholdMember } from '../../schemas/lol.schema';
 import { papermorphic, paperElevation, paperChips } from '../../theme/papermorphic';
+import { AppMenuTrigger } from '../common/AppMenuTrigger';
 
 const sampleMembers: HouseholdMember[] = [
   {
@@ -402,22 +403,24 @@ export const LolApp: Component = () => {
           }}
         >
           <div style={{ display: 'flex', 'align-items': 'center', gap: '12px' }}>
-            <div
-              style={{
-                width: '44px',
-                height: '44px',
-                'border-radius': papermorphic.radii.md,
-                background: papermorphic.colors.primary,
-                display: 'flex',
-                'align-items': 'center',
-                'justify-content': 'center',
-                'box-shadow': paperElevation[1],
-              }}
-            >
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
-                <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l4.59-4.58L18 11l-6 6z" />
-              </svg>
-            </div>
+            <AppMenuTrigger>
+              <div
+                style={{
+                  width: '44px',
+                  height: '44px',
+                  'border-radius': papermorphic.radii.md,
+                  background: papermorphic.colors.primary,
+                  display: 'flex',
+                  'align-items': 'center',
+                  'justify-content': 'center',
+                  'box-shadow': paperElevation[1],
+                }}
+              >
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="white">
+                  <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l4.59-4.58L18 11l-6 6z" />
+                </svg>
+              </div>
+            </AppMenuTrigger>
             <div>
               <h1
                 style={{

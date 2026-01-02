@@ -11,6 +11,7 @@
 import { Component, For, createSignal } from 'solid-js';
 import { Contact } from '../../schemas/nurture.schema';
 import { biophilic } from '../../theme/biophilic';
+import { AppMenuTrigger } from '../common/AppMenuTrigger';
 
 // Sample data
 const sampleContacts: Contact[] = [
@@ -332,26 +333,31 @@ export const NurtureApp: Component = () => {
               'margin-bottom': '8px',
             }}
           >
-            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-              <circle cx="24" cy="24" r="22" fill={biophilic.colors.primary} opacity="0.1" />
-              <path
-                d="M24 40V20"
-                stroke={biophilic.colors.primary}
-                stroke-width="3"
-                stroke-linecap="round"
-              />
-              <path
-                d="M24 20C24 12 32 8 40 12C32 4 24 8 24 20Z"
-                fill={biophilic.colors.secondary}
-              />
-              <path d="M24 28C24 20 16 16 8 20C16 12 24 16 24 28Z" fill={biophilic.colors.accent} />
-              <path
-                d="M24 36C24 30 18 28 14 30"
-                stroke={biophilic.colors.primary}
-                stroke-width="2"
-                stroke-linecap="round"
-              />
-            </svg>
+            <AppMenuTrigger>
+              <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                <circle cx="24" cy="24" r="22" fill={biophilic.colors.primary} opacity="0.1" />
+                <path
+                  d="M24 40V20"
+                  stroke={biophilic.colors.primary}
+                  stroke-width="3"
+                  stroke-linecap="round"
+                />
+                <path
+                  d="M24 20C24 12 32 8 40 12C32 4 24 8 24 20Z"
+                  fill={biophilic.colors.secondary}
+                />
+                <path
+                  d="M24 28C24 20 16 16 8 20C16 12 24 16 24 28Z"
+                  fill={biophilic.colors.accent}
+                />
+                <path
+                  d="M24 36C24 30 18 28 14 30"
+                  stroke={biophilic.colors.primary}
+                  stroke-width="2"
+                  stroke-linecap="round"
+                />
+              </svg>
+            </AppMenuTrigger>
             <h1
               style={{
                 margin: 0,

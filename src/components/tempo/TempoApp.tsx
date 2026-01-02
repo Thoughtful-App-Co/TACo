@@ -19,6 +19,7 @@ import { Tabs, type Tab } from './ui/tabs';
 import { SessionsList } from './session-manager/components/sessions-list';
 import { SessionView } from './session-manager/components/session-view';
 import { ApiConfigService } from './services/api-config.service';
+import { AppMenuTrigger } from '../common/AppMenuTrigger';
 
 interface Stats {
   totalTasks: number;
@@ -151,7 +152,9 @@ export const TempoApp: Component = () => {
           'justify-content': 'space-between',
         }}
       >
-        <TempoLogo size={48} />
+        <AppMenuTrigger>
+          <TempoLogo size={48} />
+        </AppMenuTrigger>
         <Button
           variant="ghost"
           size="icon"

@@ -7,6 +7,7 @@ export interface App {
   name: string;
   color: string;
   logo: string;
+  description?: string; // Optional description for footer display
 }
 
 export interface TooltipContent {

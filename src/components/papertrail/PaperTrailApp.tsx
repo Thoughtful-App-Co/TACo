@@ -23,6 +23,7 @@ import { useStoryClusters } from './hooks/useStoryClusters';
 import { Tabs } from './ui/tabs';
 import { Button } from './ui/button';
 import { SettingsModal } from './ui/settings-modal';
+import { AppMenuTrigger } from '../common/AppMenuTrigger';
 import { NewsFeed } from './components/NewsFeed';
 import { DiffView } from './components/DiffView';
 import { SimpleGraph } from './components/SimpleGraph';
@@ -146,22 +147,24 @@ export const PaperTrailApp: Component = () => {
             {/* Logo/Masthead */}
             <div style={{ display: 'flex', 'align-items': 'center', gap: '16px' }}>
               {/* Icon - construction paper lifted style */}
-              <div
-                style={{
-                  width: '56px',
-                  height: '56px',
-                  background: yellowScale[500],
-                  display: 'flex',
-                  'align-items': 'center',
-                  'justify-content': 'center',
-                  border: '3px solid #000000',
-                  'box-shadow': '4px 4px 0 #000000',
-                }}
-              >
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="#000000">
-                  <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
-                </svg>
-              </div>
+              <AppMenuTrigger>
+                <div
+                  style={{
+                    width: '56px',
+                    height: '56px',
+                    background: yellowScale[500],
+                    display: 'flex',
+                    'align-items': 'center',
+                    'justify-content': 'center',
+                    border: '3px solid #000000',
+                    'box-shadow': '4px 4px 0 #000000',
+                  }}
+                >
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="#000000">
+                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z" />
+                  </svg>
+                </div>
+              </AppMenuTrigger>
 
               {/* Title */}
               <div>

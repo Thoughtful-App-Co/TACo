@@ -21,6 +21,7 @@ import {
   InfoIcon,
   tokens,
   availableApps,
+  allApps,
   tooltipContent,
   faqItems,
   type TacoClubTier,
@@ -88,7 +89,7 @@ export const PricingPage: Component = () => {
     if (selectedExtras().includes('tempo')) {
       total += tempoAnnual() ? 120 : 144;
     }
-    if (selectedExtras().includes('tenure')) total += 12;
+    if (selectedExtras().includes('tenure')) total += 30;
     return total;
   });
 
@@ -940,12 +941,12 @@ export const PricingPage: Component = () => {
                             color: tokens.colors.textDim,
                           }}
                         >
-                          $12
+                          $30
                         </span>{' '}
-                        $3
+                        $7.50
                       </>
                     ) : (
-                      '$12'
+                      '$30'
                     )}
                   </span>
                 </div>
@@ -1449,7 +1450,7 @@ export const PricingPage: Component = () => {
                   gap: '10px',
                 }}
               >
-                <For each={availableApps}>
+                <For each={allApps}>
                   {(app) => (
                     <li>
                       <A
@@ -1480,14 +1481,7 @@ export const PricingPage: Component = () => {
                         />
                         {app.name}
                         <span style={{ 'font-size': '11px', color: 'rgba(255,255,255,0.3)' }}>
-                          —{' '}
-                          {app.id === 'tempo'
-                            ? 'A.D.H.D Task Master'
-                            : app.id === 'tenure'
-                              ? 'Eternal Career Companion'
-                              : app.id === 'nurture'
-                                ? 'Relationship Management'
-                                : ''}
+                          — {app.description}
                         </span>
                       </A>
                     </li>

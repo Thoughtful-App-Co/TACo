@@ -317,7 +317,7 @@ export const ExtrasSection: Component<ExtrasSectionProps> = (props) => {
 
           <div style={{ 'text-align': 'right' }}>
             <div style={{ 'font-size': '20px', 'font-weight': '700', color: tokens.colors.text }}>
-              $12
+              $30
               <span
                 style={{
                   'font-size': '14px',
