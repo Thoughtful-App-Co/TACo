@@ -1,4 +1,4 @@
-# Tempo Documentation
+# TACo
 
 Complete documentation for the Tempo time-management application built with Solid.js and premium design system.
 
