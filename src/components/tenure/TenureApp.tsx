@@ -20,7 +20,20 @@ import {
 } from 'solid-js';
 import { useLocation, useNavigate } from '@solidjs/router';
 import { JobMatch } from '../../schemas/tenure.schema';
-import { IconSearch, IconStar, IconGrid, IconFileText, IconBriefcase } from './pipeline/ui/Icons';
+import {
+  XIcon,
+  SmileyAngryIcon,
+  SmileySadIcon,
+  SmileyMehIcon,
+  SmileyIcon,
+  HeartIcon,
+  WrenchIcon,
+  BinocularsIcon,
+  CompassToolIcon,
+  HammerIcon,
+  FlowerLotusIcon,
+  FlameIcon,
+} from 'solid-phosphor/bold';
 import {
   searchCareers,
   getInterestProfilerQuestions,
@@ -33,11 +46,36 @@ import {
   OnetCareerDetails,
 } from '../../services/onet';
 import { formatSalary } from './pipeline/utils';
-import { maximalist, maxPalette, maxGradients } from '../../theme/maximalist';
+import { maximalist, maxPalette, maxGradients, maxAurora } from '../../theme/maximalist';
 import { PipelineView, pipelineStore, Sidebar, SidebarView } from './pipeline';
 import { PrepareApp } from './prepare';
 import { FeatureFlags, DEFAULT_FEATURE_FLAGS } from '../../schemas/pipeline.schema';
 import { TenureThemeProvider } from './TenureThemeProvider';
+import { ProsperView } from './prosper';
+import {
+  DiscoverOverview,
+  DiscoverSubTabs,
+  DiscoverSubTab,
+  OceanAssessment,
+  OceanResults,
+  JungianAssessment,
+  JungianResults,
+} from './discover';
+import {
+  migrateLegacyRiasecData,
+  isRiasecCompleted,
+  isOceanCompleted,
+  isJungianCompleted,
+  hasAnyAssessmentCompleted,
+  areAllAssessmentsCompleted,
+  getRiasecAssessment,
+  getOceanAssessment,
+  updateRiasecAssessment,
+} from '../../stores/assessment-store';
+import { loadOceanProfile } from './services/ocean';
+import { loadJungianProfile } from './services/jungian';
+import { AppMenuTrigger } from '../common/AppMenuTrigger';
+import { IconTrophy } from './pipeline/ui/Icons';
 
 // Helper to get RGB string from hex
 const hexToRgb = (hex: string) => {
@@ -284,7 +322,7 @@ const JobDetailModal: Component<{ job: OnetCareerDetails; onClose: () => void }>
             cursor: 'pointer',
           }}
         >
-          ✕
+          <XIcon width={24} height={24} />
         </button>
 
         <h2
@@ -472,7 +510,7 @@ const RadarChart: Component<{ scores: RiasecScoreWithDetails }> = (props) => {
                 })
                 .join(' ')}
               fill="none"
-              stroke="rgba(255,255,255,0.1)"
+              stroke="rgba(255,255,255,0.3)"
               stroke-width="1"
             />
           )}
@@ -487,7 +525,7 @@ const RadarChart: Component<{ scores: RiasecScoreWithDetails }> = (props) => {
               y1="150"
               x2={150 + Math.cos(angle) * 100}
               y2={150 + Math.sin(angle) * 100}
-              stroke="rgba(255,255,255,0.1)"
+              stroke="rgba(255,255,255,0.3)"
               stroke-width="1"
             />
           );
@@ -496,8 +534,8 @@ const RadarChart: Component<{ scores: RiasecScoreWithDetails }> = (props) => {
         {/* Data Polygon */}
         <polygon
           points={polygonPoints()}
-          fill={currentTheme().colors.primary + '33'}
-          stroke={currentTheme().colors.primary}
+          fill="rgba(255,255,255,0.25)"
+          stroke="rgba(255,255,255,0.9)"
           stroke-width="3"
           filter="url(#glow)"
         />
@@ -509,8 +547,8 @@ const RadarChart: Component<{ scores: RiasecScoreWithDetails }> = (props) => {
               cx={p.x}
               cy={p.y}
               r={6}
-              fill={maximalist.colors.background}
-              stroke={p.color}
+              fill={p.color}
+              stroke={maximalist.colors.background}
               stroke-width="2"
               style={{ cursor: 'pointer', transition: 'all 0.2s' }}
               onMouseEnter={() => setHoveredPoint(p)}
@@ -530,6 +568,9 @@ const RadarChart: Component<{ scores: RiasecScoreWithDetails }> = (props) => {
                 x={x}
                 y={y}
                 fill={axis.color}
+                stroke="rgba(0,0,0,0.6)"
+                stroke-width="3"
+                paint-order="stroke fill"
                 text-anchor="middle"
                 dominant-baseline="middle"
                 font-family={maximalist.fonts.heading}
@@ -911,6 +952,20 @@ export const TenureApp: Component = () => {
     return match ? (match[1].toLowerCase() as FeatureId) : null;
   });
 
+  // Extract discover sub-tab from pathname (e.g., /tenure/discover/personality -> personality)
+  const discoverSubTabFromPath = createMemo((): DiscoverSubTab | null => {
+    const path = pathname();
+    const match = path.match(/^\/tenure\/discover\/([a-z-]+)/);
+    if (match) {
+      const subTab = match[1] as DiscoverSubTab;
+      // Validate it's a valid sub-tab
+      if (['overview', 'interests', 'personality', 'cognitive-style'].includes(subTab)) {
+        return subTab;
+      }
+    }
+    return null;
+  });
+
   // Get the user's configured default landing tab from settings
   const getDefaultLandingTab = (): TabName => {
     const defaultTab = pipelineStore.state.settings.defaultLandingTab || 'discover';
@@ -940,6 +995,33 @@ export const TenureApp: Component = () => {
       // If no featureId in URL, redirect to the user's default landing tab
       const defaultTab = pipelineStore.state.settings.defaultLandingTab || 'discover';
       navigate(`/tenure/${defaultTab}`, { replace: true });
+    }
+  });
+
+  // Sync discover sub-tab with URL when pathname changes
+  createEffect(() => {
+    const path = pathname();
+    const featureId = featureIdFromPath();
+    const subTab = discoverSubTabFromPath();
+
+    // If we're on /tenure/discover without a sub-tab, redirect to /overview
+    if (featureId === 'discover' && !subTab && path === '/tenure/discover') {
+      navigate('/tenure/discover/overview', { replace: true });
+      return;
+    }
+
+    // Sync state with URL
+    if (subTab && subTab !== discoverSubTab()) {
+      setDiscoverSubTab(subTab);
+
+      // Also restore assessment state based on completion
+      if (subTab === 'interests' && isRiasecCompleted()) {
+        setAssessmentState('results');
+      } else if (subTab === 'personality' && isOceanCompleted()) {
+        setOceanAssessmentState('results');
+      } else if (subTab === 'cognitive-style' && isJungianCompleted()) {
+        setJungianAssessmentState('results');
+      }
     }
   });
 
@@ -973,6 +1055,32 @@ export const TenureApp: Component = () => {
   const [selectedJob, setSelectedJob] = createSignal<OnetCareerDetails | null>(null);
   const [isLoading, setIsLoading] = createSignal(false);
   const [isJobLoading, setIsJobLoading] = createSignal(false);
+
+  // Discover Panel State - Initialize from URL or default to 'overview'
+  const getInitialDiscoverSubTab = (): DiscoverSubTab => {
+    const subTab = discoverSubTabFromPath();
+    return subTab || 'overview';
+  };
+  const [discoverSubTab, setDiscoverSubTab] = createSignal<DiscoverSubTab>(
+    getInitialDiscoverSubTab()
+  );
+
+  // OCEAN Assessment State
+  const [oceanAssessmentState, setOceanAssessmentState] = createSignal<
+    'intro' | 'questions' | 'results'
+  >('intro');
+
+  // Jungian Assessment State
+  const [jungianAssessmentState, setJungianAssessmentState] = createSignal<
+    'intro' | 'questions' | 'results'
+  >('intro');
+
+  // Completion tracking signals (for reactive UI updates)
+  const [oceanCompleted, setOceanCompleted] = createSignal(isOceanCompleted());
+  const [jungianCompleted, setJungianCompleted] = createSignal(isJungianCompleted());
+
+  // Celebration state for all assessments complete
+  const [showCelebration, setShowCelebration] = createSignal(false);
 
   // Effect to sync Assessment State with Scores
   createEffect(() => {
@@ -1175,6 +1283,82 @@ export const TenureApp: Component = () => {
     setIsJobLoading(false);
   };
 
+  // OCEAN Assessment Handlers
+  const handleStartOcean = () => {
+    setOceanAssessmentState('questions');
+    navigate('/tenure/discover/personality');
+  };
+
+  const handleOceanComplete = () => {
+    setOceanAssessmentState('results');
+    navigate('/tenure/discover/personality');
+    setOceanCompleted(true);
+    // Check if all assessments are now complete
+    if (areAllAssessmentsCompleted()) {
+      setShowCelebration(true);
+    }
+  };
+
+  const handleOceanCancel = () => {
+    setOceanAssessmentState('intro');
+    navigate('/tenure/discover/overview');
+  };
+
+  const handleRetakeOcean = () => {
+    setOceanAssessmentState('questions');
+  };
+
+  // Jungian Assessment Handlers
+  const handleStartJungian = () => {
+    setJungianAssessmentState('questions');
+    navigate('/tenure/discover/cognitive-style');
+  };
+
+  const handleJungianComplete = () => {
+    setJungianAssessmentState('results');
+    navigate('/tenure/discover/cognitive-style');
+    setJungianCompleted(true);
+    // Check if all assessments are now complete
+    if (areAllAssessmentsCompleted()) {
+      setShowCelebration(true);
+    }
+  };
+
+  const handleJungianCancel = () => {
+    setJungianAssessmentState('intro');
+    navigate('/tenure/discover/overview');
+  };
+
+  const handleRetakeJungian = () => {
+    setJungianAssessmentState('questions');
+  };
+
+  // Discover Navigation Handlers
+  const handleStartRiasec = () => {
+    setAssessmentState('intro');
+    navigate('/tenure/discover/interests');
+  };
+
+  const handleViewRiasecResults = () => {
+    setAssessmentState('results');
+    navigate('/tenure/discover/interests');
+  };
+
+  const handleViewOceanResults = () => {
+    setOceanAssessmentState('results');
+    navigate('/tenure/discover/personality');
+  };
+
+  const handleViewJungianResults = () => {
+    setJungianAssessmentState('results');
+    navigate('/tenure/discover/cognitive-style');
+  };
+
+  const handleDiscoverSubTabChange = (tab: DiscoverSubTab) => {
+    // Navigate to the new URL - the sync effect will update state and assessment views
+    navigate(`/tenure/discover/${tab}`);
+  };
+
   // Dynamic SVG Patterns
   const dynamicPatterns = createMemo(() => {
     const color = currentTheme().colors.primary.replace('#', '%23');
@@ -1226,45 +1410,214 @@ export const TenureApp: Component = () => {
           'overflow-x': 'hidden',
         }}
       >
-        {/* Decorative background elements */}
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            'pointer-events': 'none',
-            'background-image': dynamicPatterns().zigzag,
-            opacity: 0.5,
-          }}
-        />
+        {/* Aurora background - liquid glass effect */}
+        <Show
+          when={riasecScore()}
+          fallback={
+            <>
+              {/* Multi-color aurora - Dampened for readability, focused on header */}
 
-        {/* Gradient orbs */}
-        <div
-          style={{
-            position: 'fixed',
-            top: '-200px',
-            right: '-100px',
-            width: '500px',
-            height: '500px',
-            background: `radial-gradient(circle, ${currentTheme().colors.primary}40, transparent 70%)`,
-            'border-radius': '50%',
-            filter: 'blur(60px)',
-          }}
-        />
-        <div
-          style={{
-            position: 'fixed',
-            bottom: '-150px',
-            left: '-50px',
-            width: '400px',
-            height: '400px',
-            background: `radial-gradient(circle, ${currentTheme().colors.secondary}30, transparent 70%)`,
-            'border-radius': '50%',
-            filter: 'blur(60px)',
-          }}
-        />
+              {/* BACKGROUND LAYER - Very subtle atmospheric fill (header region) */}
+              {/* Top-right corner: Conventional (Cyan) */}
+              <div
+                class="aurora-orb aurora-background"
+                style={{
+                  position: 'fixed',
+                  top: '-8%',
+                  right: '-10%',
+                  width: '35%',
+                  height: '35%',
+                  background: `radial-gradient(ellipse 100% 100% at 70% 30%, ${maximalist.riasec!.conventional}05 0%, transparent 70%)`,
+                  'border-radius': '50%',
+                  filter: 'blur(110px)',
+                  'pointer-events': 'none',
+                  animation: 'aurora-drift-1 28.8s ease-in-out infinite',
+                  opacity: 0.7,
+                }}
+              />
+              {/* Top-left accent: Realistic (Orange) - moved from bottom */}
+              <div
+                class="aurora-orb aurora-background"
+                style={{
+                  position: 'fixed',
+                  top: '-5%',
+                  left: '-12%',
+                  width: '32%',
+                  height: '32%',
+                  background: `radial-gradient(ellipse 100% 100% at 30% 30%, ${maximalist.riasec!.realistic}05 0%, transparent 70%)`,
+                  'border-radius': '50%',
+                  filter: 'blur(105px)',
+                  'pointer-events': 'none',
+                  animation: 'aurora-drift-2 28.8s ease-in-out infinite reverse',
+                  opacity: 0.7,
+                }}
+              />
+
+              {/* MID LAYER - Atmospheric support (upper-middle viewport) */}
+              {/* Top center area: Social (Green) - moved up from 61.8% */}
+              <div
+                class="aurora-orb aurora-mid"
+                style={{
+                  position: 'fixed',
+                  top: '15%',
+                  right: '-8%',
+                  width: '40%',
+                  height: '40%',
+                  background: `radial-gradient(ellipse 110% 110% at 80% 40%, ${maximalist.riasec!.social}07 0%, transparent 65%)`,
+                  'border-radius': '50%',
+                  filter: 'blur(95px)',
+                  'pointer-events': 'none',
+                  animation: 'aurora-drift-3 36s ease-in-out infinite',
+                  opacity: 0.75,
+                }}
+              />
+              {/* Header area: Investigative (Purple) */}
+              <div
+                class="aurora-orb aurora-mid"
+                style={{
+                  position: 'fixed',
+                  top: '-12%',
+                  left: '38.2%',
+                  width: '42%',
+                  height: '42%',
+                  background: `radial-gradient(ellipse 105% 105% at 50% 35%, ${maximalist.riasec!.investigative}06 0%, transparent 65%)`,
+                  'border-radius': '50%',
+                  filter: 'blur(100px)',
+                  'pointer-events': 'none',
+                  animation: 'aurora-drift-4 32s ease-in-out infinite',
+                  opacity: 0.75,
+                }}
+              />
+
+              {/* FOREGROUND LAYER - Primary focal points (header focus area) */}
+              {/* Hero (Header left - Golden ratio): Artistic (Pink) - PRIMARY */}
+              <div
+                class="aurora-orb aurora-hero"
+                style={{
+                  position: 'fixed',
+                  top: '8%',
+                  left: '-18%',
+                  width: '58%',
+                  height: '58%',
+                  background: `radial-gradient(ellipse 120% 120% at 28% 40%, ${maximalist.riasec!.artistic}09 0%, transparent 60%)`,
+                  'border-radius': '50%',
+                  filter: 'blur(85px)',
+                  'pointer-events': 'none',
+                  animation: 'aurora-drift-1 24s ease-in-out infinite',
+                  opacity: 0.8,
+                }}
+              />
+              {/* Secondary focal (Header right): Enterprising (Yellow) */}
+              <div
+                class="aurora-orb aurora-secondary"
+                style={{
+                  position: 'fixed',
+                  top: '5%',
+                  right: '25%',
+                  width: '48%',
+                  height: '48%',
+                  background: `radial-gradient(ellipse 115% 115% at 65% 45%, ${maximalist.riasec!.enterprising}08 0%, transparent 60%)`,
+                  'border-radius': '50%',
+                  filter: 'blur(90px)',
+                  'pointer-events': 'none',
+                  animation: 'aurora-drift-2 36s ease-in-out infinite',
+                  opacity: 0.8,
+                }}
+              />
+            </>
+          }
+        >
+          {/* Personalized duotone aurora - A-Grade design with focused identity */}
+
+          {/* PRIMARY COLOR LAYERS (60% visual dominance) - Dampened, header-focused */}
+          {/* Hero - Header area left: PRIMARY FOCUS */}
+          <div
+            class="aurora-orb aurora-primary-hero"
+            style={{
+              position: 'fixed',
+              top: '6%',
+              left: '-20%',
+              width: '62%',
+              height: '62%',
+              background: `radial-gradient(ellipse 125% 125% at 28% 38%, ${currentTheme().colors.primary}12 0%, transparent 60%)`,
+              'border-radius': '50%',
+              filter: 'blur(90px)',
+              'pointer-events': 'none',
+              animation: 'aurora-drift-1 24s ease-in-out infinite',
+              opacity: 0.8,
+            }}
+          />
+          {/* Support - Top-right area */}
+          <div
+            class="aurora-orb aurora-primary-support"
+            style={{
+              position: 'fixed',
+              top: '-10%',
+              right: '-12%',
+              width: '38%',
+              height: '38%',
+              background: `radial-gradient(ellipse 110% 110% at 68% 35%, ${currentTheme().colors.primary}08 0%, transparent 65%)`,
+              'border-radius': '50%',
+              filter: 'blur(100px)',
+              'pointer-events': 'none',
+              animation: 'aurora-drift-3 36s ease-in-out infinite',
+              opacity: 0.7,
+            }}
+          />
+          {/* Ambient - Header center atmospheric fill */}
+          <div
+            class="aurora-orb aurora-primary-ambient"
+            style={{
+              position: 'fixed',
+              top: '-6%',
+              left: '30%',
+              width: '32%',
+              height: '32%',
+              background: `radial-gradient(ellipse 100% 100% at 50% 30%, ${currentTheme().colors.primary}05 0%, transparent 70%)`,
+              'border-radius': '50%',
+              filter: 'blur(105px)',
+              'pointer-events': 'none',
+              animation: 'aurora-drift-2 42s ease-in-out infinite',
+              opacity: 0.65,
+            }}
+          />
+
+          {/* SECONDARY COLOR LAYERS (40% visual support) - Header complement */}
+          {/* Focal - Header right area */}
+          <div
+            class="aurora-orb aurora-secondary-focal"
+            style={{
+              position: 'fixed',
+              top: '10%',
+              right: '-10%',
+              width: '50%',
+              height: '50%',
+              background: `radial-gradient(ellipse 120% 120% at 72% 42%, ${currentTheme().colors.secondary}10 0%, transparent 62%)`,
+              'border-radius': '50%',
+              filter: 'blur(95px)',
+              'pointer-events': 'none',
+              animation: 'aurora-drift-2 30s ease-in-out infinite',
+              opacity: 0.75,
+            }}
+          />
+          {/* Accent - Upper left complement */}
+          <div
+            class="aurora-orb aurora-secondary-accent"
+            style={{
+              position: 'fixed',
+              top: '-8%',
+              left: '-10%',
+              width: '36%',
+              height: '36%',
+              background: `radial-gradient(ellipse 105% 105% at 32% 32%, ${currentTheme().colors.secondary}06 0%, transparent 68%)`,
+              'border-radius': '50%',
+              filter: 'blur(110px)',
+              'pointer-events': 'none',
+              animation: 'aurora-drift-4 48s ease-in-out infinite',
+              opacity: 0.68,
+            }}
+          />
+        </Show>
 
         <div style={{ position: 'relative', 'z-index': 1 }}>
           {/* Header */}
@@ -1278,30 +1631,31 @@ export const TenureApp: Component = () => {
           >
             <div style={{ display: 'flex', 'align-items': 'center', gap: '16px' }}>
               {/* Logo with dynamic colored border */}
-              <div
-                style={{
-                  width: '56px',
-                  height: '56px',
-                  'border-radius': '16px',
-                  background: 'transparent',
-                  border: `2px solid ${currentTheme().colors.primary}`,
-                  display: 'flex',
-                  'align-items': 'center',
-                  'justify-content': 'center',
-                  'box-shadow': currentTheme().shadows.md,
-                }}
-              >
+              <AppMenuTrigger>
                 <div
                   style={{
-                    height: '52px',
-                    width: '52px',
-                    'background-color': currentTheme().colors.primary,
-                    '-webkit-mask': 'url(/tenure/tenure_logo.png) center/contain no-repeat',
-                    mask: 'url(/tenure/tenure_logo.png) center/contain no-repeat',
+                    width: '56px',
+                    height: '56px',
+                    'border-radius': '16px',
+                    background: 'transparent',
+                    border: `2px solid ${currentTheme().colors.primary}`,
+                    display: 'flex',
+                    'align-items': 'center',
+                    'justify-content': 'center',
+                    'box-shadow': currentTheme().shadows.md,
                   }}
-                />
+                >
+                  <div
+                    style={{
+                      height: '52px',
+                      width: '52px',
+                      'background-color': currentTheme().colors.primary,
+                      '-webkit-mask': 'url(/tenure/tenure_logo.png) center/contain no-repeat',
+                      mask: 'url(/tenure/tenure_logo.png) center/contain no-repeat',
+                    }}
+                  />
 
-                {/* OPTION 2: "T" Upward Arrow - T shape integrated with growth arrow
+                  {/* OPTION 2: "T" Upward Arrow - T shape integrated with growth arrow
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
                 <path
                   d="M4 7h16"
@@ -1336,7 +1690,7 @@ export const TenureApp: Component = () => {
               </svg>
               */}
 
-                {/* OPTION 3: "T" Staircase - T with ascending steps on vertical stem
+                  {/* OPTION 3: "T" Staircase - T with ascending steps on vertical stem
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
                 <rect x="4" y="5" width="16" height="3" rx="1.5" fill={currentTheme().colors.primary} />
                 <path
@@ -1356,7 +1710,8 @@ export const TenureApp: Component = () => {
                 />
               </svg>
               */}
-              </div>
+                </div>
+              </AppMenuTrigger>
               <div>
                 <h1
                   style={{
@@ -1410,11 +1765,11 @@ export const TenureApp: Component = () => {
               >
                 {(tab) => {
                   const getIcon = () => {
-                    if (tab === 'Discover') return <IconSearch size={18} />;
-                    if (tab === 'Prepare') return <IconFileText size={18} />;
-                    if (tab === 'Prospect') return <IconGrid size={18} />;
-                    if (tab === 'Prosper') return <IconBriefcase size={18} />;
-                    if (tab === 'Matches') return <IconStar size={18} />;
+                    if (tab === 'Discover') return <BinocularsIcon width={18} height={18} />;
+                    if (tab === 'Prepare') return <CompassToolIcon width={18} height={18} />;
+                    if (tab === 'Prospect') return <HammerIcon width={18} height={18} />;
+                    if (tab === 'Prosper') return <FlowerLotusIcon width={18} height={18} />;
+                    if (tab === 'Matches') return <FlameIcon width={18} height={18} />;
                     return null;
                   };
 
@@ -1598,10 +1953,15 @@ export const TenureApp: Component = () => {
           {/* Main content */}
           <main
             style={{
-              padding: activeTab() === 'Prospect' ? '0' : '0 32px 48px',
-              'max-width': activeTab() === 'Prospect' ? 'none' : '1400px',
-              margin: activeTab() === 'Prospect' ? '0' : '0 auto',
-              height: activeTab() === 'Prospect' ? 'calc(100vh - 100px)' : 'auto',
+              padding:
+                activeTab() === 'Prospect' || activeTab() === 'Prosper' ? '0' : '0 32px 48px',
+              'max-width':
+                activeTab() === 'Prospect' || activeTab() === 'Prosper' ? 'none' : '1400px',
+              margin: activeTab() === 'Prospect' || activeTab() === 'Prosper' ? '0' : '0 auto',
+              height:
+                activeTab() === 'Prospect' || activeTab() === 'Prosper'
+                  ? 'calc(100vh - 100px)'
+                  : 'auto',
             }}
           >
             {activeTab() === 'Matches' && (
@@ -1671,588 +2031,670 @@ export const TenureApp: Component = () => {
             )}
 
             {activeTab() === 'Discover' && (
-              <div
-                style={{
-                  'max-width': '800px',
-                  margin: '0 auto',
-                  'padding-top': '48px',
-                }}
-              >
-                <Show when={assessmentState() === 'intro'}>
-                  <div style={{ 'text-align': 'center' }}>
-                    <div
-                      style={{
-                        width: '120px',
-                        height: '120px',
-                        'border-radius': '50%',
-                        background: maxGradients.aurora,
-                        margin: '0 auto 32px',
-                        display: 'flex',
-                        'align-items': 'center',
-                        'justify-content': 'center',
-                        'box-shadow': currentTheme().shadows.lg,
-                      }}
-                    >
-                      <svg width="48" height="48" viewBox="0 0 24 24" fill="white">
-                        <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z" />
-                      </svg>
-                    </div>
+              <div style={{ 'padding-top': '24px' }}>
+                {/* Sub-tabs - Always visible */}
+                <DiscoverSubTabs
+                  activeTab={discoverSubTab()}
+                  onTabChange={handleDiscoverSubTabChange}
+                  showInterests={!!riasecScore()}
+                  showPersonality={!!riasecScore() || oceanCompleted()}
+                  showCognitiveStyle={jungianCompleted()}
+                  currentThemeGradient={currentTheme().gradients.primary}
+                />
 
-                    <h2
-                      style={{
-                        margin: '0 0 16px 0',
-                        'font-family': maximalist.fonts.heading,
-                        'font-size': '32px',
-                        'font-weight': '700',
-                      }}
-                    >
-                      Discover Your Strengths
-                    </h2>
-
-                    <p
-                      style={{
-                        margin: '0 0 32px 0',
-                        'font-size': '18px',
-                        color: maximalist.colors.textMuted,
-                        'line-height': '1.6',
-                      }}
-                    >
-                      Take the O*NET Interest Profiler to uncover your unique strengths profile.
-                      This 60-question assessment provides personalized insights into your work
-                      interests.
-                    </p>
-
-                    <button
-                      onClick={startAssessment}
-                      disabled={isLoading()}
-                      style={{
-                        padding: '18px 48px',
-                        background: currentTheme().gradients.primary,
-                        border: 'none',
-                        'border-radius': maximalist.radii.md,
-                        color: currentTheme().colors.textOnPrimary,
-                        'font-size': '18px',
-                        'font-weight': '700',
-                        cursor: isLoading() ? 'wait' : 'pointer',
-                        'box-shadow': currentTheme().shadows.md,
-                        display: 'inline-flex',
-                        'align-items': 'center',
-                        gap: '12px',
-                        opacity: isLoading() ? 0.7 : 1,
-                      }}
-                    >
-                      <Show when={!isLoading()} fallback="Loading...">
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                          <path d="M8 5v14l11-7z" />
-                        </svg>
-                        Start Assessment
-                      </Show>
-                    </button>
-                  </div>
+                {/* Overview Tab - Hub showing all assessments */}
+                <Show when={discoverSubTab() === 'overview'}>
+                  <DiscoverOverview
+                    onStartRiasec={handleStartRiasec}
+                    onStartOcean={handleStartOcean}
+                    onStartJungian={handleStartJungian}
+                    onViewRiasecResults={handleViewRiasecResults}
+                    onViewOceanResults={handleViewOceanResults}
+                    onViewJungianResults={handleViewJungianResults}
+                    currentThemeGradient={currentTheme().gradients.primary}
+                    currentThemePrimary={currentTheme().colors.primary}
+                    currentThemeTextOnPrimary={currentTheme().colors.textOnPrimary}
+                  />
                 </Show>
 
-                <Show when={assessmentState() === 'questions' && questions().length > 0}>
+                {/* RIASEC Assessment Tab */}
+                <Show when={discoverSubTab() === 'interests'}>
                   <div
                     style={{
-                      background: maximalist.colors.surface,
-                      padding: '40px',
-                      'border-radius': maximalist.radii.lg,
-                      border: `2px solid ${maximalist.colors.border}`,
-                      'box-shadow': currentTheme().shadows.lg,
-                    }}
-                  >
-                    <div
-                      style={{
-                        'margin-bottom': '24px',
-                        display: 'flex',
-                        'justify-content': 'space-between',
-                        'align-items': 'center',
-                      }}
-                    >
-                      <span style={{ color: maximalist.colors.textMuted, 'font-size': '17px' }}>
-                        Question {currentQuestionIndex() + 1} of 60
-                      </span>
-                      <span style={{ color: maximalist.colors.accent, 'font-weight': '600' }}>
-                        {Math.round((currentQuestionIndex() / 60) * 100)}% Complete
-                      </span>
-                    </div>
-
-                    {/* Progress Bar */}
-                    <div
-                      style={{
-                        height: '6px',
-                        background: 'rgba(255,255,255,0.1)',
-                        'border-radius': '3px',
-                        'margin-bottom': '40px',
-                        overflow: 'hidden',
-                      }}
-                    >
-                      <div
-                        style={{
-                          height: '100%',
-                          width: `${(currentQuestionIndex() / 60) * 100}%`,
-                          background: currentTheme().gradients.primary,
-                          transition: 'width 0.3s ease',
-                        }}
-                      />
-                    </div>
-
-                    <h3
-                      style={{
-                        'font-family': maximalist.fonts.heading,
-                        'font-size': '28px',
-                        'margin-bottom': '48px',
-                        'text-align': 'center',
-                        'line-height': '1.4',
-                      }}
-                    >
-                      {questions()[currentQuestionIndex()].text}
-                    </h3>
-
-                    <div
-                      style={{
-                        display: 'grid',
-                        'grid-template-columns': 'repeat(5, 1fr)',
-                        gap: '12px',
-                        'margin-bottom': '24px',
-                      }}
-                    >
-                      <For
-                        each={[
-                          { val: 1, label: 'Strongly Dislike', color: '#EF4444' },
-                          { val: 2, label: 'Dislike', color: '#F87171' },
-                          { val: 3, label: 'Unsure', color: '#9CA3AF' },
-                          { val: 4, label: 'Like', color: '#34D399' },
-                          { val: 5, label: 'Strongly Like', color: '#10B981' },
-                        ]}
-                      >
-                        {(opt) => (
-                          <button
-                            onClick={() => handleAnswer(opt.val)}
-                            style={{
-                              padding: '16px 8px',
-                              background: 'rgba(255,255,255,0.05)',
-                              border: `2px solid ${opt.color}`,
-                              'border-radius': maximalist.radii.md,
-                              color: 'white',
-                              cursor: 'pointer',
-                              transition: 'all 0.2s',
-                              display: 'flex',
-                              'flex-direction': 'column',
-                              'align-items': 'center',
-                              gap: '8px',
-                            }}
-                            onMouseEnter={(e) =>
-                              (e.currentTarget.style.background = `${opt.color}20`)
-                            }
-                            onMouseLeave={(e) =>
-                              (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')
-                            }
-                          >
-                            <span
-                              style={{
-                                'font-size': '24px',
-                                'font-weight': 'bold',
-                                color: opt.color,
-                              }}
-                            >
-                              {opt.val === 1
-                                ? '😡'
-                                : opt.val === 2
-                                  ? '🙁'
-                                  : opt.val === 3
-                                    ? '😐'
-                                    : opt.val === 4
-                                      ? '🙂'
-                                      : '😍'}
-                            </span>
-                            <span style={{ 'font-size': '15px', 'text-align': 'center' }}>
-                              {opt.label}
-                            </span>
-                          </button>
-                        )}
-                      </For>
-                    </div>
-                  </div>
-                </Show>
-
-                <Show when={assessmentState() === 'results' && riasecScore()}>
-                  <div
-                    style={{
-                      'max-width': '1000px',
+                      'max-width': '800px',
                       margin: '0 auto',
-                      'text-align': 'left',
+                      'padding-top': '24px',
                     }}
                   >
-                    {/* Archetype Hero Section - Two Column Layout */}
-                    <div
-                      class="archetype-hero-section"
-                      style={{
-                        background: `linear-gradient(180deg, ${maximalist.colors.surface} 0%, rgba(30, 30, 30, 0) 100%)`,
-                        'border-radius': maximalist.radii.lg,
-                        padding: '40px',
-                        'margin-bottom': '40px',
-                        position: 'relative',
-                        overflow: 'hidden',
-                        'box-shadow': currentTheme().shadows.lg,
-                        border: `1px solid ${maximalist.colors.border}`,
-                      }}
-                    >
+                    <Show when={assessmentState() === 'intro'}>
+                      <div style={{ 'text-align': 'center' }}>
+                        <div
+                          style={{
+                            width: '120px',
+                            height: '120px',
+                            'border-radius': '50%',
+                            background: currentTheme().gradients.primary,
+                            margin: '0 auto 32px',
+                            display: 'flex',
+                            'align-items': 'center',
+                            'justify-content': 'center',
+                            'box-shadow': currentTheme().shadows.lg,
+                          }}
+                        >
+                          <svg width="48" height="48" viewBox="0 0 24 24" fill="white">
+                            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z" />
+                          </svg>
+                        </div>
+
+                        <h2
+                          style={{
+                            margin: '0 0 16px 0',
+                            'font-family': maximalist.fonts.heading,
+                            'font-size': '32px',
+                            'font-weight': '700',
+                          }}
+                        >
+                          Discover Your Interests
+                        </h2>
+
+                        <p
+                          style={{
+                            margin: '0 0 32px 0',
+                            'font-size': '18px',
+                            color: maximalist.colors.textMuted,
+                            'line-height': '1.6',
+                          }}
+                        >
+                          Take the O*NET Interest Profiler to uncover your unique strengths profile.
+                          This 60-question assessment provides personalized insights into your work
+                          interests.
+                        </p>
+
+                        <button
+                          onClick={startAssessment}
+                          disabled={isLoading()}
+                          style={{
+                            padding: '18px 48px',
+                            background: currentTheme().gradients.primary,
+                            border: 'none',
+                            'border-radius': maximalist.radii.md,
+                            color: currentTheme().colors.textOnPrimary,
+                            'font-size': '18px',
+                            'font-weight': '700',
+                            cursor: isLoading() ? 'wait' : 'pointer',
+                            'box-shadow': currentTheme().shadows.md,
+                            display: 'inline-flex',
+                            'align-items': 'center',
+                            gap: '12px',
+                            opacity: isLoading() ? 0.7 : 1,
+                          }}
+                        >
+                          <Show when={!isLoading()} fallback="Loading...">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                              <path d="M8 5v14l11-7z" />
+                            </svg>
+                            Start Assessment
+                          </Show>
+                        </button>
+                      </div>
+                    </Show>
+
+                    <Show when={assessmentState() === 'questions' && questions().length > 0}>
                       <div
-                        class="archetype-hero-grid"
                         style={{
-                          display: 'grid',
-                          'grid-template-columns': '300px 1fr',
-                          gap: '40px',
-                          'align-items': 'center',
+                          background: maximalist.colors.surface,
+                          padding: '40px',
+                          'border-radius': maximalist.radii.lg,
+                          border: `2px solid ${maximalist.colors.border}`,
+                          'box-shadow': currentTheme().shadows.lg,
                         }}
                       >
-                        {/* Left Column: Radar Chart */}
-                        <div class="radar-column" style={{ 'flex-shrink': 0 }}>
-                          <RadarChart scores={riasecScore()!} />
+                        <div
+                          style={{
+                            'margin-bottom': '24px',
+                            display: 'flex',
+                            'justify-content': 'space-between',
+                            'align-items': 'center',
+                          }}
+                        >
+                          <span style={{ color: maximalist.colors.textMuted, 'font-size': '17px' }}>
+                            Question {currentQuestionIndex() + 1} of 60
+                          </span>
+                          <span style={{ color: maximalist.colors.accent, 'font-weight': '600' }}>
+                            {Math.round((currentQuestionIndex() / 60) * 100)}% Complete
+                          </span>
                         </div>
 
-                        {/* Right Column: Archetype Info */}
-                        <div class="archetype-info-column" style={{ 'text-align': 'left' }}>
-                          <h2
+                        {/* Progress Bar */}
+                        <div
+                          style={{
+                            height: '6px',
+                            background: 'rgba(255,255,255,0.1)',
+                            'border-radius': '3px',
+                            'margin-bottom': '40px',
+                            overflow: 'hidden',
+                          }}
+                        >
+                          <div
                             style={{
-                              color: maximalist.colors.accent,
-                              'font-size': '15px',
-                              'text-transform': 'uppercase',
-                              'letter-spacing': '2px',
-                              'margin-bottom': '8px',
-                              'font-weight': '600',
-                              display: 'flex',
-                              'align-items': 'center',
-                              gap: '12px',
-                            }}
-                          >
-                            <span
-                              style={{
-                                color: (maximalist.riasec as any)[hybridArchetype()!.types[0]],
-                              }}
-                            >
-                              {hybridArchetype()!.types[0]}
-                            </span>
-                            <span style={{ color: maximalist.colors.textMuted }}>+</span>
-                            <span
-                              style={{
-                                color: (maximalist.riasec as any)[hybridArchetype()!.types[1]],
-                              }}
-                            >
-                              {hybridArchetype()!.types[1]}
-                            </span>
-                          </h2>
-
-                          <h1
-                            style={{
-                              'font-family': maximalist.fonts.heading,
-                              'font-size': '48px',
-                              'margin-bottom': '16px',
-                              'font-weight': '700',
+                              height: '100%',
+                              width: `${(currentQuestionIndex() / 60) * 100}%`,
                               background: currentTheme().gradients.primary,
-                              '-webkit-background-clip': 'text',
-                              'background-clip': 'text',
-                              color: 'transparent',
-                              filter: 'drop-shadow(0 0 20px rgba(255,255,255,0.2))',
-                              // Fallback for readability if gradient fails or clip not supported
-                              'text-shadow': '0 0 1px rgba(255,255,255,0.5)',
-                              'line-height': '1.1',
+                              transition: 'width 0.3s ease',
                             }}
-                          >
-                            {hybridArchetype()?.title}
-                          </h1>
-
-                          <p
-                            style={{
-                              color: maximalist.colors.text,
-                              'font-size': '18px',
-                              'line-height': '1.6',
-                              margin: 0,
-                            }}
-                          >
-                            {hybridArchetype()?.description}
-                          </p>
+                          />
                         </div>
-                      </div>
-                    </div>
 
-                    {/* Detailed Breakdown */}
-                    <h3
-                      style={{
-                        'font-family': maximalist.fonts.heading,
-                        'font-size': '32px',
-                        'margin-bottom': '24px',
-                        color: maximalist.colors.text,
-                      }}
-                    >
-                      Full Profile Breakdown
-                    </h3>
+                        <h3
+                          style={{
+                            'font-family': maximalist.fonts.heading,
+                            'font-size': '28px',
+                            'margin-bottom': '48px',
+                            'text-align': 'center',
+                            'line-height': '1.4',
+                          }}
+                        >
+                          {questions()[currentQuestionIndex()].text}
+                        </h3>
 
-                    <div
-                      style={{
-                        display: 'grid',
-                        'grid-template-columns': 'repeat(auto-fit, minmax(280px, 1fr))',
-                        gap: '24px',
-                        'margin-bottom': '48px',
-                      }}
-                    >
-                      <For each={sortedScores()}>
-                        {(item) => {
-                          const riasecColor = (maximalist.riasec as any)[item.key];
-                          return (
-                            <div
-                              style={{
-                                background: 'rgba(255,255,255,0.03)',
-                                padding: '24px',
-                                'border-radius': maximalist.radii.lg,
-                                border: `1px solid ${riasecColor}40`,
-                                position: 'relative',
-                                overflow: 'hidden',
-                                transition: 'transform 0.2s',
-                              }}
-                              onMouseEnter={(e) =>
-                                (e.currentTarget.style.transform = 'scale(1.02)')
-                              }
-                              onMouseLeave={(e) => (e.currentTarget.style.transform = 'scale(1)')}
-                            >
-                              <div
+                        <div
+                          style={{
+                            display: 'grid',
+                            'grid-template-columns': 'repeat(5, 1fr)',
+                            gap: '12px',
+                            'margin-bottom': '24px',
+                          }}
+                        >
+                          <For
+                            each={[
+                              { val: 1, label: 'Strongly Dislike', color: '#EF4444' },
+                              { val: 2, label: 'Dislike', color: '#F87171' },
+                              { val: 3, label: 'Unsure', color: '#9CA3AF' },
+                              { val: 4, label: 'Like', color: '#34D399' },
+                              { val: 5, label: 'Strongly Like', color: '#10B981' },
+                            ]}
+                          >
+                            {(opt) => (
+                              <button
+                                onClick={() => handleAnswer(opt.val)}
                                 style={{
+                                  padding: '16px 8px',
+                                  background: 'rgba(255,255,255,0.05)',
+                                  border: `2px solid ${opt.color}`,
+                                  'border-radius': maximalist.radii.md,
+                                  color: 'white',
+                                  cursor: 'pointer',
+                                  transition: 'all 0.2s',
                                   display: 'flex',
-                                  'justify-content': 'space-between',
+                                  'flex-direction': 'column',
                                   'align-items': 'center',
-                                  'margin-bottom': '16px',
+                                  gap: '8px',
                                 }}
+                                onMouseEnter={(e) =>
+                                  (e.currentTarget.style.background = `${opt.color}20`)
+                                }
+                                onMouseLeave={(e) =>
+                                  (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')
+                                }
                               >
-                                <h4
-                                  style={{
-                                    'font-size': '20px',
-                                    'font-weight': '700',
-                                    color: riasecColor,
-                                    margin: 0,
-                                    'font-family': maximalist.fonts.heading,
-                                    'text-transform': 'uppercase',
-                                    'letter-spacing': '1px',
-                                  }}
-                                >
-                                  {item.title}
-                                </h4>
-                                <div
+                                <span
                                   style={{
                                     'font-size': '24px',
                                     'font-weight': 'bold',
-                                    color: 'white',
+                                    color: opt.color,
                                   }}
                                 >
-                                  {item.score}
-                                </div>
-                              </div>
+                                  {opt.val === 1 ? (
+                                    <SmileyAngryIcon
+                                      width={24}
+                                      height={24}
+                                      style={{ color: '#EF4444' }}
+                                    />
+                                  ) : opt.val === 2 ? (
+                                    <SmileySadIcon
+                                      width={24}
+                                      height={24}
+                                      style={{ color: '#F97316' }}
+                                    />
+                                  ) : opt.val === 3 ? (
+                                    <SmileyMehIcon
+                                      width={24}
+                                      height={24}
+                                      style={{ color: '#EAB308' }}
+                                    />
+                                  ) : opt.val === 4 ? (
+                                    <SmileyIcon
+                                      width={24}
+                                      height={24}
+                                      style={{ color: '#22C55E' }}
+                                    />
+                                  ) : (
+                                    <HeartIcon
+                                      width={24}
+                                      height={24}
+                                      style={{ color: '#10B981' }}
+                                    />
+                                  )}
+                                </span>
+                                <span style={{ 'font-size': '15px', 'text-align': 'center' }}>
+                                  {opt.label}
+                                </span>
+                              </button>
+                            )}
+                          </For>
+                        </div>
+                      </div>
+                    </Show>
 
-                              {/* Bar */}
-                              <div
+                    <Show when={assessmentState() === 'results' && riasecScore()}>
+                      <div
+                        style={{
+                          'max-width': '1000px',
+                          margin: '0 auto',
+                          'text-align': 'left',
+                        }}
+                      >
+                        {/* Archetype Hero Section - Two Column Layout */}
+                        <div
+                          class="archetype-hero-section"
+                          style={{
+                            background: currentTheme().gradients.primary,
+                            'border-radius': maximalist.radii.lg,
+                            padding: '40px',
+                            'margin-bottom': '40px',
+                            position: 'relative',
+                            overflow: 'hidden',
+                            'box-shadow': currentTheme().shadows.lg,
+                            border: `1px solid ${maximalist.colors.border}`,
+                          }}
+                        >
+                          <div
+                            class="archetype-hero-grid"
+                            style={{
+                              display: 'grid',
+                              'grid-template-columns': '300px 1fr',
+                              gap: '40px',
+                              'align-items': 'center',
+                            }}
+                          >
+                            {/* Left Column: Radar Chart */}
+                            <div class="radar-column" style={{ 'flex-shrink': 0 }}>
+                              <RadarChart scores={riasecScore()!} />
+                            </div>
+
+                            {/* Right Column: Archetype Info */}
+                            <div class="archetype-info-column" style={{ 'text-align': 'left' }}>
+                              <h2
                                 style={{
-                                  height: '4px',
-                                  background: 'rgba(255,255,255,0.1)',
-                                  'border-radius': '2px',
-                                  'margin-bottom': '16px',
+                                  color: 'rgba(255, 255, 255, 0.8)',
+                                  'font-size': '15px',
+                                  'text-transform': 'uppercase',
+                                  'letter-spacing': '2px',
+                                  'margin-bottom': '8px',
+                                  'font-weight': '600',
+                                  display: 'flex',
+                                  'align-items': 'center',
+                                  gap: '12px',
                                 }}
                               >
-                                <div
-                                  style={{
-                                    width: `${(item.score / 40) * 100}%`,
-                                    height: '100%',
-                                    background: riasecColor,
-                                    'box-shadow': `0 0 10px ${riasecColor}`,
-                                  }}
-                                />
-                              </div>
+                                <span>{hybridArchetype()!.types[0]}</span>
+                                <span style={{ opacity: 0.6 }}>+</span>
+                                <span>{hybridArchetype()!.types[1]}</span>
+                              </h2>
+
+                              <h1
+                                style={{
+                                  'font-family': maximalist.fonts.heading,
+                                  'font-size': '48px',
+                                  'margin-bottom': '16px',
+                                  'font-weight': '700',
+                                  color: 'rgba(255, 255, 255, 0.95)',
+                                  'line-height': '1.1',
+                                }}
+                              >
+                                {hybridArchetype()?.title}
+                              </h1>
 
                               <p
                                 style={{
-                                  color: maximalist.colors.textMuted,
-                                  'font-size': '17px',
-                                  'line-height': '1.5',
+                                  color: 'rgba(255, 255, 255, 0.85)',
+                                  'font-size': '18px',
+                                  'line-height': '1.6',
                                   margin: 0,
                                 }}
                               >
-                                {item.description}
+                                {hybridArchetype()?.description}
                               </p>
                             </div>
-                          );
-                        }}
-                      </For>
-                    </div>
-
-                    {/* Career Matches */}
-                    <h3
-                      style={{
-                        'font-family': maximalist.fonts.heading,
-                        'font-size': '32px',
-                        'margin-bottom': '24px',
-                        color: maximalist.colors.text,
-                      }}
-                    >
-                      Recommended Careers
-                    </h3>
-
-                    <div
-                      style={{
-                        display: 'grid',
-                        'grid-template-columns': 'repeat(auto-fill, minmax(300px, 1fr))',
-                        gap: '24px',
-                        'margin-bottom': '48px',
-                      }}
-                    >
-                      <Show
-                        when={!isLoading()}
-                        fallback={
-                          <div style={{ 'grid-column': '1/-1', 'text-align': 'center' }}>
-                            Loading recommendations...
                           </div>
-                        }
-                      >
-                        <For each={careerMatches()}>
-                          {(career) => (
-                            <div
-                              style={{
-                                background: 'rgba(255,255,255,0.03)',
-                                'border-radius': maximalist.radii.md,
-                                padding: '24px',
-                                border: `1px solid ${maximalist.colors.border}`,
-                                transition: 'transform 0.2s',
-                                cursor: 'pointer',
-                              }}
-                              onMouseEnter={(e) =>
-                                (e.currentTarget.style.transform = 'translateY(-4px)')
-                              }
-                              onMouseLeave={(e) =>
-                                (e.currentTarget.style.transform = 'translateY(0)')
-                              }
-                            >
-                              <div
-                                style={{
-                                  display: 'flex',
-                                  'justify-content': 'space-between',
-                                  'align-items': 'flex-start',
-                                  'margin-bottom': '12px',
-                                }}
-                              >
-                                {career.tags.bright_outlook && (
-                                  <span
+                        </div>
+
+                        {/* Detailed Breakdown */}
+                        <h3
+                          style={{
+                            'font-family': maximalist.fonts.heading,
+                            'font-size': '32px',
+                            'margin-bottom': '24px',
+                            color: maximalist.colors.text,
+                          }}
+                        >
+                          Full Profile Breakdown
+                        </h3>
+
+                        <div
+                          style={{
+                            display: 'grid',
+                            'grid-template-columns': 'repeat(auto-fit, minmax(280px, 1fr))',
+                            gap: '24px',
+                            'margin-bottom': '48px',
+                          }}
+                        >
+                          <For each={sortedScores()}>
+                            {(item) => {
+                              const riasecColor = (maximalist.riasec as any)[item.key];
+                              return (
+                                <div
+                                  style={{
+                                    background: 'rgba(255,255,255,0.03)',
+                                    padding: '24px',
+                                    'border-radius': maximalist.radii.lg,
+                                    border: `1px solid ${riasecColor}40`,
+                                    position: 'relative',
+                                    overflow: 'hidden',
+                                    transition: 'transform 0.2s',
+                                  }}
+                                  onMouseEnter={(e) =>
+                                    (e.currentTarget.style.transform = 'scale(1.02)')
+                                  }
+                                  onMouseLeave={(e) =>
+                                    (e.currentTarget.style.transform = 'scale(1)')
+                                  }
+                                >
+                                  <div
                                     style={{
-                                      background: `${maxPalette.teal}30`,
-                                      color: maxPalette.teal,
-                                      'font-size': '10px',
-                                      padding: '4px 8px',
-                                      'border-radius': '12px',
-                                      'font-weight': 'bold',
-                                      'text-transform': 'uppercase',
+                                      display: 'flex',
+                                      'justify-content': 'space-between',
+                                      'align-items': 'center',
+                                      'margin-bottom': '16px',
                                     }}
                                   >
-                                    Bright Outlook
-                                  </span>
-                                )}
-                                <CartoonBadge fit={career.fit} />
+                                    <h4
+                                      style={{
+                                        'font-size': '20px',
+                                        'font-weight': '700',
+                                        color: riasecColor,
+                                        margin: 0,
+                                        'font-family': maximalist.fonts.heading,
+                                        'text-transform': 'uppercase',
+                                        'letter-spacing': '1px',
+                                      }}
+                                    >
+                                      {item.title}
+                                    </h4>
+                                    <div
+                                      style={{
+                                        'font-size': '24px',
+                                        'font-weight': 'bold',
+                                        color: 'white',
+                                      }}
+                                    >
+                                      {item.score}
+                                    </div>
+                                  </div>
+
+                                  {/* Bar */}
+                                  <div
+                                    style={{
+                                      height: '4px',
+                                      background: 'rgba(255,255,255,0.1)',
+                                      'border-radius': '2px',
+                                      'margin-bottom': '16px',
+                                    }}
+                                  >
+                                    <div
+                                      style={{
+                                        width: `${(item.score / 40) * 100}%`,
+                                        height: '100%',
+                                        background: riasecColor,
+                                        'box-shadow': `0 0 10px ${riasecColor}`,
+                                      }}
+                                    />
+                                  </div>
+
+                                  <p
+                                    style={{
+                                      color: maximalist.colors.textMuted,
+                                      'font-size': '17px',
+                                      'line-height': '1.5',
+                                      margin: 0,
+                                    }}
+                                  >
+                                    {item.description}
+                                  </p>
+                                </div>
+                              );
+                            }}
+                          </For>
+                        </div>
+
+                        {/* Career Matches */}
+                        <h3
+                          style={{
+                            'font-family': maximalist.fonts.heading,
+                            'font-size': '32px',
+                            'margin-bottom': '24px',
+                            color: maximalist.colors.text,
+                          }}
+                        >
+                          Recommended Careers
+                        </h3>
+
+                        <div
+                          style={{
+                            display: 'grid',
+                            'grid-template-columns': 'repeat(auto-fill, minmax(300px, 1fr))',
+                            gap: '24px',
+                            'margin-bottom': '48px',
+                          }}
+                        >
+                          <Show
+                            when={!isLoading()}
+                            fallback={
+                              <div style={{ 'grid-column': '1/-1', 'text-align': 'center' }}>
+                                Loading recommendations...
                               </div>
+                            }
+                          >
+                            <For each={careerMatches()}>
+                              {(career) => (
+                                <div
+                                  style={{
+                                    background: 'rgba(255,255,255,0.03)',
+                                    'border-radius': maximalist.radii.md,
+                                    padding: '24px',
+                                    border: `1px solid ${maximalist.colors.border}`,
+                                    transition: 'transform 0.2s',
+                                    cursor: 'pointer',
+                                  }}
+                                  onMouseEnter={(e) =>
+                                    (e.currentTarget.style.transform = 'translateY(-4px)')
+                                  }
+                                  onMouseLeave={(e) =>
+                                    (e.currentTarget.style.transform = 'translateY(0)')
+                                  }
+                                >
+                                  <div
+                                    style={{
+                                      display: 'flex',
+                                      'justify-content': 'space-between',
+                                      'align-items': 'flex-start',
+                                      'margin-bottom': '12px',
+                                    }}
+                                  >
+                                    {career.tags.bright_outlook && (
+                                      <span
+                                        style={{
+                                          background: `${maxPalette.teal}30`,
+                                          color: maxPalette.teal,
+                                          'font-size': '10px',
+                                          padding: '4px 8px',
+                                          'border-radius': '12px',
+                                          'font-weight': 'bold',
+                                          'text-transform': 'uppercase',
+                                        }}
+                                      >
+                                        Bright Outlook
+                                      </span>
+                                    )}
+                                    <CartoonBadge fit={career.fit} />
+                                  </div>
 
-                              <h4
-                                style={{
-                                  'font-size': '18px',
-                                  'font-weight': '600',
-                                  color: 'white',
-                                  'margin-bottom': '8px',
-                                }}
-                              >
-                                {career.title}
-                              </h4>
+                                  <h4
+                                    style={{
+                                      'font-size': '18px',
+                                      'font-weight': '600',
+                                      color: 'white',
+                                      'margin-bottom': '8px',
+                                    }}
+                                  >
+                                    {career.title}
+                                  </h4>
 
-                              <div
-                                style={{
-                                  color: maximalist.colors.textMuted,
-                                  'font-size': '15px',
-                                  'margin-bottom': '16px',
-                                }}
-                              >
-                                Code: {career.code}
-                              </div>
+                                  <div
+                                    style={{
+                                      color: maximalist.colors.textMuted,
+                                      'font-size': '15px',
+                                      'margin-bottom': '16px',
+                                    }}
+                                  >
+                                    Code: {career.code}
+                                  </div>
 
-                              <button
-                                onClick={() => handleJobClick(career.code)}
-                                disabled={isJobLoading()}
-                                style={{
-                                  width: '100%',
-                                  padding: '12px',
-                                  background: 'transparent',
-                                  border: `1px solid ${currentTheme().colors.primary}`,
-                                  color: currentTheme().colors.primary,
-                                  'border-radius': '8px',
-                                  cursor: isJobLoading() ? 'wait' : 'pointer',
-                                  'font-weight': '600',
-                                  transition: 'all 0.2s',
-                                  opacity: isJobLoading() ? 0.7 : 1,
-                                }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.background = currentTheme().colors.primary;
-                                  e.currentTarget.style.color = currentTheme().colors.textOnPrimary;
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.background = 'transparent';
-                                  e.currentTarget.style.color = currentTheme().colors.primary;
-                                }}
-                              >
-                                {isJobLoading() ? 'Loading...' : 'Explore Role'}
-                              </button>
-                            </div>
-                          )}
-                        </For>
-                      </Show>
-                    </div>
+                                  <button
+                                    onClick={() => handleJobClick(career.code)}
+                                    disabled={isJobLoading()}
+                                    style={{
+                                      width: '100%',
+                                      padding: '12px',
+                                      background: 'transparent',
+                                      border: `1px solid ${currentTheme().colors.primary}`,
+                                      color: currentTheme().colors.primary,
+                                      'border-radius': '8px',
+                                      cursor: isJobLoading() ? 'wait' : 'pointer',
+                                      'font-weight': '600',
+                                      transition: 'all 0.2s',
+                                      opacity: isJobLoading() ? 0.7 : 1,
+                                    }}
+                                    onMouseEnter={(e) => {
+                                      e.currentTarget.style.background =
+                                        currentTheme().colors.primary;
+                                      e.currentTarget.style.color =
+                                        currentTheme().colors.textOnPrimary;
+                                    }}
+                                    onMouseLeave={(e) => {
+                                      e.currentTarget.style.background = 'transparent';
+                                      e.currentTarget.style.color = currentTheme().colors.primary;
+                                    }}
+                                  >
+                                    {isJobLoading() ? 'Loading...' : 'Explore Role'}
+                                  </button>
+                                </div>
+                              )}
+                            </For>
+                          </Show>
+                        </div>
 
-                    {/* O*NET Attribution */}
-                    <div style={{ 'text-align': 'center', 'margin-top': '48px' }}>
-                      <button
-                        onClick={resetAssessment}
-                        style={{
-                          padding: '12px 24px',
-                          background: 'transparent',
-                          border: `1px solid ${currentTheme().colors.border}`,
-                          'border-radius': maximalist.radii.md,
-                          color: currentTheme().colors.textMuted,
-                          'font-size': '17px',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.borderColor = currentTheme().colors.primary;
-                          e.currentTarget.style.color = currentTheme().colors.primary;
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.borderColor = currentTheme().colors.border;
-                          e.currentTarget.style.color = currentTheme().colors.textMuted;
-                        }}
-                      >
-                        Retake Assessment
-                      </button>
-                    </div>
+                        {/* O*NET Attribution */}
+                        <div style={{ 'text-align': 'center', 'margin-top': '48px' }}>
+                          <button
+                            onClick={resetAssessment}
+                            style={{
+                              padding: '12px 24px',
+                              background: 'transparent',
+                              border: `1px solid ${currentTheme().colors.border}`,
+                              'border-radius': maximalist.radii.md,
+                              color: currentTheme().colors.textMuted,
+                              'font-size': '17px',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s',
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.borderColor = currentTheme().colors.primary;
+                              e.currentTarget.style.color = currentTheme().colors.primary;
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.borderColor = currentTheme().colors.border;
+                              e.currentTarget.style.color = currentTheme().colors.textMuted;
+                            }}
+                          >
+                            Retake Assessment
+                          </button>
+                        </div>
 
-                    <footer
-                      style={{
-                        'margin-top': '64px',
-                        'padding-top': '24px',
-                        'border-top': `1px solid ${maximalist.colors.border}`,
-                        'text-align': 'center',
-                        color: maximalist.colors.textMuted,
-                        'font-size': '15px',
-                        'line-height': '1.5',
-                      }}
-                    >
-                      <p style={{ 'max-width': '600px', margin: '0 auto' }}>
-                        This site incorporates information from O*NET Web Services by the U.S.
-                        Department of Labor, Employment and Training Administration (USDOL/ETA).
-                        O*NET® is a trademark of USDOL/ETA.
-                      </p>
-                    </footer>
+                        <footer
+                          style={{
+                            'margin-top': '64px',
+                            'padding-top': '24px',
+                            'border-top': `1px solid ${maximalist.colors.border}`,
+                            'text-align': 'center',
+                            color: maximalist.colors.textMuted,
+                            'font-size': '15px',
+                            'line-height': '1.5',
+                          }}
+                        >
+                          <p style={{ 'max-width': '600px', margin: '0 auto' }}>
+                            This site incorporates information from O*NET Web Services by the U.S.
+                            Department of Labor, Employment and Training Administration (USDOL/ETA).
+                            O*NET® is a trademark of USDOL/ETA.
+                          </p>
+                        </footer>
+                      </div>
+                    </Show>
                   </div>
+                </Show>
+
+                {/* OCEAN Personality Tab */}
+                <Show when={discoverSubTab() === 'personality'}>
+                  <Show
+                    when={oceanAssessmentState() === 'results' && loadOceanProfile()}
+                    fallback={
+                      <OceanAssessment
+                        onComplete={handleOceanComplete}
+                        onCancel={handleOceanCancel}
+                        currentThemeGradient={currentTheme().gradients.primary}
+                        currentThemePrimary={currentTheme().colors.primary}
+                      />
+                    }
+                  >
+                    <OceanResults
+                      profile={loadOceanProfile()!}
+                      onRetake={handleRetakeOcean}
+                      currentThemeGradient={currentTheme().gradients.primary}
+                      currentThemePrimary={currentTheme().colors.primary}
+                    />
+                  </Show>
+                </Show>
+
+                {/* Jungian Cognitive Style Tab */}
+                <Show when={discoverSubTab() === 'cognitive-style'}>
+                  <Show
+                    when={jungianAssessmentState() === 'results' && loadJungianProfile()}
+                    fallback={
+                      <JungianAssessment
+                        onComplete={handleJungianComplete}
+                        onCancel={handleJungianCancel}
+                        currentThemeGradient={currentTheme().gradients.primary}
+                        currentThemePrimary={currentTheme().colors.primary}
+                      />
+                    }
+                  >
+                    <JungianResults
+                      profile={loadJungianProfile()!}
+                      onRetake={handleRetakeJungian}
+                      currentThemeGradient={currentTheme().gradients.primary}
+                      currentThemePrimary={currentTheme().colors.primary}
+                    />
+                  </Show>
                 </Show>
               </div>
             )}
@@ -2289,39 +2731,20 @@ export const TenureApp: Component = () => {
               />
             )}
 
-            {/* Prosper Tab - Career Journal */}
+            {/* Prosper Tab - Career Journal & Compensation */}
             {activeTab() === 'Prosper' && (
-              <div style={{ 'text-align': 'center', padding: '48px' }}>
-                <h2
-                  style={{
-                    'font-family': maximalist.fonts.heading,
-                    'font-size': '36px',
-                    'font-weight': '700',
-                    color: currentTheme().colors.primary,
-                    'margin-bottom': '16px',
-                  }}
-                >
-                  Prosper: Career Journal
-                </h2>
-                <p style={{ color: maximalist.colors.textMuted, 'font-size': '18px' }}>
-                  Quarterly check-ins and accomplishment tracking while employed.
-                </p>
-                <div
-                  style={{
-                    'margin-top': '32px',
-                    padding: '24px',
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    border: `1px solid ${maximalist.colors.border}`,
-                    'border-radius': '12px',
-                    'max-width': '600px',
-                    margin: '32px auto',
-                  }}
-                >
-                  <p style={{ color: maximalist.colors.text }}>
-                    🚧 Module coming soon - Phase 2 implementation
-                  </p>
-                </div>
-              </div>
+              <ProsperView
+                currentTheme={() => ({
+                  colors: {
+                    ...currentTheme().colors,
+                    surfaceLight: 'rgba(255, 255, 255, 0.03)',
+                    surfaceMedium: 'rgba(255, 255, 255, 0.06)',
+                    surfaceHover: 'rgba(255, 255, 255, 0.08)',
+                  },
+                  fonts: maximalist.fonts,
+                  spacing: maximalist.spacing,
+                })}
+              />
             )}
           </main>
 
@@ -2329,6 +2752,171 @@ export const TenureApp: Component = () => {
             <JobDetailModal job={selectedJob()!} onClose={() => setSelectedJob(null)} />
           </Show>
         </div>
+
+        {/* All Assessments Complete Celebration Modal */}
+        <Show when={showCelebration()}>
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0, 0, 0, 0.85)',
+              'z-index': 9999,
+              display: 'flex',
+              'align-items': 'center',
+              'justify-content': 'center',
+              animation: 'fadeIn 0.3s ease-out',
+            }}
+            onClick={() => setShowCelebration(false)}
+          >
+            {/* Confetti particles */}
+            <div
+              style={{
+                position: 'absolute',
+                inset: 0,
+                overflow: 'hidden',
+                'pointer-events': 'none',
+              }}
+            >
+              {Array.from({ length: 50 }).map((_, i) => (
+                <div
+                  style={{
+                    position: 'absolute',
+                    width: `${8 + Math.random() * 8}px`,
+                    height: `${8 + Math.random() * 8}px`,
+                    background: [
+                      currentTheme().colors.primary,
+                      currentTheme().colors.secondary,
+                      '#FFD700',
+                      '#FF6B6B',
+                      '#4ECDC4',
+                      '#A78BFA',
+                    ][i % 6],
+                    'border-radius': Math.random() > 0.5 ? '50%' : '2px',
+                    left: `${Math.random() * 100}%`,
+                    top: '-20px',
+                    animation: `confettiFall ${2 + Math.random() * 3}s linear ${Math.random() * 2}s infinite`,
+                    opacity: 0.9,
+                  }}
+                />
+              ))}
+            </div>
+
+            <div
+              style={{
+                background: maximalist.colors.surface,
+                'border-radius': maximalist.radii.lg,
+                padding: '48px',
+                'max-width': '500px',
+                width: '90%',
+                'text-align': 'center',
+                border: `2px solid ${currentTheme().colors.primary}`,
+                'box-shadow': `0 0 60px ${currentTheme().colors.primary}40`,
+                position: 'relative',
+                animation: 'scaleIn 0.4s ease-out',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Trophy icon */}
+              <div
+                style={{
+                  'margin-bottom': '24px',
+                  animation: 'bounce 1s ease infinite',
+                }}
+              >
+                <IconTrophy size={72} color={currentTheme().colors.primary} />
+              </div>
+
+              <h2
+                style={{
+                  'font-family': maximalist.fonts.heading,
+                  'font-size': '32px',
+                  'font-weight': '700',
+                  'margin-bottom': '16px',
+                  color: currentTheme().colors.primary,
+                }}
+              >
+                Profile Complete!
+              </h2>
+
+              <p
+                style={{
+                  'font-size': '18px',
+                  color: maximalist.colors.text,
+                  'line-height': '1.6',
+                  'margin-bottom': '24px',
+                }}
+              >
+                Congratulations! You've completed all three assessments and built your comprehensive
+                career profile.
+              </p>
+
+              <div
+                style={{
+                  background: 'rgba(255,255,255,0.05)',
+                  'border-radius': maximalist.radii.md,
+                  padding: '20px',
+                  'margin-bottom': '24px',
+                  border: `1px solid ${maximalist.colors.border}`,
+                }}
+              >
+                <p
+                  style={{
+                    'font-size': '14px',
+                    color: maximalist.colors.textMuted,
+                    margin: '0 0 8px 0',
+                  }}
+                >
+                  Premium Feature Coming Soon
+                </p>
+                <p
+                  style={{
+                    'font-size': '16px',
+                    color: maximalist.colors.text,
+                    margin: 0,
+                    'font-weight': '600',
+                  }}
+                >
+                  Extended Profile Report
+                </p>
+                <p
+                  style={{
+                    'font-size': '14px',
+                    color: maximalist.colors.textMuted,
+                    margin: '8px 0 0 0',
+                  }}
+                >
+                  A comprehensive analysis combining your interests, personality, and cognitive
+                  style into actionable career insights.
+                </p>
+              </div>
+
+              <button
+                onClick={() => setShowCelebration(false)}
+                style={{
+                  padding: '14px 32px',
+                  background: currentTheme().gradients.primary,
+                  border: 'none',
+                  'border-radius': maximalist.radii.md,
+                  color: currentTheme().colors.textOnPrimary,
+                  'font-size': '16px',
+                  'font-weight': '600',
+                  cursor: 'pointer',
+                  transition: 'transform 0.2s, box-shadow 0.2s',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                  e.currentTarget.style.boxShadow = currentTheme().shadows.md;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.boxShadow = 'none';
+                }}
+              >
+                Explore Your Profile
+              </button>
+            </div>
+          </div>
+        </Show>
 
         {/* Sidebar for Profile/Settings */}
         <Sidebar
@@ -2397,6 +2985,27 @@ export const TenureApp: Component = () => {
           .archetype-info-column h1 {
             font-size: 42px !important;
           }
+        }
+
+        /* Celebration animations */
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        @keyframes scaleIn {
+          from { transform: scale(0.8); opacity: 0; }
+          to { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes bounce {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-10px); }
+        }
+
+        @keyframes confettiFall {
+          0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+          100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
         }
       `}</style>
       </div>
