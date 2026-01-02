@@ -50,7 +50,7 @@ export const JobMatchSchema = z.object({
 export const AssessmentSchema = z.object({
   id: z.string().uuid(),
   userId: z.string().uuid(),
-  type: z.enum(['strengths', 'values', 'work-style', 'personality']),
+  type: z.enum(['riasec', 'ocean', 'jungian', 'strengths', 'values', 'work-style']),
   questions: z.array(
     z.object({
       id: z.string(),
