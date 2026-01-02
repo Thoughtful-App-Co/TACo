@@ -20,7 +20,11 @@ import { Component, createSignal, createMemo, For, Show } from 'solid-js';
 import { pipelineStore } from '../store';
 import { liquidTenure, pipelineAnimations } from '../theme/liquid-tenure';
 import { IconX, IconUpload, IconCheck, IconAlert } from '../ui/Icons';
-import { JobApplication, ApplicationStatus } from '../../../../schemas/pipeline.schema';
+import {
+  JobApplication,
+  ApplicationStatus,
+  StatusChange,
+} from '../../../../schemas/pipeline.schema';
 
 interface ImportCSVModalProps {
   isOpen: boolean;
@@ -29,6 +33,7 @@ interface ImportCSVModalProps {
 }
 
 interface ParsedRow {
+  // Existing fields
   companyName: string;
   roleName: string;
   status: ApplicationStatus;
@@ -44,8 +49,23 @@ interface ParsedRow {
   department?: string;
   notes?: string;
   appliedAt?: Date;
+
+  // NEW: Comprehensive format fields
+  id?: string; // Preserve original ID if present
+  savedAt?: Date;
+  lastActivityAt?: Date;
+  createdAt?: Date;
+  updatedAt?: Date;
+  statusTimeline?: StatusChange[]; // Parsed from pipe-separated string
+  riasecFitScore?: number;
+  riasecMatchedTypes?: string[];
+  socCode?: string;
+  followUpDue?: Date;
+  snoozedUntil?: Date;
+
   isValid: boolean;
   errors: string[];
+  isFullFormat: boolean; // NEW: Flag if this came from our comprehensive export
 }
 
 // Common column name mappings
@@ -59,7 +79,28 @@ const COLUMN_MAPPINGS: Record<string, string[]> = {
   salary: ['salary', 'compensation', 'pay', 'salary range'],
   department: ['department', 'dept', 'team', 'division'],
   notes: ['notes', 'note', 'comments', 'description', 'details'],
-  appliedAt: ['applied', 'applied date', 'date applied', 'application date', 'date'],
+  appliedAt: ['applied', 'applied date', 'date applied', 'application date'],
+
+  // NEW: Comprehensive format columns
+  id: ['id', 'application id', 'job id'],
+  salaryMin: ['salary min', 'min salary', 'salary_min'],
+  salaryMax: ['salary max', 'max salary', 'salary_max'],
+  salaryCurrency: ['salary currency', 'currency'],
+  salaryPeriod: ['salary period', 'period'],
+  savedAt: ['saved date', 'saved at', 'saved', 'bookmarked'],
+  lastActivityAt: ['last activity', 'last updated', 'activity date'],
+  createdAt: ['created at', 'created', 'creation date'],
+  updatedAt: ['updated at', 'updated', 'modification date'],
+  statusTimeline: ['status timeline', 'timeline', 'status history', 'history'],
+  riasecFitScore: ['riasec fit score', 'riasec score', 'fit score', 'riasec fit'],
+  riasecMatchedTypes: ['riasec matched types', 'matched types', 'riasec types'],
+  socCode: ['soc code', 'soc', 'occupation code'],
+  blsMedianWage: ['bls median wage', 'median wage', 'bls wage'],
+  matchScore: ['match score', 'ai score', 'overall score'],
+  contactsCount: ['contacts count', 'contacts'],
+  documentsCount: ['documents count', 'documents'],
+  followUpDue: ['follow up due', 'follow up', 'followup'],
+  snoozedUntil: ['snoozed until', 'snoozed', 'snooze'],
 };
 
 // Status mappings from common terms
@@ -97,6 +138,7 @@ export const ImportCSVModal: Component<ImportCSVModalProps> = (props) => {
   const [importError, setImportError] = createSignal<string | null>(null);
   const [importedCount, setImportedCount] = createSignal(0);
   const [dragOver, setDragOver] = createSignal(false);
+  const [isComprehensiveFormat, setIsComprehensiveFormat] = createSignal(false);
 
   // Stats for preview
   const validRows = createMemo(() => parsedRows().filter((r) => r.isValid));
@@ -109,6 +151,7 @@ export const ImportCSVModal: Component<ImportCSVModalProps> = (props) => {
     setImportError(null);
     setImportedCount(0);
     setDragOver(false);
+    setIsComprehensiveFormat(false);
   };
 
   const handleClose = () => {
@@ -248,6 +291,66 @@ export const ImportCSVModal: Component<ImportCSVModalProps> = (props) => {
     return undefined;
   };
 
+  /**
+   * Parse status timeline from pipe-separated format
+   * Format: status:YYYY-MM-DD HH:MM:note|status:YYYY-MM-DD HH:MM
+   */
+  const parseStatusTimeline = (timelineStr: string): StatusChange[] => {
+    if (!timelineStr) return [];
+
+    const entries = timelineStr.split('|').filter((e) => e.trim());
+    return entries
+      .map((entry) => {
+        const parts = entry.split(':');
+        const status = parts[0] as ApplicationStatus;
+        // Reconstruct datetime (handles the colon in time)
+        const dateTimeParts = parts.slice(1, 3).join(':');
+        const timestamp = parseDate(dateTimeParts);
+        const note = parts.length > 3 ? parts.slice(3).join(':') : undefined;
+
+        return {
+          status: STATUS_MAPPINGS[status.toLowerCase()] || status,
+          timestamp: timestamp || new Date(),
+          note: note?.trim() || undefined,
+        };
+      })
+      .filter((entry) => entry.status);
+  };
+
+  /**
+   * Parse RIASEC types from semicolon-separated format
+   */
+  const parseRiasecTypes = (typesStr: string): string[] => {
+    if (!typesStr) return [];
+    return typesStr
+      .split(';')
+      .map((t) => t.trim())
+      .filter(Boolean);
+  };
+
+  /**
+   * Parse individual salary components from comprehensive format
+   */
+  const parseSalaryFromComponents = (
+    minStr: string,
+    maxStr: string,
+    currencyStr: string,
+    periodStr: string
+  ): ParsedRow['salary'] | undefined => {
+    const min = minStr ? parseFloat(minStr) : undefined;
+    const max = maxStr ? parseFloat(maxStr) : undefined;
+
+    if (min === undefined && max === undefined) return undefined;
+    if ((min !== undefined && isNaN(min)) || (max !== undefined && isNaN(max))) return undefined;
+
+    const currency = currencyStr?.trim() || 'USD';
+    const period: 'hourly' | 'annual' = periodStr?.toLowerCase().includes('hour')
+      ? 'hourly'
+      : 'annual';
+
+    return { min, max, currency, period };
+  };
+
   // Process uploaded CSV
   const processCSV = (content: string) => {
     setCsvContent(content);
@@ -263,7 +366,7 @@ export const ImportCSVModal: Component<ImportCSVModalProps> = (props) => {
       const headers = rows[0];
       const dataRows = rows.slice(1);
 
-      // Find column indices
+      // Find column indices - basic fields
       const companyIdx = findColumnIndex(headers, 'companyName');
       const roleIdx = findColumnIndex(headers, 'roleName');
       const statusIdx = findColumnIndex(headers, 'status');
@@ -274,6 +377,27 @@ export const ImportCSVModal: Component<ImportCSVModalProps> = (props) => {
       const departmentIdx = findColumnIndex(headers, 'department');
       const notesIdx = findColumnIndex(headers, 'notes');
       const appliedIdx = findColumnIndex(headers, 'appliedAt');
+
+      // Find column indices - comprehensive format fields
+      const idIdx = findColumnIndex(headers, 'id');
+      const salaryMinIdx = findColumnIndex(headers, 'salaryMin');
+      const salaryMaxIdx = findColumnIndex(headers, 'salaryMax');
+      const salaryCurrencyIdx = findColumnIndex(headers, 'salaryCurrency');
+      const salaryPeriodIdx = findColumnIndex(headers, 'salaryPeriod');
+      const savedAtIdx = findColumnIndex(headers, 'savedAt');
+      const lastActivityAtIdx = findColumnIndex(headers, 'lastActivityAt');
+      const createdAtIdx = findColumnIndex(headers, 'createdAt');
+      const updatedAtIdx = findColumnIndex(headers, 'updatedAt');
+      const statusTimelineIdx = findColumnIndex(headers, 'statusTimeline');
+      const riasecFitScoreIdx = findColumnIndex(headers, 'riasecFitScore');
+      const riasecMatchedTypesIdx = findColumnIndex(headers, 'riasecMatchedTypes');
+      const socCodeIdx = findColumnIndex(headers, 'socCode');
+      const followUpDueIdx = findColumnIndex(headers, 'followUpDue');
+      const snoozedUntilIdx = findColumnIndex(headers, 'snoozedUntil');
+
+      // Detect if this is a comprehensive format (has Status Timeline or ID columns)
+      const isFullFormat = statusTimelineIdx !== -1 || idIdx !== -1;
+      setIsComprehensiveFormat(isFullFormat);
 
       if (companyIdx === -1 && roleIdx === -1) {
         setImportError(
@@ -299,6 +423,26 @@ export const ImportCSVModal: Component<ImportCSVModalProps> = (props) => {
             errors.push('Missing role/job title');
           }
 
+          // Determine salary - use individual columns if comprehensive format, otherwise parse combined
+          let salary: ParsedRow['salary'] | undefined;
+          if (isFullFormat && (salaryMinIdx !== -1 || salaryMaxIdx !== -1)) {
+            salary = parseSalaryFromComponents(
+              row[salaryMinIdx] || '',
+              row[salaryMaxIdx] || '',
+              row[salaryCurrencyIdx] || '',
+              row[salaryPeriodIdx] || ''
+            );
+          } else if (salaryIdx !== -1) {
+            salary = parseSalary(row[salaryIdx] || '');
+          }
+
+          // Parse RIASEC fit score
+          let riasecFitScore: number | undefined;
+          if (riasecFitScoreIdx !== -1 && row[riasecFitScoreIdx]) {
+            const score = parseFloat(row[riasecFitScoreIdx]);
+            riasecFitScore = isNaN(score) ? undefined : score;
+          }
+
           return {
             companyName: companyName || 'Unknown Company',
             roleName: roleName || 'Unknown Role',
@@ -307,12 +451,34 @@ export const ImportCSVModal: Component<ImportCSVModalProps> = (props) => {
             location: locationIdx !== -1 ? row[locationIdx]?.trim() || undefined : undefined,
             locationType:
               locationTypeIdx !== -1 ? parseLocationType(row[locationTypeIdx] || '') : undefined,
-            salary: salaryIdx !== -1 ? parseSalary(row[salaryIdx] || '') : undefined,
+            salary,
             department: departmentIdx !== -1 ? row[departmentIdx]?.trim() || undefined : undefined,
             notes: notesIdx !== -1 ? row[notesIdx]?.trim() || undefined : undefined,
             appliedAt: appliedIdx !== -1 ? parseDate(row[appliedIdx]) : undefined,
+
+            // Comprehensive format fields
+            id: idIdx !== -1 ? row[idIdx]?.trim() || undefined : undefined,
+            savedAt: savedAtIdx !== -1 ? parseDate(row[savedAtIdx]) : undefined,
+            lastActivityAt:
+              lastActivityAtIdx !== -1 ? parseDate(row[lastActivityAtIdx]) : undefined,
+            createdAt: createdAtIdx !== -1 ? parseDate(row[createdAtIdx]) : undefined,
+            updatedAt: updatedAtIdx !== -1 ? parseDate(row[updatedAtIdx]) : undefined,
+            statusTimeline:
+              statusTimelineIdx !== -1
+                ? parseStatusTimeline(row[statusTimelineIdx] || '')
+                : undefined,
+            riasecFitScore,
+            riasecMatchedTypes:
+              riasecMatchedTypesIdx !== -1
+                ? parseRiasecTypes(row[riasecMatchedTypesIdx] || '')
+                : undefined,
+            socCode: socCodeIdx !== -1 ? row[socCodeIdx]?.trim() || undefined : undefined,
+            followUpDue: followUpDueIdx !== -1 ? parseDate(row[followUpDueIdx]) : undefined,
+            snoozedUntil: snoozedUntilIdx !== -1 ? parseDate(row[snoozedUntilIdx]) : undefined,
+
             isValid: errors.length === 0,
             errors,
+            isFullFormat,
           };
         });
 
@@ -367,7 +533,10 @@ export const ImportCSVModal: Component<ImportCSVModalProps> = (props) => {
     let imported = 0;
 
     for (const row of toImport) {
-      const app: Omit<
+      const now = new Date();
+
+      // Build the application object
+      const baseApp: Omit<
         JobApplication,
         'id' | 'createdAt' | 'updatedAt' | 'syncVersion' | 'statusHistory'
       > = {
@@ -380,16 +549,45 @@ export const ImportCSVModal: Component<ImportCSVModalProps> = (props) => {
         salary: row.salary,
         department: row.department,
         notes: row.notes || '',
-        savedAt: new Date(),
+        savedAt: row.savedAt || now,
         appliedAt: row.appliedAt,
-        lastActivityAt: row.appliedAt || new Date(),
+        lastActivityAt: row.lastActivityAt || row.appliedAt || now,
+        followUpDue: row.followUpDue,
+        snoozedUntil: row.snoozedUntil,
+        riasecFitScore: row.riasecFitScore,
+        matchedRiasecTypes: row.riasecMatchedTypes,
+        socCode: row.socCode,
         criteriaScores: [],
         contacts: [],
         documents: [],
       };
 
-      pipelineStore.addApplication(app);
+      if (row.isFullFormat && row.statusTimeline && row.statusTimeline.length > 0) {
+        // For full format imports, we need to add the application with its timeline
+        // This requires direct store manipulation since addApplication creates new timeline
+        const fullApp: JobApplication = {
+          ...baseApp,
+          id: row.id || crypto.randomUUID(),
+          statusHistory: row.statusTimeline,
+          createdAt: row.createdAt || now,
+          updatedAt: row.updatedAt || now,
+          syncVersion: 1,
+        };
+
+        // Add directly to store state (bypass addApplication which creates new statusHistory)
+        pipelineStore.state.applications.push(fullApp);
+      } else {
+        pipelineStore.addApplication(baseApp);
+      }
       imported++;
+    }
+
+    // Trigger store save for direct additions
+    if (isComprehensiveFormat()) {
+      localStorage.setItem(
+        'augment_pipeline_applications',
+        JSON.stringify(pipelineStore.state.applications)
+      );
     }
 
     setImportedCount(imported);
@@ -671,6 +869,18 @@ export const ImportCSVModal: Component<ImportCSVModalProps> = (props) => {
                       </span>
                     ))}
                   </div>
+                  <p
+                    style={{
+                      margin: '12px 0 0',
+                      'font-size': '11px',
+                      'font-family': "'Space Grotesk', system-ui, sans-serif",
+                      color: theme().colors.textMuted,
+                      'line-height': '1.5',
+                    }}
+                  >
+                    Also supports comprehensive exports with: ID, Salary Min/Max/Currency/Period,
+                    Status Timeline, RIASEC Fit Score, SOC Code, Created/Updated At, and more.
+                  </p>
                 </div>
               </div>
             </Show>
@@ -678,6 +888,35 @@ export const ImportCSVModal: Component<ImportCSVModalProps> = (props) => {
             {/* Preview Step */}
             <Show when={step() === 'preview'}>
               <div>
+                {/* Comprehensive Format Indicator */}
+                <Show when={isComprehensiveFormat()}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      'align-items': 'center',
+                      gap: '8px',
+                      padding: '10px 14px',
+                      background: 'rgba(99, 102, 241, 0.1)',
+                      border: '1px solid rgba(99, 102, 241, 0.3)',
+                      'border-radius': '8px',
+                      'margin-bottom': '16px',
+                    }}
+                  >
+                    <IconCheck size={16} color="#6366F1" />
+                    <p
+                      style={{
+                        margin: 0,
+                        'font-size': '13px',
+                        'font-family': "'Space Grotesk', system-ui, sans-serif",
+                        color: '#6366F1',
+                        'line-height': '1.4',
+                      }}
+                    >
+                      Comprehensive format detected - status timeline and metadata will be preserved
+                    </p>
+                  </div>
+                </Show>
+
                 {/* Stats */}
                 <div
                   style={{

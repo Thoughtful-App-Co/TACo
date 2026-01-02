@@ -11,7 +11,7 @@ import {
   JobApplication,
   ApplicationStatus,
   STATUS_LABELS,
-  ACTIVE_STATUSES,
+  STATUS_ORDER,
   SalaryRange,
 } from '../../../../schemas/pipeline.schema';
 import {
@@ -21,6 +21,7 @@ import {
   IconCheck,
   IconExternalLink,
   IconClock,
+  IconTrash,
 } from '../ui/Icons';
 import { AgingIndicator } from '../ui';
 import {
@@ -29,6 +30,8 @@ import {
   parseFormattedNumber,
   getCurrencySymbol,
 } from '../utils';
+import { DeleteConfirmationModal } from './DeleteConfirmationModal';
+import { StatusTimeline } from './StatusTimeline';
 
 // Persist width preference
 const STORAGE_KEY = 'augment_job_sidebar_width';
@@ -48,6 +51,7 @@ export const JobDetailSidebar: Component<JobDetailSidebarProps> = (props) => {
   // Editing state
   const [isEditing, setIsEditing] = createSignal(false);
   const [editedJob, setEditedJob] = createSignal<Partial<JobApplication>>({});
+  const [showDeleteModal, setShowDeleteModal] = createSignal(false);
 
   // Salary edit state
   const [salaryIsRange, setSalaryIsRange] = createSignal(false);
@@ -265,7 +269,7 @@ export const JobDetailSidebar: Component<JobDetailSidebarProps> = (props) => {
   };
 
   const handleDelete = () => {
-    if (props.job && confirm('Delete this application? This cannot be undone.')) {
+    if (props.job) {
       pipelineStore.deleteApplication(props.job.id);
       props.onClose();
     }
@@ -417,21 +421,43 @@ export const JobDetailSidebar: Component<JobDetailSidebarProps> = (props) => {
               >
                 {isEditing() ? 'Edit Application' : 'Application Details'}
               </h2>
-              <div
-                style={{
-                  'font-size': '12px',
-                  color: theme().colors.textMuted,
-                  'font-family': "'Space Grotesk', system-ui, sans-serif",
-                  'margin-top': '2px',
-                }}
-              >
-                <AgingIndicator lastActivityAt={props.job!.lastActivityAt} size="sm" showLabel />
-              </div>
             </div>
           </div>
 
           <div style={{ display: 'flex', 'align-items': 'center', gap: '8px' }}>
             <Show when={!isEditing()}>
+              {/* Delete button */}
+              <button
+                onClick={() => setShowDeleteModal(true)}
+                style={{
+                  display: 'flex',
+                  'align-items': 'center',
+                  'justify-content': 'center',
+                  width: '40px',
+                  height: '40px',
+                  background: 'transparent',
+                  border: '1px solid rgba(239, 68, 68, 0.3)',
+                  'border-radius': '10px',
+                  cursor: 'pointer',
+                  color: '#EF4444',
+                  transition: 'all 0.15s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                  e.currentTarget.style.transform = 'scale(1.05)';
+                  e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.5)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.transform = 'scale(1)';
+                  e.currentTarget.style.borderColor = 'rgba(239, 68, 68, 0.3)';
+                }}
+                title="Delete Application"
+              >
+                <IconTrash size={18} />
+              </button>
+
+              {/* Edit button */}
               <button
                 onClick={() => setIsEditing(true)}
                 style={{
@@ -534,29 +560,102 @@ export const JobDetailSidebar: Component<JobDetailSidebarProps> = (props) => {
               {/* Status */}
               <div>
                 <label style={labelStyle()}>Status</label>
-                <div style={{ display: 'flex', 'flex-wrap': 'wrap', gap: '8px' }}>
-                  {ACTIVE_STATUSES.map((status) => (
-                    <button
-                      onClick={() => handleStatusChange(status)}
-                      style={{
-                        padding: '8px 14px',
-                        background:
-                          props.job!.status === status ? statusColors[status].bg : 'transparent',
-                        border: `1px solid ${statusColors[status].border}`,
-                        'border-radius': '8px',
-                        color: statusColors[status].text,
-                        'font-size': '13px',
-                        'font-family': "'Space Grotesk', system-ui, sans-serif",
-                        'font-weight': props.job!.status === status ? '600' : '400',
-                        cursor: 'pointer',
-                        transition: 'all 0.15s ease',
-                      }}
+                <div style={{ position: 'relative' }}>
+                  <select
+                    value={props.job!.status}
+                    onChange={(e) => handleStatusChange(e.currentTarget.value as ApplicationStatus)}
+                    style={{
+                      width: '100%',
+                      padding: '12px 16px',
+                      'padding-left': '44px',
+                      background: theme().colors.background,
+                      border: `1px solid ${theme().colors.border}`,
+                      'border-radius': '10px',
+                      color: theme().colors.text,
+                      'font-size': '14px',
+                      'font-family': "'Space Grotesk', system-ui, sans-serif",
+                      'font-weight': '500',
+                      outline: 'none',
+                      cursor: 'pointer',
+                      transition: `border-color ${pipelineAnimations.fast}`,
+                      appearance: 'none',
+                      '-webkit-appearance': 'none',
+                      '-moz-appearance': 'none',
+                    }}
+                    onFocus={(e) => {
+                      e.currentTarget.style.borderColor = theme().colors.primary;
+                    }}
+                    onBlur={(e) => {
+                      e.currentTarget.style.borderColor = theme().colors.border;
+                    }}
+                  >
+                    {STATUS_ORDER.map((status) => (
+                      <option value={status}>{STATUS_LABELS[status]}</option>
+                    ))}
+                  </select>
+                  {/* Status indicator badge */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: '14px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      width: '20px',
+                      height: '20px',
+                      'border-radius': '6px',
+                      background: statusColors[props.job!.status].bg,
+                      border: `2px solid ${statusColors[props.job!.status].border}`,
+                      'pointer-events': 'none',
+                    }}
+                  />
+                  {/* Dropdown arrow */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      right: '16px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      'pointer-events': 'none',
+                      color: theme().colors.textMuted,
+                    }}
+                  >
+                    <svg
+                      width="12"
+                      height="12"
+                      viewBox="0 0 12 12"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
                     >
-                      {STATUS_LABELS[status]}
-                    </button>
-                  ))}
+                      <polyline points="2 4 6 8 10 4" />
+                    </svg>
+                  </div>
                 </div>
               </div>
+
+              {/* Status History Timeline */}
+              <Show when={props.job!.statusHistory && props.job!.statusHistory.length > 0}>
+                <div>
+                  <label style={labelStyle()}>Status History</label>
+                  <div
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.02)',
+                      border: `1px solid ${theme().colors.border}`,
+                      'border-radius': '12px',
+                      padding: '16px',
+                      'margin-top': '8px',
+                    }}
+                  >
+                    <StatusTimeline
+                      statusHistory={props.job!.statusHistory}
+                      currentStatus={props.job!.status}
+                      theme={theme}
+                    />
+                  </div>
+                </div>
+              </Show>
 
               {/* Job URL */}
               <Show when={props.job!.jobUrl}>
@@ -707,31 +806,6 @@ export const JobDetailSidebar: Component<JobDetailSidebarProps> = (props) => {
                   </Show>
                 </div>
               </div>
-
-              {/* Delete */}
-              <button
-                onClick={handleDelete}
-                style={{
-                  padding: '12px',
-                  background: 'transparent',
-                  border: '1px solid rgba(239, 68, 68, 0.3)',
-                  'border-radius': '10px',
-                  color: '#EF4444',
-                  'font-size': '14px',
-                  'font-family': "'Space Grotesk', system-ui, sans-serif",
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                  'margin-top': '16px',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'transparent';
-                }}
-              >
-                Delete Application
-              </button>
             </div>
           </Show>
 
@@ -1133,6 +1207,17 @@ export const JobDetailSidebar: Component<JobDetailSidebarProps> = (props) => {
           }
         }
       `}</style>
+
+      {/* Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={showDeleteModal()}
+        onClose={() => setShowDeleteModal(false)}
+        onConfirm={handleDelete}
+        title="Delete Application?"
+        message={`Are you sure you want to delete your application to ${props.job?.companyName} for ${props.job?.roleName}? This action cannot be undone.`}
+        confirmText="Delete"
+        theme={theme}
+      />
     </Show>
   );
 };

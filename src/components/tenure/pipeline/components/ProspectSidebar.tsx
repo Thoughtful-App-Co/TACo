@@ -6,6 +6,7 @@
  */
 
 import { Component, createSignal, createEffect, Show, For } from 'solid-js';
+import { A } from '@solidjs/router';
 import { liquidTenure, pipelineAnimations } from '../theme/liquid-tenure';
 import { IconGrid, IconTrendingUp, IconSettings } from '../ui/Icons';
 import { Tooltip } from '../ui';
@@ -40,10 +41,9 @@ const NAV_ITEMS: NavItem[] = [
         stroke-linecap="round"
         stroke-linejoin="round"
       >
-        <rect x="3" y="3" width="7" height="7" />
-        <rect x="14" y="3" width="7" height="7" />
-        <rect x="14" y="14" width="7" height="7" />
-        <rect x="3" y="14" width="7" height="7" />
+        {/* Speedometer/Dashboard icon */}
+        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+        <circle cx="12" cy="12" r="3" />
       </svg>
     ),
     ariaLabel: 'Dashboard - Stats and recent activity',
@@ -51,7 +51,23 @@ const NAV_ITEMS: NavItem[] = [
   {
     id: 'pipeline',
     label: 'Pipeline',
-    icon: IconGrid,
+    icon: (props) => (
+      <svg
+        width={props.size || 20}
+        height={props.size || 20}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        {/* Kanban columns icon */}
+        <rect x="3" y="3" width="5" height="18" rx="1" />
+        <rect x="10" y="3" width="5" height="12" rx="1" />
+        <rect x="17" y="3" width="5" height="15" rx="1" />
+      </svg>
+    ),
     ariaLabel: 'Pipeline - Kanban board and list view',
   },
   {
@@ -133,10 +149,6 @@ export const ProspectSidebar: Component<ProspectSidebarProps> = (props) => {
 
   const toggleCollapse = () => {
     setIsCollapsed(!isCollapsed());
-  };
-
-  const handleNavClick = (section: ProspectSection) => {
-    props.onSectionChange(section);
   };
 
   const sidebarWidth = () => (isCollapsed() ? '60px' : '240px');
@@ -240,8 +252,8 @@ export const ProspectSidebar: Component<ProspectSidebarProps> = (props) => {
               const isActive = () => props.activeSection === item.id;
 
               const navButton = (
-                <button
-                  onClick={() => handleNavClick(item.id)}
+                <A
+                  href={`/tenure/prospect/${item.id}`}
                   aria-label={item.ariaLabel}
                   aria-current={isActive() ? 'page' : undefined}
                   style={{
@@ -256,14 +268,14 @@ export const ProspectSidebar: Component<ProspectSidebarProps> = (props) => {
                     border: 'none',
                     'border-radius': '10px',
                     color: isActive() ? theme().colors.primary : theme().colors.textMuted,
-                    cursor: 'pointer',
                     'font-size': '14px',
                     'font-family': "'Space Grotesk', system-ui, sans-serif",
                     'font-weight': isActive() ? '600' : '500',
                     'text-align': 'left',
+                    'text-decoration': 'none',
                     position: 'relative',
-                    overflow: 'hidden',
-                    transition: `all ${pipelineAnimations.fast}`,
+                    overflow: 'visible',
+                    transition: `background ${pipelineAnimations.fast}, color ${pipelineAnimations.fast}, padding ${pipelineAnimations.fast}`,
                     'justify-content': isCollapsed() ? 'center' : 'flex-start',
                   }}
                   onMouseEnter={(e) => {
@@ -301,16 +313,20 @@ export const ProspectSidebar: Component<ProspectSidebarProps> = (props) => {
                   <Show when={!isCollapsed()}>
                     <span style={{ flex: 1 }}>{item.label}</span>
                   </Show>
-                </button>
+                </A>
               );
 
-              // Wrap in tooltip when collapsed
+              // Always render navButton, don't wrap in Tooltip
+              // The tooltip will be disabled when expanded
               return (
-                <Show when={isCollapsed()} fallback={navButton}>
-                  <Tooltip content={item.label} position="right" delay={200}>
-                    {navButton}
-                  </Tooltip>
-                </Show>
+                <Tooltip
+                  content={item.label}
+                  position="right"
+                  delay={200}
+                  disabled={!isCollapsed()}
+                >
+                  {navButton}
+                </Tooltip>
               );
             }}
           </For>

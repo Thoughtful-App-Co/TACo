@@ -28,105 +28,71 @@ export interface TooltipProps {
 export const Tooltip: Component<TooltipProps> = (props) => {
   const [isVisible, setIsVisible] = createSignal(false);
   const [isRendered, setIsRendered] = createSignal(false);
-  const [coords, setCoords] = createSignal({ x: 0, y: 0 });
-  const [resolvedPosition, setResolvedPosition] = createSignal<'top' | 'bottom' | 'left' | 'right'>(
-    'top'
-  );
+  const [cursorPos, setCursorPos] = createSignal({ x: 0, y: 0 });
   let triggerRef: HTMLDivElement | undefined;
   let timeoutId: number | undefined;
 
-  const position = () => props.position || 'top';
   const delay = () => props.delay ?? 150;
   const maxWidth = () => props.maxWidth || 280;
 
-  // Calculate optimal position based on element location in viewport
-  const calculateAutoPosition = (rect: DOMRect): 'top' | 'bottom' | 'left' | 'right' => {
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    const centerX = viewportWidth / 2;
-    const centerY = viewportHeight / 2;
-
-    // Calculate element center
-    const elementCenterX = rect.left + rect.width / 2;
-    const elementCenterY = rect.top + rect.height / 2;
-
-    // Check if there's enough space on each side
-    const spaceLeft = rect.left;
-    const spaceRight = viewportWidth - rect.right;
-    const spaceTop = rect.top;
-    const spaceBottom = viewportHeight - rect.bottom;
-
-    const minTooltipWidth = 280; // Match maxWidth default
-
-    // Prefer horizontal positioning for list items
-    // Position toward center: if element is on left, show tooltip on right (and vice versa)
-    if (elementCenterX < centerX) {
-      // Element is on left side, prefer showing tooltip to the right (toward center)
-      if (spaceRight >= minTooltipWidth) {
-        return 'right';
-      } else if (spaceLeft >= minTooltipWidth) {
-        return 'left';
-      }
-    } else {
-      // Element is on right side, prefer showing tooltip to the left (toward center)
-      if (spaceLeft >= minTooltipWidth) {
-        return 'left';
-      } else if (spaceRight >= minTooltipWidth) {
-        return 'right';
-      }
-    }
-
-    // Fallback to vertical if horizontal doesn't work
-    if (spaceBottom > spaceTop) {
-      return 'bottom';
-    } else {
-      return 'top';
-    }
-  };
-
-  const showTooltip = () => {
+  const showTooltip = (e: MouseEvent | FocusEvent) => {
     if (props.disabled) return;
 
-    timeoutId = window.setTimeout(() => {
+    let x = 0;
+    let y = 0;
+
+    if (e instanceof MouseEvent) {
+      const cursorX = e.clientX;
+      const cursorY = e.clientY;
+
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const tooltipWidth = maxWidth();
+      const tooltipHeight = 200;
+      const offset = 12; // Small offset from cursor
+      const edgePadding = 10;
+
+      // Default: below and right of cursor
+      x = cursorX + offset;
+      y = cursorY + offset;
+
+      // If tooltip would go off RIGHT edge, flip to LEFT of cursor
+      if (x + tooltipWidth > viewportWidth - edgePadding) {
+        x = cursorX - tooltipWidth - offset;
+      }
+
+      // If tooltip would go off BOTTOM edge, flip to ABOVE cursor
+      if (y + tooltipHeight > viewportHeight - edgePadding) {
+        y = cursorY - tooltipHeight - offset;
+      }
+
+      // Final safety: ensure not off left or top edge
+      if (x < edgePadding) {
+        x = edgePadding;
+      }
+      if (y < edgePadding) {
+        y = edgePadding;
+      }
+    } else {
+      // Focus event (keyboard) - position near element
       if (triggerRef) {
         const rect = triggerRef.getBoundingClientRect();
-        const scrollX = window.scrollX;
-        const scrollY = window.scrollY;
+        const viewportWidth = window.innerWidth;
+        const tooltipWidth = maxWidth();
 
-        // Resolve 'auto' position to actual position
-        const actualPosition =
-          position() === 'auto'
-            ? calculateAutoPosition(rect)
-            : (position() as 'top' | 'bottom' | 'left' | 'right');
+        x = rect.right + 12;
+        y = rect.top;
 
-        setResolvedPosition(actualPosition);
-
-        let x = 0;
-        let y = 0;
-
-        switch (actualPosition) {
-          case 'top':
-            x = rect.left + scrollX + rect.width / 2;
-            y = rect.top + scrollY - 8;
-            break;
-          case 'bottom':
-            x = rect.left + scrollX + rect.width / 2;
-            y = rect.bottom + scrollY + 8;
-            break;
-          case 'left':
-            x = rect.left + scrollX - 8;
-            y = rect.top + scrollY + rect.height / 2;
-            break;
-          case 'right':
-            x = rect.right + scrollX + 8;
-            y = rect.top + scrollY + rect.height / 2;
-            break;
+        if (x + tooltipWidth > viewportWidth - 10) {
+          x = rect.left - tooltipWidth - 12;
         }
-
-        setCoords({ x, y });
       }
+    }
+
+    setCursorPos({ x, y });
+
+    timeoutId = window.setTimeout(() => {
       setIsRendered(true);
-      // Small delay to ensure DOM is ready for animation
       requestAnimationFrame(() => {
         setIsVisible(true);
       });
@@ -151,40 +117,6 @@ export const Tooltip: Component<TooltipProps> = (props) => {
     }
   });
 
-  const getTransformOrigin = () => {
-    // Use resolved position for 'auto' mode
-    const pos = position() === 'auto' ? resolvedPosition() : position();
-    switch (pos) {
-      case 'top':
-        return 'bottom center';
-      case 'bottom':
-        return 'top center';
-      case 'left':
-        return 'right center';
-      case 'right':
-        return 'left center';
-      default:
-        return 'bottom center';
-    }
-  };
-
-  const getTransform = () => {
-    // Use resolved position for 'auto' mode
-    const pos = position() === 'auto' ? resolvedPosition() : position();
-    switch (pos) {
-      case 'top':
-        return 'translateX(-50%) translateY(-100%)';
-      case 'bottom':
-        return 'translateX(-50%)';
-      case 'left':
-        return 'translateX(-100%) translateY(-50%)';
-      case 'right':
-        return 'translateY(-50%)';
-      default:
-        return 'translateX(-50%) translateY(-100%)';
-    }
-  };
-
   return (
     <>
       <div
@@ -203,15 +135,14 @@ export const Tooltip: Component<TooltipProps> = (props) => {
           <div
             class={props.class}
             style={{
-              position: 'absolute',
-              left: `${coords().x}px`,
-              top: `${coords().y}px`,
-              transform: getTransform(),
-              'transform-origin': getTransformOrigin(),
+              position: 'fixed',
+              left: `${cursorPos().x}px`,
+              top: `${cursorPos().y}px`,
+              transform: 'none',
               'max-width': `${maxWidth()}px`,
               'z-index': '10000',
               opacity: isVisible() ? 1 : 0,
-              transition: 'opacity 200ms ease, transform 200ms ease',
+              transition: 'opacity 200ms ease',
               'pointer-events': 'none',
             }}
           >
@@ -255,7 +186,7 @@ interface StatTooltipContentProps {
     color?: string;
     trend?: 'up' | 'down' | 'neutral';
   }>;
-  insight?: string;
+  insight?: string | JSX.Element;
 }
 
 export const StatTooltipContent: Component<StatTooltipContentProps> = (props) => (
@@ -282,10 +213,17 @@ export const StatTooltipContent: Component<StatTooltipContentProps> = (props) =>
           style={{
             display: 'flex',
             'justify-content': 'space-between',
-            'align-items': 'center',
+            'align-items': 'flex-start',
+            gap: '12px',
           }}
         >
-          <span style={{ color: 'rgba(255, 255, 255, 0.65)', 'font-size': '13px' }}>
+          <span
+            style={{
+              color: 'rgba(255, 255, 255, 0.65)',
+              'font-size': '13px',
+              flex: '0 0 auto',
+            }}
+          >
             {metric.label}
           </span>
           <span
@@ -296,6 +234,9 @@ export const StatTooltipContent: Component<StatTooltipContentProps> = (props) =>
               display: 'flex',
               'align-items': 'center',
               gap: '4px',
+              'text-align': 'right',
+              flex: '1 1 auto',
+              'word-break': 'break-word',
             }}
           >
             {metric.trend === 'up' && (
@@ -587,12 +528,12 @@ export const ApplicationTooltipContent: Component<ApplicationTooltipContentProps
           height="14"
           viewBox="0 0 24 24"
           fill="none"
-          stroke="#60A5FA"
+          stroke={props.accentColor}
           stroke-width="2"
         >
           <path d="M9 18l6-6-6-6" />
         </svg>
-        <span style={{ 'font-size': '13px', color: '#60A5FA' }}>{props.nextAction}</span>
+        <span style={{ 'font-size': '13px', color: props.accentColor }}>{props.nextAction}</span>
       </div>
     </Show>
   </div>

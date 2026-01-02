@@ -9,31 +9,45 @@ import { createEffect } from 'solid-js';
 import {
   JobApplication,
   UserProfile,
-  PipelineSettings,
-  PipelineSyncData,
-  FeatureFlags,
+  ProspectSettings,
+  ProspectSyncData,
+  TenureFeatureFlags,
   ApplicationStatus,
   StatusChange,
   UserCriterion,
   WorkExperience,
-  DEFAULT_SETTINGS,
+  DEFAULT_PROSPECT_SETTINGS,
   DEFAULT_FEATURE_FLAGS,
   generateId,
   daysSince,
-} from '../../../schemas/pipeline.schema';
+  shouldNotify,
+  isSnoozed,
+  snoozeApplication,
+  unsnoozeApplication,
+  getEffectiveThresholds,
+  ACTIVE_STATUSES,
+  TERMINAL_STATUSES,
+} from '../../../schemas/tenure';
+
+// Backward compatibility aliases
+type PipelineSettings = ProspectSettings;
+type PipelineSyncData = ProspectSyncData;
+type FeatureFlags = TenureFeatureFlags;
+const DEFAULT_SETTINGS = DEFAULT_PROSPECT_SETTINGS;
 import { normalizeJobTitle, getCanonicalPositionName } from './utils/position-matching';
 import { normalizeToAnnual } from './utils/salary';
+import { notificationInteractionStore } from './store/notification-interactions';
 
 // ============================================================================
 // STORAGE KEYS
 // ============================================================================
 
 const STORAGE_KEYS = {
-  applications: 'augment_pipeline_applications',
-  profile: 'augment_pipeline_profile',
-  settings: 'augment_pipeline_settings',
-  featureFlags: 'augment_feature_flags',
-  riasecAnswers: 'augment_answers', // Existing key from AugmentApp
+  applications: 'tenure_prospect_applications',
+  profile: 'tenure_prospect_profile',
+  settings: 'tenure_prospect_settings',
+  featureFlags: 'tenure_feature_flags',
+  riasecAnswers: 'tenure_discover_answers',
 };
 
 // ============================================================================
@@ -52,6 +66,9 @@ interface PipelineStoreState {
   isLoading: boolean;
   error: string | null;
   aggregationMode: AggregationMode;
+
+  // Selection state for bulk operations
+  selectedIds: Set<string>;
 }
 
 // ============================================================================
@@ -112,6 +129,7 @@ function loadInitialState(): PipelineStoreState {
     isLoading: false,
     error: null,
     aggregationMode: 'none' as AggregationMode,
+    selectedIds: new Set<string>(),
   };
 }
 
@@ -484,6 +502,114 @@ export const pipelineStore = {
   },
 
   // -------------------------------------------------------------------------
+  // SELECTION ACTIONS (for bulk operations)
+  // -------------------------------------------------------------------------
+
+  toggleSelection: (id: string) => {
+    setState('selectedIds', (prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  },
+
+  selectAll: (ids: string[]) => {
+    setState('selectedIds', new Set(ids));
+  },
+
+  clearSelection: () => {
+    setState('selectedIds', new Set<string>());
+  },
+
+  isSelected: (id: string): boolean => {
+    return state.selectedIds.has(id);
+  },
+
+  getSelectedCount: (): number => {
+    return state.selectedIds.size;
+  },
+
+  // Check if all applications with given IDs are selected
+  areAllSelected: (ids: string[]): boolean => {
+    if (ids.length === 0) return false;
+    return ids.every((id) => state.selectedIds.has(id));
+  },
+
+  // Check if some (but not all) applications with given IDs are selected
+  areSomeSelected: (ids: string[]): boolean => {
+    if (ids.length === 0) return false;
+    const selectedCount = ids.filter((id) => state.selectedIds.has(id)).length;
+    return selectedCount > 0 && selectedCount < ids.length;
+  },
+
+  // Toggle selection for all given IDs (select all if not all selected, deselect all if all selected)
+  toggleAllSelection: (ids: string[]) => {
+    const allSelected = ids.every((id) => state.selectedIds.has(id));
+    if (allSelected) {
+      // Deselect all
+      setState('selectedIds', (prev) => {
+        const next = new Set(prev);
+        ids.forEach((id) => next.delete(id));
+        return next;
+      });
+    } else {
+      // Select all
+      setState('selectedIds', (prev) => {
+        const next = new Set(prev);
+        ids.forEach((id) => next.add(id));
+        return next;
+      });
+    }
+  },
+
+  bulkUpdateStatus: (newStatus: ApplicationStatus, note?: string) => {
+    const now = new Date();
+    const selectedIds = state.selectedIds;
+
+    for (const id of selectedIds) {
+      const statusChange: StatusChange = {
+        status: newStatus,
+        timestamp: now,
+        note,
+      };
+
+      setState(
+        'applications',
+        (app) => app.id === id,
+        (app) => {
+          const updates: Partial<JobApplication> = {
+            status: newStatus,
+            statusHistory: [...app.statusHistory, statusChange],
+            lastActivityAt: now,
+            updatedAt: now,
+            appliedAt: newStatus === 'applied' && !app.appliedAt ? now : app.appliedAt,
+            syncVersion: app.syncVersion + 1,
+          };
+
+          if (newStatus === 'rejected' || newStatus === 'withdrawn') {
+            updates.rejectedAtStatus = app.status;
+          }
+
+          return { ...app, ...updates };
+        }
+      );
+    }
+
+    // Clear selection after bulk update
+    setState('selectedIds', new Set<string>());
+  },
+
+  bulkDelete: () => {
+    const selectedIds = state.selectedIds;
+    setState('applications', (apps) => apps.filter((app) => !selectedIds.has(app.id)));
+    setState('selectedIds', new Set<string>());
+  },
+
+  // -------------------------------------------------------------------------
   // AGGREGATION HELPERS
   // -------------------------------------------------------------------------
 
@@ -550,6 +676,97 @@ export const pipelineStore = {
   },
 
   // -------------------------------------------------------------------------
+  // NOTIFICATION ACTIONS
+  // -------------------------------------------------------------------------
+
+  /**
+   * Get all applications that should trigger notifications
+   * (stale, not snoozed, not terminal status, not dismissed)
+   */
+  getNotifiableApplications: (): JobApplication[] => {
+    return state.applications.filter(
+      (app) => shouldNotify(app, state.settings) && !notificationInteractionStore.isDismissed(app)
+    );
+  },
+
+  /**
+   * Get notification count (for badge display)
+   * Only counts new/unviewed notifications
+   */
+  getNotificationCount: (): number => {
+    const notifiable = pipelineStore.getNotifiableApplications();
+    return notificationInteractionStore.getNewCount(notifiable);
+  },
+
+  /**
+   * Get notifiable applications grouped by severity
+   */
+  getNotificationsByPriority: (): {
+    critical: JobApplication[];
+    warning: JobApplication[];
+  } => {
+    const notifiable = pipelineStore.getNotifiableApplications();
+    const thresholds = getEffectiveThresholds(state.settings);
+
+    const critical: JobApplication[] = [];
+    const warning: JobApplication[] = [];
+
+    for (const app of notifiable) {
+      const days = daysSince(app.lastActivityAt);
+      if (days >= thresholds.critical) {
+        critical.push(app);
+      } else {
+        warning.push(app);
+      }
+    }
+
+    // Sort by days descending (most stale first)
+    critical.sort((a, b) => daysSince(b.lastActivityAt) - daysSince(a.lastActivityAt));
+    warning.sort((a, b) => daysSince(b.lastActivityAt) - daysSince(a.lastActivityAt));
+
+    return { critical, warning };
+  },
+
+  /**
+   * Snooze an application for a specified number of days
+   */
+  snoozeApp: (appId: string, days: number, reason?: 'manual' | 'holiday' | 'weekend' | 'busy') => {
+    setState(
+      'applications',
+      (app) => app.id === appId,
+      (app) => snoozeApplication(app, days, reason)
+    );
+    // Track snooze interaction
+    notificationInteractionStore.incrementSnoozeCount(appId);
+  },
+
+  /**
+   * Unsnooze an application (clear snoozedUntil)
+   */
+  unsnoozeApp: (appId: string) => {
+    setState(
+      'applications',
+      (app) => app.id === appId,
+      (app) => unsnoozeApplication(app)
+    );
+  },
+
+  /**
+   * Check if an application is currently snoozed
+   */
+  isAppSnoozed: (appId: string): boolean => {
+    const app = state.applications.find((a) => a.id === appId);
+    return app ? isSnoozed(app) : false;
+  },
+
+  /**
+   * Toggle holiday mode
+   */
+  toggleHolidayMode: () => {
+    setState('settings', 'holidayModeEnabled', (enabled) => !enabled);
+  },
+
+  // -------------------------------------------------------------------------
   // RESET
   // -------------------------------------------------------------------------
 
@@ -564,6 +781,7 @@ export const pipelineStore = {
       isLoading: false,
       error: null,
       aggregationMode: 'none' as AggregationMode,
+      selectedIds: new Set<string>(),
       featureFlags: state.featureFlags,
     });
   },

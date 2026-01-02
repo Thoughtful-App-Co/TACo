@@ -19,3 +19,5 @@ export type { SidebarView } from './Sidebar';
 export { ProspectSidebar } from './ProspectSidebar';
 export type { ProspectSection } from './ProspectSidebar';
 export { JobDetailSidebar } from './JobDetailSidebar';
+export { LaborMarketWidget } from './LaborMarketWidget';
+export { default as SalaryComparison } from './SalaryComparison';

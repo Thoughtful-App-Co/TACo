@@ -4,7 +4,8 @@
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
-import { Component, createSignal, Show } from 'solid-js';
+import { Component, createSignal, Show, createMemo, createEffect } from 'solid-js';
+import { useLocation, useNavigate } from '@solidjs/router';
 import { pipelineStore } from '../store';
 import { liquidTenure, pipelineKeyframes } from '../theme/liquid-tenure';
 import { ProspectSidebar, type ProspectSection } from './ProspectSidebar';
@@ -23,8 +24,27 @@ interface PipelineViewProps {
 }
 
 export const PipelineView: Component<PipelineViewProps> = (props) => {
-  // Section navigation - default to pipeline (not dashboard)
-  const [activeSection, setActiveSection] = createSignal<ProspectSection>('pipeline');
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Determine active section from URL path
+  const activeSection = createMemo((): ProspectSection => {
+    const path = location.pathname;
+
+    // Extract section from path like /tenure/prospect/dashboard
+    const match = path.match(/\/tenure\/prospect\/([^/]+)/);
+    if (match) {
+      const section = match[1] as ProspectSection;
+      // Validate it's a known section
+      if (['dashboard', 'pipeline', 'insights', 'settings'].includes(section)) {
+        return section;
+      }
+    }
+
+    // Default to user's configured default or 'pipeline'
+    const defaultSection = pipelineStore.state.settings.defaultProspectSection || 'pipeline';
+    return defaultSection;
+  });
 
   // Job detail state
   const [selectedJob, setSelectedJob] = createSignal<JobApplication | null>(null);
@@ -32,6 +52,15 @@ export const PipelineView: Component<PipelineViewProps> = (props) => {
   // Modal state
   const [isAddJobModalOpen, setIsAddJobModalOpen] = createSignal(false);
   const [isImportModalOpen, setIsImportModalOpen] = createSignal(false);
+
+  // Redirect to default section if on base /tenure/prospect path
+  createEffect(() => {
+    const path = location.pathname;
+    if (path === '/tenure/prospect' || path === '/tenure/prospect/') {
+      const defaultSection = pipelineStore.state.settings.defaultProspectSection || 'pipeline';
+      navigate(`/tenure/prospect/${defaultSection}`, { replace: true });
+    }
+  });
 
   // Export CSV handler
   const handleExportCSV = () => {
@@ -75,7 +104,7 @@ export const PipelineView: Component<PipelineViewProps> = (props) => {
       {/* Left Sidebar Navigation */}
       <ProspectSidebar
         activeSection={activeSection()}
-        onSectionChange={setActiveSection}
+        onSectionChange={(section) => navigate(`/tenure/prospect/${section}`)}
         currentTheme={theme}
       />
 
@@ -104,40 +133,227 @@ export const PipelineView: Component<PipelineViewProps> = (props) => {
             {/* Pipeline Header */}
             <div
               style={{
+                position: 'relative',
                 display: 'flex',
                 'align-items': 'center',
                 'justify-content': 'space-between',
-                padding: '16px 24px',
+                padding: '24px 32px',
                 'border-bottom': `1px solid ${theme().colors.border}`,
-                background: theme().colors.surface,
+                background: `linear-gradient(135deg, ${theme().colors.surface} 0%, ${theme().colors.primary}08 100%)`,
+                overflow: 'hidden',
               }}
             >
-              <div>
-                <h1
+              {/* Subtle animated gradient backdrop */}
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  background: `radial-gradient(ellipse at top right, ${theme().colors.primary}10 0%, transparent 50%)`,
+                  opacity: 0.6,
+                  'pointer-events': 'none',
+                }}
+              />
+
+              <div style={{ position: 'relative', 'z-index': 1 }}>
+                {/* Title with accent glow */}
+                <div
                   style={{
-                    margin: '0 0 4px',
-                    'font-size': '28px',
-                    'font-family': theme().fonts.heading,
-                    'font-weight': '700',
-                    color: theme().colors.text,
+                    display: 'flex',
+                    'align-items': 'center',
+                    gap: '12px',
+                    'margin-bottom': '12px',
                   }}
                 >
-                  {pipelineStore.state.profile?.name
-                    ? `${pipelineStore.state.profile.name}'s Job Pipeline`
-                    : 'Job Pipeline'}
-                </h1>
-                <p
-                  style={{
-                    margin: 0,
-                    'font-size': '17px',
-                    'font-family': theme().fonts.body,
-                    color: theme().colors.textMuted,
-                  }}
-                >
-                  {pipelineStore.state.applications.length > 0
-                    ? `${pipelineStore.state.applications.length} application${pipelineStore.state.applications.length !== 1 ? 's' : ''}`
-                    : 'Track your job applications'}
-                </p>
+                  <h1
+                    style={{
+                      margin: 0,
+                      'font-size': '32px',
+                      'font-family': theme().fonts.heading,
+                      'font-weight': '700',
+                      color: theme().colors.text,
+                      'text-shadow': `0 0 40px ${theme().colors.primary}40, 0 0 20px ${theme().colors.primary}20`,
+                      'letter-spacing': '-0.02em',
+                    }}
+                  >
+                    Job Pipeline
+                  </h1>
+                </div>
+
+                {/* Metadata Cards - Sophisticated data presentation */}
+                {(() => {
+                  const profile = pipelineStore.state.profile;
+                  const appCount = pipelineStore.state.applications.length;
+
+                  if (!profile?.name) {
+                    return (
+                      <p
+                        style={{
+                          margin: 0,
+                          'font-size': '15px',
+                          'font-family': theme().fonts.body,
+                          color: theme().colors.textMuted,
+                          'letter-spacing': '0.01em',
+                        }}
+                      >
+                        Track your job applications
+                      </p>
+                    );
+                  }
+
+                  return (
+                    <div
+                      style={{
+                        display: 'flex',
+                        'align-items': 'center',
+                        gap: '12px',
+                        'flex-wrap': 'wrap',
+                      }}
+                    >
+                      {/* Name Badge */}
+                      <div
+                        style={{
+                          display: 'inline-flex',
+                          'align-items': 'center',
+                          gap: '8px',
+                          padding: '6px 14px',
+                          background: theme().colors.surfaceLight,
+                          border: `1px solid ${theme().colors.border}`,
+                          'border-radius': '8px',
+                          'backdrop-filter': 'blur(8px)',
+                        }}
+                      >
+                        <svg
+                          width="14"
+                          height="14"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          stroke-width="2"
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          style={{ color: theme().colors.primary, opacity: 0.8 }}
+                        >
+                          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                          <circle cx="12" cy="7" r="4" />
+                        </svg>
+                        <span
+                          style={{
+                            'font-size': '14px',
+                            'font-family': theme().fonts.body,
+                            'font-weight': '600',
+                            color: theme().colors.text,
+                            'letter-spacing': '0.01em',
+                          }}
+                        >
+                          {profile.name}
+                        </span>
+                      </div>
+
+                      {/* Occupation Badge - Primary Info (highlighted) */}
+                      <Show when={profile.primaryOccupation}>
+                        <div
+                          style={{
+                            display: 'inline-flex',
+                            'align-items': 'center',
+                            gap: '8px',
+                            padding: '6px 14px',
+                            background: `linear-gradient(135deg, ${theme().colors.primary}26 0%, ${theme().colors.secondary}26 100%)`,
+                            border: `1px solid ${theme().colors.primary}4D`,
+                            'border-radius': '8px',
+                            'backdrop-filter': 'blur(8px)',
+                            'box-shadow': `0 0 20px ${theme().colors.primary}26`,
+                          }}
+                        >
+                          <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            style={{ color: theme().colors.primary, opacity: 0.9 }}
+                          >
+                            <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+                            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                          </svg>
+                          <span
+                            style={{
+                              'font-size': '14px',
+                              'font-family': theme().fonts.body,
+                              'font-weight': '600',
+                              color: theme().colors.primary,
+                              filter: 'brightness(1.2)',
+                              'letter-spacing': '0.01em',
+                            }}
+                          >
+                            {profile.primaryOccupation}
+                          </span>
+                        </div>
+                      </Show>
+
+                      {/* Application Count Badge - Info semantic color */}
+                      <Show when={appCount > 0}>
+                        <div
+                          style={{
+                            display: 'inline-flex',
+                            'align-items': 'center',
+                            gap: '8px',
+                            padding: '6px 14px',
+                            background: theme().colors.secondary
+                              ? `${theme().colors.secondary}20`
+                              : 'rgba(6, 182, 212, 0.12)',
+                            border: `1px solid ${theme().colors.secondary ? `${theme().colors.secondary}40` : 'rgba(6, 182, 212, 0.25)'}`,
+                            'border-radius': '8px',
+                            'backdrop-filter': 'blur(8px)',
+                          }}
+                        >
+                          <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            style={{ color: theme().colors.secondary, opacity: 0.9 }}
+                          >
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
+                            <polyline points="22 4 12 14.01 9 11.01" />
+                          </svg>
+                          <span
+                            style={{
+                              'font-size': '14px',
+                              'font-family': theme().fonts.body,
+                              'font-weight': '700',
+                              color: theme().colors.secondary,
+                              'letter-spacing': '0.01em',
+                            }}
+                          >
+                            {appCount}
+                          </span>
+                          <span
+                            style={{
+                              'font-size': '13px',
+                              'font-family': theme().fonts.body,
+                              'font-weight': '500',
+                              color: theme().colors.secondary,
+                              opacity: 0.7,
+                              'letter-spacing': '0.01em',
+                            }}
+                          >
+                            {appCount === 1 ? 'application' : 'applications'}
+                          </span>
+                        </div>
+                      </Show>
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Action Buttons */}

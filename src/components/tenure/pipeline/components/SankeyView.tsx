@@ -24,6 +24,15 @@ import {
   ApplicationStatus,
   STATUS_LABELS,
 } from '../../../../schemas/pipeline.schema';
+import {
+  IconBriefcase,
+  IconSend,
+  IconSearch,
+  IconMessage,
+  IconStar,
+  IconCheck,
+  IconX,
+} from '../ui/Icons';
 
 interface SankeyViewProps {
   currentTheme: () => Partial<typeof liquidTenure> & typeof liquidTenure;
@@ -70,6 +79,18 @@ const STAGE_INDEX: Record<ApplicationStatus, number> = {
   withdrawn: 5,
 };
 
+// Icon mapping for each status
+const STATUS_ICONS: Record<ApplicationStatus, Component<{ size?: number; color?: string }>> = {
+  saved: IconBriefcase,
+  applied: IconSend,
+  screening: IconSearch,
+  interviewing: IconMessage,
+  offered: IconStar,
+  accepted: IconCheck,
+  rejected: IconX,
+  withdrawn: IconX,
+};
+
 // Design tokens
 const SANKEY_DESIGN = {
   fonts: {
@@ -85,26 +106,31 @@ const SANKEY_DESIGN = {
   },
   radii: {
     sm: 4,
-    md: 4,
-    lg: 4,
+    md: 8, // Changed from 4 to 8
+    lg: 12, // Changed from 4 to 12
   },
   timing: {
     fast: pipelineAnimations.fast,
     normal: pipelineAnimations.normal,
   },
   svg: {
-    width: 900,
-    height: 400,
-    nodeWidth: 24,
-    nodePadding: 20,
-    margin: { top: 40, right: 120, bottom: 20, left: 20 },
+    width: 1000,
+    height: 500,
+    nodeWidth: 56, // Increased from 48 for icon + padding
+    nodePadding: 40, // Increased from 32 for less cramped
+    margin: { top: 50, right: 200, bottom: 40, left: 60 }, // More breathing room
   },
   links: {
-    minWidth: 4, // Minimum link width for visibility
-    maxWidth: 60, // Maximum link width to maintain readability
-    ghostOpacity: 0.1, // Opacity for ghost links
-    normalOpacity: 0.45,
-    hoverOpacity: 0.7,
+    minWidth: 6,
+    maxWidth: 80,
+    ghostOpacity: 0.25,
+    normalOpacity: 0.5,
+    hoverOpacity: 0.75,
+  },
+  typography: {
+    nodeIconSize: 24, // NEW: Icon size
+    nodeCountSize: 18,
+    linkCountSize: 12,
   },
 };
 
@@ -175,40 +201,74 @@ export const SankeyView: Component<SankeyViewProps> = (props) => {
     return flowThrough;
   });
 
+  // Calculate rejections and withdrawals by the stage they occurred at
+  const rejectionsBySourceStage = createMemo(() => {
+    const rejections: Record<ApplicationStatus, number> = {
+      saved: 0,
+      applied: 0,
+      screening: 0,
+      interviewing: 0,
+      offered: 0,
+      accepted: 0,
+      rejected: 0,
+      withdrawn: 0,
+    };
+    const withdrawals: Record<ApplicationStatus, number> = {
+      saved: 0,
+      applied: 0,
+      screening: 0,
+      interviewing: 0,
+      offered: 0,
+      accepted: 0,
+      rejected: 0,
+      withdrawn: 0,
+    };
+
+    for (const app of applications()) {
+      if (app.status === 'rejected' && app.rejectedAtStatus) {
+        rejections[app.rejectedAtStatus]++;
+      } else if (app.status === 'withdrawn' && app.rejectedAtStatus) {
+        withdrawals[app.rejectedAtStatus]++;
+      }
+    }
+
+    return { rejections, withdrawals };
+  });
+
   // Build the Sankey graph data with cumulative flow links
   const sankeyData = createMemo(() => {
     const currentCounts = statusCounts();
     const flowThrough = flowThroughCounts();
     const hasAnyApplications = applications().length > 0;
 
-    // Always create nodes for all pipeline stages (for structure visibility)
+    // Only create nodes for stages that have applications
     const nodes: SankeyNodeData[] = [];
     const nodeIdMap = new Map<ApplicationStatus, number>();
 
-    // Add main pipeline stages
+    // Add main pipeline stages that have applications
     PIPELINE_STAGES.forEach((status) => {
-      nodeIdMap.set(status, nodes.length);
-      nodes.push({
-        id: status,
-        name: STATUS_LABELS[status],
-        count: currentCounts[status],
-        color: statusColors[status]?.text || '#FFFFFF',
-      });
+      if (currentCounts[status] > 0) {
+        nodeIdMap.set(status, nodes.length);
+        nodes.push({
+          id: status,
+          name: STATUS_LABELS[status],
+          count: currentCounts[status],
+          color: statusColors[status]?.text || '#FFFFFF',
+        });
+      }
     });
 
-    // Add terminal stages if they have applications, or always show accepted
-    const terminalToShow: ApplicationStatus[] = ['accepted'];
-    if (currentCounts.rejected > 0) terminalToShow.push('rejected');
-    if (currentCounts.withdrawn > 0) terminalToShow.push('withdrawn');
-
-    terminalToShow.forEach((status) => {
-      nodeIdMap.set(status, nodes.length);
-      nodes.push({
-        id: status,
-        name: STATUS_LABELS[status],
-        count: currentCounts[status],
-        color: statusColors[status]?.text || '#FFFFFF',
-      });
+    // Add terminal stages that have applications
+    TERMINAL_STAGES.forEach((status) => {
+      if (currentCounts[status] > 0) {
+        nodeIdMap.set(status, nodes.length);
+        nodes.push({
+          id: status,
+          name: STATUS_LABELS[status],
+          count: currentCounts[status],
+          color: statusColors[status]?.text || '#FFFFFF',
+        });
+      }
     });
 
     // Build links with cumulative flow model
@@ -247,28 +307,41 @@ export const SankeyView: Component<SankeyViewProps> = (props) => {
       isGhost: acceptedFlow === 0,
     });
 
-    // Add rejected link from interviewing if there are rejected apps
-    // (Most rejections happen after interviews)
-    if (currentCounts.rejected > 0 && nodeIdMap.has('rejected')) {
-      links.push({
-        source: 'interviewing',
-        target: 'rejected',
-        value: currentCounts.rejected,
-        isGhost: false,
-      });
-    }
+    // Add rejection links from the actual stages where rejections occurred
+    const { rejections, withdrawals } = rejectionsBySourceStage();
 
-    // Add withdrawn link from applied if there are withdrawn apps
-    if (currentCounts.withdrawn > 0 && nodeIdMap.has('withdrawn')) {
-      links.push({
-        source: 'applied',
-        target: 'withdrawn',
-        value: currentCounts.withdrawn,
-        isGhost: false,
-      });
-    }
+    // Create rejection links from each stage that has rejections
+    PIPELINE_STAGES.forEach((stage) => {
+      if (rejections[stage] > 0 && nodeIdMap.has('rejected')) {
+        links.push({
+          source: stage,
+          target: 'rejected',
+          value: rejections[stage],
+          isGhost: false,
+        });
+      }
+    });
 
-    return { nodes, links, nodeIdMap, hasAnyApplications };
+    // Create withdrawal links from each stage that has withdrawals
+    PIPELINE_STAGES.forEach((stage) => {
+      if (withdrawals[stage] > 0 && nodeIdMap.has('withdrawn')) {
+        links.push({
+          source: stage,
+          target: 'withdrawn',
+          value: withdrawals[stage],
+          isGhost: false,
+        });
+      }
+    });
+
+    // Filter out links where source or target node doesn't exist (was filtered out due to 0 count)
+    const validLinks = links.filter((link) => {
+      const sourceExists = nodeIdMap.has(link.source);
+      const targetExists = nodeIdMap.has(link.target);
+      return sourceExists && targetExists;
+    });
+
+    return { nodes, links: validLinks, nodeIdMap, hasAnyApplications };
   });
 
   // Calculate Sankey layout using d3-sankey
@@ -628,26 +701,33 @@ export const SankeyView: Component<SankeyViewProps> = (props) => {
                         />
                       </Show>
 
-                      {/* Flow count label on hover */}
-                      <Show when={isHighlighted && !isGhost && link.value > 0}>
-                        <g>
-                          {/* Background pill for readability */}
+                      {/* Flow count label - ALWAYS visible for non-ghost links */}
+                      <Show when={!isGhost && link.value > 0}>
+                        <g
+                          opacity={isHighlighted ? 1 : 0.7}
+                          style={{ transition: `opacity ${SANKEY_DESIGN.timing.fast}` }}
+                        >
+                          {/* Background pill for readability - with extra padding */}
                           <rect
-                            x={((sourceNode.x1 || 0) + (targetNode.x0 || 0)) / 2 - 16}
-                            y={((link.y0 || 0) + (link.y1 || 0)) / 2 - 22}
-                            width="32"
-                            height="18"
-                            rx="6"
-                            fill="rgba(0, 0, 0, 0.7)"
+                            x={((sourceNode.x1 || 0) + (targetNode.x0 || 0)) / 2 - 22}
+                            y={((link.y0 || 0) + (link.y1 || 0)) / 2 - 12}
+                            width="44"
+                            height="24"
+                            rx="12"
+                            fill="rgba(0, 0, 0, 0.85)"
+                            stroke={isHighlighted ? targetNode.color : 'rgba(255,255,255,0.15)'}
+                            stroke-width={isHighlighted ? 1.5 : 0.5}
                           />
                           <text
                             x={((sourceNode.x1 || 0) + (targetNode.x0 || 0)) / 2}
-                            y={((link.y0 || 0) + (link.y1 || 0)) / 2 - 10}
+                            y={((link.y0 || 0) + (link.y1 || 0)) / 2}
                             text-anchor="middle"
-                            fill={targetNode.color}
-                            font-size="12"
+                            dominant-baseline="middle"
+                            fill={isHighlighted ? targetNode.color : '#FFFFFF'}
+                            font-size={`${SANKEY_DESIGN.typography.linkCountSize}`}
                             font-family={SANKEY_DESIGN.fonts.body}
-                            font-weight="600"
+                            font-weight="700"
+                            style={{ 'pointer-events': 'none' }}
                           >
                             {Math.round(link.value)}
                           </text>
@@ -727,40 +807,63 @@ export const SankeyView: Component<SankeyViewProps> = (props) => {
                         y={node.y0 || 0}
                         width={nodeWidth}
                         height={nodeHeight}
-                        rx="4"
+                        rx={SANKEY_DESIGN.radii.md}
                         fill={
-                          hasApps ? `url(#sankey-gradient-${node.id})` : 'rgba(255,255,255,0.03)'
+                          hasApps ? `url(#sankey-gradient-${node.id})` : 'rgba(255,255,255,0.05)'
                         }
                         stroke={node.color}
                         stroke-width="1.5"
-                        stroke-opacity={hasApps ? (highlighted === true ? 1 : 0.6) : 0.15}
+                        stroke-opacity={hasApps ? (highlighted === true ? 1 : 0.7) : 0.2}
                         filter={hasApps ? 'url(#node-shadow)' : undefined}
                         style={{ transition: `all ${SANKEY_DESIGN.timing.fast}` }}
                       />
 
-                      {/* Node label - right of node */}
-                      <text
-                        x={(node.x1 || 0) + 10}
-                        y={(node.y0 || 0) + nodeHeight / 2 - 6}
-                        dominant-baseline="middle"
-                        fill={hasApps ? liquidTenure.colors.text : liquidTenure.colors.textMuted}
-                        font-size="12"
-                        font-family={SANKEY_DESIGN.fonts.body}
-                        font-weight="500"
-                        opacity={hasApps ? 1 : 0.4}
-                      >
-                        {node.name}
-                      </text>
+                      {/* Icon - centered in node */}
+                      <Show when={hasApps || true}>
+                        <foreignObject
+                          x={
+                            (node.x0 || 0) +
+                            nodeWidth / 2 -
+                            SANKEY_DESIGN.typography.nodeIconSize / 2
+                          }
+                          y={(node.y0 || 0) + 12}
+                          width={SANKEY_DESIGN.typography.nodeIconSize}
+                          height={SANKEY_DESIGN.typography.nodeIconSize}
+                          style={{ 'pointer-events': 'none' }}
+                        >
+                          <div
+                            style={{
+                              display: 'flex',
+                              'align-items': 'center',
+                              'justify-content': 'center',
+                              width: '100%',
+                              height: '100%',
+                            }}
+                          >
+                            {(() => {
+                              const IconComponent = STATUS_ICONS[node.id];
+                              return (
+                                <IconComponent
+                                  size={SANKEY_DESIGN.typography.nodeIconSize}
+                                  color={hasApps ? '#FFFFFF' : 'rgba(255,255,255,0.3)'}
+                                />
+                              );
+                            })()}
+                          </div>
+                        </foreignObject>
+                      </Show>
 
-                      {/* Count - below label */}
+                      {/* Count - below icon with more spacing */}
                       <text
-                        x={(node.x1 || 0) + 10}
-                        y={(node.y0 || 0) + nodeHeight / 2 + 10}
+                        x={(node.x0 || 0) + nodeWidth / 2}
+                        y={(node.y0 || 0) + nodeHeight - 16}
+                        text-anchor="middle"
                         dominant-baseline="middle"
                         fill={hasApps ? node.color : 'rgba(255,255,255,0.2)'}
-                        font-size="16"
+                        font-size={`${SANKEY_DESIGN.typography.nodeCountSize}`}
                         font-family={SANKEY_DESIGN.fonts.heading}
                         font-weight="700"
+                        style={{ 'pointer-events': 'none' }}
                       >
                         {node.count}
                       </text>

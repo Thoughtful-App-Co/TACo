@@ -18,6 +18,9 @@ import {
   IconCopy,
   IconSettings,
 } from '../ui/Icons';
+import { WarningIcon, ClipboardTextIcon, PackageIcon } from 'solid-phosphor/bold';
+import { downloadEmergencyBackup, getBackupSummary } from '../../../../lib/emergency-export';
+import { exportAndDownload, exportSimpleAndDownload } from '../utils/csv-export';
 
 interface SyncSettingsProps {
   currentTheme: () => Partial<typeof liquidTenure> & typeof liquidTenure;
@@ -39,6 +42,14 @@ export const SyncSettings: Component<SyncSettingsProps> = (props) => {
   const [defaultLandingTab, setDefaultLandingTab] = createSignal<
     'discover' | 'prepare' | 'prospect' | 'prosper'
   >(settings().defaultLandingTab || 'discover');
+
+  const [defaultProspectSection, setDefaultProspectSection] = createSignal<
+    'dashboard' | 'pipeline' | 'insights' | 'settings'
+  >(settings().defaultProspectSection || 'pipeline');
+
+  const [defaultInsightsTab, setDefaultInsightsTab] = createSignal<'flow' | 'analytics' | 'trends'>(
+    settings().defaultInsightsTab || 'flow'
+  );
 
   const inputStyle = () => ({
     width: '100%',
@@ -143,6 +154,211 @@ export const SyncSettings: Component<SyncSettingsProps> = (props) => {
 
   return (
     <div style={{ 'max-width': '600px' }}>
+      {/* Emergency Backup Section - PRIORITY */}
+      <FluidCard
+        style={{
+          'margin-bottom': '24px',
+          background: 'rgba(245, 158, 11, 0.05)',
+          border: '1px solid rgba(245, 158, 11, 0.3)',
+        }}
+      >
+        <h3
+          style={{
+            margin: '0 0 16px',
+            'font-size': '18px',
+            'font-family': "'Playfair Display', Georgia, serif",
+            'font-weight': '600',
+            color: '#F59E0B',
+            display: 'flex',
+            'align-items': 'center',
+            gap: '10px',
+          }}
+        >
+          <WarningIcon width={16} height={16} /> Emergency Backup
+        </h3>
+        <p
+          style={{
+            margin: '0 0 16px',
+            'font-size': '13px',
+            'font-family': "'Space Grotesk', system-ui, sans-serif",
+            color: theme().colors.textMuted,
+            'line-height': '1.5',
+          }}
+        >
+          <strong>Before any schema changes:</strong> Export all your data now. These backups
+          preserve everything including status timeline, RIASEC scores, and can be used to restore
+          data even if the app's data format changes.
+        </p>
+
+        {/* Backup Summary */}
+        <div
+          style={{
+            display: 'grid',
+            'grid-template-columns': 'repeat(3, 1fr)',
+            gap: '12px',
+            'margin-bottom': '16px',
+          }}
+        >
+          <div
+            style={{
+              padding: '12px',
+              background: theme().colors.surfaceLight,
+              'border-radius': '8px',
+              'text-align': 'center',
+            }}
+          >
+            <div
+              style={{
+                'font-size': '20px',
+                'font-family': "'Playfair Display', Georgia, serif",
+                'font-weight': '700',
+                color: theme().colors.primary,
+              }}
+            >
+              {pipelineStore.state.applications.length}
+            </div>
+            <div
+              style={{
+                'font-size': '10px',
+                'font-family': "'Space Grotesk', system-ui, sans-serif",
+                'text-transform': 'uppercase',
+                'letter-spacing': '0.05em',
+                color: theme().colors.textMuted,
+                'margin-top': '2px',
+              }}
+            >
+              Jobs
+            </div>
+          </div>
+          <div
+            style={{
+              padding: '12px',
+              background: theme().colors.surfaceLight,
+              'border-radius': '8px',
+              'text-align': 'center',
+            }}
+          >
+            <div style={{ 'margin-bottom': '2px' }}>
+              {pipelineStore.state.profile ? (
+                <IconCheck size={18} color="#10B981" />
+              ) : (
+                <IconX size={18} color="#6B7280" />
+              )}
+            </div>
+            <div
+              style={{
+                'font-size': '10px',
+                'font-family': "'Space Grotesk', system-ui, sans-serif",
+                'text-transform': 'uppercase',
+                'letter-spacing': '0.05em',
+                color: theme().colors.textMuted,
+              }}
+            >
+              Profile
+            </div>
+          </div>
+          <div
+            style={{
+              padding: '12px',
+              background: theme().colors.surfaceLight,
+              'border-radius': '8px',
+              'text-align': 'center',
+            }}
+          >
+            <div style={{ 'margin-bottom': '2px' }}>
+              {localStorage.getItem('augment_answers') ? (
+                <IconCheck size={18} color="#10B981" />
+              ) : (
+                <IconX size={18} color="#6B7280" />
+              )}
+            </div>
+            <div
+              style={{
+                'font-size': '10px',
+                'font-family': "'Space Grotesk', system-ui, sans-serif",
+                'text-transform': 'uppercase',
+                'letter-spacing': '0.05em',
+                color: theme().colors.textMuted,
+              }}
+            >
+              RIASEC
+            </div>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: '12px', 'flex-wrap': 'wrap' }}>
+          <button
+            class="pipeline-btn"
+            onClick={() => downloadEmergencyBackup()}
+            style={{
+              flex: 1,
+              'min-width': '140px',
+              padding: '12px',
+              background: '#F59E0B',
+              border: 'none',
+              'border-radius': '10px',
+              color: '#000000',
+              'font-family': "'Space Grotesk', system-ui, sans-serif",
+              cursor: 'pointer',
+              'font-weight': '600',
+              display: 'flex',
+              'align-items': 'center',
+              'justify-content': 'center',
+              gap: '8px',
+            }}
+          >
+            <PackageIcon width={18} height={18} />
+            Full Backup (JSON)
+          </button>
+          <button
+            class="pipeline-btn"
+            onClick={() => exportAndDownload(pipelineStore.state.applications)}
+            style={{
+              flex: 1,
+              'min-width': '140px',
+              padding: '12px',
+              background: '#0A0A0A',
+              border: '2px solid #F59E0B',
+              'border-radius': '10px',
+              color: '#F59E0B',
+              'font-family': "'Space Grotesk', system-ui, sans-serif",
+              cursor: 'pointer',
+              'font-weight': '600',
+              display: 'flex',
+              'align-items': 'center',
+              'justify-content': 'center',
+              gap: '6px',
+            }}
+          >
+            <ClipboardTextIcon width={16} height={16} />
+            Jobs CSV (Full)
+          </button>
+          <button
+            class="pipeline-btn"
+            onClick={() => exportSimpleAndDownload(pipelineStore.state.applications)}
+            style={{
+              flex: 1,
+              'min-width': '140px',
+              padding: '12px',
+              background: '#0A0A0A',
+              border: '1px solid rgba(255, 255, 255, 0.3)',
+              'border-radius': '10px',
+              color: '#FFFFFF',
+              'font-family': "'Space Grotesk', system-ui, sans-serif",
+              cursor: 'pointer',
+              'font-weight': '500',
+              display: 'flex',
+              'align-items': 'center',
+              'justify-content': 'center',
+              gap: '6px',
+            }}
+          >
+            <ClipboardTextIcon width={16} height={16} />
+            Jobs CSV (Simple)
+          </button>
+        </div>
+      </FluidCard>
+
       {/* Sync Status */}
       <FluidCard style={{ 'margin-bottom': '24px' }}>
         <h3
@@ -623,6 +839,245 @@ export const SyncSettings: Component<SyncSettingsProps> = (props) => {
             }}
           >
             Prosper
+          </button>
+        </div>
+      </FluidCard>
+
+      {/* Default Prospect Section */}
+      <FluidCard>
+        <h4
+          style={{
+            margin: '0 0 12px',
+            'font-size': '16px',
+            'font-family': "'Playfair Display', Georgia, serif",
+            'font-weight': '600',
+            color: theme().colors.text,
+            display: 'flex',
+            'align-items': 'center',
+            gap: '10px',
+          }}
+        >
+          <IconSettings size={18} color={theme().colors.primary} /> Default Prospect Section
+        </h4>
+        <p
+          style={{
+            margin: '0 0 16px',
+            'font-size': '13px',
+            'font-family': "'Space Grotesk', system-ui, sans-serif",
+            color: theme().colors.textMuted,
+            'line-height': '1.5',
+          }}
+        >
+          Choose which section to show when you navigate to Prospect.
+        </p>
+
+        <div style={{ display: 'flex', gap: '8px', 'flex-wrap': 'wrap' }}>
+          <button
+            class="pipeline-btn"
+            onClick={() => {
+              setDefaultProspectSection('dashboard');
+              pipelineStore.updateSettings({ defaultProspectSection: 'dashboard' });
+            }}
+            style={{
+              flex: 1,
+              'min-width': '100px',
+              padding: '12px',
+              background: '#0A0A0A',
+              border:
+                defaultProspectSection() === 'dashboard'
+                  ? '2px solid #FFFFFF'
+                  : '1px solid rgba(255, 255, 255, 0.3)',
+              'border-radius': '10px',
+              color: '#FFFFFF',
+              'font-family': "'Space Grotesk', system-ui, sans-serif",
+              'font-weight': defaultProspectSection() === 'dashboard' ? '600' : '400',
+              opacity: defaultProspectSection() === 'dashboard' ? 1 : 0.7,
+              cursor: 'pointer',
+            }}
+          >
+            Dashboard
+          </button>
+          <button
+            class="pipeline-btn"
+            onClick={() => {
+              setDefaultProspectSection('pipeline');
+              pipelineStore.updateSettings({ defaultProspectSection: 'pipeline' });
+            }}
+            style={{
+              flex: 1,
+              'min-width': '100px',
+              padding: '12px',
+              background: '#0A0A0A',
+              border:
+                defaultProspectSection() === 'pipeline'
+                  ? '2px solid #FFFFFF'
+                  : '1px solid rgba(255, 255, 255, 0.3)',
+              'border-radius': '10px',
+              color: '#FFFFFF',
+              'font-family': "'Space Grotesk', system-ui, sans-serif",
+              'font-weight': defaultProspectSection() === 'pipeline' ? '600' : '400',
+              opacity: defaultProspectSection() === 'pipeline' ? 1 : 0.7,
+              cursor: 'pointer',
+            }}
+          >
+            Pipeline
+          </button>
+          <button
+            class="pipeline-btn"
+            onClick={() => {
+              setDefaultProspectSection('insights');
+              pipelineStore.updateSettings({ defaultProspectSection: 'insights' });
+            }}
+            style={{
+              flex: 1,
+              'min-width': '100px',
+              padding: '12px',
+              background: '#0A0A0A',
+              border:
+                defaultProspectSection() === 'insights'
+                  ? '2px solid #FFFFFF'
+                  : '1px solid rgba(255, 255, 255, 0.3)',
+              'border-radius': '10px',
+              color: '#FFFFFF',
+              'font-family': "'Space Grotesk', system-ui, sans-serif",
+              'font-weight': defaultProspectSection() === 'insights' ? '600' : '400',
+              opacity: defaultProspectSection() === 'insights' ? 1 : 0.7,
+              cursor: 'pointer',
+            }}
+          >
+            Insights
+          </button>
+          <button
+            class="pipeline-btn"
+            onClick={() => {
+              setDefaultProspectSection('settings');
+              pipelineStore.updateSettings({ defaultProspectSection: 'settings' });
+            }}
+            style={{
+              flex: 1,
+              'min-width': '100px',
+              padding: '12px',
+              background: '#0A0A0A',
+              border:
+                defaultProspectSection() === 'settings'
+                  ? '2px solid #FFFFFF'
+                  : '1px solid rgba(255, 255, 255, 0.3)',
+              'border-radius': '10px',
+              color: '#FFFFFF',
+              'font-family': "'Space Grotesk', system-ui, sans-serif",
+              'font-weight': defaultProspectSection() === 'settings' ? '600' : '400',
+              opacity: defaultProspectSection() === 'settings' ? 1 : 0.7,
+              cursor: 'pointer',
+            }}
+          >
+            Settings
+          </button>
+        </div>
+      </FluidCard>
+
+      {/* Default Insights Tab */}
+      <FluidCard>
+        <h4
+          style={{
+            margin: '0 0 12px',
+            'font-size': '16px',
+            'font-family': "'Playfair Display', Georgia, serif",
+            'font-weight': '600',
+            color: theme().colors.text,
+            display: 'flex',
+            'align-items': 'center',
+            gap: '10px',
+          }}
+        >
+          <IconSettings size={18} color={theme().colors.primary} /> Default Insights Tab
+        </h4>
+        <p
+          style={{
+            margin: '0 0 16px',
+            'font-size': '13px',
+            'font-family': "'Space Grotesk', system-ui, sans-serif",
+            color: theme().colors.textMuted,
+            'line-height': '1.5',
+          }}
+        >
+          Choose which tab to show when you navigate to Insights.
+        </p>
+
+        <div style={{ display: 'flex', gap: '8px', 'flex-wrap': 'wrap' }}>
+          <button
+            class="pipeline-btn"
+            onClick={() => {
+              setDefaultInsightsTab('flow');
+              pipelineStore.updateSettings({ defaultInsightsTab: 'flow' });
+            }}
+            style={{
+              flex: 1,
+              'min-width': '100px',
+              padding: '12px',
+              background: '#0A0A0A',
+              border:
+                defaultInsightsTab() === 'flow'
+                  ? '2px solid #FFFFFF'
+                  : '1px solid rgba(255, 255, 255, 0.3)',
+              'border-radius': '10px',
+              color: '#FFFFFF',
+              'font-family': "'Space Grotesk', system-ui, sans-serif",
+              'font-weight': defaultInsightsTab() === 'flow' ? '600' : '400',
+              opacity: defaultInsightsTab() === 'flow' ? 1 : 0.7,
+              cursor: 'pointer',
+            }}
+          >
+            Flow
+          </button>
+          <button
+            class="pipeline-btn"
+            onClick={() => {
+              setDefaultInsightsTab('analytics');
+              pipelineStore.updateSettings({ defaultInsightsTab: 'analytics' });
+            }}
+            style={{
+              flex: 1,
+              'min-width': '100px',
+              padding: '12px',
+              background: '#0A0A0A',
+              border:
+                defaultInsightsTab() === 'analytics'
+                  ? '2px solid #FFFFFF'
+                  : '1px solid rgba(255, 255, 255, 0.3)',
+              'border-radius': '10px',
+              color: '#FFFFFF',
+              'font-family': "'Space Grotesk', system-ui, sans-serif",
+              'font-weight': defaultInsightsTab() === 'analytics' ? '600' : '400',
+              opacity: defaultInsightsTab() === 'analytics' ? 1 : 0.7,
+              cursor: 'pointer',
+            }}
+          >
+            Analytics
+          </button>
+          <button
+            class="pipeline-btn"
+            onClick={() => {
+              setDefaultInsightsTab('trends');
+              pipelineStore.updateSettings({ defaultInsightsTab: 'trends' });
+            }}
+            style={{
+              flex: 1,
+              'min-width': '100px',
+              padding: '12px',
+              background: '#0A0A0A',
+              border:
+                defaultInsightsTab() === 'trends'
+                  ? '2px solid #FFFFFF'
+                  : '1px solid rgba(255, 255, 255, 0.3)',
+              'border-radius': '10px',
+              color: '#FFFFFF',
+              'font-family': "'Space Grotesk', system-ui, sans-serif",
+              'font-weight': defaultInsightsTab() === 'trends' ? '600' : '400',
+              opacity: defaultInsightsTab() === 'trends' ? 1 : 0.7,
+              cursor: 'pointer',
+            }}
+          >
+            Trends
           </button>
         </div>
       </FluidCard>

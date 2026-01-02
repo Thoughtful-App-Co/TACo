@@ -4,10 +4,18 @@
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
-import { Component, createSignal, Show } from 'solid-js';
+import { Component, createSignal, Show, For, Switch, Match } from 'solid-js';
 import { pipelineStore } from '../store';
 import { liquidTenure, pipelineAnimations } from '../theme/liquid-tenure';
-import { IconX, IconLink, IconEdit, IconLoader, IconCheck } from '../ui/Icons';
+import {
+  IconX,
+  IconLink,
+  IconEdit,
+  IconCheck,
+  IconCheckCircle,
+  IconFileText,
+  IconSparkles,
+} from '../ui/Icons';
 import { JobApplication, SalaryRange } from '../../../../schemas/pipeline.schema';
 import { formatNumberForInput, parseFormattedNumber, getCurrencySymbol } from '../utils';
 
@@ -23,11 +31,30 @@ interface ScrapedJobData {
   companyName?: string;
   roleName?: string;
   location?: string;
+  locationType?: 'remote' | 'hybrid' | 'onsite';
   salary?: string;
+  salaryMin?: number;
+  salaryMax?: number;
+  salaryCurrency?: string;
+  salaryPeriod?: 'hourly' | 'annual';
   description?: string;
   requirements?: string[];
+  niceToHave?: string[];
+  benefits?: string[];
   url: string;
 }
+
+// Helper to get current date in YYYY-MM-DD format
+const getCurrentDate = (): string => {
+  const now = new Date();
+  return now.toISOString().split('T')[0];
+};
+
+// Helper to get current time in HH:MM format
+const getCurrentTime = (): string => {
+  const now = new Date();
+  return now.toTimeString().slice(0, 5);
+};
 
 export const AddJobModal: Component<AddJobModalProps> = (props) => {
   const theme = () => props.currentTheme();
@@ -36,6 +63,40 @@ export const AddJobModal: Component<AddJobModalProps> = (props) => {
   const [jobUrl, setJobUrl] = createSignal('');
   const [urlError, setUrlError] = createSignal<string | null>(null);
   const [scrapedData, setScrapedData] = createSignal<ScrapedJobData | null>(null);
+
+  // Loading stage state for multi-step progress indicator
+  type LoadingStage = 'fetching' | 'extracting' | 'analyzing' | 'preparing';
+  const [loadingStage, setLoadingStage] = createSignal<LoadingStage>('fetching');
+
+  // Loading stages configuration
+  const loadingStages: Array<{
+    id: LoadingStage;
+    label: string;
+    icon: 'globe' | 'document' | 'sparkles' | 'check';
+  }> = [
+    { id: 'fetching', label: 'Fetching page...', icon: 'globe' },
+    { id: 'extracting', label: 'Extracting content...', icon: 'document' },
+    { id: 'analyzing', label: 'Analyzing job details...', icon: 'sparkles' },
+    { id: 'preparing', label: 'Preparing form...', icon: 'check' },
+  ];
+
+  const getStageIndex = (stage: LoadingStage): number => {
+    return loadingStages.findIndex((s) => s.id === stage);
+  };
+
+  const getStageStatus = (stageId: LoadingStage): 'pending' | 'active' | 'complete' => {
+    const currentIndex = getStageIndex(loadingStage());
+    const stageIndex = getStageIndex(stageId);
+    if (stageIndex < currentIndex) return 'complete';
+    if (stageIndex === currentIndex) return 'active';
+    return 'pending';
+  };
+
+  const getProgressPercent = (): number => {
+    const currentIndex = getStageIndex(loadingStage());
+    // Each stage is 25%, active stage shows partial progress
+    return Math.min(((currentIndex + 1) / loadingStages.length) * 100, 100);
+  };
 
   // Form state (for manual entry or editing scraped data)
   const [companyName, setCompanyName] = createSignal('');
@@ -60,14 +121,15 @@ export const AddJobModal: Component<AddJobModalProps> = (props) => {
   const [department, setDepartment] = createSignal('');
 
   // Applied date/time state
-  const [appliedAtDate, setAppliedAtDate] = createSignal('');
-  const [appliedAtTime, setAppliedAtTime] = createSignal('12:00');
+  const [appliedAtDate, setAppliedAtDate] = createSignal(getCurrentDate());
+  const [appliedAtTime, setAppliedAtTime] = createSignal(getCurrentTime());
 
   const resetModal = () => {
     setView('initial');
     setJobUrl('');
     setUrlError(null);
     setScrapedData(null);
+    setLoadingStage('fetching');
     setCompanyName('');
     setRoleName('');
     setJobPostingText('');
@@ -82,8 +144,8 @@ export const AddJobModal: Component<AddJobModalProps> = (props) => {
     setLocation('');
     setLocationType('');
     setDepartment('');
-    setAppliedAtDate('');
-    setAppliedAtTime('12:00');
+    setAppliedAtDate(getCurrentDate());
+    setAppliedAtTime(getCurrentTime());
   };
 
   const handleClose = () => {
@@ -112,21 +174,43 @@ export const AddJobModal: Component<AddJobModalProps> = (props) => {
     }
 
     setUrlError(null);
+    setLoadingStage('fetching');
     setView('url-loading');
 
+    // Helper to delay stage transitions for realistic UX
+    const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
     try {
+      // Stage 1: Fetching page
+      setLoadingStage('fetching');
+
       // Call the Cloudflare Worker to scrape the job posting
-      const response = await fetch('/api/tasks/scrape-job', {
+      const fetchPromise = fetch('/api/tasks/scrape-job', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url }),
       });
 
+      // Ensure minimum time for fetching stage (800ms)
+      const [response] = await Promise.all([fetchPromise, delay(800)]);
+
+      // Stage 2: Extracting content
+      setLoadingStage('extracting');
+      await delay(600);
+
       if (!response.ok) {
         throw new Error('Failed to fetch job posting');
       }
 
+      // Stage 3: Analyzing job details
+      setLoadingStage('analyzing');
       const data = await response.json();
+      await delay(700);
+
+      // Stage 4: Preparing form
+      setLoadingStage('preparing');
+      await delay(400);
+
       setScrapedData({ ...data, url });
 
       // Pre-fill form with scraped data
@@ -134,6 +218,29 @@ export const AddJobModal: Component<AddJobModalProps> = (props) => {
       setRoleName(data.roleName || '');
       setJobPostingText(data.description || '');
       setFormUrl(url);
+      setLocation(data.location || '');
+      setLocationType(data.locationType || '');
+      setSalaryCurrency(data.salaryCurrency || 'USD');
+      setSalaryPeriod(data.salaryPeriod || 'annual');
+
+      // Handle salary fields
+      if (data.salaryMin !== undefined || data.salaryMax !== undefined) {
+        const min = data.salaryMin;
+        const max = data.salaryMax;
+        if (min !== undefined && max !== undefined && min !== max) {
+          // It's a range
+          setSalaryIsRange(true);
+          setSalaryMin(formatNumberForInput(String(min)));
+          setSalaryMax(formatNumberForInput(String(max)));
+        } else {
+          // Single salary value
+          setSalaryIsRange(false);
+          const singleValue = min ?? max;
+          if (singleValue !== undefined) {
+            setSalarySingle(formatNumberForInput(String(singleValue)));
+          }
+        }
+      }
 
       setView('url-result');
     } catch (error) {
@@ -418,28 +525,178 @@ export const AddJobModal: Component<AddJobModalProps> = (props) => {
               </div>
             </Show>
 
-            {/* Loading View */}
+            {/* Enhanced Loading View with Multi-Stage Progress */}
             <Show when={view() === 'url-loading'}>
               <div
                 style={{
                   display: 'flex',
                   'flex-direction': 'column',
-                  'align-items': 'center',
-                  'justify-content': 'center',
-                  padding: '40px 20px',
-                  gap: '16px',
+                  padding: '32px 24px',
+                  gap: '24px',
                 }}
+                role="status"
+                aria-live="polite"
+                aria-label={`Loading: ${loadingStages.find((s) => s.id === loadingStage())?.label}`}
               >
-                <IconLoader size={32} color={theme().colors.primary} />
+                {/* Progress Bar */}
+                <div
+                  style={{
+                    width: '100%',
+                    height: '4px',
+                    background: `${theme().colors.border}`,
+                    'border-radius': '2px',
+                    overflow: 'hidden',
+                  }}
+                >
+                  <div
+                    style={{
+                      width: `${getProgressPercent()}%`,
+                      height: '100%',
+                      background: theme().colors.primary,
+                      'border-radius': '2px',
+                      transition: `width ${pipelineAnimations.normal} ${pipelineAnimations.flow}`,
+                    }}
+                    role="progressbar"
+                    aria-valuenow={getProgressPercent()}
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                  />
+                </div>
+
+                {/* Stage Steps */}
+                <div
+                  style={{
+                    display: 'flex',
+                    'flex-direction': 'column',
+                    gap: '16px',
+                  }}
+                >
+                  <For each={loadingStages}>
+                    {(stage) => {
+                      const status = () => getStageStatus(stage.id);
+                      const isActive = () => status() === 'active';
+                      const isComplete = () => status() === 'complete';
+                      const isPending = () => status() === 'pending';
+
+                      // Icon rendering with reactive patterns
+                      const iconSize = 18;
+                      const iconColor = () =>
+                        isComplete()
+                          ? '#10B981'
+                          : isActive()
+                            ? theme().colors.primary
+                            : theme().colors.textMuted;
+
+                      return (
+                        <div
+                          style={{
+                            display: 'flex',
+                            'align-items': 'center',
+                            gap: '12px',
+                            padding: '12px 16px',
+                            background: isActive()
+                              ? `${theme().colors.primary}15`
+                              : isComplete()
+                                ? 'rgba(16, 185, 129, 0.08)'
+                                : 'transparent',
+                            border: `1px solid ${
+                              isActive()
+                                ? `${theme().colors.primary}40`
+                                : isComplete()
+                                  ? 'rgba(16, 185, 129, 0.25)'
+                                  : 'transparent'
+                            }`,
+                            'border-radius': '10px',
+                            transition: `all ${pipelineAnimations.fast}`,
+                            opacity: isPending() ? 0.5 : 1,
+                          }}
+                        >
+                          {/* Icon Container */}
+                          <div
+                            style={{
+                              display: 'flex',
+                              'align-items': 'center',
+                              'justify-content': 'center',
+                              width: '32px',
+                              height: '32px',
+                              'border-radius': '8px',
+                              background: isActive()
+                                ? `${theme().colors.primary}20`
+                                : isComplete()
+                                  ? 'rgba(16, 185, 129, 0.15)'
+                                  : `${theme().colors.border}`,
+                              animation: isActive()
+                                ? 'pipeline-pulse 1.5s ease-in-out infinite'
+                                : 'none',
+                            }}
+                          >
+                            <Switch>
+                              <Match when={isComplete()}>
+                                <IconCheckCircle size={iconSize} color="#10B981" />
+                              </Match>
+                              <Match when={stage.icon === 'globe'}>
+                                <IconLink size={iconSize} color={iconColor()} />
+                              </Match>
+                              <Match when={stage.icon === 'document'}>
+                                <IconFileText size={iconSize} color={iconColor()} />
+                              </Match>
+                              <Match when={stage.icon === 'sparkles'}>
+                                <IconSparkles size={iconSize} color={iconColor()} />
+                              </Match>
+                              <Match when={stage.icon === 'check'}>
+                                <IconCheck size={iconSize} color={iconColor()} />
+                              </Match>
+                            </Switch>
+                          </div>
+
+                          {/* Label */}
+                          <span
+                            style={{
+                              'font-size': '14px',
+                              'font-family': "'Space Grotesk', system-ui, sans-serif",
+                              'font-weight': isActive() ? '600' : '400',
+                              color: isComplete()
+                                ? '#10B981'
+                                : isActive()
+                                  ? theme().colors.text
+                                  : theme().colors.textMuted,
+                              transition: `color ${pipelineAnimations.fast}`,
+                            }}
+                          >
+                            {stage.label}
+                          </span>
+
+                          {/* Status Indicator */}
+                          <Show when={isActive()}>
+                            <div
+                              style={{
+                                'margin-left': 'auto',
+                                width: '8px',
+                                height: '8px',
+                                'border-radius': '50%',
+                                background: theme().colors.primary,
+                                animation: 'pipeline-pulse 1s ease-in-out infinite',
+                              }}
+                            />
+                          </Show>
+                        </div>
+                      );
+                    }}
+                  </For>
+                </div>
+
+                {/* Current Stage Description */}
                 <p
                   style={{
                     margin: 0,
-                    'font-size': '14px',
+                    'font-size': '13px',
                     'font-family': "'Space Grotesk', system-ui, sans-serif",
                     color: theme().colors.textMuted,
+                    'text-align': 'center',
+                    'line-height': '1.5',
                   }}
                 >
-                  Fetching job details...
+                  Analyzing job posting to extract key details...
                 </p>
               </div>
             </Show>
@@ -553,7 +810,7 @@ export const AddJobModal: Component<AddJobModalProps> = (props) => {
 
                   {/* Applied Date & Time */}
                   <div>
-                    <label style={labelStyle()}>Application Date & Time (Optional)</label>
+                    <label style={labelStyle()}>Application Date & Time</label>
                     <div
                       style={{ display: 'grid', 'grid-template-columns': '2fr 1fr', gap: '12px' }}
                     >
@@ -582,7 +839,7 @@ export const AddJobModal: Component<AddJobModalProps> = (props) => {
                         'font-family': "'Space Grotesk', system-ui, sans-serif",
                       }}
                     >
-                      Leave blank if not yet applied. Time defaults to 12:00 PM.
+                      Defaults to now. Adjust if you applied at a different time.
                     </p>
                   </div>
 
@@ -631,12 +888,13 @@ export const AddJobModal: Component<AddJobModalProps> = (props) => {
                               <span
                                 style={{
                                   position: 'absolute',
-                                  left: '14px',
+                                  left: '16px',
                                   top: '50%',
                                   transform: 'translateY(-50%)',
                                   color: theme().colors.textMuted,
                                   'font-size': '14px',
                                   'pointer-events': 'none',
+                                  'z-index': '1',
                                 }}
                               >
                                 {getCurrencySymbol(salaryCurrency())}
@@ -650,7 +908,11 @@ export const AddJobModal: Component<AddJobModalProps> = (props) => {
                                   setSalarySingle(formatted);
                                 }}
                                 placeholder="e.g., 120,000"
-                                style={{ ...inputStyle(), 'padding-left': '36px' }}
+                                style={{
+                                  ...inputStyle(),
+                                  'padding-left': '32px',
+                                  'text-indent': '12px',
+                                }}
                               />
                             </div>
                           </div>
@@ -669,12 +931,13 @@ export const AddJobModal: Component<AddJobModalProps> = (props) => {
                               <span
                                 style={{
                                   position: 'absolute',
-                                  left: '14px',
+                                  left: '16px',
                                   top: '50%',
                                   transform: 'translateY(-50%)',
                                   color: theme().colors.textMuted,
                                   'font-size': '14px',
                                   'pointer-events': 'none',
+                                  'z-index': '1',
                                 }}
                               >
                                 {getCurrencySymbol(salaryCurrency())}
@@ -688,7 +951,11 @@ export const AddJobModal: Component<AddJobModalProps> = (props) => {
                                   setSalaryMin(formatted);
                                 }}
                                 placeholder="e.g., 100,000"
-                                style={{ ...inputStyle(), 'padding-left': '36px' }}
+                                style={{
+                                  ...inputStyle(),
+                                  'padding-left': '32px',
+                                  'text-indent': '12px',
+                                }}
                               />
                             </div>
                           </div>
@@ -698,12 +965,13 @@ export const AddJobModal: Component<AddJobModalProps> = (props) => {
                               <span
                                 style={{
                                   position: 'absolute',
-                                  left: '14px',
+                                  left: '16px',
                                   top: '50%',
                                   transform: 'translateY(-50%)',
                                   color: theme().colors.textMuted,
                                   'font-size': '14px',
                                   'pointer-events': 'none',
+                                  'z-index': '1',
                                 }}
                               >
                                 {getCurrencySymbol(salaryCurrency())}
@@ -717,7 +985,11 @@ export const AddJobModal: Component<AddJobModalProps> = (props) => {
                                   setSalaryMax(formatted);
                                 }}
                                 placeholder="e.g., 140,000"
-                                style={{ ...inputStyle(), 'padding-left': '36px' }}
+                                style={{
+                                  ...inputStyle(),
+                                  'padding-left': '32px',
+                                  'text-indent': '12px',
+                                }}
                               />
                             </div>
                           </div>

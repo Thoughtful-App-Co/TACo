@@ -5,10 +5,18 @@
  */
 
 export { FluidCard } from './FluidCard';
+export { Checkbox } from './Checkbox';
 export { StatusBadge } from './StatusBadge';
 export { AgingIndicator } from './AgingIndicator';
 export { ScoreBadge } from './ScoreBadge';
 export { AggregationAccordion } from './AggregationAccordion';
+export {
+  AgingCardWrapper,
+  PeelEffect,
+  PaperTexture,
+  CoffeeStain,
+  getAgingStyles,
+} from './CardAging';
 export {
   Tooltip,
   StatTooltipContent,

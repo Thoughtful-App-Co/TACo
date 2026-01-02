@@ -13,16 +13,20 @@ import {
   FluidCard,
   StatusBadge,
   AgingIndicator,
+  AgingCardWrapper,
   ScoreBadge,
   Tooltip,
   StatTooltipContent,
   PipelineColumnTooltipContent,
   ApplicationTooltipContent,
   SortMenu,
+  Checkbox,
   type SortConfig,
   type SortField,
 } from '../ui';
 import { AggregationAccordion } from '../ui/AggregationAccordion';
+import { BulkActionsBar } from './BulkActionsBar';
+import { DeleteConfirmationModal } from './DeleteConfirmationModal';
 import {
   IconGrid,
   IconList,
@@ -40,6 +44,7 @@ import {
   IconClock,
   IconClockDuotone,
   IconTrendingUpDuotone,
+  IconSearch,
 } from '../ui/Icons';
 import {
   JobApplication,
@@ -63,11 +68,19 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
     field: 'age',
     direction: 'desc',
   });
+  const [searchQuery, setSearchQuery] = createSignal('');
   const theme = () => props.currentTheme();
 
   // Drag and drop state
   const [draggedAppId, setDraggedAppId] = createSignal<string | null>(null);
   const [dragOverStatus, setDragOverStatus] = createSignal<ApplicationStatus | null>(null);
+
+  // Bulk selection state
+  const [showDeleteConfirm, setShowDeleteConfirm] = createSignal(false);
+
+  // Selection helpers
+  const selectedCount = () => pipelineStore.state.selectedIds.size;
+  const hasSelection = () => selectedCount() > 0;
 
   // Get RIASEC-based duotone colors
   const duotoneColors = createMemo<DuotoneColors>(() => getCurrentDuotone());
@@ -78,6 +91,19 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
   );
 
   const applicationsByStatus = createMemo(() => {
+    const query = searchQuery().toLowerCase().trim();
+
+    // Filter by search query first
+    const filteredApps = query
+      ? applications().filter((app) => {
+          const searchFields = [app.companyName, app.roleName, app.location, app.notes]
+            .filter(Boolean)
+            .join(' ')
+            .toLowerCase();
+          return searchFields.includes(query);
+        })
+      : applications();
+
     const grouped: Record<ApplicationStatus, JobApplication[]> = {
       saved: [],
       applied: [],
@@ -89,7 +115,7 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
       withdrawn: [],
     };
 
-    for (const app of applications()) {
+    for (const app of filteredApps) {
       grouped[app.status].push(app);
     }
 
@@ -106,7 +132,6 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
         case 'role':
           return a.roleName.localeCompare(b.roleName) * multiplier;
         case 'salary':
-          // Compare by minimum salary, treating undefined as 0
           const aMin = a.salary?.min ?? 0;
           const bMin = b.salary?.min ?? 0;
           return (aMin - bMin) * multiplier;
@@ -316,10 +341,31 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
     pipelineStore.updateStatus(appId, newStatus);
   };
 
+  const handleBulkStatusChange = (status: ApplicationStatus) => {
+    pipelineStore.bulkUpdateStatus(status);
+  };
+
+  const handleBulkDelete = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmBulkDelete = () => {
+    pipelineStore.bulkDelete();
+    setShowDeleteConfirm(false);
+  };
+
+  const handleCheckboxChange = (appId: string, checked: boolean) => {
+    pipelineStore.toggleSelection(appId);
+  };
+
+  const handleSelectAllInStatus = (status: ApplicationStatus) => {
+    const appsInStatus = applicationsByStatus()[status];
+    const ids = appsInStatus.map((app) => app.id);
+    pipelineStore.selectAll(ids);
+  };
+
   return (
     <div>
-      {/* Stats Overview with Tooltips */}
-
       {/* View Toggle & Aggregation Filter */}
       <div
         style={{
@@ -407,12 +453,87 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
           </button>
         </div>
 
-        {/* Center: Sort Menu */}
-        <SortMenu
-          currentSort={sortConfig()}
-          onSortChange={setSortConfig}
-          currentTheme={props.currentTheme}
-        />
+        {/* Center: Search + Sort */}
+        <div
+          style={{
+            display: 'flex',
+            'align-items': 'center',
+            gap: '12px',
+            flex: '1',
+            'max-width': '500px',
+          }}
+        >
+          {/* Search Input */}
+          <div
+            style={{
+              display: 'flex',
+              'align-items': 'center',
+              gap: '8px',
+              padding: '8px 14px',
+              background: 'linear-gradient(135deg, rgba(15, 15, 18, 0.95), rgba(10, 10, 12, 0.98))',
+              border: searchQuery()
+                ? '1px solid rgba(255, 255, 255, 0.2)'
+                : '1px solid rgba(255, 255, 255, 0.1)',
+              'border-radius': '10px',
+              flex: '1',
+              'min-width': '150px',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <IconSearch size={16} color="rgba(255, 255, 255, 0.5)" />
+            <input
+              type="text"
+              placeholder="Search jobs..."
+              value={searchQuery()}
+              onInput={(e) => setSearchQuery(e.currentTarget.value)}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                outline: 'none',
+                color: theme().colors.text,
+                'font-size': '13px',
+                'font-family': "'Space Grotesk', system-ui, sans-serif",
+                width: '100%',
+              }}
+            />
+            <Show when={searchQuery()}>
+              <button
+                onClick={() => setSearchQuery('')}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.1)',
+                  border: 'none',
+                  'border-radius': '50%',
+                  width: '18px',
+                  height: '18px',
+                  display: 'flex',
+                  'align-items': 'center',
+                  'justify-content': 'center',
+                  cursor: 'pointer',
+                  padding: '0',
+                  color: 'rgba(255, 255, 255, 0.6)',
+                }}
+              >
+                <svg
+                  width="10"
+                  height="10"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="3"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </Show>
+          </div>
+
+          <SortMenu
+            currentSort={sortConfig()}
+            onSortChange={setSortConfig}
+            currentTheme={props.currentTheme}
+          />
+        </div>
 
         {/* Right: Archive Filter Toggle */}
         <button
@@ -496,7 +617,7 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
               right: '-50px',
               width: '200px',
               height: '200px',
-              background: 'radial-gradient(circle, rgba(59, 130, 246, 0.08), transparent 70%)',
+              background: `radial-gradient(circle, ${theme().colors.primary}14, transparent 70%)`,
               'border-radius': '50%',
               'pointer-events': 'none',
             }}
@@ -508,7 +629,7 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
               left: '-30px',
               width: '150px',
               height: '150px',
-              background: 'radial-gradient(circle, rgba(139, 92, 246, 0.06), transparent 70%)',
+              background: `radial-gradient(circle, ${theme().colors.secondary}10, transparent 70%)`,
               'border-radius': '50%',
               'pointer-events': 'none',
             }}
@@ -525,12 +646,11 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
               style={{
                 padding: '20px',
                 'border-radius': '20px',
-                background:
-                  'linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1))',
-                border: '1px solid rgba(59, 130, 246, 0.2)',
+                background: `linear-gradient(135deg, ${theme().colors.primary}1A, ${theme().colors.secondary}1A)`,
+                border: `1px solid ${theme().colors.primary}33`,
               }}
             >
-              <IconPipeline size={48} color="#60A5FA" />
+              <IconPipeline size={48} color={theme().colors.primary} />
             </div>
           </div>
           <h3
@@ -564,7 +684,7 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
               'align-items': 'center',
               'justify-content': 'center',
               gap: '8px',
-              color: 'rgba(96, 165, 250, 0.7)',
+              color: `${theme().colors.primary}B3`,
               'font-size': '13px',
               'font-family': "'Space Grotesk', system-ui, sans-serif",
             }}
@@ -628,6 +748,18 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
                 }}
                 onCardDragStart={setDraggedAppId}
                 onCardDragEnd={() => setDraggedAppId(null)}
+                isSelected={(appId) => pipelineStore.isSelected(appId)}
+                onCheckboxChange={handleCheckboxChange}
+                onSelectAllInColumn={() => {
+                  const ids = applicationsByStatus()[status].map((app) => app.id);
+                  pipelineStore.toggleAllSelection(ids);
+                }}
+                areAllSelectedInColumn={pipelineStore.areAllSelected(
+                  applicationsByStatus()[status].map((app) => app.id)
+                )}
+                areSomeSelectedInColumn={pipelineStore.areSomeSelected(
+                  applicationsByStatus()[status].map((app) => app.id)
+                )}
               />
             )}
           </For>
@@ -643,10 +775,9 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
             <div style={{ display: 'flex', 'flex-direction': 'column', gap: '24px' }}>
               <For each={displayedStatuses()}>
                 {(status) => {
-                  const apps = displayApplicationsByStatus()[status];
                   const colors = statusColors[status];
                   return (
-                    <Show when={apps.length > 0}>
+                    <Show when={displayApplicationsByStatus()[status].length > 0}>
                       <div>
                         {/* Status Header - styled like kanban column headers */}
                         <div
@@ -677,6 +808,26 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
                               background: `linear-gradient(90deg, transparent, ${colors.text}30, transparent)`,
                             }}
                           />
+
+                          {/* Select All Checkbox */}
+                          <div onClick={(e) => e.stopPropagation()} style={{ 'flex-shrink': '0' }}>
+                            <Checkbox
+                              checked={pipelineStore.areAllSelected(
+                                displayApplicationsByStatus()[status].map((app) => app.id)
+                              )}
+                              indeterminate={pipelineStore.areSomeSelected(
+                                displayApplicationsByStatus()[status].map((app) => app.id)
+                              )}
+                              onChange={() => {
+                                const ids = displayApplicationsByStatus()[status].map(
+                                  (app) => app.id
+                                );
+                                pipelineStore.toggleAllSelection(ids);
+                              }}
+                              size="sm"
+                              accentColor={colors.text}
+                            />
+                          </div>
 
                           {/* Status Icon */}
                           <div
@@ -847,7 +998,7 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
                               'font-weight': '700',
                             }}
                           >
-                            {apps.length}
+                            {displayApplicationsByStatus()[status].length}
                           </span>
                         </div>
 
@@ -861,13 +1012,15 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
                               'padding-left': '8px',
                             }}
                           >
-                            <For each={apps}>
+                            <For each={displayApplicationsByStatus()[status]}>
                               {(app) => (
                                 <ApplicationRow
                                   application={app}
                                   theme={theme}
                                   onClick={() => props.onSelectJob(app)}
                                   hideStatusBadge={true}
+                                  isSelected={pipelineStore.isSelected(app.id)}
+                                  onCheckboxChange={handleCheckboxChange}
                                 />
                               )}
                             </For>
@@ -898,6 +1051,8 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
                           application={app}
                           theme={theme}
                           onClick={() => props.onSelectJob(app)}
+                          isSelected={pipelineStore.isSelected(app.id)}
+                          onCheckboxChange={handleCheckboxChange}
                         />
                       )}
                     </For>
@@ -908,6 +1063,25 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
           </div>
         </Show>
       </Show>
+
+      <BulkActionsBar
+        selectedCount={selectedCount()}
+        onClearSelection={() => pipelineStore.clearSelection()}
+        onBulkStatusChange={handleBulkStatusChange}
+        onBulkDelete={handleBulkDelete}
+        theme={props.currentTheme}
+        isOpen={hasSelection()}
+      />
+
+      <DeleteConfirmationModal
+        isOpen={showDeleteConfirm()}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={confirmBulkDelete}
+        title="Delete Selected Applications"
+        message={`Are you sure you want to delete ${selectedCount()} application${selectedCount() !== 1 ? 's' : ''}? This action cannot be undone.`}
+        confirmText="Delete All"
+        theme={props.currentTheme}
+      />
     </div>
   );
 };
@@ -1045,6 +1219,12 @@ interface PipelineColumnProps {
   onDrop: (appId: string) => void;
   onCardDragStart: (appId: string) => void;
   onCardDragEnd: () => void;
+  // Selection props
+  isSelected: (appId: string) => boolean;
+  onCheckboxChange: (appId: string, checked: boolean) => void;
+  onSelectAllInColumn: () => void;
+  areAllSelectedInColumn: boolean;
+  areSomeSelectedInColumn: boolean;
 }
 
 const PipelineColumn: Component<PipelineColumnProps> = (props) => {
@@ -1133,6 +1313,17 @@ const PipelineColumn: Component<PipelineColumnProps> = (props) => {
                 background: `linear-gradient(90deg, transparent, ${colors().text}30, transparent)`,
               }}
             />
+
+            {/* Select All Checkbox - only show when column has items */}
+            <Show when={props.applications.length > 0}>
+              <Checkbox
+                checked={props.areAllSelectedInColumn}
+                indeterminate={props.areSomeSelectedInColumn}
+                onChange={() => props.onSelectAllInColumn()}
+                accentColor={colors().text}
+                size="sm"
+              />
+            </Show>
 
             {/* Status Icon */}
             <div
@@ -1306,6 +1497,8 @@ const PipelineColumn: Component<PipelineColumnProps> = (props) => {
               isDragging={props.draggedAppId === app.id}
               onDragStart={() => props.onCardDragStart(app.id)}
               onDragEnd={props.onCardDragEnd}
+              isSelected={props.isSelected(app.id)}
+              onCheckboxChange={props.onCheckboxChange}
             />
           )}
         </For>
@@ -1323,6 +1516,9 @@ interface ApplicationCardProps {
   isDragging?: boolean;
   onDragStart?: () => void;
   onDragEnd?: () => void;
+  // Selection props
+  isSelected?: boolean;
+  onCheckboxChange?: (id: string, checked: boolean) => void;
 }
 
 const ApplicationCard: Component<ApplicationCardProps> = (props) => {
@@ -1384,94 +1580,132 @@ const ApplicationCard: Component<ApplicationCardProps> = (props) => {
       delay={300}
       disabled={props.isDragging}
     >
-      <div
-        draggable={true}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-        style={{
-          opacity: props.isDragging ? 0.5 : 1,
-          transform: props.isDragging ? 'scale(0.98)' : 'scale(1)',
-          transition: 'opacity 0.2s ease, transform 0.2s ease',
-        }}
+      <AgingCardWrapper
+        lastActivityAt={app().lastActivityAt}
+        settings={pipelineStore.state.settings}
+        peelSize="medium"
+        showTexture={true}
+        showCoffeeStain={false}
       >
-        <FluidCard
-          onClick={props.onClick}
-          hoverable
-          glowColor={accentColor()}
+        <div
+          draggable={true}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
           style={{
-            padding: '16px',
-            cursor: 'grab',
-            position: 'relative',
-            background: 'linear-gradient(135deg, rgba(35, 35, 40, 0.95), rgba(25, 25, 30, 0.98))',
-            border: `1px solid rgba(255, 255, 255, 0.08)`,
+            opacity: props.isDragging ? 0.5 : 1,
+            transform: props.isDragging ? 'scale(0.98)' : 'scale(1)',
+            transition: 'opacity 0.2s ease, transform 0.2s ease',
           }}
         >
-          <div
+          <FluidCard
+            onClick={props.onClick}
+            hoverable
+            glowColor={accentColor()}
             style={{
-              'font-size': '16px',
-              'font-family': "'Space Grotesk', system-ui, sans-serif",
-              'font-weight': '700',
-              color: props.theme().colors.text,
-              'margin-bottom': '4px',
-              'white-space': 'nowrap',
-              overflow: 'hidden',
-              'text-overflow': 'ellipsis',
-              'line-height': '1.4',
+              padding: '16px',
+              cursor: 'grab',
+              position: 'relative',
+              background: 'linear-gradient(135deg, rgba(35, 35, 40, 0.95), rgba(25, 25, 30, 0.98))',
+              border: `1px solid rgba(255, 255, 255, 0.08)`,
             }}
+            class="application-card"
           >
-            {app().roleName}
-          </div>
-          <div
-            style={{
-              'font-size': '14px',
-              'font-family': "'Space Grotesk', system-ui, sans-serif",
-              color: props.theme().colors.textMuted,
-              'margin-bottom': '8px',
-              'white-space': 'nowrap',
-              overflow: 'hidden',
-              'text-overflow': 'ellipsis',
-            }}
-          >
-            {app().companyName}
-          </div>
-
-          {/* Location icon */}
-          <Show when={app().location || app().locationType}>
-            <div
-              style={{
-                display: 'flex',
-                'align-items': 'center',
-                gap: '6px',
-                'font-size': '12px',
-                color: props.theme().colors.textMuted,
-              }}
-            >
-              <svg
-                width="12"
-                height="12"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                <circle cx="12" cy="10" r="3" />
-              </svg>
-              <span
+            {/* Checkbox - appears on hover or when selected */}
+            <Show when={props.onCheckboxChange}>
+              <div
+                class="card-checkbox"
                 style={{
-                  'white-space': 'nowrap',
-                  overflow: 'hidden',
-                  'text-overflow': 'ellipsis',
+                  position: 'absolute',
+                  top: '8px',
+                  left: '8px',
+                  'z-index': '10',
+                  opacity: props.isSelected ? '1' : '0',
+                  transition: 'opacity 0.15s ease',
                 }}
               >
-                {app().location || app().locationType}
-              </span>
+                <Checkbox
+                  checked={props.isSelected || false}
+                  onChange={(checked) => props.onCheckboxChange?.(app().id, checked)}
+                  size="sm"
+                  accentColor={accentColor()}
+                />
+              </div>
+            </Show>
+            <div
+              style={{
+                'font-size': '16px',
+                'font-family': "'Space Grotesk', system-ui, sans-serif",
+                'font-weight': '700',
+                color: props.theme().colors.text,
+                'margin-bottom': '4px',
+                'white-space': 'nowrap',
+                overflow: 'hidden',
+                'text-overflow': 'ellipsis',
+                'line-height': '1.4',
+                'padding-left': props.onCheckboxChange ? '28px' : '0',
+              }}
+            >
+              {app().roleName}
             </div>
-          </Show>
-        </FluidCard>
-      </div>
+            <div
+              style={{
+                'font-size': '14px',
+                'font-family': "'Space Grotesk', system-ui, sans-serif",
+                color: props.theme().colors.textMuted,
+                'margin-bottom': '8px',
+                'white-space': 'nowrap',
+                overflow: 'hidden',
+                'text-overflow': 'ellipsis',
+                'padding-left': props.onCheckboxChange ? '28px' : '0',
+              }}
+            >
+              {app().companyName}
+            </div>
+
+            {/* Location icon */}
+            <Show when={app().location || app().locationType}>
+              <div
+                style={{
+                  display: 'flex',
+                  'align-items': 'center',
+                  gap: '6px',
+                  'font-size': '12px',
+                  color: props.theme().colors.textMuted,
+                  'padding-left': props.onCheckboxChange ? '28px' : '0',
+                }}
+              >
+                <svg
+                  width="12"
+                  height="12"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                  <circle cx="12" cy="10" r="3" />
+                </svg>
+                <span
+                  style={{
+                    'white-space': 'nowrap',
+                    overflow: 'hidden',
+                    'text-overflow': 'ellipsis',
+                  }}
+                >
+                  {app().location || app().locationType}
+                </span>
+              </div>
+            </Show>
+            <style>{`
+            .application-card:hover .card-checkbox {
+              opacity: 1 !important;
+            }
+          `}</style>
+          </FluidCard>
+        </div>
+      </AgingCardWrapper>
     </Tooltip>
   );
 };
@@ -1481,6 +1715,9 @@ interface ApplicationRowProps {
   theme: () => typeof liquidTenure;
   onClick: () => void;
   hideStatusBadge?: boolean;
+  // Selection props
+  isSelected?: boolean;
+  onCheckboxChange?: (id: string, checked: boolean) => void;
 }
 
 const ApplicationRow: Component<ApplicationRowProps> = (props) => {
@@ -1520,81 +1757,153 @@ const ApplicationRow: Component<ApplicationRowProps> = (props) => {
       position="auto"
       delay={300}
     >
-      <FluidCard
-        onClick={props.onClick}
-        hoverable
-        glowColor={statusColor()}
-        style={{
-          display: 'flex',
-          'align-items': 'center',
-          gap: '20px',
-          padding: '18px 20px',
-          cursor: 'pointer',
-          background: 'linear-gradient(135deg, rgba(35, 35, 40, 0.9), rgba(25, 25, 30, 0.95))',
-          border: '1px solid rgba(255, 255, 255, 0.07)',
-          position: 'relative',
-          overflow: 'hidden',
-        }}
+      <AgingCardWrapper
+        lastActivityAt={app().lastActivityAt}
+        settings={pipelineStore.state.settings}
+        peelSize="small"
+        showTexture={true}
+        showCoffeeStain={false}
       >
-        {/* Status indicator dot */}
-        <div
+        <FluidCard
+          onClick={props.onClick}
+          hoverable
+          glowColor={statusColor()}
           style={{
-            position: 'absolute',
-            left: 0,
-            top: '50%',
-            transform: 'translateY(-50%)',
-            width: '4px',
-            height: '40%',
-            'min-height': '24px',
-            background: statusColor(),
-            'border-radius': '0 4px 4px 0',
-            'box-shadow': `0 0 8px ${statusColor()}50`,
+            display: 'flex',
+            'align-items': 'center',
+            gap: '20px',
+            padding: '18px 20px',
+            cursor: 'pointer',
+            background: 'linear-gradient(135deg, rgba(35, 35, 40, 0.9), rgba(25, 25, 30, 0.95))',
+            border: '1px solid rgba(255, 255, 255, 0.07)',
+            position: 'relative',
+            overflow: 'hidden',
           }}
-        />
-        {/* Company/Role */}
-        <div style={{ flex: '1', 'min-width': '0', 'padding-left': '8px' }}>
+          class="application-row"
+        >
+          {/* Status indicator dot */}
           <div
             style={{
-              'font-size': '16px',
-              'font-family': "'Space Grotesk', system-ui, sans-serif",
-              'font-weight': '700',
-              color: props.theme().colors.text,
-              'white-space': 'nowrap',
-              overflow: 'hidden',
-              'text-overflow': 'ellipsis',
-              'line-height': '1.4',
+              position: 'absolute',
+              left: 0,
+              top: '50%',
+              transform: 'translateY(-50%)',
+              width: '4px',
+              height: '40%',
+              'min-height': '24px',
+              background: statusColor(),
+              'border-radius': '0 4px 4px 0',
+              'box-shadow': `0 0 8px ${statusColor()}50`,
             }}
-          >
-            {app().roleName}
-          </div>
-          <div
-            style={{
-              'font-size': '14px',
-              'font-family': "'Space Grotesk', system-ui, sans-serif",
-              color: props.theme().colors.textMuted,
-              'margin-top': '2px',
-            }}
-          >
-            {app().companyName}
-          </div>
-        </div>
+          />
 
-        {/* Location icon (if available) */}
-        <Show when={app().location || app().locationType}>
+          {/* Checkbox - appears on hover or when selected */}
+          <Show when={props.onCheckboxChange}>
+            <div
+              class="row-checkbox"
+              style={{
+                'flex-shrink': '0',
+                opacity: props.isSelected ? '1' : '0',
+                transition: 'opacity 0.15s ease',
+                'margin-left': '8px',
+              }}
+            >
+              <Checkbox
+                checked={props.isSelected || false}
+                onChange={(checked) => props.onCheckboxChange?.(app().id, checked)}
+                size="sm"
+                accentColor={statusColor()}
+              />
+            </div>
+          </Show>
+
+          {/* Company/Role */}
           <div
             style={{
+              flex: '1',
+              'min-width': '0',
+              'padding-left': props.onCheckboxChange ? '0' : '8px',
+            }}
+          >
+            <div
+              style={{
+                'font-size': '16px',
+                'font-family': "'Space Grotesk', system-ui, sans-serif",
+                'font-weight': '700',
+                color: props.theme().colors.text,
+                'white-space': 'nowrap',
+                overflow: 'hidden',
+                'text-overflow': 'ellipsis',
+                'line-height': '1.4',
+              }}
+            >
+              {app().roleName}
+            </div>
+            <div
+              style={{
+                'font-size': '14px',
+                'font-family': "'Space Grotesk', system-ui, sans-serif",
+                color: props.theme().colors.textMuted,
+                'margin-top': '2px',
+              }}
+            >
+              {app().companyName}
+            </div>
+          </div>
+
+          {/* Location icon (if available) */}
+          <Show when={app().location || app().locationType}>
+            <div
+              style={{
+                display: 'flex',
+                'align-items': 'center',
+                gap: '6px',
+                padding: '6px 12px',
+                'font-size': '13px',
+                color: props.theme().colors.textMuted,
+                'white-space': 'nowrap',
+              }}
+            >
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+              {app().location || app().locationType}
+            </div>
+          </Show>
+
+          {/* Aging Indicator */}
+          <AgingIndicator lastActivityAt={app().lastActivityAt} size="sm" />
+
+          {/* Status - hidden in grouped list view */}
+          <Show when={!props.hideStatusBadge}>
+            <StatusBadge status={app().status} size="sm" />
+          </Show>
+
+          {/* Hover arrow indicator */}
+          <div
+            style={{
+              width: '24px',
+              height: '24px',
               display: 'flex',
               'align-items': 'center',
-              gap: '6px',
-              padding: '6px 12px',
-              'font-size': '13px',
-              color: props.theme().colors.textMuted,
-              'white-space': 'nowrap',
+              'justify-content': 'center',
+              color: 'rgba(255, 255, 255, 0.3)',
+              transition: 'all 0.2s ease',
             }}
           >
             <svg
-              width="14"
-              height="14"
+              width="16"
+              height="16"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -1602,44 +1911,16 @@ const ApplicationRow: Component<ApplicationRowProps> = (props) => {
               stroke-linecap="round"
               stroke-linejoin="round"
             >
-              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-              <circle cx="12" cy="10" r="3" />
+              <path d="M9 18l6-6-6-6" />
             </svg>
-            {app().location || app().locationType}
           </div>
-        </Show>
-
-        {/* Status - hidden in grouped list view */}
-        <Show when={!props.hideStatusBadge}>
-          <StatusBadge status={app().status} size="sm" />
-        </Show>
-
-        {/* Hover arrow indicator */}
-        <div
-          style={{
-            width: '24px',
-            height: '24px',
-            display: 'flex',
-            'align-items': 'center',
-            'justify-content': 'center',
-            color: 'rgba(255, 255, 255, 0.3)',
-            transition: 'all 0.2s ease',
-          }}
-        >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          >
-            <path d="M9 18l6-6-6-6" />
-          </svg>
-        </div>
-      </FluidCard>
+          <style>{`
+          .application-row:hover .row-checkbox {
+            opacity: 1 !important;
+          }
+        `}</style>
+        </FluidCard>
+      </AgingCardWrapper>
     </Tooltip>
   );
 };
@@ -1680,7 +1961,7 @@ const StageDefinitionTooltip: Component<StageDefinitionTooltipProps> = (props) =
     },
     accepted: {
       title: 'Accepted',
-      definition: "You've accepted the offer. Congratulations! 🎉",
+      definition: "You've accepted the offer. Congratulations!",
     },
     rejected: {
       title: 'Rejected',

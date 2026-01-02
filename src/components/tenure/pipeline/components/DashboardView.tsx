@@ -20,6 +20,13 @@ import {
   IconChevronRight,
 } from '../ui/Icons';
 import {
+  LightbulbIcon,
+  TrendUpIcon,
+  TrendDownIcon,
+  LightningIcon,
+  TargetIcon,
+} from 'solid-phosphor/bold';
+import {
   JobApplication,
   ApplicationStatus,
   ACTIVE_STATUSES,
@@ -27,6 +34,7 @@ import {
   daysSince,
 } from '../../../../schemas/pipeline.schema';
 import { exportAndDownload } from '../utils/csv-export';
+import { LaborMarketWidget } from './LaborMarketWidget';
 
 interface DashboardViewProps {
   currentTheme: () => Partial<typeof liquidTenure> & typeof liquidTenure;
@@ -146,6 +154,175 @@ export const DashboardView: Component<DashboardViewProps> = (props) => {
     };
   });
 
+  // Response time metrics
+  const responseTimeMetrics = createMemo(() => {
+    const apps = applications();
+
+    // Calculate average time from Applied to first response (Screening or Interviewing)
+    const appsWithResponse = apps.filter(
+      (a) =>
+        a.statusHistory?.some((h) => h.status === 'applied') &&
+        a.statusHistory?.some((h) => ['screening', 'interviewing', 'rejected'].includes(h.status))
+    );
+
+    let totalResponseDays = 0;
+    let fastestResponse = Infinity;
+    let slowestResponse = 0;
+
+    appsWithResponse.forEach((app) => {
+      const appliedEntry = app.statusHistory?.find((h) => h.status === 'applied');
+      const responseEntry = app.statusHistory?.find((h) =>
+        ['screening', 'interviewing', 'rejected'].includes(h.status)
+      );
+
+      if (appliedEntry && responseEntry) {
+        const days = Math.floor(
+          (new Date(responseEntry.timestamp).getTime() -
+            new Date(appliedEntry.timestamp).getTime()) /
+            (1000 * 60 * 60 * 24)
+        );
+        totalResponseDays += days;
+        fastestResponse = Math.min(fastestResponse, days);
+        slowestResponse = Math.max(slowestResponse, days);
+      }
+    });
+
+    const avgResponseDays =
+      appsWithResponse.length > 0 ? Math.round(totalResponseDays / appsWithResponse.length) : null;
+
+    return {
+      avgResponseDays,
+      fastestResponse: fastestResponse !== Infinity ? fastestResponse : null,
+      slowestResponse: slowestResponse > 0 ? slowestResponse : null,
+      responseRate:
+        apps.filter((a) => a.statusHistory?.some((h) => h.status === 'applied')).length > 0
+          ? Math.round(
+              (appsWithResponse.length /
+                apps.filter((a) => a.statusHistory?.some((h) => h.status === 'applied')).length) *
+                100
+            )
+          : null,
+    };
+  });
+
+  // Interview stage breakdown
+  const interviewMetrics = createMemo(() => {
+    const interviewing = applicationsByStatus().interviewing;
+
+    // Count by interview round (based on notes or tags if available, otherwise estimate)
+    const withMultipleRounds = interviewing.filter((a) => {
+      const interviewHistory = a.statusHistory?.filter((h) => h.status === 'interviewing') || [];
+      return (
+        interviewHistory.length > 1 ||
+        a.notes?.toLowerCase().includes('round 2') ||
+        a.notes?.toLowerCase().includes('final')
+      );
+    });
+
+    // Average match score for interviewing apps
+    const analyzedInterviewing = interviewing.filter((a) => a.analysis?.overallScore);
+    const avgInterviewScore =
+      analyzedInterviewing.length > 0
+        ? Math.round(
+            analyzedInterviewing.reduce((sum, a) => sum + (a.analysis?.overallScore || 0), 0) /
+              analyzedInterviewing.length
+          )
+        : null;
+
+    // How many came from high match scores
+    const highScoreInterviews = interviewing.filter(
+      (a) => (a.analysis?.overallScore || 0) >= 70
+    ).length;
+
+    return {
+      totalInterviewing: interviewing.length,
+      advancedRounds: withMultipleRounds.length,
+      avgMatchScore: avgInterviewScore,
+      highScoreCount: highScoreInterviews,
+    };
+  });
+
+  // Offer metrics
+  const offerMetrics = createMemo(() => {
+    const apps = applications();
+    const offered = applicationsByStatus().offered;
+    const accepted = applicationsByStatus().accepted;
+
+    // Total offers ever received (offered + accepted)
+    const totalOffersReceived = apps.filter((a) =>
+      a.statusHistory?.some((h) => h.status === 'offered')
+    ).length;
+
+    // Offer acceptance rate
+    const acceptanceRate =
+      totalOffersReceived > 0 ? Math.round((accepted.length / totalOffersReceived) * 100) : null;
+
+    // Average time from first application to offer
+    const appsWithOffer = apps.filter((a) => a.statusHistory?.some((h) => h.status === 'offered'));
+    let avgDaysToOffer = null;
+
+    if (appsWithOffer.length > 0) {
+      const totalDays = appsWithOffer.reduce((sum, app) => {
+        const created = new Date(app.createdAt).getTime();
+        const offerEntry = app.statusHistory?.find((h) => h.status === 'offered');
+        if (offerEntry) {
+          return (
+            sum +
+            Math.floor((new Date(offerEntry.timestamp).getTime() - created) / (1000 * 60 * 60 * 24))
+          );
+        }
+        return sum;
+      }, 0);
+      avgDaysToOffer = Math.round(totalDays / appsWithOffer.length);
+    }
+
+    return {
+      totalOffersReceived,
+      pendingOffers: offered.length,
+      acceptedOffers: accepted.length,
+      acceptanceRate,
+      avgDaysToOffer,
+    };
+  });
+
+  // Weekly activity metrics
+  const weeklyMetrics = createMemo(() => {
+    const apps = applications();
+    const now = Date.now();
+    const oneWeekAgo = now - 7 * 24 * 60 * 60 * 1000;
+    const twoWeeksAgo = now - 14 * 24 * 60 * 60 * 1000;
+
+    const addedThisWeek = apps.filter((a) => new Date(a.createdAt).getTime() > oneWeekAgo).length;
+    const addedLastWeek = apps.filter((a) => {
+      const created = new Date(a.createdAt).getTime();
+      return created > twoWeeksAgo && created <= oneWeekAgo;
+    }).length;
+
+    // Status changes this week
+    let statusChangesThisWeek = 0;
+    apps.forEach((app) => {
+      app.statusHistory?.forEach((h) => {
+        if (new Date(h.timestamp).getTime() > oneWeekAgo) {
+          statusChangesThisWeek++;
+        }
+      });
+    });
+
+    const weeklyTrend =
+      addedLastWeek > 0
+        ? Math.round(((addedThisWeek - addedLastWeek) / addedLastWeek) * 100)
+        : addedThisWeek > 0
+          ? 100
+          : 0;
+
+    return {
+      addedThisWeek,
+      addedLastWeek,
+      weeklyTrend,
+      statusChangesThisWeek,
+    };
+  });
+
   // Generate recent activity (last 7 items)
   const recentActivity = createMemo(() => {
     const items: ActivityItem[] = [];
@@ -224,7 +401,7 @@ export const DashboardView: Component<DashboardViewProps> = (props) => {
   });
 
   return (
-    <div style={{ padding: '32px', 'max-width': '1400px' }}>
+    <div style={{ padding: '32px' }}>
       {/* Header */}
       <div style={{ 'margin-bottom': '32px' }}>
         <h1
@@ -264,22 +441,44 @@ export const DashboardView: Component<DashboardViewProps> = (props) => {
             <StatTooltipContent
               title="Active Applications"
               metrics={[
-                { label: 'Total tracked', value: aggregateStats().total },
+                { label: 'Total ever tracked', value: aggregateStats().total },
                 {
                   label: 'Added this week',
-                  value: aggregateStats().addedThisWeek,
-                  trend: aggregateStats().addedThisWeek > 0 ? 'up' : 'neutral',
+                  value: weeklyMetrics().addedThisWeek,
+                  trend:
+                    weeklyMetrics().weeklyTrend > 0
+                      ? 'up'
+                      : weeklyMetrics().weeklyTrend < 0
+                        ? 'down'
+                        : 'neutral',
                 },
                 {
-                  label: 'Needing attention',
+                  label: 'Status changes this week',
+                  value: weeklyMetrics().statusChangesThisWeek,
+                  color: weeklyMetrics().statusChangesThisWeek > 0 ? '#10B981' : undefined,
+                },
+                {
+                  label: 'Needing attention (14+ days)',
                   value: aggregateStats().stale,
-                  color: aggregateStats().stale > 0 ? '#F59E0B' : undefined,
+                  color: aggregateStats().stale > 0 ? '#F59E0B' : '#10B981',
                 },
               ]}
               insight={
-                aggregateStats().avgScore
-                  ? `Avg match score: ${aggregateStats().avgScore}%`
-                  : 'Analyze jobs to see match scores'
+                weeklyMetrics().weeklyTrend > 0 ? (
+                  <>
+                    <TrendUpIcon width={16} height={16} /> {weeklyMetrics().weeklyTrend}% more
+                    activity than last week
+                  </>
+                ) : weeklyMetrics().weeklyTrend < 0 ? (
+                  <>
+                    <TrendDownIcon width={16} height={16} /> Activity down{' '}
+                    {Math.abs(weeklyMetrics().weeklyTrend)}% from last week
+                  </>
+                ) : aggregateStats().avgScore ? (
+                  `Avg match score: ${aggregateStats().avgScore}%`
+                ) : (
+                  'Start adding jobs to track your search'
+                )
               }
             />
           }
@@ -298,17 +497,41 @@ export const DashboardView: Component<DashboardViewProps> = (props) => {
             <StatTooltipContent
               title="Applied"
               metrics={[
-                { label: 'Avg. days since applied', value: avgDaysInStatus().applied ?? '—' },
+                { label: 'Awaiting response', value: applicationsByStatus().applied.length },
+                {
+                  label: 'Avg. days waiting',
+                  value: avgDaysInStatus().applied ?? '—',
+                  color: (avgDaysInStatus().applied || 0) > 14 ? '#F59E0B' : undefined,
+                },
+                {
+                  label: 'Response rate',
+                  value: responseTimeMetrics().responseRate
+                    ? `${responseTimeMetrics().responseRate}%`
+                    : '—',
+                  color: (responseTimeMetrics().responseRate || 0) >= 30 ? '#10B981' : '#F59E0B',
+                },
+                {
+                  label: 'Avg. response time',
+                  value: responseTimeMetrics().avgResponseDays
+                    ? `${responseTimeMetrics().avgResponseDays} days`
+                    : '—',
+                },
                 {
                   label: 'Conversion to interview',
                   value: conversionRates().toInterview ? `${conversionRates().toInterview}%` : '—',
-                  color:
-                    conversionRates().toInterview && conversionRates().toInterview! >= 30
-                      ? '#10B981'
-                      : undefined,
+                  color: (conversionRates().toInterview || 0) >= 20 ? '#10B981' : '#F59E0B',
                 },
               ]}
-              insight="Applications awaiting response"
+              insight={
+                responseTimeMetrics().fastestResponse !== null ? (
+                  <>
+                    <LightningIcon width={16} height={16} /> Fastest response:{' '}
+                    {responseTimeMetrics().fastestResponse} days
+                  </>
+                ) : (
+                  'Track responses to see timing insights'
+                )
+              }
             />
           }
           position="bottom"
@@ -326,17 +549,38 @@ export const DashboardView: Component<DashboardViewProps> = (props) => {
             <StatTooltipContent
               title="Interviewing"
               metrics={[
-                { label: 'Avg. days in stage', value: avgDaysInStatus().interviewing ?? '—' },
+                { label: 'Active interviews', value: applicationsByStatus().interviewing.length },
+                {
+                  label: 'Avg. days in stage',
+                  value: avgDaysInStatus().interviewing ?? '—',
+                  color: (avgDaysInStatus().interviewing || 0) > 21 ? '#F59E0B' : undefined,
+                },
+                {
+                  label: 'Advanced rounds',
+                  value: interviewMetrics().advancedRounds,
+                  color: interviewMetrics().advancedRounds > 0 ? '#10B981' : undefined,
+                },
+                {
+                  label: 'High match (70%+)',
+                  value: interviewMetrics().highScoreCount,
+                  color: '#8B5CF6',
+                },
                 {
                   label: 'Conversion to offer',
                   value: conversionRates().toOffer ? `${conversionRates().toOffer}%` : '—',
-                  color:
-                    conversionRates().toOffer && conversionRates().toOffer! >= 50
-                      ? '#10B981'
-                      : '#F59E0B',
+                  color: (conversionRates().toOffer || 0) >= 30 ? '#10B981' : '#F59E0B',
                 },
               ]}
-              insight="Active interview processes"
+              insight={
+                interviewMetrics().avgMatchScore ? (
+                  <>
+                    <TargetIcon width={16} height={16} /> Avg match score of interviews:{' '}
+                    {interviewMetrics().avgMatchScore}%
+                  </>
+                ) : (
+                  'High match scores correlate with better interview outcomes'
+                )
+              }
             />
           }
           position="bottom"
@@ -352,19 +596,36 @@ export const DashboardView: Component<DashboardViewProps> = (props) => {
         <Tooltip
           content={
             <StatTooltipContent
-              title="Offers Received"
+              title="Offers"
               metrics={[
-                { label: 'Pending decision', value: applicationsByStatus().offered.length },
+                { label: 'Pending decision', value: offerMetrics().pendingOffers },
                 {
-                  label: 'Total accepted',
-                  value: applicationsByStatus().accepted.length,
-                  color: '#10B981',
+                  label: 'Total offers received',
+                  value: offerMetrics().totalOffersReceived,
+                  color: offerMetrics().totalOffersReceived > 0 ? '#10B981' : undefined,
+                },
+                {
+                  label: 'Accepted',
+                  value: offerMetrics().acceptedOffers,
+                  color: '#22C55E',
+                },
+                {
+                  label: 'Acceptance rate',
+                  value: offerMetrics().acceptanceRate ? `${offerMetrics().acceptanceRate}%` : '—',
+                },
+                {
+                  label: 'Avg. days to offer',
+                  value: offerMetrics().avgDaysToOffer
+                    ? `${offerMetrics().avgDaysToOffer} days`
+                    : '—',
                 },
               ]}
               insight={
-                applicationsByStatus().offered.length > 0
-                  ? 'Review and respond to offers'
-                  : 'Keep going!'
+                offerMetrics().pendingOffers > 0
+                  ? '🎉 You have offers to review!'
+                  : offerMetrics().totalOffersReceived > 0
+                    ? `Success rate: ${Math.round((offerMetrics().totalOffersReceived / aggregateStats().total) * 100)}% of applications led to offers`
+                    : 'Keep going - offers come to those who persist!'
               }
             />
           }
@@ -384,17 +645,37 @@ export const DashboardView: Component<DashboardViewProps> = (props) => {
               title="Follow-ups Due"
               metrics={[
                 {
-                  label: 'Overdue',
+                  label: 'Overdue now',
                   value: followUpsDue().length,
-                  color: followUpsDue().length > 0 ? '#EF4444' : undefined,
+                  color: followUpsDue().length > 0 ? '#EF4444' : '#10B981',
                 },
                 {
                   label: 'Stale (14+ days)',
                   value: aggregateStats().stale,
-                  color: aggregateStats().stale > 0 ? '#F59E0B' : undefined,
+                  color: aggregateStats().stale > 0 ? '#F59E0B' : '#10B981',
+                },
+                {
+                  label: 'In Applied stage',
+                  value: applicationsByStatus().applied.filter(
+                    (a) => daysSince(a.lastActivityAt) >= 7
+                  ).length,
+                  color: '#60A5FA',
+                },
+                {
+                  label: 'In Interviewing stage',
+                  value: applicationsByStatus().interviewing.filter(
+                    (a) => daysSince(a.lastActivityAt) >= 7
+                  ).length,
+                  color: '#A78BFA',
                 },
               ]}
-              insight={followUpsDue().length > 0 ? 'Time to reach out!' : 'All caught up'}
+              insight={
+                followUpsDue().length > 0
+                  ? `⏰ ${followUpsDue().length} follow-up${followUpsDue().length !== 1 ? 's' : ''} overdue - reach out today!`
+                  : aggregateStats().stale > 0
+                    ? `${aggregateStats().stale} app${aggregateStats().stale !== 1 ? 's' : ''} going stale - consider following up`
+                    : '✅ All caught up! Great job staying on top of follow-ups'
+              }
             />
           }
           position="bottom"
@@ -636,8 +917,8 @@ export const DashboardView: Component<DashboardViewProps> = (props) => {
             style={{
               'margin-top': '16px',
               padding: '16px',
-              background: 'rgba(59, 130, 246, 0.05)',
-              border: '1px solid rgba(59, 130, 246, 0.2)',
+              background: `${theme().colors.primary}0D`,
+              border: `1px solid ${theme().colors.primary}33`,
               'border-radius': '10px',
             }}
           >
@@ -645,12 +926,15 @@ export const DashboardView: Component<DashboardViewProps> = (props) => {
               style={{
                 'font-size': '13px',
                 'font-family': "'Space Grotesk', system-ui, sans-serif",
-                'font-weight': '500',
-                color: '#60A5FA',
+                'font-weight': '600',
+                display: 'flex',
+                'align-items': 'center',
+                gap: '6px',
+                color: theme().colors.primary,
                 'margin-bottom': '8px',
               }}
             >
-              💡 Pro Tip
+              <LightbulbIcon width={16} height={16} /> Pro Tip
             </div>
             <p
               style={{
@@ -671,6 +955,11 @@ export const DashboardView: Component<DashboardViewProps> = (props) => {
             </p>
           </div>
         </FluidCard>
+      </div>
+
+      {/* Labor Market Insights Section */}
+      <div style={{ 'margin-top': '24px' }}>
+        <LaborMarketWidget currentTheme={props.currentTheme} />
       </div>
     </div>
   );

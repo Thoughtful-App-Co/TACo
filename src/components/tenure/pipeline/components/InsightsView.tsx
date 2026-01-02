@@ -4,7 +4,8 @@
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
-import { Component, createSignal, Show, For, createMemo } from 'solid-js';
+import { Component, createSignal, Show, For, createMemo, createEffect } from 'solid-js';
+import { useLocation, useNavigate } from '@solidjs/router';
 import { liquidTenure, pipelineAnimations, statusColors } from '../theme/liquid-tenure';
 import { SankeyView } from './SankeyView';
 import {
@@ -19,10 +20,15 @@ import {
   IconStar,
   IconChevronRight,
   IconFilter,
+  IconX,
 } from '../ui/Icons';
-import { FluidCard } from '../ui';
+import { FluidCard, AggregationAccordion } from '../ui';
 import { pipelineStore } from '../store';
-import { JobApplication, ApplicationStatus } from '../../../../schemas/pipeline.schema';
+import {
+  JobApplication,
+  ApplicationStatus,
+  STATUS_LABELS,
+} from '../../../../schemas/pipeline.schema';
 
 interface InsightsViewProps {
   currentTheme: () => Partial<typeof liquidTenure> & typeof liquidTenure;
@@ -33,7 +39,36 @@ type InsightsTab = 'flow' | 'analytics' | 'trends';
 
 export const InsightsView: Component<InsightsViewProps> = (props) => {
   const theme = () => props.currentTheme();
-  const [activeTab, setActiveTab] = createSignal<InsightsTab>('flow');
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Determine active tab from URL path
+  const activeTab = createMemo((): InsightsTab => {
+    const path = location.pathname;
+
+    // Extract tab from path like /tenure/prospect/insights/flow
+    const match = path.match(/\/tenure\/prospect\/insights\/([^/]+)/);
+    if (match) {
+      const tab = match[1] as InsightsTab;
+      // Validate it's a known tab
+      if (['flow', 'analytics', 'trends'].includes(tab)) {
+        return tab;
+      }
+    }
+
+    // Default to user's configured default or 'flow'
+    const defaultTab = pipelineStore.state.settings.defaultInsightsTab || 'flow';
+    return defaultTab;
+  });
+
+  // Redirect to default tab if on base /tenure/prospect/insights path
+  createEffect(() => {
+    const path = location.pathname;
+    if (path === '/tenure/prospect/insights' || path === '/tenure/prospect/insights/') {
+      const defaultTab = pipelineStore.state.settings.defaultInsightsTab || 'flow';
+      navigate(`/tenure/prospect/insights/${defaultTab}`, { replace: true });
+    }
+  });
 
   const tabs = [
     {
@@ -61,16 +96,16 @@ export const InsightsView: Component<InsightsViewProps> = (props) => {
     if (e.key === 'ArrowRight') {
       e.preventDefault();
       const nextIndex = (index + 1) % tabs.length;
-      setActiveTab(tabs[nextIndex].id);
+      navigate(`/tenure/prospect/insights/${tabs[nextIndex].id}`);
       (document.querySelector(`[data-tab="${tabs[nextIndex].id}"]`) as HTMLElement)?.focus();
     } else if (e.key === 'ArrowLeft') {
       e.preventDefault();
       const prevIndex = (index - 1 + tabs.length) % tabs.length;
-      setActiveTab(tabs[prevIndex].id);
+      navigate(`/tenure/prospect/insights/${tabs[prevIndex].id}`);
       (document.querySelector(`[data-tab="${tabs[prevIndex].id}"]`) as HTMLElement)?.focus();
     } else if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      setActiveTab(tabId);
+      navigate(`/tenure/prospect/insights/${tabId}`);
     }
   };
 
@@ -101,7 +136,7 @@ export const InsightsView: Component<InsightsViewProps> = (props) => {
               data-tab={tab.id}
               tabIndex={activeTab() === tab.id ? 0 : -1}
               class="pipeline-btn"
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => navigate(`/tenure/prospect/insights/${tab.id}`)}
               onKeyDown={(e) => handleTabKeyDown(e, tab.id, index())}
               style={{
                 display: 'flex',
@@ -296,6 +331,13 @@ const AnalyticsTab: Component<TabProps> = (props) => {
           reachedStage[PIPELINE_STAGES[i]]++;
         }
       }
+
+      // Also count rejected and withdrawn separately (these are terminal states, not pipeline stages)
+      if (app.status === 'rejected') {
+        reachedStage.rejected++;
+      } else if (app.status === 'withdrawn') {
+        reachedStage.withdrawn++;
+      }
     });
 
     const total = apps.length;
@@ -316,6 +358,43 @@ const AnalyticsTab: Component<TabProps> = (props) => {
     const responseRate = totalApplied > 0 ? (totalResponded / totalApplied) * 100 : 0;
     const interviewRate = totalApplied > 0 ? (totalInterviewing / totalApplied) * 100 : 0;
     const offerRate = totalInterviewing > 0 ? (totalOffered / totalInterviewing) * 100 : 0;
+
+    // Calculate rejection and withdrawal rates
+    const totalRejected = statusCounts.rejected;
+    const totalWithdrawn = statusCounts.withdrawn;
+    const rejectionRate = totalApplied > 0 ? (totalRejected / totalApplied) * 100 : 0;
+    const withdrawalRate = totalApplied > 0 ? (totalWithdrawn / totalApplied) * 100 : 0;
+
+    // Track rejections by stage (where rejection occurred)
+    const rejectionsByStage: Record<ApplicationStatus, number> = {
+      saved: 0,
+      applied: 0,
+      screening: 0,
+      interviewing: 0,
+      offered: 0,
+      accepted: 0,
+      rejected: 0,
+      withdrawn: 0,
+    };
+
+    const withdrawalsByStage: Record<ApplicationStatus, number> = {
+      saved: 0,
+      applied: 0,
+      screening: 0,
+      interviewing: 0,
+      offered: 0,
+      accepted: 0,
+      rejected: 0,
+      withdrawn: 0,
+    };
+
+    apps.forEach((app) => {
+      if (app.status === 'rejected' && app.rejectedAtStatus) {
+        rejectionsByStage[app.rejectedAtStatus]++;
+      } else if (app.status === 'withdrawn' && app.rejectedAtStatus) {
+        withdrawalsByStage[app.rejectedAtStatus]++;
+      }
+    });
 
     // Calculate average time to offer from statusHistory
     let avgTimeToOffer: number | null = null;
@@ -421,6 +500,12 @@ const AnalyticsTab: Component<TabProps> = (props) => {
       conversions,
       dropoffs,
       stageDurations,
+      totalRejected,
+      totalWithdrawn,
+      rejectionRate,
+      withdrawalRate,
+      rejectionsByStage,
+      withdrawalsByStage,
     };
   });
 
@@ -462,6 +547,18 @@ const AnalyticsTab: Component<TabProps> = (props) => {
       icon: IconCheck,
       color: statusColors.accepted,
     },
+    {
+      status: 'rejected' as ApplicationStatus,
+      label: 'Rejected',
+      icon: IconX,
+      color: statusColors.rejected,
+    },
+    {
+      status: 'withdrawn' as ApplicationStatus,
+      label: 'Withdrawn',
+      icon: IconX,
+      color: statusColors.withdrawn,
+    },
   ];
 
   // Helper to format percentage
@@ -479,178 +576,164 @@ const AnalyticsTab: Component<TabProps> = (props) => {
   return (
     <div style={{ display: 'flex', 'flex-direction': 'column', gap: '24px' }}>
       {/* Conversion Funnel */}
-      <FluidCard variant="default">
-        <div style={{ 'margin-bottom': '20px' }}>
-          <h4
-            style={{
-              margin: '0 0 4px',
-              'font-size': '18px',
-              'font-family': "'Playfair Display', Georgia, serif",
-              'font-weight': '600',
-              color: theme().colors.text,
-            }}
-          >
-            Conversion Funnel
-          </h4>
-          <p
-            style={{
-              margin: 0,
-              'font-size': '13px',
-              'font-family': "'Space Grotesk', system-ui, sans-serif",
-              color: theme().colors.textMuted,
-            }}
-          >
-            Track how applications progress through each stage
-          </p>
-        </div>
+      <AggregationAccordion
+        title="Conversion Funnel"
+        count={analytics().total}
+        defaultExpanded={true}
+        currentTheme={theme}
+      >
+        <div style={{ padding: '20px' }}>
+          {/* Funnel Visualization */}
+          <div style={{ display: 'flex', 'flex-direction': 'column', gap: '12px' }}>
+            <For each={funnelStages}>
+              {(stage, index) => {
+                const reached = () => analytics().reachedStage[stage.status];
+                const total = () => analytics().total;
+                const percentage = () =>
+                  total() > 0 ? Math.round((reached() / total()) * 100) : 0;
 
-        {/* Funnel Visualization */}
-        <div style={{ display: 'flex', 'flex-direction': 'column', gap: '12px' }}>
-          <For each={funnelStages}>
-            {(stage, index) => {
-              const reached = () => analytics().reachedStage[stage.status];
-              const total = () => analytics().total;
-              const percentage = () => (total() > 0 ? Math.round((reached() / total()) * 100) : 0);
+                // Get conversion rate from previous stage
+                const getConversionRate = (): number => {
+                  const idx = index();
+                  if (idx === 0) return 100; // First stage, no conversion
+                  const conversionData = analytics().conversions;
+                  switch (idx) {
+                    case 1:
+                      return conversionData.savedToApplied;
+                    case 2:
+                      return conversionData.appliedToScreening;
+                    case 3:
+                      return conversionData.screeningToInterviewing;
+                    case 4:
+                      return conversionData.interviewingToOffered;
+                    case 5:
+                      return conversionData.offeredToAccepted;
+                    default:
+                      return 0;
+                  }
+                };
 
-              // Get conversion rate from previous stage
-              const getConversionRate = (): number => {
-                const idx = index();
-                if (idx === 0) return 100; // First stage, no conversion
-                const conversionData = analytics().conversions;
-                switch (idx) {
-                  case 1:
-                    return conversionData.savedToApplied;
-                  case 2:
-                    return conversionData.appliedToScreening;
-                  case 3:
-                    return conversionData.screeningToInterviewing;
-                  case 4:
-                    return conversionData.interviewingToOffered;
-                  case 5:
-                    return conversionData.offeredToAccepted;
-                  default:
-                    return 0;
-                }
-              };
-
-              return (
-                <div style={{ display: 'flex', 'align-items': 'center', gap: '16px' }}>
-                  {/* Stage Icon and Label */}
-                  <div
-                    style={{
-                      width: '120px',
-                      display: 'flex',
-                      'align-items': 'center',
-                      gap: '10px',
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: '32px',
-                        height: '32px',
-                        'border-radius': '8px',
-                        background: stage.color.bg,
-                        border: `1px solid ${stage.color.border}`,
-                        display: 'flex',
-                        'align-items': 'center',
-                        'justify-content': 'center',
-                      }}
-                    >
-                      <stage.icon size={16} color={stage.color.text} />
-                    </div>
-                    <span
-                      style={{
-                        'font-size': '13px',
-                        'font-family': "'Space Grotesk', system-ui, sans-serif",
-                        color: theme().colors.text,
-                        'font-weight': '500',
-                      }}
-                    >
-                      {stage.label}
-                    </span>
-                  </div>
-
-                  {/* Progress Bar */}
-                  <div style={{ flex: 1, position: 'relative' }}>
-                    <div
-                      style={{
-                        height: '28px',
-                        background: 'rgba(255, 255, 255, 0.05)',
-                        'border-radius': '8px',
-                        overflow: 'hidden',
-                        position: 'relative',
-                      }}
-                    >
+                return (
+                  <Show when={reached() > 0}>
+                    <div style={{ display: 'flex', 'align-items': 'center', gap: '16px' }}>
+                      {/* Stage Icon and Label */}
                       <div
                         style={{
-                          position: 'absolute',
-                          top: 0,
-                          left: 0,
-                          height: '100%',
-                          width: `${percentage()}%`,
-                          background: stage.color.gradient,
-                          'border-radius': '8px',
-                          transition: `width ${pipelineAnimations.slow} ease`,
-                          opacity: reached() > 0 ? 1 : 0.3,
-                        }}
-                      />
-                      {/* Count Badge */}
-                      <div
-                        style={{
-                          position: 'absolute',
-                          left: '12px',
-                          top: '50%',
-                          transform: 'translateY(-50%)',
-                          'font-size': '13px',
-                          'font-family': "'Space Grotesk', system-ui, sans-serif",
-                          'font-weight': '600',
-                          color: reached() > 0 ? '#FFFFFF' : theme().colors.textMuted,
-                          'text-shadow': reached() > 0 ? '0 1px 2px rgba(0,0,0,0.3)' : 'none',
+                          width: '120px',
+                          display: 'flex',
+                          'align-items': 'center',
+                          gap: '10px',
                         }}
                       >
-                        {reached()}
+                        <div
+                          style={{
+                            width: '32px',
+                            height: '32px',
+                            'border-radius': '8px',
+                            background: stage.color.bg,
+                            border: `1px solid ${stage.color.border}`,
+                            display: 'flex',
+                            'align-items': 'center',
+                            'justify-content': 'center',
+                          }}
+                        >
+                          <stage.icon size={16} color={stage.color.text} />
+                        </div>
+                        <span
+                          style={{
+                            'font-size': '13px',
+                            'font-family': "'Space Grotesk', system-ui, sans-serif",
+                            color: theme().colors.text,
+                            'font-weight': '500',
+                          }}
+                        >
+                          {stage.label}
+                        </span>
                       </div>
-                    </div>
-                  </div>
 
-                  {/* Metrics */}
-                  <div
-                    style={{
-                      width: '100px',
-                      display: 'flex',
-                      gap: '8px',
-                      'justify-content': 'flex-end',
-                    }}
-                  >
-                    <Show when={index() > 0}>
+                      {/* Progress Bar */}
+                      <div style={{ flex: 1, position: 'relative' }}>
+                        <div
+                          style={{
+                            height: '28px',
+                            background: 'rgba(255, 255, 255, 0.05)',
+                            'border-radius': '8px',
+                            overflow: 'hidden',
+                            position: 'relative',
+                          }}
+                        >
+                          <div
+                            style={{
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                              height: '100%',
+                              width: `${percentage()}%`,
+                              background: stage.color.gradient,
+                              'border-radius': '8px',
+                              transition: `width ${pipelineAnimations.slow} ease`,
+                              opacity: reached() > 0 ? 1 : 0.3,
+                            }}
+                          />
+                          {/* Count Badge */}
+                          <div
+                            style={{
+                              position: 'absolute',
+                              left: '12px',
+                              top: '50%',
+                              transform: 'translateY(-50%)',
+                              'font-size': '13px',
+                              'font-family': "'Space Grotesk', system-ui, sans-serif",
+                              'font-weight': '600',
+                              color: reached() > 0 ? '#FFFFFF' : theme().colors.textMuted,
+                              'text-shadow': reached() > 0 ? '0 1px 2px rgba(0,0,0,0.3)' : 'none',
+                            }}
+                          >
+                            {reached()}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Metrics */}
                       <div
                         style={{
-                          padding: '4px 8px',
-                          background:
-                            getConversionRate() > 0
-                              ? 'rgba(16, 185, 129, 0.15)'
-                              : 'rgba(255, 255, 255, 0.05)',
-                          border:
-                            getConversionRate() > 0
-                              ? '1px solid rgba(16, 185, 129, 0.3)'
-                              : '1px solid rgba(255, 255, 255, 0.1)',
-                          'border-radius': '4px',
-                          'font-size': '11px',
-                          'font-family': "'Space Grotesk', system-ui, sans-serif",
-                          color: getConversionRate() > 0 ? '#34D399' : theme().colors.textMuted,
-                          'font-weight': '600',
+                          width: '100px',
+                          display: 'flex',
+                          gap: '8px',
+                          'justify-content': 'flex-end',
                         }}
                       >
-                        {formatPercent(getConversionRate())}%
+                        <Show when={index() > 0}>
+                          <div
+                            style={{
+                              padding: '4px 8px',
+                              background:
+                                getConversionRate() > 0
+                                  ? 'rgba(16, 185, 129, 0.15)'
+                                  : 'rgba(255, 255, 255, 0.05)',
+                              border:
+                                getConversionRate() > 0
+                                  ? '1px solid rgba(16, 185, 129, 0.3)'
+                                  : '1px solid rgba(255, 255, 255, 0.1)',
+                              'border-radius': '4px',
+                              'font-size': '11px',
+                              'font-family': "'Space Grotesk', system-ui, sans-serif",
+                              color: getConversionRate() > 0 ? '#34D399' : theme().colors.textMuted,
+                              'font-weight': '600',
+                            }}
+                          >
+                            {formatPercent(getConversionRate())}%
+                          </div>
+                        </Show>
                       </div>
-                    </Show>
-                  </div>
-                </div>
-              );
-            }}
-          </For>
+                    </div>
+                  </Show>
+                );
+              }}
+            </For>
+          </div>
         </div>
-      </FluidCard>
+      </AggregationAccordion>
 
       {/* Key Metrics */}
       <div
@@ -702,209 +785,402 @@ const AnalyticsTab: Component<TabProps> = (props) => {
           theme={theme}
           hasData={analytics().avgTimeToOffer !== null}
         />
+        <MetricCard
+          title="Rejection Rate"
+          description="Applications rejected by company"
+          value={formatPercent(analytics().rejectionRate)}
+          unit="%"
+          icon={IconX}
+          color={statusColors.rejected.text}
+          theme={theme}
+          hasData={analytics().totalApplied > 0}
+        />
+        <MetricCard
+          title="Withdrawal Rate"
+          description="Applications withdrawn by candidate"
+          value={formatPercent(analytics().withdrawalRate)}
+          unit="%"
+          icon={IconX}
+          color={statusColors.withdrawn.text}
+          theme={theme}
+          hasData={analytics().totalApplied > 0}
+        />
       </div>
 
       {/* Stage Breakdown */}
-      <FluidCard variant="default">
-        <div
-          style={{
-            'margin-bottom': '16px',
-            display: 'flex',
-            'justify-content': 'space-between',
-            'align-items': 'center',
-          }}
-        >
-          <div>
-            <h4
+      <AggregationAccordion
+        title="Stage-by-Stage Breakdown"
+        count={analytics().total}
+        defaultExpanded={false}
+        currentTheme={theme}
+      >
+        <div style={{ padding: '20px' }}>
+          <div
+            style={{
+              'margin-bottom': '16px',
+              display: 'flex',
+              'justify-content': 'flex-end',
+              'align-items': 'center',
+            }}
+          >
+            <div
               style={{
-                margin: '0 0 4px',
-                'font-size': '18px',
-                'font-family': "'Playfair Display', Georgia, serif",
-                'font-weight': '600',
-                color: theme().colors.text,
-              }}
-            >
-              Stage-by-Stage Breakdown
-            </h4>
-            <p
-              style={{
-                margin: 0,
-                'font-size': '13px',
+                padding: '6px 12px',
+                background: 'rgba(255, 255, 255, 0.05)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                'border-radius': '6px',
+                'font-size': '12px',
                 'font-family': "'Space Grotesk', system-ui, sans-serif",
                 color: theme().colors.textMuted,
+                display: 'flex',
+                'align-items': 'center',
+                gap: '6px',
               }}
             >
-              Detailed metrics for each pipeline stage
-            </p>
+              <IconFilter size={14} />
+              All Time
+            </div>
           </div>
-          <div
-            style={{
-              padding: '6px 12px',
-              background: 'rgba(255, 255, 255, 0.05)',
-              border: '1px solid rgba(255, 255, 255, 0.1)',
-              'border-radius': '6px',
-              'font-size': '12px',
-              'font-family': "'Space Grotesk', system-ui, sans-serif",
-              color: theme().colors.textMuted,
-              display: 'flex',
-              'align-items': 'center',
-              gap: '6px',
-            }}
-          >
-            <IconFilter size={14} />
-            All Time
-          </div>
-        </div>
 
-        {/* Table Header */}
-        <div
-          style={{
-            display: 'grid',
-            'grid-template-columns': '1fr 80px 100px 100px',
-            gap: '16px',
-            padding: '12px 16px',
-            background: 'rgba(255, 255, 255, 0.03)',
-            'border-radius': '8px',
-            'margin-bottom': '8px',
-          }}
-        >
+          {/* Table Header */}
           <div
             style={{
-              'font-size': '11px',
-              'font-family': "'Space Grotesk', system-ui, sans-serif",
-              color: theme().colors.textMuted,
-              'text-transform': 'uppercase',
-              'letter-spacing': '0.5px',
+              display: 'grid',
+              'grid-template-columns': '1fr 80px 100px 100px',
+              gap: '16px',
+              padding: '12px 16px',
+              background: 'rgba(255, 255, 255, 0.03)',
+              'border-radius': '8px',
+              'margin-bottom': '8px',
             }}
           >
-            Stage
+            <div
+              style={{
+                'font-size': '11px',
+                'font-family': "'Space Grotesk', system-ui, sans-serif",
+                color: theme().colors.textMuted,
+                'text-transform': 'uppercase',
+                'letter-spacing': '0.5px',
+              }}
+            >
+              Stage
+            </div>
+            <div
+              style={{
+                'font-size': '11px',
+                'font-family': "'Space Grotesk', system-ui, sans-serif",
+                color: theme().colors.textMuted,
+                'text-transform': 'uppercase',
+                'letter-spacing': '0.5px',
+                'text-align': 'center',
+              }}
+            >
+              Count
+            </div>
+            <div
+              style={{
+                'font-size': '11px',
+                'font-family': "'Space Grotesk', system-ui, sans-serif",
+                color: theme().colors.textMuted,
+                'text-transform': 'uppercase',
+                'letter-spacing': '0.5px',
+                'text-align': 'center',
+              }}
+            >
+              Avg. Duration
+            </div>
+            <div
+              style={{
+                'font-size': '11px',
+                'font-family': "'Space Grotesk', system-ui, sans-serif",
+                color: theme().colors.textMuted,
+                'text-transform': 'uppercase',
+                'letter-spacing': '0.5px',
+                'text-align': 'center',
+              }}
+            >
+              Drop-off
+            </div>
           </div>
-          <div
-            style={{
-              'font-size': '11px',
-              'font-family': "'Space Grotesk', system-ui, sans-serif",
-              color: theme().colors.textMuted,
-              'text-transform': 'uppercase',
-              'letter-spacing': '0.5px',
-              'text-align': 'center',
-            }}
-          >
-            Count
-          </div>
-          <div
-            style={{
-              'font-size': '11px',
-              'font-family': "'Space Grotesk', system-ui, sans-serif",
-              color: theme().colors.textMuted,
-              'text-transform': 'uppercase',
-              'letter-spacing': '0.5px',
-              'text-align': 'center',
-            }}
-          >
-            Avg. Duration
-          </div>
-          <div
-            style={{
-              'font-size': '11px',
-              'font-family': "'Space Grotesk', system-ui, sans-serif",
-              color: theme().colors.textMuted,
-              'text-transform': 'uppercase',
-              'letter-spacing': '0.5px',
-              'text-align': 'center',
-            }}
-          >
-            Drop-off
-          </div>
-        </div>
 
-        {/* Table Rows */}
-        <For each={funnelStages}>
-          {(stage, index) => {
-            const dropoffKeys = [
-              'saved',
-              'applied',
-              'screening',
-              'interviewing',
-              'offered',
-            ] as const;
-            const dropoffKey = index() < 5 ? dropoffKeys[index()] : undefined;
-            const dropoff = () => (dropoffKey ? analytics().dropoffs[dropoffKey] : null);
-            const duration = () => analytics().stageDurations[stage.status];
+          {/* Table Rows */}
+          <For each={funnelStages}>
+            {(stage, index) => {
+              const dropoffKeys = [
+                'saved',
+                'applied',
+                'screening',
+                'interviewing',
+                'offered',
+              ] as const;
+              const dropoffKey = index() < 5 ? dropoffKeys[index()] : undefined;
+              const dropoff = () => (dropoffKey ? analytics().dropoffs[dropoffKey] : null);
+              const duration = () => analytics().stageDurations[stage.status];
 
-            return (
-              <div
-                style={{
-                  display: 'grid',
-                  'grid-template-columns': '1fr 80px 100px 100px',
-                  gap: '16px',
-                  padding: '14px 16px',
-                  'border-bottom': '1px solid rgba(255, 255, 255, 0.05)',
-                  transition: `background ${pipelineAnimations.fast}`,
-                }}
-              >
-                <div style={{ display: 'flex', 'align-items': 'center', gap: '10px' }}>
+              // For terminal states (rejected/withdrawn), show count instead of dropoff
+              const isTerminal = stage.status === 'rejected' || stage.status === 'withdrawn';
+              const terminalCount = () =>
+                isTerminal ? analytics().statusCounts[stage.status] : null;
+
+              return (
+                <div
+                  style={{
+                    display: 'grid',
+                    'grid-template-columns': '1fr 80px 100px 100px',
+                    gap: '16px',
+                    padding: '14px 16px',
+                    'border-bottom': '1px solid rgba(255, 255, 255, 0.05)',
+                    transition: `background ${pipelineAnimations.fast}`,
+                  }}
+                >
+                  <div style={{ display: 'flex', 'align-items': 'center', gap: '10px' }}>
+                    <div
+                      style={{
+                        width: '8px',
+                        height: '8px',
+                        'border-radius': '50%',
+                        background: stage.color.gradient,
+                      }}
+                    />
+                    <span
+                      style={{
+                        'font-size': '14px',
+                        'font-family': "'Space Grotesk', system-ui, sans-serif",
+                        color: theme().colors.text,
+                      }}
+                    >
+                      {stage.label}
+                    </span>
+                  </div>
                   <div
-                    style={{
-                      width: '8px',
-                      height: '8px',
-                      'border-radius': '50%',
-                      background: stage.color.gradient,
-                    }}
-                  />
-                  <span
                     style={{
                       'font-size': '14px',
                       'font-family': "'Space Grotesk', system-ui, sans-serif",
-                      color: theme().colors.text,
-                    }}
-                  >
-                    {stage.label}
-                  </span>
-                </div>
-                <div
-                  style={{
-                    'font-size': '14px',
-                    'font-family': "'Space Grotesk', system-ui, sans-serif",
-                    color:
-                      analytics().reachedStage[stage.status] > 0
+                      color: (
+                        isTerminal
+                          ? terminalCount()! > 0
+                          : analytics().reachedStage[stage.status] > 0
+                      )
                         ? theme().colors.text
                         : theme().colors.textMuted,
-                    'text-align': 'center',
-                    'font-weight': analytics().reachedStage[stage.status] > 0 ? '600' : '400',
-                  }}
-                >
-                  {analytics().reachedStage[stage.status]}
+                      'text-align': 'center',
+                      'font-weight': (
+                        isTerminal
+                          ? terminalCount()! > 0
+                          : analytics().reachedStage[stage.status] > 0
+                      )
+                        ? '600'
+                        : '400',
+                    }}
+                  >
+                    {isTerminal ? terminalCount() : analytics().reachedStage[stage.status]}
+                  </div>
+                  <div
+                    style={{
+                      'font-size': '14px',
+                      'font-family': "'Space Grotesk', system-ui, sans-serif",
+                      color: theme().colors.textMuted,
+                      'text-align': 'center',
+                    }}
+                  >
+                    {formatDuration(duration())}
+                  </div>
+                  <div
+                    style={{
+                      'font-size': '14px',
+                      'font-family': "'Space Grotesk', system-ui, sans-serif",
+                      color:
+                        dropoff() !== null && dropoff()! > 50
+                          ? '#F87171'
+                          : dropoff() !== null && dropoff()! > 25
+                            ? '#FBBF24'
+                            : theme().colors.textMuted,
+                      'text-align': 'center',
+                    }}
+                  >
+                    {isTerminal
+                      ? '--'
+                      : dropoff() !== null
+                        ? `${formatPercent(dropoff()!)}%`
+                        : '--'}
+                  </div>
                 </div>
-                <div
-                  style={{
-                    'font-size': '14px',
-                    'font-family': "'Space Grotesk', system-ui, sans-serif",
-                    color: theme().colors.textMuted,
-                    'text-align': 'center',
-                  }}
-                >
-                  {formatDuration(duration())}
+              );
+            }}
+          </For>
+        </div>
+      </AggregationAccordion>
+
+      {/* Rejection & Withdrawal Breakdown - Show where rejections/withdrawals occurred */}
+      <Show when={analytics().totalRejected > 0 || analytics().totalWithdrawn > 0}>
+        <AggregationAccordion
+          title="Rejection & Withdrawal Analysis"
+          count={analytics().totalRejected + analytics().totalWithdrawn}
+          defaultExpanded={false}
+          accentColor={statusColors.rejected.text}
+          currentTheme={theme}
+        >
+          <div style={{ padding: '20px' }}>
+            <div style={{ display: 'flex', 'flex-direction': 'column', gap: '16px' }}>
+              {/* Rejections by Stage */}
+              <Show when={analytics().totalRejected > 0}>
+                <div>
+                  <div
+                    style={{
+                      'font-size': '13px',
+                      'font-family': "'Space Grotesk', system-ui, sans-serif",
+                      color: theme().colors.text,
+                      'font-weight': '600',
+                      'margin-bottom': '12px',
+                      display: 'flex',
+                      'align-items': 'center',
+                      gap: '8px',
+                    }}
+                  >
+                    <IconX size={14} color={statusColors.rejected.text} />
+                    <span>Rejections ({analytics().totalRejected} total)</span>
+                  </div>
+                  <div style={{ display: 'flex', 'flex-direction': 'column', gap: '8px' }}>
+                    <For each={PIPELINE_STAGES.filter((s) => analytics().rejectionsByStage[s] > 0)}>
+                      {(stage) => {
+                        const count = analytics().rejectionsByStage[stage];
+                        const percentage =
+                          analytics().totalRejected > 0
+                            ? (count / analytics().totalRejected) * 100
+                            : 0;
+                        const stageColor =
+                          statusColors[stage as keyof typeof statusColors] || statusColors.saved;
+
+                        return (
+                          <div
+                            style={{
+                              display: 'flex',
+                              'align-items': 'center',
+                              gap: '12px',
+                              padding: '8px 12px',
+                              background: 'rgba(255, 255, 255, 0.02)',
+                              'border-radius': '8px',
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: '6px',
+                                height: '6px',
+                                'border-radius': '50%',
+                                background: stageColor.gradient,
+                              }}
+                            />
+                            <div style={{ flex: 1 }}>
+                              <span
+                                style={{
+                                  'font-size': '13px',
+                                  'font-family': "'Space Grotesk', system-ui, sans-serif",
+                                  color: theme().colors.text,
+                                }}
+                              >
+                                Rejected at {STATUS_LABELS[stage]}
+                              </span>
+                            </div>
+                            <div
+                              style={{
+                                'font-size': '13px',
+                                'font-family': "'Space Grotesk', system-ui, sans-serif",
+                                color: theme().colors.textMuted,
+                                'font-weight': '600',
+                              }}
+                            >
+                              {count} ({formatPercent(percentage)}%)
+                            </div>
+                          </div>
+                        );
+                      }}
+                    </For>
+                  </div>
                 </div>
-                <div
-                  style={{
-                    'font-size': '14px',
-                    'font-family': "'Space Grotesk', system-ui, sans-serif",
-                    color:
-                      dropoff() !== null && dropoff()! > 50
-                        ? '#F87171'
-                        : dropoff() !== null && dropoff()! > 25
-                          ? '#FBBF24'
-                          : theme().colors.textMuted,
-                    'text-align': 'center',
-                  }}
-                >
-                  {dropoff() !== null ? `${formatPercent(dropoff()!)}%` : '--'}
+              </Show>
+
+              {/* Withdrawals by Stage */}
+              <Show when={analytics().totalWithdrawn > 0}>
+                <div>
+                  <div
+                    style={{
+                      'font-size': '13px',
+                      'font-family': "'Space Grotesk', system-ui, sans-serif",
+                      color: theme().colors.text,
+                      'font-weight': '600',
+                      'margin-bottom': '12px',
+                      display: 'flex',
+                      'align-items': 'center',
+                      gap: '8px',
+                    }}
+                  >
+                    <IconX size={14} color={statusColors.withdrawn.text} />
+                    <span>Withdrawals ({analytics().totalWithdrawn} total)</span>
+                  </div>
+                  <div style={{ display: 'flex', 'flex-direction': 'column', gap: '8px' }}>
+                    <For
+                      each={PIPELINE_STAGES.filter((s) => analytics().withdrawalsByStage[s] > 0)}
+                    >
+                      {(stage) => {
+                        const count = analytics().withdrawalsByStage[stage];
+                        const percentage =
+                          analytics().totalWithdrawn > 0
+                            ? (count / analytics().totalWithdrawn) * 100
+                            : 0;
+                        const stageColor =
+                          statusColors[stage as keyof typeof statusColors] || statusColors.saved;
+
+                        return (
+                          <div
+                            style={{
+                              display: 'flex',
+                              'align-items': 'center',
+                              gap: '12px',
+                              padding: '8px 12px',
+                              background: 'rgba(255, 255, 255, 0.02)',
+                              'border-radius': '8px',
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: '6px',
+                                height: '6px',
+                                'border-radius': '50%',
+                                background: stageColor.gradient,
+                              }}
+                            />
+                            <div style={{ flex: 1 }}>
+                              <span
+                                style={{
+                                  'font-size': '13px',
+                                  'font-family': "'Space Grotesk', system-ui, sans-serif",
+                                  color: theme().colors.text,
+                                }}
+                              >
+                                Withdrawn from {STATUS_LABELS[stage]}
+                              </span>
+                            </div>
+                            <div
+                              style={{
+                                'font-size': '13px',
+                                'font-family': "'Space Grotesk', system-ui, sans-serif",
+                                color: theme().colors.textMuted,
+                                'font-weight': '600',
+                              }}
+                            >
+                              {count} ({formatPercent(percentage)}%)
+                            </div>
+                          </div>
+                        );
+                      }}
+                    </For>
+                  </div>
                 </div>
-              </div>
-            );
-          }}
-        </For>
-      </FluidCard>
+              </Show>
+            </div>
+          </div>
+        </AggregationAccordion>
+      </Show>
     </div>
   );
 };
@@ -989,9 +1265,17 @@ const MetricCard: Component<MetricCardProps> = (props) => {
 };
 
 // Trends Tab Component
+import { TrendsHeroChart } from '../trends/components/TrendsHeroChart';
+import { PredictiveInsights } from '../trends/components/PredictiveInsights';
+import { useTrendsData } from '../trends/hooks/useTrendsData';
+import type { TimeRange } from '../trends/trends-data';
+
 const TrendsTab: Component<TabProps> = (props) => {
   const theme = () => props.theme();
-  const [selectedRange, setSelectedRange] = createSignal<'7d' | '30d' | '90d' | 'all'>('30d');
+  const [selectedRange, setSelectedRange] = createSignal<TimeRange>('30d');
+
+  // Get reactive trends data
+  const trendsData = useTrendsData(() => pipelineStore.state.applications, selectedRange);
 
   const timeRanges = [
     { id: '7d' as const, label: 'Last 7 days' },
@@ -1000,98 +1284,18 @@ const TrendsTab: Component<TabProps> = (props) => {
     { id: 'all' as const, label: 'All time' },
   ];
 
-  // Activity metrics that will be tracked
-  const activityMetrics = [
-    { label: 'Applications Sent', color: statusColors.applied.text, placeholder: '--' },
-    { label: 'Responses Received', color: statusColors.screening.text, placeholder: '--' },
-    { label: 'Interviews Scheduled', color: statusColors.interviewing.text, placeholder: '--' },
-    { label: 'Offers Received', color: statusColors.offered.text, placeholder: '--' },
-  ];
-
   return (
     <div style={{ display: 'flex', 'flex-direction': 'column', gap: '24px' }}>
-      {/* Coming Soon Banner */}
-      <FluidCard variant="outlined" style={{ 'border-color': 'rgba(139, 92, 246, 0.3)' }}>
-        <div style={{ display: 'flex', 'align-items': 'center', gap: '16px' }}>
-          <div
-            style={{
-              width: '48px',
-              height: '48px',
-              'border-radius': '12px',
-              background: 'rgba(139, 92, 246, 0.15)',
-              border: '1px solid rgba(139, 92, 246, 0.3)',
-              display: 'flex',
-              'align-items': 'center',
-              'justify-content': 'center',
-              'flex-shrink': 0,
-            }}
-          >
-            <IconClock size={24} color="#A78BFA" />
-          </div>
-          <div style={{ flex: 1 }}>
-            <h3
-              style={{
-                margin: '0 0 4px',
-                'font-size': '16px',
-                'font-family': "'Playfair Display', Georgia, serif",
-                'font-weight': '600',
-                color: theme().colors.text,
-              }}
-            >
-              Trends Dashboard Coming Soon
-            </h3>
-            <p
-              style={{
-                margin: 0,
-                'font-size': '13px',
-                'font-family': "'Space Grotesk', system-ui, sans-serif",
-                color: theme().colors.textMuted,
-                'line-height': '1.5',
-              }}
-            >
-              Activity timelines, application velocity, and historical performance tracking
-            </p>
-          </div>
-          <div
-            style={{
-              padding: '6px 12px',
-              background: 'rgba(139, 92, 246, 0.15)',
-              border: '1px solid rgba(139, 92, 246, 0.3)',
-              'border-radius': '6px',
-              'font-size': '11px',
-              'font-family': "'Space Grotesk', system-ui, sans-serif",
-              color: '#A78BFA',
-              'text-transform': 'uppercase',
-              'letter-spacing': '0.5px',
-              'font-weight': '600',
-            }}
-          >
-            Preview
-          </div>
-        </div>
-      </FluidCard>
-
       {/* Time Range Selector */}
       <div
         style={{
           display: 'flex',
-          'justify-content': 'space-between',
+          'justify-content': 'flex-end',
           'align-items': 'center',
           'flex-wrap': 'wrap',
           gap: '16px',
         }}
       >
-        <h4
-          style={{
-            margin: 0,
-            'font-size': '18px',
-            'font-family': "'Playfair Display', Georgia, serif",
-            'font-weight': '600',
-            color: theme().colors.text,
-          }}
-        >
-          Activity Timeline
-        </h4>
         <div
           role="group"
           aria-label="Time range selection"
@@ -1112,15 +1316,18 @@ const TrendsTab: Component<TabProps> = (props) => {
                 style={{
                   padding: '8px 16px',
                   background:
-                    selectedRange() === range.id ? 'rgba(139, 92, 246, 0.2)' : 'transparent',
+                    selectedRange() === range.id ? `${theme().colors.primary}30` : 'transparent',
                   border:
                     selectedRange() === range.id
-                      ? '1px solid rgba(139, 92, 246, 0.4)'
+                      ? `1px solid ${theme().colors.primary}60`
                       : '1px solid transparent',
                   'border-radius': '8px',
                   'font-size': '13px',
                   'font-family': "'Space Grotesk', system-ui, sans-serif",
-                  color: selectedRange() === range.id ? '#A78BFA' : theme().colors.textMuted,
+                  color:
+                    selectedRange() === range.id
+                      ? theme().colors.primary
+                      : theme().colors.textMuted,
                   'font-weight': selectedRange() === range.id ? '600' : '400',
                   cursor: 'pointer',
                   transition: `all ${pipelineAnimations.fast}`,
@@ -1133,254 +1340,18 @@ const TrendsTab: Component<TabProps> = (props) => {
         </div>
       </div>
 
-      {/* Mock Chart Area */}
-      <FluidCard variant="default">
-        <div style={{ position: 'relative', height: '280px', overflow: 'hidden' }}>
-          {/* Y-axis labels */}
-          <div
-            style={{
-              position: 'absolute',
-              left: 0,
-              top: 0,
-              bottom: '40px',
-              width: '40px',
-              display: 'flex',
-              'flex-direction': 'column',
-              'justify-content': 'space-between',
-              'padding-right': '8px',
-            }}
-          >
-            <For each={[15, 10, 5, 0]}>
-              {(val) => (
-                <span
-                  style={{
-                    'font-size': '10px',
-                    'font-family': "'Space Grotesk', system-ui, sans-serif",
-                    color: theme().colors.textMuted,
-                    'text-align': 'right',
-                  }}
-                >
-                  {val}
-                </span>
-              )}
-            </For>
-          </div>
+      {/* Hero Chart with Timeline/Velocity Toggle */}
+      <TrendsHeroChart
+        timeSeriesData={trendsData().timeSeriesData}
+        velocityMetrics={trendsData().velocityMetrics}
+        currentTheme={theme}
+      />
 
-          {/* Chart grid and bars */}
-          <div
-            style={{
-              position: 'absolute',
-              left: '48px',
-              right: '16px',
-              top: 0,
-              bottom: '40px',
-            }}
-          >
-            {/* Grid lines */}
-            <For each={[0, 1, 2, 3]}>
-              {() => (
-                <div
-                  style={{
-                    position: 'absolute',
-                    left: 0,
-                    right: 0,
-                    height: '1px',
-                    background: 'rgba(255, 255, 255, 0.05)',
-                  }}
-                />
-              )}
-            </For>
-
-            {/* Placeholder bars */}
-            <div
-              style={{
-                display: 'flex',
-                'align-items': 'flex-end',
-                'justify-content': 'space-between',
-                height: '100%',
-                gap: '8px',
-              }}
-            >
-              <For each={Array(12).fill(0)}>
-                {() => {
-                  const height = () => Math.random() * 60 + 20;
-                  return (
-                    <div
-                      style={{
-                        flex: 1,
-                        height: `${height()}%`,
-                        background:
-                          'linear-gradient(180deg, rgba(139, 92, 246, 0.4), rgba(139, 92, 246, 0.1))',
-                        'border-radius': '4px 4px 0 0',
-                        opacity: 0.5,
-                        transition: `height ${pipelineAnimations.slow}`,
-                      }}
-                    />
-                  );
-                }}
-              </For>
-            </div>
-          </div>
-
-          {/* X-axis labels placeholder */}
-          <div
-            style={{
-              position: 'absolute',
-              left: '48px',
-              right: '16px',
-              bottom: 0,
-              height: '32px',
-              display: 'flex',
-              'justify-content': 'space-between',
-              'align-items': 'flex-start',
-              'padding-top': '8px',
-              'border-top': '1px solid rgba(255, 255, 255, 0.08)',
-            }}
-          >
-            <For each={['W1', 'W2', 'W3', 'W4']}>
-              {(label) => (
-                <span
-                  style={{
-                    'font-size': '10px',
-                    'font-family': "'Space Grotesk', system-ui, sans-serif",
-                    color: theme().colors.textMuted,
-                  }}
-                >
-                  {label}
-                </span>
-              )}
-            </For>
-          </div>
-
-          {/* Overlay message */}
-          <div
-            style={{
-              position: 'absolute',
-              inset: 0,
-              display: 'flex',
-              'align-items': 'center',
-              'justify-content': 'center',
-              background: 'rgba(0, 0, 0, 0.3)',
-              'backdrop-filter': 'blur(2px)',
-              'border-radius': '12px',
-            }}
-          >
-            <div
-              style={{
-                padding: '16px 24px',
-                background: 'rgba(30, 30, 35, 0.95)',
-                border: '1px solid rgba(139, 92, 246, 0.3)',
-                'border-radius': '12px',
-                'text-align': 'center',
-              }}
-            >
-              <IconClock size={24} color="#A78BFA" />
-              <p
-                style={{
-                  margin: '8px 0 0',
-                  'font-size': '14px',
-                  'font-family': "'Space Grotesk', system-ui, sans-serif",
-                  color: theme().colors.text,
-                }}
-              >
-                Activity chart will appear here
-              </p>
-            </div>
-          </div>
-        </div>
-      </FluidCard>
-
-      {/* Activity Metrics Summary */}
-      <div
-        style={{
-          display: 'grid',
-          'grid-template-columns': 'repeat(auto-fit, minmax(180px, 1fr))',
-          gap: '16px',
-        }}
-      >
-        <For each={activityMetrics}>
-          {(metric) => (
-            <FluidCard variant="stat" accentColor={metric.color}>
-              <div style={{ display: 'flex', 'flex-direction': 'column', gap: '8px' }}>
-                <div
-                  style={{
-                    width: '8px',
-                    height: '8px',
-                    'border-radius': '50%',
-                    background: metric.color,
-                  }}
-                />
-                <div
-                  style={{
-                    'font-size': '24px',
-                    'font-weight': '700',
-                    'font-family': "'Space Grotesk', system-ui, sans-serif",
-                    color: theme().colors.textMuted,
-                  }}
-                >
-                  {metric.placeholder}
-                </div>
-                <div
-                  style={{
-                    'font-size': '12px',
-                    'font-family': "'Space Grotesk', system-ui, sans-serif",
-                    color: theme().colors.text,
-                  }}
-                >
-                  {metric.label}
-                </div>
-              </div>
-            </FluidCard>
-          )}
-        </For>
-      </div>
-
-      {/* What We'll Track Section */}
-      <FluidCard variant="default">
-        <h4
-          style={{
-            margin: '0 0 16px',
-            'font-size': '16px',
-            'font-family': "'Playfair Display', Georgia, serif",
-            'font-weight': '600',
-            color: theme().colors.text,
-          }}
-        >
-          What We'll Track
-        </h4>
-        <div
-          style={{
-            display: 'grid',
-            'grid-template-columns': 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: '12px',
-          }}
-        >
-          <TrendFeatureItem
-            icon={IconTrendingUp}
-            label="Application velocity"
-            description="How many apps per week"
-            theme={theme}
-          />
-          <TrendFeatureItem
-            icon={IconClock}
-            label="Response times"
-            description="Average time to hear back"
-            theme={theme}
-          />
-          <TrendFeatureItem
-            icon={IconMessage}
-            label="Interview patterns"
-            description="Peak interview weeks"
-            theme={theme}
-          />
-          <TrendFeatureItem
-            icon={IconStar}
-            label="Success streaks"
-            description="Track winning patterns"
-            theme={theme}
-          />
-        </div>
-      </FluidCard>
+      {/* Predictive Insights */}
+      <PredictiveInsights
+        applications={pipelineStore.state.applications}
+        applicationsPerWeek={trendsData().velocityMetrics.applicationsPerWeek}
+      />
     </div>
   );
 };

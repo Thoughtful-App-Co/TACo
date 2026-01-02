@@ -5,6 +5,7 @@
  */
 
 import { Component, createMemo, For } from 'solid-js';
+import { Portal } from 'solid-js/web';
 import { liquidTenure, statusColors } from '../theme/liquid-tenure';
 import {
   JobApplication,
@@ -102,174 +103,176 @@ export const SankeyTooltip: Component<SankeyTooltipProps> = (props) => {
   };
 
   return (
-    <div
-      style={{
-        position: 'fixed',
-        top: `${props.position.y}px`,
-        left: `${props.position.x}px`,
-        transform: props.position.alignRight
-          ? 'translate(-100%, -50%)' // Align right edge to position
-          : 'translateY(-50%)', // Align left edge to position
-        'min-width': '280px',
-        'max-width': '320px',
-        background: 'linear-gradient(135deg, rgba(15, 15, 22, 0.98), rgba(10, 10, 15, 0.98))',
-        border: `1px solid ${color().border}`,
-        'border-radius': `${DESIGN.radii.md}px`,
-        'box-shadow': `0 8px 32px rgba(0, 0, 0, 0.6), 0 0 0 1px ${color().text}15`,
-        'z-index': 1000,
-        overflow: 'hidden',
-        'backdrop-filter': 'blur(12px)',
-        'pointer-events': 'none',
-      }}
-    >
-      {/* Tooltip Header */}
+    <Portal>
       <div
         style={{
-          padding: `${DESIGN.spacing.sm}px ${DESIGN.spacing.md}px`,
-          background: `linear-gradient(135deg, ${color().bg}, transparent)`,
-          'border-bottom': `1px solid ${color().border}`,
+          position: 'fixed',
+          top: `${props.position.y}px`,
+          left: `${props.position.x}px`,
+          transform: props.position.alignRight
+            ? 'translate(-100%, -50%)' // Align right edge to position
+            : 'translateY(-50%)', // Align left edge to position
+          'min-width': '280px',
+          'max-width': '320px',
+          background: 'linear-gradient(135deg, rgba(15, 15, 22, 0.98), rgba(10, 10, 15, 0.98))',
+          border: `1px solid ${color().border}`,
+          'border-radius': `${DESIGN.radii.md}px`,
+          'box-shadow': `0 8px 32px rgba(0, 0, 0, 0.6), 0 0 0 1px ${color().text}15`,
+          'z-index': 1000,
+          overflow: 'hidden',
+          'backdrop-filter': 'blur(12px)',
+          'pointer-events': 'none',
         }}
       >
+        {/* Tooltip Header */}
         <div
-          style={{ display: 'flex', 'align-items': 'center', 'justify-content': 'space-between' }}
+          style={{
+            padding: `${DESIGN.spacing.sm}px ${DESIGN.spacing.md}px`,
+            background: `linear-gradient(135deg, ${color().bg}, transparent)`,
+            'border-bottom': `1px solid ${color().border}`,
+          }}
         >
-          <h4
-            style={{
-              margin: 0,
-              'font-size': '11px',
-              'font-family': DESIGN.fonts.body,
-              'font-weight': '600',
-              'text-transform': 'uppercase',
-              'letter-spacing': '0.05em',
-              color: color().text,
-            }}
+          <div
+            style={{ display: 'flex', 'align-items': 'center', 'justify-content': 'space-between' }}
           >
-            {STATUS_LABELS[props.status]}
-          </h4>
+            <h4
+              style={{
+                margin: 0,
+                'font-size': '11px',
+                'font-family': DESIGN.fonts.body,
+                'font-weight': '600',
+                'text-transform': 'uppercase',
+                'letter-spacing': '0.05em',
+                color: color().text,
+              }}
+            >
+              {STATUS_LABELS[props.status]}
+            </h4>
+            <div
+              style={{
+                'font-size': '14px',
+                'font-family': DESIGN.fonts.heading,
+                'font-weight': '700',
+                color: color().text,
+              }}
+            >
+              {totalCount()}
+            </div>
+          </div>
+        </div>
+
+        {/* Domain Sections */}
+        <div
+          style={{
+            padding: `${DESIGN.spacing.sm}px ${DESIGN.spacing.md}px`,
+          }}
+        >
+          <For each={Array.from(appsByDomain().entries()).slice(0, 3)}>
+            {([domain, apps], domainIndex) => (
+              <div
+                style={{
+                  'margin-bottom':
+                    domainIndex() < Array.from(appsByDomain().keys()).length - 1
+                      ? `${DESIGN.spacing.md}px`
+                      : '0',
+                }}
+              >
+                {/* Domain Header */}
+                <div
+                  style={{
+                    'font-size': '11px',
+                    'font-family': DESIGN.fonts.body,
+                    'font-weight': '600',
+                    'text-transform': 'uppercase',
+                    'letter-spacing': '0.05em',
+                    color: color().text,
+                    'margin-bottom': `${DESIGN.spacing.xs}px`,
+                    'padding-bottom': `${DESIGN.spacing.xs}px`,
+                    'border-bottom': `1px solid ${color().border}`,
+                  }}
+                >
+                  {domain} ({apps.length})
+                </div>
+
+                {/* Apps in this domain */}
+                <div style={{ 'margin-top': `${DESIGN.spacing.xs}px` }}>
+                  <For each={apps.slice(0, 3)}>
+                    {(app, index) => (
+                      <div
+                        style={{
+                          display: 'flex',
+                          'flex-direction': 'column',
+                          gap: '2px',
+                          padding: `${DESIGN.spacing.xs}px 0`,
+                          'font-size': '11px',
+                          'line-height': '1.3',
+                        }}
+                      >
+                        {/* Job Title */}
+                        <div
+                          style={{
+                            'font-weight': '500',
+                            color: theme().colors.text,
+                            overflow: 'hidden',
+                            'text-overflow': 'ellipsis',
+                            'white-space': 'nowrap',
+                          }}
+                        >
+                          {app.roleName}
+                        </div>
+
+                        {/* Age + Company */}
+                        <div
+                          style={{
+                            color: theme().colors.textMuted,
+                            overflow: 'hidden',
+                            'text-overflow': 'ellipsis',
+                            'white-space': 'nowrap',
+                            'font-size': '10px',
+                          }}
+                        >
+                          {getApplicationAge(app)} days • {app.companyName}
+                        </div>
+                      </div>
+                    )}
+                  </For>
+
+                  {/* Overflow for this domain */}
+                  {apps.length > 3 && (
+                    <div
+                      style={{
+                        'font-size': '10px',
+                        'font-family': DESIGN.fonts.body,
+                        color: theme().colors.textMuted,
+                        'font-style': 'italic',
+                        'margin-top': `${DESIGN.spacing.xs}px`,
+                      }}
+                    >
+                      +{apps.length - 3} more
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </For>
+
+          {/* Summary Footer */}
           <div
             style={{
-              'font-size': '14px',
-              'font-family': DESIGN.fonts.heading,
-              'font-weight': '700',
-              color: color().text,
+              'margin-top': `${DESIGN.spacing.md}px`,
+              'padding-top': `${DESIGN.spacing.sm}px`,
+              'border-top': `1px solid ${color().border}`,
+              'font-size': '11px',
+              'font-family': DESIGN.fonts.body,
+              color: theme().colors.textMuted,
+              'text-align': 'center',
             }}
           >
-            {totalCount()}
+            +{totalCount()} applications, average age {averageAge()} days
           </div>
         </div>
       </div>
-
-      {/* Domain Sections */}
-      <div
-        style={{
-          padding: `${DESIGN.spacing.sm}px ${DESIGN.spacing.md}px`,
-        }}
-      >
-        <For each={Array.from(appsByDomain().entries()).slice(0, 3)}>
-          {([domain, apps], domainIndex) => (
-            <div
-              style={{
-                'margin-bottom':
-                  domainIndex() < Array.from(appsByDomain().keys()).length - 1
-                    ? `${DESIGN.spacing.md}px`
-                    : '0',
-              }}
-            >
-              {/* Domain Header */}
-              <div
-                style={{
-                  'font-size': '11px',
-                  'font-family': DESIGN.fonts.body,
-                  'font-weight': '600',
-                  'text-transform': 'uppercase',
-                  'letter-spacing': '0.05em',
-                  color: color().text,
-                  'margin-bottom': `${DESIGN.spacing.xs}px`,
-                  'padding-bottom': `${DESIGN.spacing.xs}px`,
-                  'border-bottom': `1px solid ${color().border}`,
-                }}
-              >
-                {domain} ({apps.length})
-              </div>
-
-              {/* Apps in this domain */}
-              <div style={{ 'margin-top': `${DESIGN.spacing.xs}px` }}>
-                <For each={apps.slice(0, 3)}>
-                  {(app, index) => (
-                    <div
-                      style={{
-                        display: 'flex',
-                        'flex-direction': 'column',
-                        gap: '2px',
-                        padding: `${DESIGN.spacing.xs}px 0`,
-                        'font-size': '11px',
-                        'line-height': '1.3',
-                      }}
-                    >
-                      {/* Job Title */}
-                      <div
-                        style={{
-                          'font-weight': '500',
-                          color: theme().colors.text,
-                          overflow: 'hidden',
-                          'text-overflow': 'ellipsis',
-                          'white-space': 'nowrap',
-                        }}
-                      >
-                        {app.roleName}
-                      </div>
-
-                      {/* Age + Company */}
-                      <div
-                        style={{
-                          color: theme().colors.textMuted,
-                          overflow: 'hidden',
-                          'text-overflow': 'ellipsis',
-                          'white-space': 'nowrap',
-                          'font-size': '10px',
-                        }}
-                      >
-                        {getApplicationAge(app)} days • {app.companyName}
-                      </div>
-                    </div>
-                  )}
-                </For>
-
-                {/* Overflow for this domain */}
-                {apps.length > 3 && (
-                  <div
-                    style={{
-                      'font-size': '10px',
-                      'font-family': DESIGN.fonts.body,
-                      color: theme().colors.textMuted,
-                      'font-style': 'italic',
-                      'margin-top': `${DESIGN.spacing.xs}px`,
-                    }}
-                  >
-                    +{apps.length - 3} more
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </For>
-
-        {/* Summary Footer */}
-        <div
-          style={{
-            'margin-top': `${DESIGN.spacing.md}px`,
-            'padding-top': `${DESIGN.spacing.sm}px`,
-            'border-top': `1px solid ${color().border}`,
-            'font-size': '11px',
-            'font-family': DESIGN.fonts.body,
-            color: theme().colors.textMuted,
-            'text-align': 'center',
-          }}
-        >
-          +{totalCount()} applications, average age {averageAge()} days
-        </div>
-      </div>
-    </div>
+    </Portal>
   );
 };
 

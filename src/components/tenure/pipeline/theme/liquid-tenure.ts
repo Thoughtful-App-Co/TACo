@@ -298,6 +298,67 @@ export const pipelineKeyframes = `
     }
   }
 
+  /* Aurora background drift animations - very subtle, slow */
+  @keyframes aurora-drift-1 {
+    0%, 100% {
+      transform: translate(0, 0) scale(1);
+      opacity: 1;
+    }
+    25% {
+      transform: translate(2%, 3%) scale(1.02);
+      opacity: 0.95;
+    }
+    50% {
+      transform: translate(-1%, 5%) scale(1.01);
+      opacity: 0.9;
+    }
+    75% {
+      transform: translate(-2%, 2%) scale(1.03);
+      opacity: 0.95;
+    }
+  }
+
+  @keyframes aurora-drift-2 {
+    0%, 100% {
+      transform: translate(0, 0) scale(1);
+      opacity: 1;
+    }
+    33% {
+      transform: translate(-3%, 2%) scale(1.02);
+      opacity: 0.92;
+    }
+    66% {
+      transform: translate(2%, -2%) scale(0.98);
+      opacity: 0.88;
+    }
+  }
+
+  @keyframes aurora-drift-3 {
+    0%, 100% {
+      transform: translate(0, 0) scale(1);
+      opacity: 1;
+    }
+    40% {
+      transform: translate(3%, -3%) scale(1.03);
+      opacity: 0.9;
+    }
+    80% {
+      transform: translate(-2%, 2%) scale(0.99);
+      opacity: 0.95;
+    }
+  }
+
+  @keyframes aurora-drift-4 {
+    0%, 100% {
+      transform: translate(0, 0) scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: translate(1%, 2%) scale(1.05);
+      opacity: 0.85;
+    }
+  }
+
   .pipeline-card {
     animation: pipeline-fade-up 0.3s ${pipelineAnimations.flow} forwards;
   }
