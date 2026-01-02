@@ -29,14 +29,39 @@
     />
     <meta property="twitter:image" content="https://www.thoughtfulappo.co/og-image.png" />
 
+    <!-- PWA Manifest (dynamically switched per app) -->
+    <link rel="manifest" href="/manifest.json" id="pwa-manifest" />
+
+    <!-- Theme color (dynamically updated) -->
+    <meta name="theme-color" content="#FF6B6B" />
+
+    <!-- iOS PWA Support -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="TACo" />
+    <link rel="apple-touch-icon" href="/icons/taco/apple-touch-icon.png" />
+
+    <!-- MS Tile -->
+    <meta name="msapplication-TileColor" content="#0F0F1A" />
+    <meta name="msapplication-TileImage" content="/icons/taco/icon-144.png" />
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Dosis:wght@200;300;400;500;600;700;800&family=Gafata&display=swap"
       rel="stylesheet"
     />
+
+    <!-- 100% privacy-first analytics -->
+    <script async src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
   </head>
   <body>
+    <noscript
+      ><img
+        src="https://queue.simpleanalyticscdn.com/noscript.gif"
+        alt=""
+        referrerpolicy="no-referrer-when-downgrade"
+    /></noscript>
     <div id="root"></div>
     <script type="module" src="./src/index.tsx"></script>
   </body>
