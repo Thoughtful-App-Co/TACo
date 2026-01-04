@@ -14,6 +14,7 @@ import { useIOSMetaUpdater } from './lib/pwa/ios-meta';
 import { OfflineIndicator } from './components/common/OfflineIndicator';
 import { InstallBanner } from './components/common/InstallBanner';
 import { UpdateModal } from './components/common/UpdateModal';
+import { AccountButton } from './components/common/AccountButton';
 import { appMenuStore } from './stores/app-menu-store';
 
 type AppTab =
@@ -145,7 +146,7 @@ const apps: AppInfo[] = [
 const timelineConfig: Record<Timeline, { label: string; description: string; color: string }> = {
   now: {
     label: 'Now',
-    description: 'Active Development',
+    description: 'Alpha/Beta Testing',
     color: '#10B981', // Emerald
   },
   next: {
@@ -486,107 +487,128 @@ const AppItem: Component<{ app: AppInfo; onClick: () => void }> = (props) => {
         </span>
       </button>
 
-      {/* Tooltip */}
+      {/* Tooltip - Premium Dark Mode with Animated Gradient Border */}
       <Show when={showTooltip()}>
+        {/* Animated gradient border wrapper */}
         <div
-          id={`tooltip-${props.app.id}`}
-          role="tooltip"
           style={{
             position: 'absolute',
             bottom: 'calc(100% + 12px)',
             left: '50%',
             transform: 'translateX(-50%)',
-            width: '280px',
-            padding: '16px',
-            background: 'rgba(255, 255, 255, 0.98)',
-            'backdrop-filter': 'blur(12px)',
-            '-webkit-backdrop-filter': 'blur(12px)',
-            'border-radius': '12px',
-            'box-shadow': '0 8px 32px rgba(0, 0, 0, 0.2), 0 2px 8px rgba(0, 0, 0, 0.1)',
+            padding: '3px',
+            'border-radius': '16px',
+            background: `linear-gradient(90deg, 
+              #FF6B6B 0%, 
+              #FFE66D 33%, 
+              #4ECDC4 66%,
+              #FF6B6B 100%
+            )`,
+            'background-size': '300% 100%',
+            animation: 'tooltipBorderFlow 4s linear infinite, tooltipFadeIn 0.2s ease',
+            'box-shadow': `
+              0 0 40px rgba(255, 107, 107, 0.3),
+              0 24px 48px rgba(0, 0, 0, 0.6)
+            `,
             'z-index': 100,
-            animation: 'tooltipFadeIn 0.2s ease',
             'pointer-events': 'none',
           }}
         >
-          {/* Arrow */}
           <div
+            id={`tooltip-${props.app.id}`}
+            role="tooltip"
             style={{
-              position: 'absolute',
-              bottom: '-6px',
-              left: '50%',
-              transform: 'translateX(-50%) rotate(45deg)',
-              width: '12px',
-              height: '12px',
-              background: 'rgba(255, 255, 255, 0.98)',
-              'box-shadow': '2px 2px 4px rgba(0, 0, 0, 0.1)',
-            }}
-          />
-
-          {/* Content */}
-          <div
-            style={{
-              display: 'flex',
-              'align-items': 'center',
-              gap: '10px',
-              'margin-bottom': '10px',
+              width: '280px',
+              padding: '16px',
+              background: '#1A1A2E',
+              'backdrop-filter': 'blur(12px)',
+              '-webkit-backdrop-filter': 'blur(12px)',
+              'border-radius': 'calc(16px - 3px)',
+              position: 'relative',
             }}
           >
+            {/* Arrow with gradient glow */}
             <div
               style={{
-                width: '32px',
-                height: '32px',
-                'border-radius': '8px',
-                background: props.app.color,
+                position: 'absolute',
+                bottom: '-9px',
+                left: '50%',
+                transform: 'translateX(-50%) rotate(45deg)',
+                width: '14px',
+                height: '14px',
+                background: '#1A1A2E',
+                'box-shadow': '0 0 20px rgba(255, 107, 107, 0.2)',
+              }}
+            />
+
+            {/* Content */}
+            <div
+              style={{
                 display: 'flex',
                 'align-items': 'center',
-                'justify-content': 'center',
-                color: 'white',
-                'font-weight': '700',
-                'font-size': '14px',
-                'text-shadow':
-                  '0 0 2px rgba(0,0,0,0.8), 0 0 4px rgba(0,0,0,0.5), 1px 1px 0 rgba(0,0,0,0.3)',
+                gap: '10px',
+                'margin-bottom': '10px',
               }}
             >
-              <Show when={props.app.logo} fallback={props.app.name.charAt(0)}>
-                <img
-                  src={props.app.logo}
-                  alt={props.app.name}
-                  style={{ width: '26px', height: '26px', 'object-fit': 'contain' }}
-                />
-              </Show>
-            </div>
-            <div>
               <div
                 style={{
-                  'font-size': '15px',
-                  'font-weight': '600',
-                  color: '#1F2937',
-                  'line-height': '1.2',
+                  width: '32px',
+                  height: '32px',
+                  'border-radius': '8px',
+                  background: props.app.color,
+                  display: 'flex',
+                  'align-items': 'center',
+                  'justify-content': 'center',
+                  color: 'white',
+                  'font-weight': '700',
+                  'font-size': '14px',
+                  'text-shadow':
+                    '0 0 2px rgba(0,0,0,0.8), 0 0 4px rgba(0,0,0,0.5), 1px 1px 0 rgba(0,0,0,0.3)',
                 }}
               >
-                {props.app.name}
+                <Show when={props.app.logo} fallback={props.app.name.charAt(0)}>
+                  <img
+                    src={props.app.logo}
+                    alt={props.app.name}
+                    style={{ width: '26px', height: '26px', 'object-fit': 'contain' }}
+                  />
+                </Show>
               </div>
-              <div
-                style={{
-                  'font-size': '12px',
-                  color: '#6B7280',
-                }}
-              >
-                {props.app.description}
+              <div>
+                <div
+                  style={{
+                    'font-family': "'Shupp', 'DM Sans', system-ui, sans-serif",
+                    'font-size': '24px',
+                    'font-weight': '600',
+                    color: '#FFFFFF',
+                    'line-height': '1.2',
+                  }}
+                >
+                  {props.app.name}
+                </div>
+                <div
+                  style={{
+                    'font-size': '13px',
+                    'font-weight': '600',
+                    color: '#A0A0B8',
+                  }}
+                >
+                  {props.app.description}
+                </div>
               </div>
             </div>
-          </div>
 
-          <p
-            style={{
-              margin: 0,
-              'font-size': '13px',
-              'line-height': '1.5',
-              color: '#374151',
-            }}
-          >
-            {props.app.elevatorPitch}
-          </p>
+            <p
+              style={{
+                margin: 0,
+                'font-size': '14px',
+                'line-height': '1.5',
+                color: '#A0A0B8',
+              }}
+            >
+              {props.app.elevatorPitch}
+            </p>
+          </div>
         </div>
       </Show>
     </div>
@@ -625,6 +647,29 @@ const LandingPage: Component = () => {
           }
         `}
       </style>
+
+      {/* Top Navigation Bar */}
+      <nav
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          padding: isMobile() ? '12px 16px' : '16px 24px',
+          display: 'flex',
+          'justify-content': 'flex-end',
+          'align-items': 'center',
+          'z-index': 100,
+          background:
+            'linear-gradient(180deg, rgba(15, 15, 26, 0.95) 0%, rgba(15, 15, 26, 0) 100%)',
+          'pointer-events': 'none',
+        }}
+      >
+        {/* Sign Up Button - Top Right */}
+        <div style={{ 'pointer-events': 'auto' }}>
+          <AccountButton variant="header" label="Sign Up" />
+        </div>
+      </nav>
 
       {/* Decorative gradient orbs */}
       <div
@@ -1738,52 +1783,65 @@ const TabNavigation: Component<{
                 </div>
               </A>
 
-              {/* Settings Button */}
-              <button
-                onClick={() => {
-                  appMenuStore.close();
-                  navigate('/settings');
-                }}
-                aria-label="Settings"
+              {/* Account & Settings */}
+              <div
                 style={{
-                  width: isMobile() ? '40px' : '48px',
-                  height: isMobile() ? '40px' : '48px',
-                  'border-radius': '50%',
-                  background: 'rgba(255,255,255,0.05)',
-                  border: '1px solid rgba(255,255,255,0.1)',
                   display: 'flex',
                   'align-items': 'center',
-                  'justify-content': 'center',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  color: 'rgba(255,255,255,0.7)',
+                  gap: isMobile() ? '8px' : '12px',
                   'flex-shrink': 0,
                 }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
-                  e.currentTarget.style.color = 'white';
-                  e.currentTarget.style.transform = 'rotate(45deg)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-                  e.currentTarget.style.color = 'rgba(255,255,255,0.7)';
-                  e.currentTarget.style.transform = 'rotate(0deg)';
-                }}
               >
-                <svg
-                  width={isMobile() ? '20' : '24'}
-                  height={isMobile() ? '20' : '24'}
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+                {/* Account Button */}
+                <AccountButton variant={isMobile() ? 'header' : 'menu'} />
+
+                {/* Settings Button */}
+                <button
+                  onClick={() => {
+                    appMenuStore.close();
+                    navigate('/settings');
+                  }}
+                  aria-label="Settings"
+                  style={{
+                    width: isMobile() ? '40px' : '48px',
+                    height: isMobile() ? '40px' : '48px',
+                    'border-radius': '50%',
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    display: 'flex',
+                    'align-items': 'center',
+                    'justify-content': 'center',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    color: 'rgba(255,255,255,0.7)',
+                    'flex-shrink': 0,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
+                    e.currentTarget.style.color = 'white';
+                    e.currentTarget.style.transform = 'rotate(45deg)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+                    e.currentTarget.style.color = 'rgba(255,255,255,0.7)';
+                    e.currentTarget.style.transform = 'rotate(0deg)';
+                  }}
                 >
-                  <circle cx="12" cy="12" r="3" />
-                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-                </svg>
-              </button>
+                  <svg
+                    width={isMobile() ? '20' : '24'}
+                    height={isMobile() ? '20' : '24'}
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="3" />
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                  </svg>
+                </button>
+              </div>
             </div>
 
             {/* Timeline Tabs */}

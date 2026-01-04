@@ -3,15 +3,11 @@ import { render } from 'solid-js/web';
 import { Router, Route } from '@solidjs/router';
 import { App, LandingPage, AppPage } from './App';
 import { PricingPage } from './components/PricingPage';
+import { AuthProvider } from './lib/auth-context';
 
 // Initialize PWA service worker
 import { initPWA } from './lib/pwa/register';
 import { initInstallPrompt } from './lib/pwa/install-prompt';
-
-// Configure PDF.js worker globally
-// This must be done before any PDF parsing occurs
-import * as pdfjsLib from 'pdfjs-dist';
-pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
 
 // Initialize PWA
 initPWA();
@@ -109,6 +105,16 @@ globalStyles.textContent = `
        transform: translateX(-50%) translateY(0);
      }
    }
+   
+   /* Tooltip gradient border flow animation */
+   @keyframes tooltipBorderFlow {
+     0% {
+       background-position: 0% 50%;
+     }
+     100% {
+       background-position: 300% 50%;
+     }
+   }
 
    /* Spin animation */
    @keyframes spin {
@@ -176,12 +182,14 @@ const root = document.getElementById('root');
 if (root) {
   render(
     () => (
-      <Router root={App}>
-        <Route path="/" component={LandingPage} />
-        <Route path="/pricing" component={PricingPage} />
-        {/* All app routes - :appId handles base path, /* captures any sub-paths */}
-        <Route path="/:appId/*" component={AppPage} />
-      </Router>
+      <AuthProvider>
+        <Router root={App}>
+          <Route path="/" component={LandingPage} />
+          <Route path="/pricing" component={PricingPage} />
+          {/* All app routes - :appId handles base path, /* captures any sub-paths */}
+          <Route path="/:appId/*" component={AppPage} />
+        </Router>
+      </AuthProvider>
     ),
     root
   );
