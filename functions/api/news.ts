@@ -6,6 +6,10 @@
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
+import { createLogger } from '../lib/logger';
+
+const log = createLogger('PaperTrail');
+
 interface Env {
   GUARDIAN_API_KEY?: string;
   GNEWS_API_KEY?: string;
@@ -184,7 +188,7 @@ async function fetchGuardian(
   limit: number
 ): Promise<NormalizedArticle[]> {
   if (!env.GUARDIAN_API_KEY) {
-    console.log('[PaperTrail] Guardian API key not configured, skipping');
+    log.info('Guardian API key not configured, skipping');
     return [];
   }
 
@@ -203,14 +207,14 @@ async function fetchGuardian(
   try {
     const response = await fetch(url);
     if (!response.ok) {
-      console.error('[PaperTrail] Guardian API error:', response.status);
+      log.error('Guardian API error:', response.status);
       return [];
     }
 
     const data = await response.json();
     return normalizeGuardian(data.response?.results || []);
   } catch (error) {
-    console.error('[PaperTrail] Guardian fetch error:', error);
+    log.error('Guardian fetch error:', error);
     return [];
   }
 }
@@ -250,7 +254,7 @@ function normalizeGNews(articles: GNewsArticle[]): NormalizedArticle[] {
 
 async function fetchGNews(env: Env, query: string, limit: number): Promise<NormalizedArticle[]> {
   if (!env.GNEWS_API_KEY) {
-    console.log('[PaperTrail] GNews API key not configured, skipping');
+    log.info('GNews API key not configured, skipping');
     return [];
   }
 
@@ -268,14 +272,14 @@ async function fetchGNews(env: Env, query: string, limit: number): Promise<Norma
   try {
     const response = await fetch(url);
     if (!response.ok) {
-      console.error('[PaperTrail] GNews API error:', response.status);
+      log.error('GNews API error:', response.status);
       return [];
     }
 
     const data = await response.json();
     return normalizeGNews(data.articles || []);
   } catch (error) {
-    console.error('[PaperTrail] GNews fetch error:', error);
+    log.error('GNews fetch error:', error);
     return [];
   }
 }
@@ -295,14 +299,14 @@ async function fetchRSSFeeds(limit: number): Promise<NormalizedArticle[]> {
         });
 
         if (!response.ok) {
-          console.error(`[PaperTrail] RSS fetch failed: ${feed.name}`, response.status);
+          log.error(`RSS fetch failed: ${feed.name}`, response.status);
           return [];
         }
 
         const xml = await response.text();
         return parseRSS(xml, { name: feed.name, id: feed.id });
       } catch (error) {
-        console.error(`[PaperTrail] RSS error: ${feed.name}`, error);
+        log.error(`RSS error: ${feed.name}`, error);
         return [];
       }
     })
@@ -346,7 +350,7 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
     const section = url.searchParams.get('section') || '';
     const limit = parseInt(url.searchParams.get('limit') || '40', 10);
 
-    console.log('[PaperTrail] Fetching from multiple sources');
+    log.info('Fetching from multiple sources');
 
     // Fetch from Guardian, GNews (if configured), and RSS feeds in parallel
     const [guardianArticles, gnewsArticles, rssArticles] = await Promise.all([
@@ -369,8 +373,8 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
       .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime())
       .slice(0, limit);
 
-    console.log(
-      `[PaperTrail] Aggregated ${articles.length} articles from ${new Set(articles.map((a) => a.provider)).size} providers`
+    log.info(
+      `Aggregated ${articles.length} articles from ${new Set(articles.map((a) => a.provider)).size} providers`
     );
 
     return new Response(
@@ -384,7 +388,7 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
       { headers: corsHeaders }
     );
   } catch (error) {
-    console.error('[PaperTrail] Error:', error);
+    log.error('Error:', error);
     return new Response(JSON.stringify({ error: 'Internal server error' }), {
       status: 500,
       headers: corsHeaders,

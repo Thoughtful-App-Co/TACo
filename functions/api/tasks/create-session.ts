@@ -25,6 +25,7 @@ import {
   getBaseTaskTitle,
   getBaseStoryTitle,
 } from '../../../src/components/tempo/lib/transformUtils';
+import { tasksLog } from '../../lib/logger';
 
 // Cloudflare Pages Function for /api/tasks/create-session
 // Handles session creation with Claude AI scheduling
@@ -164,7 +165,7 @@ function findMatchingTaskTitle(searchTitle: string, availableTitles: string[]): 
   const normalizedSearch = normalizeTaskTitle(searchTitle);
 
   // Log for debugging
-  console.log(`Matching title: "${searchTitle}" normalized to "${normalizedSearch}"`);
+  tasksLog.debug(`Matching title: "${searchTitle}" normalized to "${normalizedSearch}"`);
 
   // First check for split task matches
   const splitMatches = availableTitles.filter(
@@ -173,7 +174,7 @@ function findMatchingTaskTitle(searchTitle: string, availableTitles: string[]): 
   );
 
   if (splitMatches.length > 0) {
-    console.log(`Found split task matches: ${splitMatches.join(', ')}`);
+    tasksLog.debug(`Found split task matches: ${splitMatches.join(', ')}`);
     // Return the first part to represent the whole task
     return splitMatches[0].split('(Part')[0].trim();
   }
@@ -181,12 +182,12 @@ function findMatchingTaskTitle(searchTitle: string, availableTitles: string[]): 
   // Try exact match first
   const exactMatch = availableTitles.find((title) => {
     const normalizedTitle = normalizeTaskTitle(title);
-    console.log(`Comparing with: "${title}" normalized to "${normalizedTitle}"`);
+    tasksLog.debug(`Comparing with: "${title}" normalized to "${normalizedTitle}"`);
     return normalizedTitle === normalizedSearch;
   });
 
   if (exactMatch) {
-    console.log(`Found exact match: "${exactMatch}"`);
+    tasksLog.debug(`Found exact match: "${exactMatch}"`);
     return exactMatch;
   }
 
@@ -205,11 +206,11 @@ function findMatchingTaskTitle(searchTitle: string, availableTitles: string[]): 
   });
 
   if (fuzzyMatch) {
-    console.log(`Found fuzzy match: "${fuzzyMatch}"`);
+    tasksLog.debug(`Found fuzzy match: "${fuzzyMatch}"`);
     return fuzzyMatch;
   }
 
-  console.log(`No match found for "${searchTitle}"`);
+  tasksLog.debug(`No match found for "${searchTitle}"`);
   return undefined;
 }
 
@@ -234,7 +235,7 @@ function findOriginalStory(
 ): StoryWithTitle | null {
   // Special case for "Break" blocks which don't correspond to actual stories
   if (storyTitle === 'Break' || storyTitle.toLowerCase().includes('break')) {
-    console.log(`Creating dummy story for special block: ${storyTitle}`);
+    tasksLog.debug(`Creating dummy story for special block: ${storyTitle}`);
     // Return a dummy story object with minimal required properties
     return {
       title: storyTitle,
@@ -255,7 +256,7 @@ function findOriginalStory(
       // Use the original title from mapping to find the story
       const originalStory = stories.find((s) => s.title === mapping.originalTitle);
       if (originalStory) {
-        console.log(`Found story using mapping: ${storyTitle} -> ${mapping.originalTitle}`);
+        tasksLog.debug(`Found story using mapping: ${storyTitle} -> ${mapping.originalTitle}`);
         return originalStory;
       }
     }
@@ -295,7 +296,7 @@ function findOriginalStory(
   });
 
   if (original) {
-    console.log(`Found story using fuzzy match: ${storyTitle} -> ${original.title}`);
+    tasksLog.debug(`Found story using fuzzy match: ${storyTitle} -> ${original.title}`);
   }
 
   return original || null;
@@ -444,7 +445,7 @@ function parseTimeString(timeStr: string): Date {
   }
 
   // Fallback to current time
-  console.warn(`Could not parse time string: ${timeStr}, using current time`);
+  tasksLog.warn(`Could not parse time string: ${timeStr}, using current time`);
   return result;
 }
 
@@ -479,7 +480,7 @@ function insertMissingBreaks(storyBlocks: StoryBlock[]): StoryBlock[] {
         const projectedWorkTime = consecutiveWorkTime + timeBox.duration;
 
         if (projectedWorkTime > DURATION_RULES.MAX_WORK_WITHOUT_BREAK && consecutiveWorkTime > 0) {
-          console.log(
+          tasksLog.debug(
             `Inserting break BEFORE work session "${timeBox.tasks?.[0]?.title || 'unknown'}" at ${formatTimeAsISO(currentTime)} (would exceed limit: ${projectedWorkTime} min)`
           );
 
@@ -572,7 +573,7 @@ async function retryWithBackoff<T>(operation: () => Promise<T>, retryCount = 0):
         RETRY_CONFIG.initialDelay * Math.pow(RETRY_CONFIG.backoffFactor, retryCount),
         RETRY_CONFIG.maxDelay
       );
-      console.log(`API overloaded, retrying in ${delay}ms (attempt ${retryCount + 1})`);
+      tasksLog.debug(`API overloaded, retrying in ${delay}ms (attempt ${retryCount + 1})`);
       await new Promise((resolve) => setTimeout(resolve, delay));
       return retryWithBackoff(operation, retryCount + 1);
     }
@@ -615,9 +616,9 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     const body = await request.json();
     const { stories, startTime, storyMapping } = RequestSchema.parse(body);
 
-    console.log(`Received ${stories.length} stories for session creation`);
+    tasksLog.debug(`Received ${stories.length} stories for session creation`);
     if (storyMapping) {
-      console.log(`Received mapping data for ${storyMapping.length} possible story titles`);
+      tasksLog.debug(`Received mapping data for ${storyMapping.length} possible story titles`);
     }
 
     const startDateTime = new Date(startTime);
@@ -638,8 +639,8 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
 
     try {
       // Log input data
-      console.log('Creating session with stories:', JSON.stringify(stories, null, 2));
-      console.log('Start time:', startDateTime.toLocaleTimeString());
+      tasksLog.debug('Creating session with stories:', JSON.stringify(stories, null, 2));
+      tasksLog.debug('Start time:', startDateTime.toLocaleTimeString());
 
       // Use the Task type from our schema instead of the imported type
       const enhancedStories = stories.map((story: z.infer<typeof StorySchema>) => ({
@@ -745,7 +746,7 @@ CRITICAL RULES:
 
       try {
         // Log the raw response for debugging
-        console.log('Raw session plan response:', messageContent.text);
+        tasksLog.debug('Raw session plan response:', messageContent.text);
 
         let parsedData;
         try {
@@ -759,12 +760,12 @@ CRITICAL RULES:
             jsonText.trim().endsWith(',') ||
             !jsonText.trim().endsWith('}')
           ) {
-            console.warn('JSON appears to be truncated or malformed');
+            tasksLog.warn('JSON appears to be truncated or malformed');
 
             // Try to reconstruct if it's a known response pattern by checking the structure
             if (jsonText.includes('"storyBlocks"') && jsonText.includes('"summary"')) {
               // This is likely our expected format but truncated
-              console.warn('Attempting to reconstruct truncated JSON with the expected structure');
+              tasksLog.warn('Attempting to reconstruct truncated JSON with the expected structure');
 
               // Check if we're missing the final closing brace
               if (
@@ -783,7 +784,7 @@ CRITICAL RULES:
             parsedData = JSON.parse(jsonText);
           } catch (initialParseError) {
             // If standard parsing fails, try a more lenient approach
-            console.warn('Standard JSON parsing failed, attempting repair:', initialParseError);
+            tasksLog.warn('Standard JSON parsing failed, attempting repair:', initialParseError);
 
             // Check if we can fix common truncation issues
             const fixedJson = jsonText
@@ -795,7 +796,7 @@ CRITICAL RULES:
             parsedData = JSON.parse(fixedJson);
           }
         } catch (parseError) {
-          console.error('JSON parsing failed after repair attempts:', parseError);
+          tasksLog.error('JSON parsing failed after repair attempts:', parseError);
           throw new SessionCreationError(
             'Failed to parse AI response as JSON',
             'JSON_PARSE_ERROR',
@@ -812,7 +813,7 @@ CRITICAL RULES:
           !parsedData.storyBlocks ||
           !Array.isArray(parsedData.storyBlocks)
         ) {
-          console.error('Parsed data is missing required fields');
+          tasksLog.error('Parsed data is missing required fields');
           throw new SessionCreationError(
             'AI response is missing required data structure',
             'INVALID_DATA_STRUCTURE',
@@ -833,14 +834,14 @@ CRITICAL RULES:
         for (let i = 0; i < parsedData.storyBlocks.length; i++) {
           const block = parsedData.storyBlocks[i];
           if (!block.title || !block.timeBoxes || !Array.isArray(block.timeBoxes)) {
-            console.error(`Story block at index ${i} is missing required fields`);
+            tasksLog.error(`Story block at index ${i} is missing required fields`);
 
             // Try to repair the block with minimal data
             if (!block.title) block.title = `Story Block ${i + 1}`;
             if (!block.summary) block.summary = `Tasks for story block ${i + 1}`;
             if (!block.icon) block.icon = '📋';
             if (!block.timeBoxes || !Array.isArray(block.timeBoxes)) {
-              console.warn(`Reconstructing missing timeBoxes for story block ${i}`);
+              tasksLog.warn(`Reconstructing missing timeBoxes for story block ${i}`);
               block.timeBoxes = [];
             }
             block.totalDuration = block.timeBoxes.reduce(
@@ -870,12 +871,12 @@ CRITICAL RULES:
             // Transform story properties if needed
             const blockTitle = String(transformedBlock.title || 'unknown');
             if (!transformedBlock.storyType && transformedBlock.type) {
-              console.log(`Transforming story type -> storyType for "${blockTitle}"`);
+              tasksLog.debug(`Transforming story type -> storyType for "${blockTitle}"`);
               transformedBlock.storyType = String(transformedBlock.type);
             }
 
             if (!transformedBlock.projectType && transformedBlock.project) {
-              console.log(`Transforming story project -> projectType for "${blockTitle}"`);
+              tasksLog.debug(`Transforming story project -> projectType for "${blockTitle}"`);
               transformedBlock.projectType = String(transformedBlock.project);
               delete transformedBlock.project;
             }
@@ -894,19 +895,21 @@ CRITICAL RULES:
 
         // After processing and transforming the data, validate it
         // This ensures any renamed properties (type->taskCategory, project->projectType) are properly processed
-        console.log('Validating processed session plan...');
+        tasksLog.debug('Validating processed session plan...');
         const storyBlocks = parsedData.storyBlocks || [];
 
         // Verify all tasks have the correct properties
         storyBlocks.forEach((block: any) => {
           // Transform story properties if needed
           if (!block.storyType && block.type) {
-            console.log(`Transforming story type -> storyType for "${block.title || 'unknown'}"`);
+            tasksLog.debug(
+              `Transforming story type -> storyType for "${block.title || 'unknown'}"`
+            );
             block.storyType = block.type;
           }
 
           if (!block.projectType && block.project) {
-            console.log(
+            tasksLog.debug(
               `Transforming story project -> projectType for "${block.title || 'unknown'}"`
             );
             block.projectType = block.project;
@@ -919,14 +922,14 @@ CRITICAL RULES:
                 timeBox.tasks.forEach((task: any) => {
                   // Ensure task has taskCategory property (originally might have been type)
                   if (!task.taskCategory && task.type) {
-                    console.log(`Transforming task type -> taskCategory for "${task.title}"`);
+                    tasksLog.debug(`Transforming task type -> taskCategory for "${task.title}"`);
                     task.taskCategory = task.type;
                     delete task.type;
                   }
 
                   // Ensure task has projectType property (originally might have been project)
                   if (!task.projectType && task.project) {
-                    console.log(`Transforming task project -> projectType for "${task.title}"`);
+                    tasksLog.debug(`Transforming task project -> projectType for "${task.title}"`);
                     task.projectType = task.project;
                     delete task.project;
                   }
@@ -939,21 +942,21 @@ CRITICAL RULES:
         // Add additional duration validations
         try {
           // After parsing the AI response but before validation, insert missing breaks
-          console.log('Checking for and inserting missing breaks...');
+          tasksLog.debug('Checking for and inserting missing breaks...');
           parsedData.storyBlocks = insertMissingBreaks(parsedData.storyBlocks);
 
           // Validate each story block's duration matches its time boxes
           for (const block of parsedData.storyBlocks) {
-            console.log(`\nValidating story block: ${block.title}`);
+            tasksLog.debug(`\nValidating story block: ${block.title}`);
 
             // Use the utility functions for duration calculations
             const { workDuration, breakDuration, totalDuration } = calculateDurationSummary(
               block.timeBoxes
             );
 
-            console.log('- Work time total:', workDuration);
-            console.log('- Break time total:', breakDuration);
-            console.log('- Total duration:', totalDuration);
+            tasksLog.debug('- Work time total:', workDuration);
+            tasksLog.debug('- Break time total:', breakDuration);
+            tasksLog.debug('- Total duration:', totalDuration);
 
             // Find the original story to update its duration
             const originalStory = findOriginalStory(block.title, stories, storyMapping);
@@ -993,10 +996,10 @@ CRITICAL RULES:
             block.totalDuration = totalDuration;
 
             // Log the final durations for debugging
-            console.log('Final block durations:');
-            console.log('- Total (with breaks):', totalDuration);
-            console.log('- Work time:', workDuration);
-            console.log('- Break time:', breakDuration);
+            tasksLog.debug('Final block durations:');
+            tasksLog.debug('- Total (with breaks):', totalDuration);
+            tasksLog.debug('- Work time:', workDuration);
+            tasksLog.debug('- Break time:', breakDuration);
 
             // Validation for maximum work time without substantial break
             // Note: This validation should pass after insertMissingBreaks has run,
@@ -1011,17 +1014,17 @@ CRITICAL RULES:
 
                 // Log for debugging
                 if (consecutiveWorkTime > DURATION_RULES.MAX_WORK_WITHOUT_BREAK * 0.9) {
-                  console.log(
+                  tasksLog.debug(
                     `Warning: Block "${block.title}" approaching max work time: ${consecutiveWorkTime}/${DURATION_RULES.MAX_WORK_WITHOUT_BREAK} min`
                   );
                 }
 
                 if (consecutiveWorkTime > DURATION_RULES.MAX_WORK_WITHOUT_BREAK) {
                   // This should not happen if insertMissingBreaks worked correctly
-                  console.error(
+                  tasksLog.error(
                     `Block "${block.title}" exceeded max work time after break insertion`
                   );
-                  console.error(
+                  tasksLog.error(
                     `Time boxes:`,
                     JSON.stringify(
                       block.timeBoxes.map((b: TimeBox) => ({ type: b.type, duration: b.duration })),
@@ -1056,9 +1059,9 @@ CRITICAL RULES:
             0
           );
 
-          console.log('\nValidating total session duration:');
-          console.log('- Calculated:', calculatedDuration);
-          console.log('- Reported:', parsedData.summary.totalDuration);
+          tasksLog.debug('\nValidating total session duration:');
+          tasksLog.debug('- Calculated:', calculatedDuration);
+          tasksLog.debug('- Reported:', parsedData.summary.totalDuration);
 
           // Update the summary total duration to match calculated
           parsedData.summary.totalDuration = calculatedDuration;
@@ -1072,7 +1075,7 @@ CRITICAL RULES:
           (block: StoryBlock) => {
             // Skip "Break" blocks entirely during task extraction
             if (block.title === 'Break' || block.title.toLowerCase().includes('break')) {
-              console.log(`Skipping Break block "${block.title}" during task validation`);
+              tasksLog.debug(`Skipping Break block "${block.title}" during task validation`);
               return [];
             }
 
@@ -1083,11 +1086,11 @@ CRITICAL RULES:
         );
 
         // Log for debugging
-        console.log(`\nTask validation:`);
-        console.log(`- Stories returned by AI: ${parsedData.storyBlocks.length}`);
-        console.log(`- Stories expected: ${stories.length}`);
-        console.log(`- Tasks scheduled: ${allScheduledTasks.length}`);
-        console.log(
+        tasksLog.debug(`\nTask validation:`);
+        tasksLog.debug(`- Stories returned by AI: ${parsedData.storyBlocks.length}`);
+        tasksLog.debug(`- Stories expected: ${stories.length}`);
+        tasksLog.debug(`- Tasks scheduled: ${allScheduledTasks.length}`);
+        tasksLog.debug(
           `- Tasks expected: ${stories.reduce((sum: number, s: Story) => sum + s.tasks.length, 0)}`
         );
 
@@ -1099,7 +1102,7 @@ CRITICAL RULES:
           (s: Story) => !returnedStoryTitles.has(s.title.toLowerCase())
         );
         if (missingStories.length > 0) {
-          console.error(
+          tasksLog.error(
             `WARNING: AI response is missing entire stories: ${missingStories.map((s: Story) => s.title).join(', ')}`
           );
         }
@@ -1111,8 +1114,8 @@ CRITICAL RULES:
         );
 
         if (validationResult.isMissingTasks) {
-          console.error('Missing tasks in schedule:', validationResult.missingTasks);
-          console.error(
+          tasksLog.error('Missing tasks in schedule:', validationResult.missingTasks);
+          tasksLog.error(
             `Scheduled ${validationResult.scheduledCount} of ${validationResult.originalCount} tasks`
           );
           throw new SessionCreationError(
@@ -1131,7 +1134,7 @@ CRITICAL RULES:
         throw new SessionCreationError('Failed to process session plan', 'PROCESSING_ERROR', error);
       }
     } catch (error) {
-      console.error('Session creation error:', error);
+      tasksLog.error('Session creation error:', error);
 
       if (error instanceof SessionCreationError) {
         return new Response(
@@ -1160,7 +1163,7 @@ CRITICAL RULES:
       );
     }
   } catch (error) {
-    console.error('Session creation error:', error);
+    tasksLog.error('Session creation error:', error);
 
     if (error instanceof SessionCreationError) {
       return new Response(

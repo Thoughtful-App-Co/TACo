@@ -8,9 +8,14 @@
  */
 
 import { Anthropic } from '@anthropic-ai/sdk';
+import { authorizeTokenFeature } from '../../lib/auth-middleware';
+import { resumeLog } from '../../lib/logger';
 
 interface Env {
   ANTHROPIC_API_KEY: string;
+  JWT_SECRET: string;
+  AUTH_DB: any;
+  BILLING_DB: any;
 }
 
 interface ParseRequest {
@@ -22,10 +27,23 @@ interface ParseRequest {
 export async function onRequestPost(context: { request: Request; env: Env }) {
   const { request, env } = context;
 
-  console.log('[Resume Parser] Request received');
+  resumeLog.info('Request received');
+
+  // SECURITY: Validate authentication, check subscription, and deduct token
+  const authResult = await authorizeTokenFeature(request, env, {
+    requiredProducts: ['tenure_extras'],
+    tokenCost: 1,
+    resourceName: 'resume_parsing',
+  });
+
+  if (!authResult.success) {
+    return authResult.response;
+  }
+
+  const { newTokenBalance } = authResult;
 
   if (!env.ANTHROPIC_API_KEY) {
-    console.error('[Resume Parser] Missing API key');
+    resumeLog.error('Missing API key');
     return new Response(JSON.stringify({ error: 'ANTHROPIC_API_KEY is not configured' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },
@@ -40,7 +58,7 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     const body: ParseRequest = await request.json();
     const { content, contentType, fileName } = body;
 
-    console.log('[Resume Parser] Parsing resume:', {
+    resumeLog.info('Parsing resume:', {
       contentType,
       fileName,
       contentLength: content.length,
@@ -172,15 +190,12 @@ CRITICAL REQUIREMENTS:
       throw new Error('No text content in AI response');
     }
 
-    console.log(
-      '[Resume Parser] Raw AI response (first 500 chars):',
-      responseText.substring(0, 500)
-    );
-    console.log(
-      '[Resume Parser] Raw AI response (last 500 chars):',
+    resumeLog.info('Raw AI response (first 500 chars):', responseText.substring(0, 500));
+    resumeLog.info(
+      'Raw AI response (last 500 chars):',
       responseText.substring(Math.max(0, responseText.length - 500))
     );
-    console.log('[Resume Parser] Total response length:', responseText.length);
+    resumeLog.info('Total response length:', responseText.length);
 
     // Parse and validate response
     let parsedData: any;
@@ -194,7 +209,7 @@ CRITICAL REQUIREMENTS:
 
       if (jsonMatch) {
         jsonText = jsonMatch[1].trim();
-        console.log('[Resume Parser] Extracted JSON from code block');
+        resumeLog.info('Extracted JSON from code block');
       }
 
       // Remove any leading/trailing text before { or after }
@@ -203,22 +218,19 @@ CRITICAL REQUIREMENTS:
 
       if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
         jsonText = jsonText.substring(jsonStart, jsonEnd + 1);
-        console.log('[Resume Parser] Extracted JSON between braces');
+        resumeLog.info('Extracted JSON between braces');
       }
 
-      console.log('[Resume Parser] Attempting to parse JSON, length:', jsonText.length);
-      console.log('[Resume Parser] JSON preview (first 300 chars):', jsonText.substring(0, 300));
+      resumeLog.info('Attempting to parse JSON, length:', jsonText.length);
+      resumeLog.info('JSON preview (first 300 chars):', jsonText.substring(0, 300));
 
       parsedData = JSON.parse(jsonText);
     } catch (parseError) {
-      console.error('[Resume Parser] JSON parse error:', parseError);
-      console.error('[Resume Parser] Full raw response:', responseText);
-      console.error('[Resume Parser] Response type:', typeof responseText);
-      console.error('[Resume Parser] Response starts with:', responseText.substring(0, 100));
-      console.error(
-        '[Resume Parser] Response ends with:',
-        responseText.substring(responseText.length - 100)
-      );
+      resumeLog.error('JSON parse error:', parseError);
+      resumeLog.error('Full raw response:', responseText);
+      resumeLog.error('Response type:', typeof responseText);
+      resumeLog.error('Response starts with:', responseText.substring(0, 100));
+      resumeLog.error('Response ends with:', responseText.substring(responseText.length - 100));
 
       // Try to save the problematic response for debugging
       return new Response(
@@ -256,7 +268,7 @@ CRITICAL REQUIREMENTS:
       throw new Error('Invalid response structure from AI');
     }
 
-    console.log('[Resume Parser] Successfully parsed:', {
+    resumeLog.info('Successfully parsed:', {
       experienceCount: parsedData.parsed.experience?.length || 0,
       educationCount: parsedData.parsed.education?.length || 0,
       skillsCount: parsedData.parsed.skills?.length || 0,
@@ -267,6 +279,7 @@ CRITICAL REQUIREMENTS:
       JSON.stringify({
         success: true,
         ...parsedData,
+        tokenBalance: newTokenBalance === -1 ? 'unlimited' : newTokenBalance,
       }),
       {
         headers: {
@@ -276,7 +289,7 @@ CRITICAL REQUIREMENTS:
       }
     );
   } catch (error) {
-    console.error('[Resume Parser] Error:', error);
+    resumeLog.error('Error:', error);
 
     return new Response(
       JSON.stringify({

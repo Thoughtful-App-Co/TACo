@@ -1,5 +1,7 @@
 import { Anthropic } from '@anthropic-ai/sdk';
 import { z } from 'zod';
+import { authorizeSubscriptionFeature } from '../../lib/auth-middleware';
+import { tasksLog } from '../../lib/logger';
 import type {
   TaskType,
   TaskCategory,
@@ -27,6 +29,9 @@ type ProcessedResponseFromAI = APIProcessResponse;
 
 interface Env {
   ANTHROPIC_API_KEY: string;
+  JWT_SECRET: string;
+  AUTH_DB: any;
+  BILLING_DB: any;
 }
 
 // Input validation schema
@@ -284,20 +289,26 @@ class TaskProcessingError extends Error {
 export async function onRequestPost(context: { request: Request; env: Env }) {
   const { request, env } = context;
 
-  // Check for API key in request header (for "Bring Your Own Key" feature)
-  // Falls back to environment variable for production/shared dev environments
-  const apiKeyFromHeader = request.headers.get('X-API-Key');
-  const apiKey = apiKeyFromHeader || env.ANTHROPIC_API_KEY;
+  // SECURITY: Validate authentication and check tempo_extras subscription
+  const authResult = await authorizeSubscriptionFeature(request, env, {
+    requiredProducts: ['tempo_extras'],
+  });
+
+  if (!authResult.success) {
+    return authResult.response;
+  }
+
+  // Use environment API key (no more BYOK support - security risk)
+  const apiKey = env.ANTHROPIC_API_KEY;
 
   if (!apiKey) {
     return new Response(
       JSON.stringify({
-        error:
-          'API key not provided. Please configure your API key in settings or set ANTHROPIC_API_KEY environment variable.',
+        error: 'API key not configured on server',
         code: 'MISSING_API_KEY',
       }),
       {
-        status: 401,
+        status: 500,
         headers: { 'Content-Type': 'application/json' },
       }
     );
@@ -314,7 +325,7 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     try {
       await RequestSchema.parseAsync(body);
     } catch (error) {
-      console.error('Request validation failed:', error);
+      tasksLog.error('Request validation failed:', error);
       return new Response(
         JSON.stringify({
           error: 'Invalid request format',
@@ -329,7 +340,7 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     }
 
     try {
-      console.log(`Processing ${body.tasks.length} tasks:`, body.tasks);
+      tasksLog.info(`Processing ${body.tasks.length} tasks:`, body.tasks);
 
       // Send task list to Claude for processing
       const response = await anthropic.messages.create({
@@ -403,7 +414,7 @@ Provide the result as a JSON object with this EXACT structure:
       }
 
       // Log the raw response for debugging
-      console.log('Raw response:', messageContent.text);
+      tasksLog.info('Raw response:', messageContent.text);
 
       let processedData: ProcessedResponseFromAI;
       try {
@@ -476,7 +487,7 @@ Provide the result as a JSON object with this EXACT structure:
               // Suggest task splitting for very long tasks
               if (task.duration && task.duration > 90 && !task.needsSplitting) {
                 task.needsSplitting = true;
-                console.log(`Marking task "${task.title}" for splitting (${task.duration}min)`);
+                tasksLog.info(`Marking task "${task.title}" for splitting (${task.duration}min)`);
               }
 
               // Suggest rounding the duration if it's not a multiple of 5
@@ -503,14 +514,14 @@ Provide the result as a JSON object with this EXACT structure:
         );
 
         if (missingTasks.length > 0) {
-          console.warn('Some tasks were not included in the processed output:', missingTasks);
+          tasksLog.warn('Some tasks were not included in the processed output:', missingTasks);
         }
 
         return new Response(JSON.stringify(processedData), {
           headers: { 'Content-Type': 'application/json' },
         });
       } catch (error) {
-        console.error('JSON processing error:', error);
+        tasksLog.error('JSON processing error:', error);
         throw new TaskProcessingError(
           'Failed to process AI response',
           'JSON_PROCESSING_ERROR',
@@ -522,7 +533,7 @@ Provide the result as a JSON object with this EXACT structure:
       throw new TaskProcessingError('Story processing failed', 'PROCESSING_ERROR', error);
     }
   } catch (error) {
-    console.error('Task processing error:', error);
+    tasksLog.error('Task processing error:', error);
 
     if (error instanceof TaskProcessingError) {
       return new Response(

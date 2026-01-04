@@ -7,6 +7,8 @@
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
+import { pushLog } from '../../lib/logger';
+
 interface Env {
   // Future: Add KV binding for storing subscriptions
   // PUSH_SUBSCRIPTIONS: KVNamespace;
@@ -27,13 +29,13 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     // const key = btoa(subscription.endpoint).slice(0, 64);
     // await context.env.PUSH_SUBSCRIPTIONS.put(key, JSON.stringify({ subscription, timestamp }));
 
-    console.log('[Push] New subscription:', subscription.endpoint.slice(0, 50) + '...');
+    pushLog.info('New subscription:', subscription.endpoint.slice(0, 50) + '...');
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error('[Push] Subscribe error:', error);
+    pushLog.error('Subscribe error:', error);
     return new Response(JSON.stringify({ error: 'Internal error' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },

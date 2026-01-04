@@ -8,6 +8,8 @@
  */
 
 import { z } from 'zod';
+import { authorizeTokenFeature } from '../../lib/auth-middleware';
+import { resumeLog } from '../../lib/logger';
 
 // Request schema
 const CoverLetterRequestSchema = z.object({
@@ -67,11 +69,28 @@ interface CoverLetterResponse {
   };
 }
 
-export async function onRequest(context: {
-  request: Request;
-  env: { ANTHROPIC_API_KEY: string };
-}): Promise<Response> {
+interface Env {
+  ANTHROPIC_API_KEY: string;
+  JWT_SECRET: string;
+  AUTH_DB: any;
+  BILLING_DB: any;
+}
+
+export async function onRequest(context: { request: Request; env: Env }): Promise<Response> {
   const { request, env } = context;
+
+  // SECURITY: Validate authentication, check subscription, and deduct token
+  const authResult = await authorizeTokenFeature(request, env, {
+    requiredProducts: ['tenure_extras'],
+    tokenCost: 1,
+    resourceName: 'cover_letter_generation',
+  });
+
+  if (!authResult.success) {
+    return authResult.response;
+  }
+
+  const { newTokenBalance } = authResult;
 
   // CORS headers
   const corsHeaders = {
@@ -209,7 +228,7 @@ Provide your response in this exact JSON format:
 
     if (!claudeResponse.ok) {
       const errorText = await claudeResponse.text();
-      console.error('Claude API error:', errorText);
+      resumeLog.error('Claude API error:', errorText);
       return new Response(JSON.stringify({ error: 'AI service error', details: errorText }), {
         status: 502,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -230,7 +249,7 @@ Provide your response in this exact JSON format:
       if (!jsonMatch) throw new Error('No JSON found in response');
       result = JSON.parse(jsonMatch[0]);
     } catch (e) {
-      console.error('Failed to parse Claude response:', content);
+      resumeLog.error('Failed to parse Claude response:', content);
       return new Response(JSON.stringify({ error: 'Failed to parse AI response' }), {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -253,12 +272,18 @@ Provide your response in this exact JSON format:
       },
     };
 
-    return new Response(JSON.stringify(response), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    return new Response(
+      JSON.stringify({
+        ...response,
+        tokenBalance: newTokenBalance === -1 ? 'unlimited' : newTokenBalance,
+      }),
+      {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      }
+    );
   } catch (error: any) {
-    console.error('Cover letter generation error:', error);
+    resumeLog.error('Cover letter generation error:', error);
     return new Response(
       JSON.stringify({ error: 'Internal server error', message: error.message }),
       {

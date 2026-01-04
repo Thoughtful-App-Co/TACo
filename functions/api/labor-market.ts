@@ -15,6 +15,9 @@
  */
 
 import { z } from 'zod';
+import { createLogger } from '../lib/logger';
+
+const log = createLogger('LaborMarket');
 
 // Cloudflare Workers Cache API type declaration
 declare const caches: {
@@ -183,11 +186,11 @@ async function getCachedResponse(cacheKey: string): Promise<Response | null> {
     const cachedResponse = await cache.match(cacheKey);
 
     if (cachedResponse) {
-      console.log('[Labor Market] Cache hit:', cacheKey);
+      log.info('Cache hit:', cacheKey);
       return cachedResponse;
     }
   } catch (error) {
-    console.error('[Labor Market] Cache read error:', error);
+    log.error('Cache read error:', error);
   }
 
   return null;
@@ -210,9 +213,9 @@ async function cacheResponse(cacheKey: string, response: Response): Promise<void
     });
 
     await cache.put(cacheKey, responseToCache);
-    console.log('[Labor Market] Cached response:', cacheKey);
+    log.info('Cached response:', cacheKey);
   } catch (error) {
-    console.error('[Labor Market] Cache write error:', error);
+    log.error('Cache write error:', error);
   }
 }
 
@@ -261,7 +264,7 @@ async function fetchFromBls(
     });
 
     if (!blsResponse.ok) {
-      console.error('[Labor Market] BLS API HTTP error:', blsResponse.status);
+      log.error('BLS API HTTP error:', blsResponse.status);
       return {
         success: false,
         error: `BLS API returned HTTP ${blsResponse.status}`,
@@ -273,7 +276,7 @@ async function fetchFromBls(
     // Check for BLS API-level errors
     if (data.status === 'REQUEST_FAILED' || data.status === 'REQUEST_NOT_PROCESSED') {
       const errorMessage = data.message?.join(' ') || 'Unknown BLS API error';
-      console.error('[Labor Market] BLS API error:', errorMessage);
+      log.error('BLS API error:', errorMessage);
       return {
         success: false,
         error: mapBlsError(errorMessage),
@@ -282,7 +285,7 @@ async function fetchFromBls(
 
     return { success: true, data };
   } catch (error) {
-    console.error('[Labor Market] BLS API fetch error:', error);
+    log.error('BLS API fetch error:', error);
     return {
       success: false,
       error: 'Failed to connect to BLS API. Please try again later.',
@@ -307,11 +310,11 @@ export async function onRequestOptions() {
 export async function onRequestPost(context: { request: Request; env: Env }) {
   const { request, env } = context;
 
-  console.log('[Labor Market] Request received');
+  log.info('Request received');
 
   // 1. Validate API key is configured
   if (!env.BLS_API_KEY) {
-    console.error('[Labor Market] BLS_API_KEY not configured');
+    log.error('BLS_API_KEY not configured');
     return new Response(
       JSON.stringify({
         success: false,
@@ -348,7 +351,7 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
       .map((e) => `${e.path.join('.')}: ${e.message}`)
       .join('; ');
 
-    console.log('[Labor Market] Validation failed:', errors);
+    log.info('Validation failed:', errors);
 
     return new Response(
       JSON.stringify({
@@ -384,7 +387,7 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
 
   if (!rateLimit.allowed) {
     const resetDate = new Date(rateLimit.resetAt).toISOString();
-    console.log('[Labor Market] Rate limit exceeded, resets at:', resetDate);
+    log.info('Rate limit exceeded, resets at:', resetDate);
 
     return new Response(
       JSON.stringify({
@@ -433,7 +436,7 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
   }
 
   // 5. Make BLS API request
-  console.log('[Labor Market] Fetching from BLS API:', {
+  log.info('Fetching from BLS API:', {
     seriesCount: validatedRequest.seriesid.length,
     yearRange: `${validatedRequest.startyear}-${validatedRequest.endyear}`,
   });
@@ -486,7 +489,7 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
   // 8. Cache successful response (async, don't wait)
   cacheResponse(cacheKey, response.clone());
 
-  console.log('[Labor Market] Request completed successfully:', {
+  log.info('Request completed successfully:', {
     seriesCount: blsResult.data!.Results?.series?.length || 0,
     rateLimitRemaining: rateLimit.remaining - 1,
   });

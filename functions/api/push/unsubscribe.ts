@@ -6,6 +6,8 @@
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
+import { pushLog } from '../../lib/logger';
+
 interface Env {
   // Future: Add KV binding
 }
@@ -25,13 +27,13 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     // const key = btoa(endpoint).slice(0, 64);
     // await context.env.PUSH_SUBSCRIPTIONS.delete(key);
 
-    console.log('[Push] Unsubscribed:', endpoint.slice(0, 50) + '...');
+    pushLog.info('Unsubscribed:', endpoint.slice(0, 50) + '...');
 
     return new Response(JSON.stringify({ success: true }), {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error('[Push] Unsubscribe error:', error);
+    pushLog.error('Unsubscribe error:', error);
     return new Response(JSON.stringify({ error: 'Internal error' }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' },

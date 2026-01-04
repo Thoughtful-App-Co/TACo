@@ -6,6 +6,7 @@
 
 import { Anthropic } from '@anthropic-ai/sdk';
 import { z } from 'zod';
+import { tasksLog } from '../../lib/logger';
 
 interface Env {
   ANTHROPIC_API_KEY: string;
@@ -155,7 +156,7 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     }
 
     const { url } = validation.data;
-    console.log('[scrape-job] Request received for URL:', url);
+    tasksLog.info('Request received for URL:', url);
 
     // Fetch the job posting page
     let pageContent: string;
@@ -169,12 +170,9 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
       }
 
       pageContent = await response.text();
-      console.log('[scrape-job] Fetched page, content length:', pageContent.length);
+      tasksLog.debug('Fetched page, content length:', pageContent.length);
     } catch (fetchError) {
-      console.log(
-        '[scrape-job] Fetch error:',
-        fetchError instanceof Error ? fetchError.message : fetchError
-      );
+      tasksLog.debug('Fetch error:', fetchError instanceof Error ? fetchError.message : fetchError);
       return new Response(
         JSON.stringify({
           error: 'Failed to fetch job posting',
@@ -190,16 +188,16 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
 
     // Extract JSON-LD structured data (most reliable source)
     const jsonLdData = extractJsonLd(pageContent);
-    console.log(
-      '[scrape-job] JSON-LD data found:',
+    tasksLog.debug(
+      'JSON-LD data found:',
       !!jsonLdData,
       jsonLdData ? JSON.stringify(jsonLdData).slice(0, 200) + '...' : 'none'
     );
 
     // Extract meta tags
     const metaTags = extractMetaTags(pageContent);
-    console.log(
-      '[scrape-job] Meta tags found:',
+    tasksLog.debug(
+      'Meta tags found:',
       Object.keys(metaTags)
         .filter((k) => metaTags[k as keyof MetaTags])
         .join(', ') || 'none'
@@ -207,8 +205,8 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
 
     // Extract text content from HTML with better structure preservation
     const textContent = extractTextFromHtml(pageContent);
-    console.log(
-      '[scrape-job] Extracted text length:',
+    tasksLog.debug(
+      'Extracted text length:',
       textContent.length,
       'First 200 chars:',
       textContent.slice(0, 200)
@@ -251,11 +249,7 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
       if (metaTags.description) additionalContext += `Meta Description: ${metaTags.description}\n`;
     }
 
-    console.log(
-      '[scrape-job] Calling Claude API with',
-      truncatedContent.length,
-      'chars of content'
-    );
+    tasksLog.debug('Calling Claude API with', truncatedContent.length, 'chars of content');
     const response = await anthropic.messages.create({
       model: 'claude-3-haiku-20240307',
       max_tokens: 2000,
@@ -310,7 +304,7 @@ Important notes:
     if (!('text' in messageContent)) {
       throw new Error('Invalid API response format');
     }
-    console.log('[scrape-job] Claude response:', messageContent.text.slice(0, 500));
+    tasksLog.debug('Claude response:', messageContent.text.slice(0, 500));
 
     // Parse the JSON response
     let scrapedData: ScrapedJob;
@@ -320,12 +314,9 @@ Important notes:
         throw new Error('No JSON object found in response');
       }
       scrapedData = JSON.parse(jsonMatch[0]);
-      console.log('[scrape-job] Parsed data:', JSON.stringify(scrapedData, null, 2));
+      tasksLog.debug('Parsed data:', JSON.stringify(scrapedData, null, 2));
     } catch (parseError) {
-      console.log(
-        '[scrape-job] Parse error:',
-        parseError instanceof Error ? parseError.message : parseError
-      );
+      tasksLog.debug('Parse error:', parseError instanceof Error ? parseError.message : parseError);
       return new Response(
         JSON.stringify({
           error: 'Failed to parse extracted data',
@@ -347,8 +338,8 @@ Important notes:
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error(
-      '[scrape-job] Job scraping error:',
+    tasksLog.error(
+      'Job scraping error:',
       error instanceof Error ? error.message : error,
       error instanceof Error ? error.stack : ''
     );

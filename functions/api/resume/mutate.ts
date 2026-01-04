@@ -1,23 +1,28 @@
 /**
  * Resume Mutation API - Cloudflare Worker
- * 
+ *
  * Tailors resumes to specific job descriptions using AI.
- * 
+ *
  * Flow:
  * 1. Receive resume + job description
  * 2. Extract keywords locally (free)
  * 3. Analyze gaps (free)
  * 4. Use Claude to rewrite bullets and summary (paid)
  * 5. Return mutations with before/after
- * 
+ *
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
 import { Anthropic } from '@anthropic-ai/sdk';
 import { z } from 'zod';
+import { authorizeTokenFeature } from '../../lib/auth-middleware';
+import { resumeLog } from '../../lib/logger';
 
 interface Env {
   ANTHROPIC_API_KEY: string;
+  JWT_SECRET: string;
+  AUTH_DB: any; // D1Database from Cloudflare runtime
+  BILLING_DB: any; // D1Database from Cloudflare runtime
 }
 
 // ============================================================================
@@ -28,42 +33,48 @@ const MutationRequestSchema = z.object({
   // Master resume data
   masterResume: z.object({
     summary: z.string().optional(),
-    experiences: z.array(z.object({
-      id: z.string(),
-      company: z.string(),
-      title: z.string(),
-      bullets: z.array(z.string()),
-      skills: z.array(z.string()).optional(),
-    })),
+    experiences: z.array(
+      z.object({
+        id: z.string(),
+        company: z.string(),
+        title: z.string(),
+        bullets: z.array(z.string()),
+        skills: z.array(z.string()).optional(),
+      })
+    ),
     skills: z.array(z.string()),
-    extractedKeywords: z.object({
-      skills: z.array(z.string()),
-      knowledge: z.array(z.string()),
-      tools: z.array(z.string()),
-    }).optional(),
+    extractedKeywords: z
+      .object({
+        skills: z.array(z.string()),
+        knowledge: z.array(z.string()),
+        tools: z.array(z.string()),
+      })
+      .optional(),
   }),
-  
+
   // Job description (user pastes this)
   jobDescription: z.string().min(100, 'Job description too short'),
-  
+
   // Optional context
   targetCompany: z.string().optional(),
   targetRole: z.string().optional(),
-  
+
   // User preferences
-  preferences: z.object({
-    tone: z.enum(['professional', 'technical', 'executive', 'casual']).default('professional'),
-    length: z.enum(['concise', 'detailed']).default('concise'),
-    emphasize: z.array(z.string()).optional(),
-    deemphasize: z.array(z.string()).optional(),
-  }).optional(),
+  preferences: z
+    .object({
+      tone: z.enum(['professional', 'technical', 'executive', 'casual']).default('professional'),
+      length: z.enum(['concise', 'detailed']).default('concise'),
+      emphasize: z.array(z.string()).optional(),
+      deemphasize: z.array(z.string()).optional(),
+    })
+    .optional(),
 });
 
 type MutationRequest = z.infer<typeof MutationRequestSchema>;
 
 interface MutationResponse {
   success: boolean;
-  
+
   // Analysis results (from local processing)
   analysis: {
     jdKeywords: {
@@ -77,7 +88,7 @@ interface MutationResponse {
     matchScoreBefore: number;
     matchScoreAfter: number;
   };
-  
+
   // The mutations (from Claude)
   mutations: {
     summary: {
@@ -97,7 +108,7 @@ interface MutationResponse {
     skillsReordered: string[];
     skillsToAdd: string[];
   };
-  
+
   // Metadata
   processingTime: number;
   aiTokensUsed: number;
@@ -111,9 +122,21 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
   const { request, env } = context;
   const startTime = Date.now();
 
-  // Check for API key
-  const apiKeyFromHeader = request.headers.get('X-API-Key');
-  const apiKey = apiKeyFromHeader || env.ANTHROPIC_API_KEY;
+  // SECURITY: Validate authentication, check subscription, and deduct token
+  const authResult = await authorizeTokenFeature(request, env, {
+    requiredProducts: ['tenure_extras'],
+    tokenCost: 1,
+    resourceName: 'resume_mutation',
+  });
+
+  if (!authResult.success) {
+    return authResult.response;
+  }
+
+  const { auth, newTokenBalance } = authResult;
+
+  // Use environment API key (no more BYOK support - security risk)
+  const apiKey = env.ANTHROPIC_API_KEY;
 
   if (!apiKey) {
     return new Response(
@@ -121,7 +144,7 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
         error: 'API key not configured',
         code: 'MISSING_API_KEY',
       }),
-      { status: 401, headers: { 'Content-Type': 'application/json' } }
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
     );
   }
 
@@ -129,7 +152,7 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     // Parse and validate request
     const body = await request.json().catch(() => ({}));
     const validation = MutationRequestSchema.safeParse(body);
-    
+
     if (!validation.success) {
       return new Response(
         JSON.stringify({
@@ -158,10 +181,10 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     const missingKeywords = findMissing(jdKeywords, resumeKeywords);
 
     // Calculate match score before
-    const totalJDKeywords = [...jdKeywords.skills, ...jdKeywords.knowledge, ...jdKeywords.tools].length;
-    const matchScoreBefore = totalJDKeywords > 0 
-      ? Math.round((matchedKeywords.length / totalJDKeywords) * 100)
-      : 0;
+    const totalJDKeywords = [...jdKeywords.skills, ...jdKeywords.knowledge, ...jdKeywords.tools]
+      .length;
+    const matchScoreBefore =
+      totalJDKeywords > 0 ? Math.round((matchedKeywords.length / totalJDKeywords) * 100) : 0;
 
     // Step 3: Use Claude to mutate resume
     const anthropic = new Anthropic({ apiKey });
@@ -179,7 +202,7 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     totalTokens += summaryMutation.tokensUsed;
 
     // Mutate experience bullets
-    const experienceMutations = [];
+    const experienceMutations: { experienceId: string; bullets: any[] }[] = [];
     for (const exp of mutationRequest.masterResume.experiences) {
       const bulletMutations = await mutateExperienceBullets(
         anthropic,
@@ -190,7 +213,7 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
         mutationRequest.preferences?.length || 'concise'
       );
       totalTokens += bulletMutations.tokensUsed;
-      
+
       experienceMutations.push({
         experienceId: exp.id,
         bullets: bulletMutations.bullets,
@@ -198,10 +221,10 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
     }
 
     // Reorder skills (simple: JD keywords first, then others)
-    const skillsReordered = reorderSkills(
-      mutationRequest.masterResume.skills,
-      [...jdKeywords.skills, ...jdKeywords.tools]
-    );
+    const skillsReordered = reorderSkills(mutationRequest.masterResume.skills, [
+      ...jdKeywords.skills,
+      ...jdKeywords.tools,
+    ]);
 
     // Suggest skills to add (from missing keywords)
     const skillsToAdd = missingKeywords.slice(0, 5);
@@ -235,13 +258,18 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
       aiTokensUsed: totalTokens,
     };
 
-    return new Response(JSON.stringify(response), {
-      headers: { 'Content-Type': 'application/json' },
-    });
-
+    return new Response(
+      JSON.stringify({
+        ...response,
+        tokenBalance: newTokenBalance === -1 ? 'unlimited' : newTokenBalance,
+      }),
+      {
+        headers: { 'Content-Type': 'application/json' },
+      }
+    );
   } catch (error) {
-    console.error('Mutation error:', error);
-    
+    resumeLog.error('Mutation error:', error);
+
     return new Response(
       JSON.stringify({
         error: 'Failed to mutate resume',
@@ -262,7 +290,7 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
  */
 async function extractKeywordsSimple(text: string) {
   const lower = text.toLowerCase();
-  
+
   // Basic pattern matching for common skill/knowledge terms
   const skills: string[] = [];
   const knowledge: string[] = [];
@@ -271,12 +299,12 @@ async function extractKeywordsSimple(text: string) {
 
   // Extract common patterns
   const words = text.match(/\b\w+\b/g) || [];
-  const uniqueWords = [...new Set(words.map(w => w.toLowerCase()))];
+  const uniqueWords = [...new Set(words.map((w) => w.toLowerCase()))];
 
   // Simple categorization (would use our full service client-side)
   for (const word of uniqueWords) {
     if (word.length < 3) continue;
-    
+
     // Requirements
     if (/years?|degree|bachelor|master|phd|certification/i.test(word)) {
       requirements.push(word);
@@ -304,20 +332,26 @@ async function extractKeywordsSimple(text: string) {
  */
 function findMatches(jdKeywords: any, resumeKeywords: any): string[] {
   const allJD = [...jdKeywords.skills, ...jdKeywords.knowledge, ...jdKeywords.tools];
-  const allResume = [...resumeKeywords.skills, ...resumeKeywords.knowledge, ...resumeKeywords.tools];
-  
+  const allResume = [
+    ...resumeKeywords.skills,
+    ...resumeKeywords.knowledge,
+    ...resumeKeywords.tools,
+  ];
+
   const matched: string[] = [];
   for (const jdKw of allJD) {
     for (const resumeKw of allResume) {
-      if (jdKw.toLowerCase() === resumeKw.toLowerCase() || 
-          jdKw.toLowerCase().includes(resumeKw.toLowerCase()) ||
-          resumeKw.toLowerCase().includes(jdKw.toLowerCase())) {
+      if (
+        jdKw.toLowerCase() === resumeKw.toLowerCase() ||
+        jdKw.toLowerCase().includes(resumeKw.toLowerCase()) ||
+        resumeKw.toLowerCase().includes(jdKw.toLowerCase())
+      ) {
         matched.push(jdKw);
         break;
       }
     }
   }
-  
+
   return [...new Set(matched)];
 }
 
@@ -327,17 +361,17 @@ function findMatches(jdKeywords: any, resumeKeywords: any): string[] {
 function findMissing(jdKeywords: any, resumeKeywords: any): string[] {
   const matched = findMatches(jdKeywords, resumeKeywords);
   const allJD = [...jdKeywords.skills, ...jdKeywords.knowledge, ...jdKeywords.tools];
-  return allJD.filter(kw => !matched.includes(kw)).slice(0, 10);
+  return allJD.filter((kw) => !matched.includes(kw)).slice(0, 10);
 }
 
 /**
  * Reorder skills to prioritize JD keywords
  */
 function reorderSkills(resumeSkills: string[], jdKeywords: string[]): string[] {
-  const jdSet = new Set(jdKeywords.map(k => k.toLowerCase()));
+  const jdSet = new Set(jdKeywords.map((k) => k.toLowerCase()));
   const matched: string[] = [];
   const unmatched: string[] = [];
-  
+
   for (const skill of resumeSkills) {
     if (jdSet.has(skill.toLowerCase())) {
       matched.push(skill);
@@ -345,7 +379,7 @@ function reorderSkills(resumeSkills: string[], jdKeywords: string[]): string[] {
       unmatched.push(skill);
     }
   }
-  
+
   return [...matched, ...unmatched];
 }
 
@@ -361,9 +395,9 @@ async function mutateSummary(
   tone: string = 'professional'
 ): Promise<{ mutation: any; tokensUsed: number }> {
   if (missingKeywords.length === 0 && originalSummary) {
-    return { 
+    return {
       mutation: null,
-      tokensUsed: 0 
+      tokensUsed: 0,
     };
   }
 
@@ -411,7 +445,7 @@ Return ONLY valid JSON in this format:
     }
 
     const parsed = JSON.parse(jsonMatch[0]);
-    
+
     return {
       mutation: {
         original: originalSummary,
@@ -421,7 +455,7 @@ Return ONLY valid JSON in this format:
       tokensUsed: response.usage.input_tokens + response.usage.output_tokens,
     };
   } catch (error) {
-    console.error('Summary mutation error:', error);
+    resumeLog.error('Summary mutation error:', error);
     return { mutation: null, tokensUsed: 0 };
   }
 }
@@ -437,19 +471,18 @@ async function mutateExperienceBullets(
   tone: string = 'professional',
   length: string = 'concise'
 ): Promise<{ bullets: any[]; tokensUsed: number }> {
-  
   const bulletsToMutate = experience.bullets.slice(0, 3); // Only mutate top 3 bullets
   const keywordsForThisExp = missingKeywords.slice(0, 3);
 
   if (keywordsForThisExp.length === 0) {
-    return { 
-      bullets: bulletsToMutate.map(b => ({
+    return {
+      bullets: bulletsToMutate.map((b) => ({
         original: b,
         mutated: b,
         keywordsAdded: [],
         reason: 'No keywords needed',
       })),
-      tokensUsed: 0 
+      tokensUsed: 0,
     };
   }
 
@@ -507,21 +540,21 @@ Return ONLY valid JSON array in this format:
     }
 
     const parsed = JSON.parse(jsonMatch[0]);
-    
+
     return {
       bullets: parsed,
       tokensUsed: response.usage.input_tokens + response.usage.output_tokens,
     };
   } catch (error) {
-    console.error('Bullet mutation error:', error);
-    return { 
-      bullets: bulletsToMutate.map(b => ({
+    resumeLog.error('Bullet mutation error:', error);
+    return {
+      bullets: bulletsToMutate.map((b) => ({
         original: b,
         mutated: b,
         keywordsAdded: [],
         reason: 'Mutation failed',
       })),
-      tokensUsed: 0 
+      tokensUsed: 0,
     };
   }
 }
