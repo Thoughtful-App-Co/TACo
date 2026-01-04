@@ -245,7 +245,7 @@ export const TrendsHeroChart: Component<TrendsHeroChartProps> = (props) => {
               animation: `fadeIn ${theme().animations.normal}`,
             }}
           >
-            <ActivityTimelineChart data={props.timeSeriesData} />
+            <ActivityTimelineChart data={props.timeSeriesData} currentTheme={props.currentTheme} />
           </div>
         </Show>
 
@@ -259,7 +259,10 @@ export const TrendsHeroChart: Component<TrendsHeroChartProps> = (props) => {
               animation: `fadeIn ${theme().animations.normal}`,
             }}
           >
-            <ApplicationVelocityChart velocityMetrics={props.velocityMetrics} />
+            <ApplicationVelocityChart
+              velocityMetrics={props.velocityMetrics}
+              currentTheme={props.currentTheme}
+            />
           </div>
         </Show>
       </div>

@@ -1,13 +1,32 @@
 /**
  * ActivityTimelineChart - Area chart showing application activity over time
  *
+ * THEME STRATEGY:
+ * This component uses a dual-source theme approach to balance flexibility and completeness:
+ *
+ * 1. Base Theme (useTenureTheme): Provides full theme structure from TenureThemeProvider context
+ *    - Includes semantic colors (success, warning, error, etc.)
+ *    - Includes status colors (applied, screening, etc.)
+ *    - Includes trend colors (up/down indicators)
+ *    - Includes animations, fonts, spacing, etc.
+ *
+ * 2. Dynamic Color Override (currentTheme prop): Optional prop for RIASEC-based primary color
+ *    - Passed from TenureApp which derives colors from user's personality assessment
+ *    - If provided, overrides theme.colors.primary for the chart line/gradient
+ *    - Falls back to context theme if not provided
+ *
+ * This approach was chosen after encountering two issues:
+ * - Using only the prop resulted in missing theme.trend/theme.semantic properties (partial theme)
+ * - Using only the context resulted in losing dynamic RIASEC colors from TenureApp
+ * - Solution: Use context for structure, override primary color from prop
+ *
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
 import { Component, createSignal, For, Show, createMemo } from 'solid-js';
 import { Portal } from 'solid-js/web';
-import * as d3 from 'd3';
-import { useTenureTheme } from '../../../TenureThemeProvider';
+import { scaleTime, scaleLinear, max, area, curveMonotoneX, timeFormat } from 'd3';
+import { useTenureTheme, TenureTheme } from '../../../TenureThemeProvider';
 import { hexToRgba } from '../../../../../theme/semantic-colors';
 import { TimeSeriesDataPoint } from '../trends-data';
 
@@ -16,15 +35,21 @@ interface ActivityTimelineChartProps {
   width?: number;
   height?: number;
   onDataPointClick?: (dataPoint: TimeSeriesDataPoint) => void;
+  currentTheme?: () => { colors: { primary: string } };
 }
 
 export const ActivityTimelineChart: Component<ActivityTimelineChartProps> = (props) => {
   const width = () => props.width || 800;
   const height = () => props.height || 300;
+
+  // THEME MERGING STRATEGY:
+  // 1. Get full theme from TenureThemeProvider context (has all semantic/status/trend colors)
   const theme = useTenureTheme();
 
-  // Primary color with fallback to ensure it's never undefined
-  const primaryColor = () => theme.colors.primary || '#8B5CF6';
+  // 2. Override primary color with RIASEC-based color from TenureApp if provided
+  //    This ensures the chart line reflects the user's personality-based theme
+  //    while still having access to the full theme structure for other elements
+  const primaryColor = () => props.currentTheme?.().colors.primary || theme.colors.primary;
 
   const [hoveredPoint, setHoveredPoint] = createSignal<number | null>(null);
   const [tooltipPosition, setTooltipPosition] = createSignal({ x: 0, y: 0, isBelow: false });
@@ -38,18 +63,16 @@ export const ActivityTimelineChart: Component<ActivityTimelineChartProps> = (pro
   const xScale = createMemo(() => {
     const data = props.data;
     if (data.length === 0)
-      return d3.scaleTime().domain([new Date(), new Date()]).range([0, chartWidth()]);
+      return scaleTime().domain([new Date(), new Date()]).range([0, chartWidth()]);
 
-    return d3
-      .scaleTime()
+    return scaleTime()
       .domain([data[0].date, data[data.length - 1].date])
       .range([0, chartWidth()]);
   });
 
   const yScale = createMemo(() => {
-    const maxCount = d3.max(props.data, (d) => d.count) || 10;
-    return d3
-      .scaleLinear()
+    const maxCount = max(props.data, (d) => d.count) || 10;
+    return scaleLinear()
       .domain([0, maxCount * 1.1]) // Add 10% padding
       .range([chartHeight(), 0])
       .nice();
@@ -57,12 +80,11 @@ export const ActivityTimelineChart: Component<ActivityTimelineChartProps> = (pro
 
   // Area generator
   const areaGenerator = createMemo(() => {
-    return d3
-      .area<TimeSeriesDataPoint>()
+    return area<TimeSeriesDataPoint>()
       .x((d) => xScale()(d.date))
       .y0(chartHeight())
       .y1((d) => yScale()(d.count))
-      .curve(d3.curveMonotoneX);
+      .curve(curveMonotoneX);
   });
 
   // Generate path

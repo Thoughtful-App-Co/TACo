@@ -1,12 +1,22 @@
 /**
  * ApplicationVelocityChart - Bar chart with velocity trends and benchmark comparison
  *
+ * THEME STRATEGY:
+ * This component uses TenureThemeProvider context for full theme access.
+ *
+ * Unlike ActivityTimelineChart, this chart primarily uses semantic and status colors
+ * (theme.semantic.success, theme.trend.up, theme.status.applied, etc.) rather than
+ * the primary color, so it doesn't need the RIASEC color override in practice.
+ *
+ * However, it accepts the currentTheme prop for consistency with sibling components
+ * and potential future use cases where primary color might be needed.
+ *
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
 import { Component, createSignal, For, Show, createMemo } from 'solid-js';
-import * as d3 from 'd3';
-import { useTenureTheme } from '../../../TenureThemeProvider';
+import { scaleBand, scaleLinear, max } from 'd3';
+import { useTenureTheme, TenureTheme } from '../../../TenureThemeProvider';
 import { VelocityMetrics } from '../trends-data';
 import { APPLICATION_BENCHMARKS, getVelocityStatus } from '../trends-benchmarks';
 import { TrendUpIcon, TrendDownIcon } from 'solid-phosphor/bold';
@@ -15,11 +25,16 @@ interface ApplicationVelocityChartProps {
   velocityMetrics: VelocityMetrics;
   width?: number;
   height?: number;
+  currentTheme?: () => { colors: { primary: string } };
 }
 
 export const ApplicationVelocityChart: Component<ApplicationVelocityChartProps> = (props) => {
   const width = () => props.width || 900;
   const height = () => props.height || 350;
+
+  // Get full theme from TenureThemeProvider context
+  // This chart uses semantic colors (success/warning/info) and status colors (applied, etc.)
+  // rather than the primary color, so we don't need the RIASEC color override
   const theme = useTenureTheme();
 
   const [hoveredBar, setHoveredBar] = createSignal<number | null>(null);
@@ -34,17 +49,16 @@ export const ApplicationVelocityChart: Component<ApplicationVelocityChartProps> 
   // Scales
   const xScale = createMemo(() => {
     const data = props.velocityMetrics.weeklyData;
-    return d3
-      .scaleBand()
+    return scaleBand()
       .domain(data.map((_, i) => i.toString()))
       .range([0, chartWidth()])
       .padding(0.2);
   });
 
   const yScale = createMemo(() => {
-    const maxCount = d3.max(props.velocityMetrics.weeklyData, (d) => d.count) || 20;
+    const maxCount = max(props.velocityMetrics.weeklyData, (d) => d.count) || 20;
     const maxWithOptimal = Math.max(maxCount, optimalRange.max * 1.2);
-    return d3.scaleLinear().domain([0, maxWithOptimal]).range([chartHeight(), 0]).nice();
+    return scaleLinear().domain([0, maxWithOptimal]).range([chartHeight(), 0]).nice();
   });
 
   // Y-axis ticks
