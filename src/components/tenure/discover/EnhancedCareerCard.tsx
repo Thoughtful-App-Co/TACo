@@ -12,6 +12,7 @@ import type { OnetCareerMatch } from '../../../services/onet';
 import { getCareerOutlook, onetToSoc } from '../../../services/bls';
 import type { CareerOutlook, ProjectionOutlook } from '../../../types/bls.types';
 import { maximalist } from '../../../theme/maximalist';
+import { logger } from '../../../lib/logger';
 
 // ============================================================================
 // Types
@@ -238,10 +239,10 @@ export const EnhancedCareerCard: Component<EnhancedCareerCardProps> = (props) =>
         if (result.success) {
           return result.data;
         }
-        console.warn('Failed to fetch BLS data:', result.error);
+        logger.laborMarket.warn('Failed to fetch BLS data:', result.error);
         return null;
       } catch (error) {
-        console.error('Error fetching career outlook:', error);
+        logger.laborMarket.error('Error fetching career outlook:', error);
         return null;
       }
     }

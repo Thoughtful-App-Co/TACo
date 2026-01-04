@@ -18,7 +18,9 @@ import {
 } from '../../../../services/onet';
 import { getMutationsRemaining, getUsageSummary } from '../../../../lib/usage-tracker';
 import { canUseMutation } from '../../../../lib/feature-gates';
+import { logger } from '../../../../lib/logger';
 import { IconSearch, IconLoader } from '../../pipeline/ui/Icons';
+import { Paywall } from '../../../common/Paywall';
 
 interface JobTitlePanelProps {
   onMutate: (params: {
@@ -53,6 +55,7 @@ export const JobTitlePanel: Component<JobTitlePanelProps> = (props) => {
   const [length, setLength] = createSignal<'concise' | 'detailed'>('concise');
   const [error, setError] = createSignal<string | null>(null);
   const [showDropdown, setShowDropdown] = createSignal(false);
+  const [showPaywall, setShowPaywall] = createSignal(false);
 
   // Debounced search
   let searchTimeout: ReturnType<typeof setTimeout>;
@@ -73,7 +76,7 @@ export const JobTitlePanel: Component<JobTitlePanelProps> = (props) => {
         setSearchResults(results.slice(0, 10)); // Limit to 10 results
         setShowDropdown(results.length > 0);
       } catch (e) {
-        console.error('Search failed:', e);
+        logger.onet.error('Search failed:', e);
       } finally {
         setIsSearching(false);
       }
@@ -96,7 +99,7 @@ export const JobTitlePanel: Component<JobTitlePanelProps> = (props) => {
         setOccupationData(data);
       })
       .catch((e) => {
-        console.error('Failed to load occupation details:', e);
+        logger.onet.error('Failed to load occupation details:', e);
         setError('Failed to load occupation details');
       })
       .finally(() => {
@@ -135,8 +138,19 @@ export const JobTitlePanel: Component<JobTitlePanelProps> = (props) => {
       return;
     }
 
-    if (!canMutate()) {
-      setError('You have reached your mutation limit for this month');
+    // Check access first
+    const access = canUseMutation();
+    if (!access.allowed) {
+      // Show paywall for subscription issues
+      if (access.requiresAuth || access.requiresSubscription) {
+        setShowPaywall(true);
+        return;
+      }
+    }
+
+    // Check quota separately
+    if (getMutationsRemaining() <= 0) {
+      setError('You have reached your mutation limit for this month. Limit resets on the 1st.');
       return;
     }
 
@@ -696,6 +710,14 @@ export const JobTitlePanel: Component<JobTitlePanelProps> = (props) => {
             : `${usageSummary().mutations.remaining}/${usageSummary().mutations.limit} mutations left`}
         </div>
       </div>
+
+      {/* Paywall Modal */}
+      <Paywall
+        isOpen={showPaywall()}
+        onClose={() => setShowPaywall(false)}
+        feature="tenure_extras"
+        featureName="Role-Based Resume Mutation"
+      />
     </div>
   );
 };

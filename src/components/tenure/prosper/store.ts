@@ -37,6 +37,7 @@ import {
   createDefaultReviewQuestions,
   interpolateSalaryRange,
 } from '../../../schemas/tenure';
+import { logger } from '../../../lib/logger';
 
 // Alias for compatibility
 type SalaryRange = ProsperSalaryRange;
@@ -95,7 +96,7 @@ function loadFromStorage<T>(key: string, defaultValue: T): T {
       return reviveDates(parsed);
     }
   } catch (e) {
-    console.error(`Failed to load ${key} from storage:`, e);
+    logger.storage.error(`Failed to load ${key} from storage:`, e);
   }
   return defaultValue;
 }

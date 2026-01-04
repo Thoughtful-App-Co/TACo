@@ -10,6 +10,7 @@ import { parseResume } from '../services/resume-parser.service';
 import { extractTextFromFile } from '../services/file-extractor.service';
 import { IconUpload, IconFileText, IconCheck, IconAlert, IconX } from '../../pipeline/ui/Icons';
 import { toastStore } from './toast-store';
+import { logger } from '../../../../lib/logger';
 
 interface ResumeUploaderProps {
   onParseComplete?: () => void;
@@ -128,14 +129,14 @@ export const ResumeUploader: Component<ResumeUploaderProps> = (props) => {
       }, 100);
 
       // Extract text from file using client-side parsing
-      console.log('[ResumeUploader] Starting text extraction for:', file.name);
+      logger.resume.debug('Starting text extraction for:', file.name);
       const extraction = await extractTextFromFile(file);
 
       clearInterval(progressInterval);
       prepareStore.setUploadProgress(100);
       prepareStore.setUploading(false);
 
-      console.log('[ResumeUploader] Extraction result:', {
+      logger.resume.debug('Extraction result:', {
         success: extraction.success,
         textLength: extraction.text?.length || 0,
         wordCount: extraction.wordCount,
@@ -145,19 +146,19 @@ export const ResumeUploader: Component<ResumeUploaderProps> = (props) => {
       });
 
       if (!extraction.success) {
-        console.error('[ResumeUploader] Extraction failed:', extraction.error);
+        logger.resume.error('Extraction failed:', extraction.error);
         throw new Error(extraction.error || 'Failed to extract text from file');
       }
 
       if (!extraction.text || extraction.text.trim().length === 0) {
-        console.error('[ResumeUploader] No text extracted from file');
+        logger.resume.error('No text extracted from file');
         throw new Error(
           'No text could be extracted from the PDF. The file may be empty or contain only images.'
         );
       }
 
       // Parse with AI - send extracted text
-      console.log('[ResumeUploader] Starting AI parsing...');
+      logger.resume.debug('Starting AI parsing...');
       await parseResumeContent(extraction.text, file.name, file.type);
     } catch (error) {
       prepareStore.setError(error instanceof Error ? error.message : 'Upload failed');
@@ -217,7 +218,7 @@ export const ResumeUploader: Component<ResumeUploaderProps> = (props) => {
       }
 
       // Call AI parsing service
-      console.log('[ResumeUploader] Calling AI parsing service with:', {
+      logger.resume.debug('Calling AI parsing service with:', {
         contentLength: content.length,
         fileName,
         fileType,
@@ -236,7 +237,7 @@ export const ResumeUploader: Component<ResumeUploaderProps> = (props) => {
       // Clear progress interval on completion
       clearInterval(progressInterval);
 
-      console.log('[ResumeUploader] AI parsing result:', {
+      logger.resume.debug('AI parsing result:', {
         success: result.success,
         experienceCount: result.parsed?.experience?.length || 0,
         educationCount: result.parsed?.education?.length || 0,
@@ -245,12 +246,12 @@ export const ResumeUploader: Component<ResumeUploaderProps> = (props) => {
       });
 
       if (!result.success) {
-        console.error('[ResumeUploader] AI parsing failed:', result.error);
+        logger.resume.error('AI parsing failed:', result.error);
         throw new Error(result.error || 'Parsing failed');
       }
 
       // Update master resume with parsed data
-      console.log('[ResumeUploader] Updating store with parsed data...');
+      logger.resume.debug('Updating store with parsed data...');
       prepareStore.setParsedSections(result.parsed);
 
       prepareStore.updateMasterResume({

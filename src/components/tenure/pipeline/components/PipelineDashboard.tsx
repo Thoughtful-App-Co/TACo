@@ -54,6 +54,9 @@ import {
   daysSince,
 } from '../../../../schemas/pipeline.schema';
 import { formatSalary } from '../utils/salary';
+import { logger } from '../../../../lib/logger';
+
+const log = logger.create('Pipeline');
 
 interface PipelineDashboardProps {
   currentTheme: () => Partial<typeof liquidTenure> & typeof liquidTenure;
@@ -1245,12 +1248,12 @@ const PipelineColumn: Component<PipelineColumnProps> = (props) => {
     try {
       const appId = e.dataTransfer?.getData('text/plain');
       if (!appId) {
-        console.warn('Drop failed: No application ID in drag data');
+        log.warn('Drop failed: No application ID in drag data');
         return;
       }
       props.onDrop(appId);
     } catch (error) {
-      console.error('Failed to process drop:', error);
+      log.error('Failed to process drop:', error);
     }
   };
 
@@ -1543,14 +1546,14 @@ const ApplicationCard: Component<ApplicationCardProps> = (props) => {
   const handleDragStart = (e: DragEvent) => {
     try {
       if (!e.dataTransfer) {
-        console.warn('Drag operation failed: dataTransfer not available');
+        log.warn('Drag operation failed: dataTransfer not available');
         return;
       }
       e.dataTransfer.setData('text/plain', app().id);
       e.dataTransfer.effectAllowed = 'move';
       props.onDragStart?.();
     } catch (error) {
-      console.error('Failed to initiate drag operation:', error);
+      log.error('Failed to initiate drag operation:', error);
       // Reset dragging state if drag fails
       props.onDragEnd?.();
     }

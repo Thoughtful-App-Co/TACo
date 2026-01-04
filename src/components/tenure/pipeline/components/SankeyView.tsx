@@ -33,6 +33,9 @@ import {
   IconCheck,
   IconX,
 } from '../ui/Icons';
+import { logger } from '../../../../lib/logger';
+
+const log = logger.create('Pipeline');
 
 interface SankeyViewProps {
   currentTheme: () => Partial<typeof liquidTenure> & typeof liquidTenure;
@@ -380,7 +383,7 @@ export const SankeyView: Component<SankeyViewProps> = (props) => {
 
       return graph;
     } catch (e) {
-      console.warn('Sankey layout failed:', e);
+      log.warn('Sankey layout failed:', e);
 
       // Fallback: position nodes manually in a horizontal line
       const nodeCount = nodes.length;

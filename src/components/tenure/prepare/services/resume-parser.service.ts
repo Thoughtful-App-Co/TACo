@@ -4,6 +4,7 @@
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
+import { logger } from '../../../../lib/logger';
 import type { ParsedResumeSections, ExtractedKeywords } from '../../../../schemas/prepare.schema';
 
 // ============================================================================
@@ -33,8 +34,8 @@ export interface ParseResumeResponse {
  * Parse resume using AI
  */
 export async function parseResume(request: ParseResumeRequest): Promise<ParseResumeResponse> {
-  console.log('[Resume Parser API] Starting API call to /api/resume/parse');
-  console.log('[Resume Parser API] Request:', {
+  logger.resume.debug('Starting API call to /api/resume/parse');
+  logger.resume.debug('Request:', {
     contentLength: request.content.length,
     contentType: request.contentType,
     fileName: request.fileName,
@@ -49,20 +50,20 @@ export async function parseResume(request: ParseResumeRequest): Promise<ParseRes
       body: JSON.stringify(request),
     });
 
-    console.log('[Resume Parser API] Response status:', response.status, response.statusText);
+    logger.resume.debug('Response status:', response.status, response.statusText);
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      console.error('[Resume Parser API] Error response:', errorData);
+      logger.resume.error('Error response:', errorData);
 
       // If there's debug info, log it prominently
       if (errorData.debugInfo) {
-        console.error('[Resume Parser API] === DEBUG INFO ===');
-        console.error('[Resume Parser API] Parse Error:', errorData.debugInfo.parseError);
-        console.error('[Resume Parser API] Response Length:', errorData.debugInfo.responseLength);
-        console.error('[Resume Parser API] Response Preview:', errorData.debugInfo.responsePreview);
-        console.error('[Resume Parser API] Response Suffix:', errorData.debugInfo.responseSuffix);
-        console.error('[Resume Parser API] === END DEBUG INFO ===');
+        logger.resume.error('=== DEBUG INFO ===');
+        logger.resume.error('Parse Error:', errorData.debugInfo.parseError);
+        logger.resume.error('Response Length:', errorData.debugInfo.responseLength);
+        logger.resume.error('Response Preview:', errorData.debugInfo.responsePreview);
+        logger.resume.error('Response Suffix:', errorData.debugInfo.responseSuffix);
+        logger.resume.error('=== END DEBUG INFO ===');
       }
 
       throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
@@ -72,29 +73,20 @@ export async function parseResume(request: ParseResumeRequest): Promise<ParseRes
 
     // Check if the response indicates success
     if (!data.success && data.error) {
-      console.error('[Resume Parser API] API returned error:', data.error);
+      logger.resume.error('API returned error:', data.error);
 
       // Log debug info if present
       if ((data as any).debugInfo) {
-        console.error('[Resume Parser API] === DEBUG INFO ===');
-        console.error('[Resume Parser API] Parse Error:', (data as any).debugInfo.parseError);
-        console.error(
-          '[Resume Parser API] Response Length:',
-          (data as any).debugInfo.responseLength
-        );
-        console.error(
-          '[Resume Parser API] Response Preview:',
-          (data as any).debugInfo.responsePreview
-        );
-        console.error(
-          '[Resume Parser API] Response Suffix:',
-          (data as any).debugInfo.responseSuffix
-        );
-        console.error('[Resume Parser API] === END DEBUG INFO ===');
+        logger.resume.error('=== DEBUG INFO ===');
+        logger.resume.error('Parse Error:', (data as any).debugInfo.parseError);
+        logger.resume.error('Response Length:', (data as any).debugInfo.responseLength);
+        logger.resume.error('Response Preview:', (data as any).debugInfo.responsePreview);
+        logger.resume.error('Response Suffix:', (data as any).debugInfo.responseSuffix);
+        logger.resume.error('=== END DEBUG INFO ===');
       }
     }
 
-    console.log('[Resume Parser API] Success! Parsed data:', {
+    logger.resume.info('Success! Parsed data:', {
       success: data.success,
       experienceCount: data.parsed?.experience?.length || 0,
       educationCount: data.parsed?.education?.length || 0,
@@ -103,8 +95,8 @@ export async function parseResume(request: ParseResumeRequest): Promise<ParseRes
     });
     return data;
   } catch (error) {
-    console.error('[Resume Parser API] Exception caught:', error);
-    console.error('[Resume Parser API] Error details:', {
+    logger.resume.error('Exception caught:', error);
+    logger.resume.error('Error details:', {
       name: error instanceof Error ? error.name : 'Unknown',
       message: error instanceof Error ? error.message : 'Unknown error',
       stack: error instanceof Error ? error.stack : undefined,

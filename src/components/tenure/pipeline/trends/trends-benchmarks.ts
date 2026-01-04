@@ -6,6 +6,7 @@
  */
 
 import { getLaborMarketSnapshot } from '../../../../services/bls';
+import { logger } from '../../../../lib/logger';
 
 /**
  * Application volume benchmarks
@@ -371,7 +372,10 @@ export async function getLiveMarketBenchmarks(): Promise<LiveMarketBenchmarks> {
       isLive: true,
     };
   } catch (error) {
-    console.warn('Failed to fetch live market benchmarks, using static fallback:', error);
+    logger.laborMarket.warn(
+      'Failed to fetch live market benchmarks, using static fallback:',
+      error
+    );
     return STATIC_MARKET_BENCHMARKS;
   }
 }

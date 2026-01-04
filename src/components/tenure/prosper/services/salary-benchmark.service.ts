@@ -12,6 +12,7 @@
 import * as bls from '../../../../services/bls';
 import { MarketBenchmark } from '../../../../schemas/tenure';
 import { isV2FeatureEnabled } from '../../../../lib/feature-gates';
+import { logger } from '../../../../lib/logger';
 
 // =============================================================================
 // CACHE CONFIGURATION
@@ -59,7 +60,7 @@ function getRateLimitState(): RateLimitState {
       return state;
     }
   } catch (e) {
-    console.error('Failed to load rate limit state:', e);
+    logger.laborMarket.error('Failed to load rate limit state:', e);
   }
 
   return {
@@ -118,7 +119,7 @@ function getCachedBenchmark(socCode: string, areaCode?: string): MarketBenchmark
     entry.data.fetchedAt = new Date(entry.data.fetchedAt);
     return entry.data;
   } catch (e) {
-    console.error('Failed to read cached benchmark:', e);
+    logger.laborMarket.error('Failed to read cached benchmark:', e);
     return null;
   }
 }
@@ -135,7 +136,7 @@ function setCachedBenchmark(benchmark: MarketBenchmark, socCode: string, areaCod
     };
     localStorage.setItem(key, JSON.stringify(entry));
   } catch (e) {
-    console.error('Failed to cache benchmark:', e);
+    logger.laborMarket.error('Failed to cache benchmark:', e);
   }
 }
 
@@ -228,7 +229,7 @@ export async function getSalaryBenchmark(
         };
       }
     } catch (e) {
-      console.warn('Client-side BLS call failed, falling back to server:', e);
+      logger.laborMarket.warn('Client-side BLS call failed, falling back to server:', e);
     }
   }
 
@@ -336,7 +337,7 @@ export function clearBenchmarkCache(): number {
       cleared++;
     });
   } catch (e) {
-    console.error('Failed to clear benchmark cache:', e);
+    logger.laborMarket.error('Failed to clear benchmark cache:', e);
   }
   return cleared;
 }

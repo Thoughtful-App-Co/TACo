@@ -37,6 +37,7 @@ const DEFAULT_SETTINGS = DEFAULT_PROSPECT_SETTINGS;
 import { normalizeJobTitle, getCanonicalPositionName } from './utils/position-matching';
 import { normalizeToAnnual } from './utils/salary';
 import { notificationInteractionStore } from './store/notification-interactions';
+import { logger } from '../../../lib/logger';
 
 // ============================================================================
 // STORAGE KEYS
@@ -84,7 +85,7 @@ function loadFromStorage<T>(key: string, defaultValue: T): T {
       return reviveDates(parsed);
     }
   } catch (e) {
-    console.error(`Failed to load ${key} from storage:`, e);
+    logger.storage.error(`Failed to load ${key} from storage:`, e);
   }
   return defaultValue;
 }

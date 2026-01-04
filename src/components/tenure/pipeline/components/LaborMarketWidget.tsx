@@ -33,6 +33,7 @@ import type {
   ProjectionOutlook,
 } from '../../../../types/bls.types';
 import { isV2FeatureEnabled } from '../../../../lib/feature-gates';
+import { logger } from '../../../../lib/logger';
 
 interface LaborMarketWidgetProps {
   currentTheme: () => typeof liquidTenure;
@@ -49,35 +50,6 @@ interface ApiError {
   details?: string;
   timestamp: Date;
 }
-
-// =============================================================================
-// DEBUG MODE
-// =============================================================================
-
-/**
- * Check if debug mode is enabled via localStorage
- * Enable by setting: localStorage.setItem('taco_debug_labor_market', 'true')
- */
-const isDebugMode = (): boolean => {
-  try {
-    return localStorage.getItem('taco_debug_labor_market') === 'true';
-  } catch {
-    return false;
-  }
-};
-
-/**
- * Debug logger with [LaborMarket] prefix
- */
-const debugLog = (message: string, data?: unknown): void => {
-  if (isDebugMode()) {
-    if (data !== undefined) {
-      console.log(`[LaborMarket] ${message}`, data);
-    } else {
-      console.log(`[LaborMarket] ${message}`);
-    }
-  }
-};
 
 // =============================================================================
 // OUTLOOK BADGE COLORS
@@ -575,7 +547,7 @@ const ProgressBar: Component<{ value: number; max?: number; color?: string }> = 
 
 export const LaborMarketWidget: Component<LaborMarketWidgetProps> = (props) => {
   // Feature gate: BLS integration is deferred to v2
-  if (!isV2FeatureEnabled('BLS_INTEGRATION')) {
+  if (!isV2FeatureEnabled('laborMarket')) {
     return null;
   }
 
@@ -604,70 +576,71 @@ export const LaborMarketWidget: Component<LaborMarketWidgetProps> = (props) => {
 
   // Mount logging
   onMount(() => {
-    console.log('[LaborMarket] Widget mounted');
-    console.log(`[LaborMarket] Profile has target occupations: ${hasTargetOccupations()}`);
-    console.log(`[LaborMarket] Profile has location preferences: ${!!hasLocationPreferences()}`);
+    logger.laborMarket.debug('Widget mounted');
+    logger.laborMarket.debug(`Profile has target occupations: ${hasTargetOccupations()}`);
+    logger.laborMarket.debug(`Profile has location preferences: ${!!hasLocationPreferences()}`);
 
-    if (isDebugMode()) {
-      console.log('[LaborMarket] Debug mode is ENABLED');
-      console.log('[LaborMarket] Profile data:', profile());
-    }
+    logger.laborMarket.debug('Debug mode is ENABLED');
+    logger.laborMarket.debug('Profile data:', profile());
 
     // Force resource to trigger by reading it
-    console.log('[LaborMarket] Triggering market snapshot fetch...');
+    logger.laborMarket.debug('Triggering market snapshot fetch...');
 
     try {
       const snapshotValue = marketSnapshot();
-      console.log('[LaborMarket] Market snapshot value:', snapshotValue);
-      console.log('[LaborMarket] Market snapshot loading:', marketSnapshot.loading);
-      console.log('[LaborMarket] Market snapshot state:', marketSnapshot.state);
-      console.log('[LaborMarket] Market snapshot error:', marketSnapshotError());
+      logger.laborMarket.debug('Market snapshot value:', snapshotValue);
+      logger.laborMarket.debug('Market snapshot loading:', marketSnapshot.loading);
+      logger.laborMarket.debug('Market snapshot state:', marketSnapshot.state);
+      logger.laborMarket.debug('Market snapshot error:', marketSnapshotError());
     } catch (error) {
-      console.error('[LaborMarket] Error reading market snapshot:', error);
+      logger.laborMarket.error('Error reading market snapshot:', error);
     }
 
     // Also trigger the other resources
     try {
-      console.log('[LaborMarket] Occupation data value:', targetOccupationData());
-      console.log('[LaborMarket] Regional data value:', regionalData());
+      logger.laborMarket.debug('Occupation data value:', targetOccupationData());
+      logger.laborMarket.debug('Regional data value:', regionalData());
     } catch (error) {
-      console.error('[LaborMarket] Error reading other resources:', error);
+      logger.laborMarket.error('Error reading other resources:', error);
     }
   });
 
   // Fetch market snapshot with error handling
   const fetchMarketSnapshot = async (): Promise<LaborMarketSnapshot | null> => {
-    console.log('[LaborMarket] fetchMarketSnapshot() CALLED');
+    logger.laborMarket.debug('fetchMarketSnapshot() CALLED');
     const startTime = performance.now();
     setMarketSnapshotError(null);
-    debugLog('Fetching market snapshot...');
+    logger.laborMarket.debug('Fetching market snapshot...');
 
     try {
-      console.log('[LaborMarket] About to call getLaborMarketSnapshot()...');
+      logger.laborMarket.debug('About to call getLaborMarketSnapshot()...');
       const result = await getLaborMarketSnapshot();
-      console.log('[LaborMarket] getLaborMarketSnapshot() returned');
-      console.log('[LaborMarket] Result type:', typeof result);
-      console.log('[LaborMarket] Result.success:', result?.success);
-      console.log('[LaborMarket] Full result:', JSON.stringify(result, null, 2));
+      logger.laborMarket.debug('getLaborMarketSnapshot() returned');
+      logger.laborMarket.debug('Result type:', typeof result);
+      logger.laborMarket.debug('Result.success:', result?.success);
+      logger.laborMarket.debug('Full result:', JSON.stringify(result, null, 2));
 
       const timing = Math.round(performance.now() - startTime);
       setSnapshotTiming(timing);
 
       if (result.success) {
-        console.log('[LaborMarket] SUCCESS - Market snapshot fetched:', {
+        logger.laborMarket.debug('SUCCESS - Market snapshot fetched:', {
           timing,
           unemployment: result.data.nationalUnemploymentRate,
           jobOpenings: result.data.jobOpenings,
           inflation: result.data.inflation,
         });
-        debugLog('Market snapshot fetched successfully', { timing, data: result.data });
+        logger.laborMarket.debug('Market snapshot fetched successfully', {
+          timing,
+          data: result.data,
+        });
         // Cache status is determined by timing - fast responses likely from cache
         setSnapshotCacheHit(timing < 100);
         return result.data;
       }
 
       // Handle error case
-      console.error('[LaborMarket] API call succeeded but result.success is false:', result.error);
+      logger.laborMarket.error('API call succeeded but result.success is false:', result.error);
       const errorDetails: ApiError = {
         code: result.error?.code || 'unknown',
         message: result.error?.message || 'Failed to fetch market snapshot',
@@ -675,14 +648,14 @@ export const LaborMarketWidget: Component<LaborMarketWidgetProps> = (props) => {
         timestamp: new Date(),
       };
 
-      console.error('[LaborMarket] Failed to fetch market snapshot:', {
+      logger.laborMarket.error('Failed to fetch market snapshot:', {
         error: result.error,
         timing,
       });
       setMarketSnapshotError(errorDetails);
       return null;
     } catch (error) {
-      console.error('[LaborMarket] EXCEPTION in fetchMarketSnapshot:', error);
+      logger.laborMarket.error('EXCEPTION in fetchMarketSnapshot:', error);
       const timing = Math.round(performance.now() - startTime);
       setSnapshotTiming(timing);
 
@@ -693,7 +666,7 @@ export const LaborMarketWidget: Component<LaborMarketWidgetProps> = (props) => {
         timestamp: new Date(),
       };
 
-      console.error('[LaborMarket] Exception while fetching market snapshot:', {
+      logger.laborMarket.error('Exception while fetching market snapshot:', {
         error,
         timing,
       });
@@ -709,13 +682,13 @@ export const LaborMarketWidget: Component<LaborMarketWidgetProps> = (props) => {
     targetOccupations: { socCode: string; title: string }[] | undefined
   ): Promise<CareerOutlook[] | null> => {
     if (!targetOccupations || targetOccupations.length === 0) {
-      debugLog('No target occupations to fetch');
+      logger.laborMarket.debug('No target occupations to fetch');
       return null;
     }
 
     const startTime = performance.now();
     setOccupationDataError(null);
-    debugLog(
+    logger.laborMarket.debug(
       'Fetching occupation data for:',
       targetOccupations.map((o) => o.title)
     );
@@ -728,23 +701,23 @@ export const LaborMarketWidget: Component<LaborMarketWidgetProps> = (props) => {
 
     for (const occ of occupationsToFetch) {
       try {
-        debugLog(`Fetching career outlook for ${occ.title} (${occ.socCode})`);
+        logger.laborMarket.debug(`Fetching career outlook for ${occ.title} (${occ.socCode})`);
         const result = await getCareerOutlook(occ.socCode);
 
         if (result.success) {
           results.push(result.data);
-          debugLog(`Successfully fetched data for ${occ.title}`);
+          logger.laborMarket.debug(`Successfully fetched data for ${occ.title}`);
         } else {
           errors.push(`${occ.title}: ${result.error?.message || 'Unknown error'}`);
-          console.error(
-            `[LaborMarket] Failed to fetch occupation data for ${occ.title}:`,
+          logger.laborMarket.error(
+            `Failed to fetch occupation data for ${occ.title}:`,
             result.error
           );
         }
       } catch (error) {
         const errorMsg = error instanceof Error ? error.message : 'Unknown error';
         errors.push(`${occ.title}: ${errorMsg}`);
-        console.error(`[LaborMarket] Exception fetching occupation data for ${occ.title}:`, error);
+        logger.laborMarket.error(`Exception fetching occupation data for ${occ.title}:`, error);
       }
     }
 
@@ -764,10 +737,14 @@ export const LaborMarketWidget: Component<LaborMarketWidgetProps> = (props) => {
 
     // If some requests failed, log warning but return partial results
     if (errors.length > 0) {
-      console.warn('[LaborMarket] Some occupation fetches failed:', errors);
+      logger.laborMarket.warn('Some occupation fetches failed:', errors);
     }
 
-    debugLog('Occupation data fetch complete', { timing, resultsCount: results.length, errors });
+    logger.laborMarket.debug('Occupation data fetch complete', {
+      timing,
+      resultsCount: results.length,
+      errors,
+    });
     return results.length > 0 ? results : null;
   };
 
@@ -780,13 +757,13 @@ export const LaborMarketWidget: Component<LaborMarketWidgetProps> = (props) => {
   const fetchRegionalData = async (): Promise<RegionalComparison | null> => {
     const userProfile = profile();
     if (!userProfile?.targetOccupations?.[0] || !userProfile?.locationPreferences) {
-      debugLog('Missing profile data for regional comparison');
+      logger.laborMarket.debug('Missing profile data for regional comparison');
       return null;
     }
 
     const prefs = userProfile.locationPreferences;
     if (!prefs.current?.state || !prefs.targetLocations?.states?.length) {
-      debugLog('Missing location preferences for regional comparison');
+      logger.laborMarket.debug('Missing location preferences for regional comparison');
       return null;
     }
 
@@ -800,17 +777,17 @@ export const LaborMarketWidget: Component<LaborMarketWidgetProps> = (props) => {
         try {
           return buildStateAreaCode(abbrev);
         } catch (e) {
-          debugLog(`Failed to convert state abbreviation: ${abbrev}`, e);
+          logger.laborMarket.debug(`Failed to convert state abbreviation: ${abbrev}`, e);
           return null;
         }
       })
       .filter((code): code is string => code !== null);
 
     if (areaCodes.length === 0) {
-      debugLog('No valid area codes after conversion');
+      logger.laborMarket.debug('No valid area codes after conversion');
       return null;
     }
-    debugLog('Fetching regional data for areas:', areaCodes);
+    logger.laborMarket.debug('Fetching regional data for areas:', areaCodes);
 
     try {
       const result = await compareRegionalWages(
@@ -821,7 +798,10 @@ export const LaborMarketWidget: Component<LaborMarketWidgetProps> = (props) => {
       setRegionalTiming(timing);
 
       if (result.success) {
-        debugLog('Regional data fetched successfully', { timing, data: result.data });
+        logger.laborMarket.debug('Regional data fetched successfully', {
+          timing,
+          data: result.data,
+        });
         return result.data;
       }
 
@@ -832,7 +812,7 @@ export const LaborMarketWidget: Component<LaborMarketWidgetProps> = (props) => {
         timestamp: new Date(),
       };
 
-      console.error('[LaborMarket] Failed to fetch regional data:', {
+      logger.laborMarket.error('Failed to fetch regional data:', {
         error: result.error,
         timing,
       });
@@ -849,7 +829,7 @@ export const LaborMarketWidget: Component<LaborMarketWidgetProps> = (props) => {
         timestamp: new Date(),
       };
 
-      console.error('[LaborMarket] Exception while fetching regional data:', {
+      logger.laborMarket.error('Exception while fetching regional data:', {
         error,
         timing,
       });
@@ -874,16 +854,16 @@ export const LaborMarketWidget: Component<LaborMarketWidgetProps> = (props) => {
 
   // Refresh handler
   const handleRefresh = async () => {
-    debugLog('Refresh triggered');
+    logger.laborMarket.debug('Refresh triggered');
     setIsRefreshing(true);
     clearBlsCache();
     setSnapshotCacheHit(false);
 
     try {
       await Promise.all([refetchSnapshot(), refetchOccupations?.(), refetchRegional?.()]);
-      debugLog('Refresh complete');
+      logger.laborMarket.debug('Refresh complete');
     } catch (error) {
-      console.error('[LaborMarket] Error during refresh:', error);
+      logger.laborMarket.error('Error during refresh:', error);
     } finally {
       setIsRefreshing(false);
     }
@@ -891,19 +871,19 @@ export const LaborMarketWidget: Component<LaborMarketWidgetProps> = (props) => {
 
   // Retry handlers for individual sections
   const handleRetrySnapshot = async () => {
-    debugLog('Retrying market snapshot fetch');
+    logger.laborMarket.debug('Retrying market snapshot fetch');
     setMarketSnapshotError(null);
     await refetchSnapshot();
   };
 
   const handleRetryOccupations = async () => {
-    debugLog('Retrying occupation data fetch');
+    logger.laborMarket.debug('Retrying occupation data fetch');
     setOccupationDataError(null);
     await refetchOccupations?.();
   };
 
   const handleRetryRegional = async () => {
-    debugLog('Retrying regional data fetch');
+    logger.laborMarket.debug('Retrying regional data fetch');
     setRegionalDataError(null);
     await refetchRegional?.();
   };
@@ -971,7 +951,7 @@ export const LaborMarketWidget: Component<LaborMarketWidgetProps> = (props) => {
       }}
     >
       {/* Debug Panel - Only shown when debug mode is enabled */}
-      <Show when={isDebugMode()}>
+      <Show when={logger.laborMarket.getLevel() <= 1}>
         <div
           style={{
             padding: '12px',

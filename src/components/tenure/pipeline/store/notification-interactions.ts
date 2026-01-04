@@ -6,6 +6,7 @@
 
 import { createStore } from 'solid-js/store';
 import { NotificationInteraction, JobApplication } from '../../../../schemas/pipeline.schema';
+import { logger } from '../../../../lib/logger';
 
 // ============================================================================
 // STORAGE KEY
@@ -48,7 +49,7 @@ function loadFromStorage(): Map<string, NotificationInteraction> {
       return map;
     }
   } catch (e) {
-    console.error('Failed to load notification interactions:', e);
+    logger.storage.error('Failed to load notification interactions:', e);
   }
   return new Map();
 }
@@ -62,7 +63,7 @@ function saveToStorage(interactions: Map<string, NotificationInteraction>) {
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(obj));
   } catch (e) {
-    console.error('Failed to save notification interactions:', e);
+    logger.storage.error('Failed to save notification interactions:', e);
   }
 }
 

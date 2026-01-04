@@ -47,6 +47,7 @@ import {
   type CoverLetterResponse,
 } from './services/cover-letter.service';
 import { exportService, type ExportFormat } from './services/export.service';
+import { logger } from '../../../lib/logger';
 
 interface PrepareAppProps {
   currentTheme: () => {
@@ -252,7 +253,7 @@ export const PrepareApp: Component<PrepareAppProps> = (props) => {
         matchScoreAfter: result.analysis.matchScoreAfter,
       });
     } catch (error: any) {
-      console.error('Mutation failed:', error);
+      logger.resume.error('Mutation failed:', error);
       setMutationError(error.getUserMessage?.() || error.message || 'Failed to mutate resume');
     } finally {
       setIsMutating(false);
@@ -372,7 +373,7 @@ export const PrepareApp: Component<PrepareAppProps> = (props) => {
         matchScoreAfter: result.analysis.matchScoreAfter,
       });
     } catch (error: any) {
-      console.error('Role mutation failed:', error);
+      logger.resume.error('Role mutation failed:', error);
       setMutationError(
         error.getUserMessage?.() || error.message || 'Failed to create resume variant'
       );
@@ -474,7 +475,7 @@ export const PrepareApp: Component<PrepareAppProps> = (props) => {
       const result = await coverLetterService.generateCoverLetter(request);
       setCoverLetterResult(result);
     } catch (error: any) {
-      console.error('Cover letter generation failed:', error);
+      logger.resume.error('Cover letter generation failed:', error);
       setCoverLetterError(
         error.getUserMessage?.() || error.message || 'Failed to generate cover letter'
       );
@@ -504,7 +505,7 @@ export const PrepareApp: Component<PrepareAppProps> = (props) => {
       setShowExportModal(false);
       setExportTarget(null);
     } catch (error: any) {
-      console.error('Export failed:', error);
+      logger.resume.error('Export failed:', error);
       // Show error in success modal (reusing for error display)
       setSuccessModal({
         isOpen: true,
@@ -951,7 +952,7 @@ export const PrepareApp: Component<PrepareAppProps> = (props) => {
           }}
           onEditVariant={(variant: ResumeVariant) => {
             // TODO: Implement variant editing
-            console.log('Edit variant:', variant);
+            logger.resume.debug('Edit variant:', variant);
             setViewMode('builder');
           }}
           onExport={(item) => {

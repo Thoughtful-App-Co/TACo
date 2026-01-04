@@ -219,6 +219,8 @@ export function duotoneGlow(
 // RIASEC SCORE STORAGE KEY
 // ============================================================================
 
+import { logger } from '../../../../lib/logger';
+
 export const RIASEC_STORAGE_KEY = 'augment_answers';
 
 /**
@@ -231,7 +233,7 @@ export function loadRiasecScores(): Record<string, number> | null {
       return JSON.parse(stored);
     }
   } catch (e) {
-    console.error('Failed to load RIASEC scores:', e);
+    logger.storage.error('Failed to load RIASEC scores:', e);
   }
   return null;
 }

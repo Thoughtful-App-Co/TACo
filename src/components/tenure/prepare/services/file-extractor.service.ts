@@ -8,6 +8,8 @@
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
+import { logger } from '../../../../lib/logger';
+
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -29,30 +31,27 @@ export interface ExtractionResult {
  * Note: PDF.js worker is configured globally in src/index.tsx
  */
 export async function extractTextFromPDF(file: File): Promise<ExtractionResult> {
-  console.log('[PDF Extractor] Starting extraction for:', file.name);
+  logger.resume.debug('Starting extraction for:', file.name);
 
   try {
     // Import pdfjs-dist - worker is already configured in src/index.tsx
     const pdfjsLib = await import('pdfjs-dist');
-    console.log('[PDF Extractor] pdfjs-dist loaded, version:', pdfjsLib.version);
+    logger.resume.debug('pdfjs-dist loaded, version:', pdfjsLib.version);
 
     // Ensure worker is configured (defensive check)
     if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
-      console.log('[PDF Extractor] Worker not configured, setting up...');
+      logger.resume.debug('Worker not configured, setting up...');
       pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
     } else {
-      console.log(
-        '[PDF Extractor] Worker already configured:',
-        pdfjsLib.GlobalWorkerOptions.workerSrc
-      );
+      logger.resume.debug('Worker already configured:', pdfjsLib.GlobalWorkerOptions.workerSrc);
     }
 
     // Read file as ArrayBuffer
     const arrayBuffer = await file.arrayBuffer();
-    console.log('[PDF Extractor] File read as ArrayBuffer, size:', arrayBuffer.byteLength, 'bytes');
+    logger.resume.debug('File read as ArrayBuffer, size:', arrayBuffer.byteLength, 'bytes');
 
     // Load the PDF document with standard font data for font handling
-    console.log('[PDF Extractor] Loading PDF document...');
+    logger.resume.debug('Loading PDF document...');
     const loadingTask = pdfjsLib.getDocument({
       data: arrayBuffer,
       // Use unpkg CDN which has the font files (cdnjs returns 403)
@@ -63,26 +62,26 @@ export async function extractTextFromPDF(file: File): Promise<ExtractionResult> 
       disableFontFace: true,
     });
     const pdf = await loadingTask.promise;
-    console.log('[PDF Extractor] PDF loaded successfully, pages:', pdf.numPages);
+    logger.resume.debug('PDF loaded successfully, pages:', pdf.numPages);
 
     // Extract text from all pages
     const textParts: string[] = [];
 
     for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-      console.log(`[PDF Extractor] Extracting text from page ${pageNum}/${pdf.numPages}...`);
+      logger.resume.debug(`Extracting text from page ${pageNum}/${pdf.numPages}...`);
       const page = await pdf.getPage(pageNum);
       const textContent = await page.getTextContent();
       const pageText = textContent.items
         .map((item: any) => ('str' in item ? item.str : ''))
         .join(' ');
       textParts.push(pageText);
-      console.log(`[PDF Extractor] Page ${pageNum} extracted, ${pageText.length} characters`);
+      logger.resume.debug(`Page ${pageNum} extracted, ${pageText.length} characters`);
     }
 
     const text = textParts.join('\n\n');
     const wordCount = text.split(/\s+/).filter((w: string) => w.length > 0).length;
 
-    console.log('[PDF Extractor] Extraction complete!', {
+    logger.resume.info('Extraction complete!', {
       totalText: text.length,
       wordCount,
       pageCount: pdf.numPages,
@@ -96,11 +95,8 @@ export async function extractTextFromPDF(file: File): Promise<ExtractionResult> 
       wordCount,
     };
   } catch (error) {
-    console.error('[PDF Extractor] Error:', error);
-    console.error(
-      '[PDF Extractor] Error stack:',
-      error instanceof Error ? error.stack : 'No stack'
-    );
+    logger.resume.error('Error:', error);
+    logger.resume.error('Error stack:', error instanceof Error ? error.stack : 'No stack');
     return {
       success: false,
       text: '',
