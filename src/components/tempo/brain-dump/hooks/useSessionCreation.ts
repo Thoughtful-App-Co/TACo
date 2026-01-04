@@ -4,6 +4,9 @@ import { brainDumpService } from '../services/brain-dump-services';
 import type { ProcessedStory } from '../../lib/types';
 import { useNavigate } from '@solidjs/router';
 import type { ErrorDetails } from '../types';
+import { logger } from '../../../../lib/logger';
+
+const log = logger.create('Session');
 
 export function useSessionCreation() {
   const navigate = useNavigate();
@@ -29,7 +32,7 @@ export function useSessionCreation() {
 
       // Navigate to the newly created session page
       const today = new Date().toISOString().split('T')[0];
-      console.log(`[useSessionCreation] Navigating to session page for date: ${today}`);
+      log.debug(`Navigating to session page for date: ${today}`);
 
       // Add a small delay to ensure the session is saved before navigation
       setTimeout(() => {
@@ -39,15 +42,15 @@ export function useSessionCreation() {
       }, 500);
 
       return result;
-    } catch (error) {
-      console.error('Failed to create session:', error);
+    } catch (err) {
+      log.error('Failed to create session: ' + String(err));
 
-      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
-      let errorDetails = error instanceof Error ? error.cause : error;
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred';
+      let errorDetails: unknown = err;
 
       // If the error has a structured response
-      if (error instanceof Error && error.cause && typeof error.cause === 'object') {
-        errorDetails = error.cause;
+      if (err instanceof Error && (err as any).cause && typeof (err as any).cause === 'object') {
+        errorDetails = (err as any).cause;
       }
 
       setError({
@@ -58,7 +61,7 @@ export function useSessionCreation() {
 
       setProcessingProgress(0);
       setProcessingStep('Error creating session');
-      throw error;
+      throw err;
     } finally {
       setTimeout(() => {
         setIsCreatingSession(false);

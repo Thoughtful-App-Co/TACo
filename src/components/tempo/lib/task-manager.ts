@@ -13,6 +13,9 @@ import type {
   StoryType,
   DifficultyLevel,
 } from './types';
+import { logger } from '../../../lib/logger';
+
+const log = logger.create('TaskManager');
 
 const DURATION_RULES = {
   FIRST_SESSION: { min: 20, max: 30 },
@@ -209,8 +212,8 @@ export async function createTimeBoxes(tasks: Task[]): Promise<SessionPlan> {
         const currentTotalDuration = totalSessionDuration + storyDuration;
 
         if (currentTotalDuration > frogDeadlineMinutes) {
-          console.warn(
-            `Warning: Frog task "${task.title}" scheduled beyond the first third of the day (${currentTotalDuration}/${frogDeadlineMinutes} minutes)`
+          log.warn(
+            `Frog task "${task.title}" scheduled beyond the first third of the day (${currentTotalDuration}/${frogDeadlineMinutes} minutes)`
           );
         }
 

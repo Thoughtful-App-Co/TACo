@@ -8,6 +8,9 @@ import type {
   SessionStatus,
 } from '../lib/types';
 import { sessionStorage } from '../lib/sessionStorage';
+import { logger } from '../../../lib/logger';
+
+const log = logger.create('SessionStorage');
 
 const SESSION_PREFIX = 'session-';
 
@@ -16,22 +19,22 @@ export class SessionStorageService {
    * Get a session by date
    */
   async getSession(date: string): Promise<Session | null> {
-    console.log(`[SessionStorageService] Getting session for date: ${date}`);
+    log.debug(`Getting session for date: ${date}`);
     let storedSession: any = null;
     try {
       storedSession = await sessionStorage.getSession(date);
     } catch (error) {
-      console.error(`[SessionStorageService] Error getting session for date: ${date}`, error);
+      log.error(`Error getting session for date: ${date}`, error);
       return null;
     }
 
     if (!storedSession) {
-      console.log(`[SessionStorageService] No session found for date: ${date}`);
+      log.debug(`No session found for date: ${date}`);
 
       // For development only: if no session exists, create a dummy session
       // TODO: Replace process.env.NODE_ENV with import.meta.env.DEV once available
       if (import.meta.env?.DEV) {
-        console.log(`[SessionStorageService] Creating dummy session for development`);
+        log.debug(`Creating dummy session for development`);
         const dummySession = this.createDummySession(date);
         await this.saveSession(date, dummySession);
         return dummySession;
@@ -40,8 +43,8 @@ export class SessionStorageService {
       return null;
     }
 
-    console.log(
-      `[SessionStorageService] Found session for date: ${date} with ${storedSession.storyBlocks?.length || 0} story blocks`
+    log.debug(
+      `Found session for date: ${date} with ${storedSession.storyBlocks?.length || 0} story blocks`
     );
 
     return {
@@ -59,7 +62,7 @@ export class SessionStorageService {
    */
   private createDummySession(date: string): Session {
     const formattedDate = this.formatDate(date);
-    console.log(`[SessionStorageService] Creating dummy session for date: ${formattedDate}`);
+    log.debug(`Creating dummy session for date: ${formattedDate}`);
 
     return {
       date: formattedDate,
@@ -123,16 +126,16 @@ export class SessionStorageService {
    * Get all sessions
    */
   async getAllSessions(): Promise<Session[]> {
-    console.log(`[SessionStorageService] Getting all sessions`);
+    log.debug(`Getting all sessions`);
     let storedSessions: Record<string, any> = {};
     try {
       storedSessions = await sessionStorage.getAllSessions();
     } catch (error) {
-      console.error(`[SessionStorageService] Error getting all sessions`, error);
+      log.error(`Error getting all sessions`, error);
       return [];
     }
     const sessionCount = Object.keys(storedSessions).length;
-    console.log(`[SessionStorageService] Found ${sessionCount} sessions`);
+    log.debug(`Found ${sessionCount} sessions`);
 
     if (sessionCount === 0) {
       // Debug: check localStorage directly to see if there are any session keys
@@ -140,15 +143,15 @@ export class SessionStorageService {
       for (let i = 0; i < localStorage.length; i++) {
         allStorageKeys.push(localStorage.key(i));
       }
-      console.log(`[SessionStorageService] Debug - All localStorage keys:`, allStorageKeys);
+      log.debug(`Debug - All localStorage keys:`, allStorageKeys);
 
       // Check for any session keys specifically
       const sessionKeys = allStorageKeys.filter(
         (key): key is string => key !== null && key.startsWith('session-')
       );
       if (sessionKeys.length > 0) {
-        console.log(
-          `[SessionStorageService] Found ${sessionKeys.length} raw session keys, but they were not loaded by sessionStorage:`,
+        log.debug(
+          `Found ${sessionKeys.length} raw session keys, but they were not loaded by sessionStorage:`,
           sessionKeys
         );
 
@@ -167,20 +170,15 @@ export class SessionStorageService {
                 totalDuration: sessionData.totalDuration || 0,
                 lastUpdated: sessionData.lastUpdated || new Date().toISOString(),
               });
-              console.log(`[SessionStorageService] Manually recovered session for date: ${date}`);
+              log.debug(`Manually recovered session for date: ${date}`);
             }
           } catch (error) {
-            console.error(
-              `[SessionStorageService] Failed to manually parse session from key ${key}:`,
-              error
-            );
+            log.error(`Failed to manually parse session from key ${key}:`, error);
           }
         }
 
         if (manuallyLoadedSessions.length > 0) {
-          console.log(
-            `[SessionStorageService] Returning ${manuallyLoadedSessions.length} manually loaded sessions`
-          );
+          log.debug(`Returning ${manuallyLoadedSessions.length} manually loaded sessions`);
           return manuallyLoadedSessions;
         }
       }
@@ -200,8 +198,8 @@ export class SessionStorageService {
    */
   async saveSession(date: string, session: Session): Promise<void> {
     const formattedDate = this.formatDate(date);
-    console.log(
-      `[SessionStorageService] Saving session for date: ${formattedDate} with ${session.storyBlocks?.length || 0} story blocks and total duration: ${session.totalDuration}`
+    log.debug(
+      `Saving session for date: ${formattedDate} with ${session.storyBlocks?.length || 0} story blocks and total duration: ${session.totalDuration}`
     );
 
     try {
@@ -216,19 +214,12 @@ export class SessionStorageService {
       // Verify the session was saved
       const verifySession: any = await sessionStorage.getSession(formattedDate);
       if (!verifySession) {
-        console.error(
-          `[SessionStorageService] Failed to verify session save for date: ${formattedDate}`
-        );
+        log.error(`Failed to verify session save for date: ${formattedDate}`);
       } else {
-        console.log(
-          `[SessionStorageService] Successfully saved and verified session for date: ${formattedDate}`
-        );
+        log.info(`Successfully saved and verified session for date: ${formattedDate}`);
       }
     } catch (error) {
-      console.error(
-        `[SessionStorageService] Error saving session for date: ${formattedDate}`,
-        error
-      );
+      log.error(`Error saving session for date: ${formattedDate}`, error);
     }
   }
 
@@ -251,16 +242,16 @@ export class SessionStorageService {
   ): Promise<boolean> {
     // If storyId is undefined, we can't update the task status
     if (!storyId) {
-      console.error('Cannot update task status: storyId is undefined');
+      log.error('Cannot update task status: storyId is undefined');
       return false;
     }
 
-    console.log(
-      `[SessionStorageService] Updating task status in session ${date}, story ${storyId}, timeBox ${timeBoxIndex}, task ${taskIndex} to ${status}`
+    log.debug(
+      `Updating task status in session ${date}, story ${storyId}, timeBox ${timeBoxIndex}, task ${taskIndex} to ${status}`
     );
 
     const result = sessionStorage.updateTaskStatus(date, storyId, timeBoxIndex, taskIndex, status);
-    console.log(`[SessionStorageService] Task status update result: ${result}`);
+    log.debug(`Task status update result: ${result}`);
 
     return result;
   }
@@ -403,7 +394,7 @@ export class SessionStorageService {
   ): Promise<boolean> {
     try {
       const formattedDate = this.formatDate(date);
-      console.log(`[SessionStorageService] Saving timer state for date: ${formattedDate}`);
+      log.debug(`Saving timer state for date: ${formattedDate}`);
 
       return sessionStorage.saveTimerState(
         formattedDate,
@@ -412,7 +403,7 @@ export class SessionStorageService {
         isTimerRunning
       );
     } catch (error) {
-      console.error(`[SessionStorageService] Error saving timer state for date: ${date}:`, error);
+      log.error(`Error saving timer state for date: ${date}:`, error);
       return false;
     }
   }
@@ -428,38 +419,38 @@ export class SessionStorageService {
   ): Promise<boolean> {
     try {
       const formattedDate = this.formatDate(date);
-      console.log(
-        `[SessionStorageService] Saving actual duration of ${actualDuration}min for timebox ${timeBoxIndex} in story ${storyId}`
+      log.debug(
+        `Saving actual duration of ${actualDuration}min for timebox ${timeBoxIndex} in story ${storyId}`
       );
 
       // Get the session
       const session = await sessionStorage.getSession(formattedDate);
       if (!session) {
-        console.error(`[SessionStorageService] No session found for date: ${formattedDate}`);
+        log.error(`No session found for date: ${formattedDate}`);
         return false;
       }
 
       // Find the story
       const storyIndex = session.storyBlocks.findIndex((s) => s.id === storyId);
       if (storyIndex === -1) {
-        console.error(`[SessionStorageService] Story with ID ${storyId} not found`);
+        log.error(`Story with ID ${storyId} not found`);
         return false;
       }
 
       // Find the timebox
       const timeBox = session.storyBlocks[storyIndex].timeBoxes[timeBoxIndex];
       if (!timeBox) {
-        console.error(`[SessionStorageService] TimeBox at index ${timeBoxIndex} not found`);
+        log.error(`TimeBox at index ${timeBoxIndex} not found`);
         return false;
       }
 
       // Log timebox details for debugging
-      console.log(`[SessionStorageService] TimeBox details before update:`);
-      console.log(`  Type: ${timeBox.type}`);
-      console.log(`  Duration: ${timeBox.duration}min`);
-      console.log(`  Status: ${timeBox.status}`);
-      console.log(`  Start Time: ${timeBox.startTime || 'Not set'}`);
-      console.log(`  Actual Duration: ${timeBox.actualDuration || 'Not set'}`);
+      log.debug(`TimeBox details before update:`);
+      log.debug(`  Type: ${timeBox.type}`);
+      log.debug(`  Duration: ${timeBox.duration}min`);
+      log.debug(`  Status: ${timeBox.status}`);
+      log.debug(`  Start Time: ${timeBox.startTime || 'Not set'}`);
+      log.debug(`  Actual Duration: ${timeBox.actualDuration || 'Not set'}`);
 
       // Set the actual duration
       timeBox.actualDuration = actualDuration;
@@ -470,7 +461,7 @@ export class SessionStorageService {
         const syntheticStartTime = new Date();
         syntheticStartTime.setMinutes(syntheticStartTime.getMinutes() - actualDuration);
         timeBox.startTime = syntheticStartTime.toISOString();
-        console.log(`[SessionStorageService] Created synthetic startTime: ${timeBox.startTime}`);
+        log.debug(`Created synthetic startTime: ${timeBox.startTime}`);
       }
 
       // Save the updated session
@@ -495,13 +486,11 @@ export class SessionStorageService {
           verifySession.storyBlocks[storyIndex].timeBoxes[timeBoxIndex].actualDuration;
 
         if (savedActualDuration === actualDuration) {
-          console.log(
-            `[SessionStorageService] Successfully verified actual duration was saved: ${savedActualDuration}min`
-          );
+          log.debug(`Successfully verified actual duration was saved: ${savedActualDuration}min`);
           return true;
         } else {
-          console.error(
-            `[SessionStorageService] Verification failed - Expected: ${actualDuration}min, Got: ${savedActualDuration}min`
+          log.error(
+            `Verification failed - Expected: ${actualDuration}min, Got: ${savedActualDuration}min`
           );
           return false;
         }
@@ -509,7 +498,7 @@ export class SessionStorageService {
 
       return true;
     } catch (error) {
-      console.error(`[SessionStorageService] Error saving actual duration:`, error);
+      log.error(`Error saving actual duration:`, error);
       return false;
     }
   }
@@ -526,7 +515,7 @@ export class SessionStorageService {
       const timerState = await sessionStorage.getTimerState(date);
       return timerState;
     } catch (error) {
-      console.error(`[SessionStorageService] Error getting timer state for date: ${date}`, error);
+      log.error(`Error getting timer state for date: ${date}`, error);
       return null;
     }
   }
@@ -544,7 +533,7 @@ export class SessionStorageService {
       const session = await this.getSession(formattedDate);
 
       if (!session) {
-        console.error(`[SessionStorageService] No session found for date: ${formattedDate}`);
+        log.error(`No session found for date: ${formattedDate}`);
         return false;
       }
 
@@ -556,12 +545,10 @@ export class SessionStorageService {
       };
 
       await this.saveSession(formattedDate, updatedSession);
-      console.log(
-        `[SessionStorageService] Successfully archived session for date: ${formattedDate}`
-      );
+      log.info(`Successfully archived session for date: ${formattedDate}`);
       return true;
     } catch (error) {
-      console.error(`[SessionStorageService] Error archiving session for date: ${date}:`, error);
+      log.error(`Error archiving session for date: ${date}:`, error);
       return false;
     }
   }
@@ -579,7 +566,7 @@ export class SessionStorageService {
       const session = await this.getSession(formattedDate);
 
       if (!session) {
-        console.error(`[SessionStorageService] No session found for date: ${formattedDate}`);
+        log.error(`No session found for date: ${formattedDate}`);
         return false;
       }
 
@@ -591,12 +578,10 @@ export class SessionStorageService {
       };
 
       await this.saveSession(formattedDate, updatedSession);
-      console.log(
-        `[SessionStorageService] Successfully unarchived session for date: ${formattedDate}`
-      );
+      log.info(`Successfully unarchived session for date: ${formattedDate}`);
       return true;
     } catch (error) {
-      console.error(`[SessionStorageService] Error unarchiving session for date: ${date}:`, error);
+      log.error(`Error unarchiving session for date: ${date}:`, error);
       return false;
     }
   }
@@ -618,7 +603,7 @@ export class SessionStorageService {
       const day = String(parsedDate.getDate()).padStart(2, '0');
       return `${year}-${month}-${day}`;
     } catch (error) {
-      console.error('Failed to parse date:', date);
+      log.error('Failed to parse date:', date);
       return date; // Return original if parsing fails
     }
   }

@@ -5,6 +5,9 @@ import { SessionStorageService } from '../../services/session-storage.service';
 import type { ProcessedStory, ProcessedTask } from '../../lib/types';
 import { TaskRolloverService } from '../../services/task-rollover.service';
 import { ErrorDetails } from '../types';
+import { logger } from '../../../../lib/logger';
+
+const log = logger.create('BrainDump');
 
 // Create a singleton instance of SessionStorageService
 const sessionStorage = new SessionStorageService();
@@ -80,7 +83,7 @@ export function useBrainDump(onTasksProcessed?: (stories: ProcessedStory[]) => v
 
       // Validate the response structure
       if (!data.stories || !Array.isArray(data.stories)) {
-        console.error('Invalid response structure:', data);
+        log.error('Invalid response structure: ' + JSON.stringify(data));
         throw new Error('Invalid response format: missing stories array');
       }
 
@@ -90,7 +93,7 @@ export function useBrainDump(onTasksProcessed?: (stories: ProcessedStory[]) => v
       });
 
       if (invalidStories.length > 0) {
-        console.error('Invalid stories found:', invalidStories);
+        log.error('Invalid stories found: ' + JSON.stringify(invalidStories));
         throw new Error('Some stories are missing required fields');
       }
 
@@ -108,7 +111,7 @@ export function useBrainDump(onTasksProcessed?: (stories: ProcessedStory[]) => v
       setTaskProcessingProgress(100);
       setTaskProcessingStep('Complete!');
     } catch (error) {
-      console.error('Failed to process tasks:', error);
+      log.error('Failed to process tasks: ' + String(error));
 
       let errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
       const errorCode = 'UNKNOWN_ERROR';
@@ -186,7 +189,7 @@ export function useBrainDump(onTasksProcessed?: (stories: ProcessedStory[]) => v
       }
 
       // Log the stories being sent for debugging
-      console.log('Stories for session creation:', JSON.stringify(updatedStories, null, 2));
+      log.debug(`Stories for session creation: ${JSON.stringify(updatedStories, null, 2)}`);
 
       // Get current time and ensure it's valid
       const now = new Date();
@@ -206,24 +209,24 @@ export function useBrainDump(onTasksProcessed?: (stories: ProcessedStory[]) => v
 
       // Validate session plan
       if (!sessionPlan || typeof sessionPlan !== 'object') {
-        console.error('Invalid session plan:', sessionPlan);
+        log.error('Invalid session plan: ' + JSON.stringify(sessionPlan));
         throw new Error('Failed to create a valid session plan');
       }
 
       // Check required properties
       if (!sessionPlan.storyBlocks || !Array.isArray(sessionPlan.storyBlocks)) {
-        console.error('Session plan missing story blocks:', sessionPlan);
+        log.error('Session plan missing story blocks: ' + JSON.stringify(sessionPlan));
         throw new Error('Session plan missing required story blocks');
       }
 
       if (sessionPlan.storyBlocks.length === 0) {
-        console.error('Session plan has empty story blocks array:', sessionPlan);
+        log.error('Session plan has empty story blocks array: ' + JSON.stringify(sessionPlan));
         throw new Error('Session plan contains no story blocks');
       }
 
       // Ensure we have a valid total duration
       const validTotalDuration = validateSessionDuration(sessionPlan);
-      console.log(`Validated session duration: ${validTotalDuration} minutes`);
+      log.debug(`Validated session duration: ${validTotalDuration} minutes`);
 
       // Format today's date as YYYY-MM-DD for the session key
       const today = now.toISOString().split('T')[0];
@@ -233,12 +236,12 @@ export function useBrainDump(onTasksProcessed?: (stories: ProcessedStory[]) => v
 
       // Validate duration range (between 1 minute and 24 hours)
       if (durationMs <= 0) {
-        console.error('Invalid duration (too small):', validTotalDuration);
+        log.error(`Invalid duration (too small): ${validTotalDuration}`);
         throw new Error(`Session duration is too short: ${validTotalDuration} minutes`);
       }
 
       if (durationMs > 24 * 60 * 60 * 1000) {
-        console.error('Invalid duration (too large):', validTotalDuration);
+        log.error(`Invalid duration (too large): ${validTotalDuration}`);
         throw new Error(`Session duration exceeds maximum allowed: ${validTotalDuration} minutes`);
       }
 
@@ -247,11 +250,9 @@ export function useBrainDump(onTasksProcessed?: (stories: ProcessedStory[]) => v
 
       // Validate end time
       if (isNaN(endTime.getTime())) {
-        console.error('End time calculation failed:', {
-          now: now.toISOString(),
-          durationMs,
-          totalDuration: validTotalDuration,
-        });
+        log.error(
+          `End time calculation failed: now=${now.toISOString()}, durationMs=${durationMs}, totalDuration=${validTotalDuration}`
+        );
         throw new Error('Failed to calculate a valid end time');
       }
 
@@ -273,18 +274,18 @@ export function useBrainDump(onTasksProcessed?: (stories: ProcessedStory[]) => v
         const recentSession = await rolloverService.getMostRecentActiveSession();
 
         if (recentSession) {
-          console.log(`[useBrainDump] Archiving previous session: ${recentSession.date}`);
+          log.debug(`Archiving previous session: ${recentSession.date}`);
           await rolloverService.archiveSession(recentSession.date);
         }
       } catch (archiveError) {
         // Log but don't fail if archiving fails
-        console.error('[useBrainDump] Error archiving previous session:', archiveError);
+        log.error('Error archiving previous session: ' + String(archiveError));
       }
 
       // Session created successfully - user can navigate via Sessions tab
-      console.log(`Session created successfully for date: ${today}`);
+      log.info(`Session created successfully for date: ${today}`);
     } catch (error) {
-      console.error('Failed to create session:', error);
+      log.error('Failed to create session: ' + String(error));
 
       // Detailed error handling
       let errorMessage = error instanceof Error ? error.message : 'Failed to create session';
@@ -348,15 +349,15 @@ export function useBrainDump(onTasksProcessed?: (stories: ProcessedStory[]) => v
   }
 
   function validateSessionDuration(sessionPlan: SessionPlanWithDuration): number {
-    console.log('Validating session duration for plan:', sessionPlan);
+    log.debug('Validating session duration for plan');
 
     // Check if totalDuration is directly available and valid
     if (typeof sessionPlan.totalDuration === 'number' && sessionPlan.totalDuration > 0) {
-      console.log(`Using provided totalDuration: ${sessionPlan.totalDuration}`);
+      log.debug(`Using provided totalDuration: ${sessionPlan.totalDuration}`);
       return sessionPlan.totalDuration;
     }
 
-    console.warn('Session plan missing valid totalDuration, calculating from story blocks');
+    log.warn('Session plan missing valid totalDuration, calculating from story blocks');
 
     // Calculate from story blocks if available
     if (Array.isArray(sessionPlan.storyBlocks) && sessionPlan.storyBlocks.length > 0) {
@@ -367,7 +368,7 @@ export function useBrainDump(onTasksProcessed?: (stories: ProcessedStory[]) => v
       );
 
       if (calculatedDuration > 0) {
-        console.log(`Calculated duration from blocks: ${calculatedDuration}`);
+        log.debug(`Calculated duration from blocks: ${calculatedDuration}`);
 
         // Update the session plan with the calculated value
         sessionPlan.totalDuration = calculatedDuration;
@@ -385,7 +386,7 @@ export function useBrainDump(onTasksProcessed?: (stories: ProcessedStory[]) => v
       );
 
       if (durationFromStories > 0) {
-        console.log(`Calculated duration from stories: ${durationFromStories}`);
+        log.debug(`Calculated duration from stories: ${durationFromStories}`);
 
         // Update the session plan
         sessionPlan.totalDuration = durationFromStories;
@@ -404,7 +405,7 @@ export function useBrainDump(onTasksProcessed?: (stories: ProcessedStory[]) => v
       );
 
       if (originalDuration > 0) {
-        console.log(`Using original story durations as fallback: ${originalDuration}`);
+        log.debug(`Using original story durations as fallback: ${originalDuration}`);
 
         // Update the session plan
         sessionPlan.totalDuration = originalDuration;
@@ -414,7 +415,7 @@ export function useBrainDump(onTasksProcessed?: (stories: ProcessedStory[]) => v
     }
 
     // If all else fails, throw an error
-    console.error('Could not determine valid session duration from any source');
+    log.error('Could not determine valid session duration from any source');
     throw new Error('Unable to determine valid session duration');
   }
 

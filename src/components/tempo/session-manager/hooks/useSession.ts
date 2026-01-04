@@ -2,6 +2,9 @@ import { createSignal, createEffect, createMemo, onCleanup } from 'solid-js';
 import { useNavigate } from '@solidjs/router';
 import type { StoryBlock, TimeBox, TimeBoxTask, Session, TimeBoxStatus } from '../../lib/types';
 import { SessionStorageService } from '../../services/session-storage.service';
+import { logger } from '../../../../lib/logger';
+
+const log = logger.create('Session');
 
 // This is a minimal toast implementation since we don't have access to the actual toast component
 // Replace with your actual toast implementation when available
@@ -13,7 +16,6 @@ const useToastFallback = () => {
     actionLabel?: string;
     onAction?: () => void;
   }) => {
-    console.log(`[Toast] ${props.title}: ${props.description}`);
     if (
       props.actionLabel &&
       props.onAction &&
@@ -185,7 +187,7 @@ export const useSession = ({
     const storyIndex = updatedSession.storyBlocks.findIndex((story) => story.id === storyId);
 
     if (storyIndex === -1) {
-      console.error(`Story with ID ${storyId} not found`);
+      log.error(`Story with ID ${storyId} not found`);
       return;
     }
 
@@ -194,7 +196,7 @@ export const useSession = ({
 
     // Only allow undoing completed timeboxes
     if (timeBox.status !== 'completed') {
-      console.warn('Cannot undo a timebox that is not completed');
+      log.warn('Cannot undo a timebox that is not completed');
       return;
     }
 
@@ -245,7 +247,7 @@ export const useSession = ({
     const storyIndex = updatedSession.storyBlocks.findIndex((story) => story.id === storyId);
 
     if (storyIndex === -1) {
-      console.error(`Story with ID ${storyId} not found`);
+      log.error(`Story with ID ${storyId} not found`);
       return;
     }
 
@@ -270,13 +272,13 @@ export const useSession = ({
       // Use the exact elapsed time, even if it's 0
       timeBox.actualDuration = rawActualDuration;
 
-      console.log(`TimeBox completed - Type: ${timeBox.type}, ID: ${storyId}-${timeBoxIndex}`);
-      console.log(`  Start Time: ${timeBox.startTime}`);
-      console.log(`  End Time: ${endTime.toISOString()}`);
-      console.log(
+      log.debug(`TimeBox completed - Type: ${timeBox.type}, ID: ${storyId}-${timeBoxIndex}`);
+      log.debug(`  Start Time: ${timeBox.startTime}`);
+      log.debug(`  End Time: ${endTime.toISOString()}`);
+      log.debug(
         `  Actual Duration: ${timeBox.actualDuration}min (planned: ${timeBox.duration}min)`
       );
-      console.log(`  Time saved: ${timeBox.duration - timeBox.actualDuration}min`);
+      log.debug(`  Time saved: ${timeBox.duration - timeBox.actualDuration}min`);
 
       // Save the actual duration to storage
       if (session()!.date) {
@@ -284,9 +286,9 @@ export const useSession = ({
           .saveActualDuration(session()!.date, storyId, timeBoxIndex, timeBox.actualDuration)
           .then((result) => {
             if (!result) {
-              console.error('Failed to save actual duration to storage');
+              log.error('Failed to save actual duration to storage');
             } else {
-              console.log(
+              log.debug(
                 `Successfully saved actual duration to storage: ${timeBox.actualDuration}min`
               );
             }
@@ -294,7 +296,7 @@ export const useSession = ({
       }
     } else {
       // Handle missing startTime by creating a synthetic one
-      console.warn(
+      log.warn(
         `TimeBox has no startTime record! Type: ${timeBox.type}, ID: ${storyId}-${timeBoxIndex}`
       );
 
@@ -303,7 +305,7 @@ export const useSession = ({
         // For focus sessions, use a more realistic synthetic duration
         timeBox.actualDuration = Math.max(1, Math.floor(timeBox.duration * 0.8));
 
-        console.log(
+        log.debug(
           `Using synthetic duration for focus session: ${timeBox.actualDuration}min (80% of planned ${timeBox.duration}min)`
         );
       } else {
@@ -311,7 +313,7 @@ export const useSession = ({
         const variation = -Math.floor(Math.random() * 2); // -0 to -1 minutes
         timeBox.actualDuration = Math.max(1, timeBox.duration + variation);
 
-        console.log(
+        log.debug(
           `Using synthetic duration for break: ${timeBox.actualDuration}min (${variation}min from planned ${timeBox.duration}min)`
         );
       }
@@ -321,10 +323,10 @@ export const useSession = ({
         new Date().getTime() - timeBox.actualDuration * 60000
       ).toISOString();
 
-      console.log(
+      log.debug(
         `  Synthetic Duration: ${timeBox.actualDuration}min (planned: ${timeBox.duration}min)`
       );
-      console.log(`  Time saved: ${timeBox.duration - timeBox.actualDuration}min`);
+      log.debug(`  Time saved: ${timeBox.duration - timeBox.actualDuration}min`);
 
       // Save the synthetic duration to storage
       if (session()!.date) {
@@ -332,9 +334,9 @@ export const useSession = ({
           .saveActualDuration(session()!.date, storyId, timeBoxIndex, timeBox.actualDuration)
           .then((result) => {
             if (!result) {
-              console.error('Failed to save synthetic duration to storage');
+              log.error('Failed to save synthetic duration to storage');
             } else {
-              console.log(
+              log.debug(
                 `Successfully saved synthetic duration to storage: ${timeBox.actualDuration}min`
               );
             }
@@ -418,7 +420,7 @@ export const useSession = ({
     if (storyIndex === -1) {
       // Handle the special case for session-debrief
       if (storyId === 'session-debrief') {
-        console.log(`Starting debrief timer for ${duration} minutes`);
+        log.debug(`Starting debrief timer for ${duration} minutes`);
 
         // Set timer state without attempting to update non-existent timeBox
         setActiveTimeBox({ storyId, timeBoxIndex });
@@ -433,7 +435,7 @@ export const useSession = ({
         return;
       }
 
-      console.error(`Story with ID ${storyId} not found`);
+      log.error(`Story with ID ${storyId} not found`);
       return;
     }
 
@@ -452,7 +454,7 @@ export const useSession = ({
 
     // Record start time for actual duration tracking
     timeBox.startTime = new Date().toISOString();
-    console.log(
+    log.debug(
       `Starting TimeBox - Type: ${timeBox.type}, ID: ${storyId}-${timeBoxIndex}, Start Time: ${timeBox.startTime}`
     );
 
@@ -486,24 +488,24 @@ export const useSession = ({
     task: TimeBoxTask
   ) => {
     if (!session() || !storyId) {
-      console.error('Cannot toggle task status: session or storyId is undefined');
+      log.error('Cannot toggle task status: session or storyId is undefined');
       return;
     }
 
-    console.log('TASK UPDATE - Checking if task status changed in props:', task.status);
+    log.debug('TASK UPDATE - Checking if task status changed in props:', task.status);
 
     const updatedSession = { ...session()! };
     const storyIndex = updatedSession.storyBlocks.findIndex((story) => story.id === storyId);
 
     if (storyIndex === -1) {
-      console.error(`Story with ID ${storyId} not found`);
+      log.error(`Story with ID ${storyId} not found`);
       return;
     }
 
     // Validate that the timeBox and its tasks array exist
     const timeBox = updatedSession.storyBlocks[storyIndex].timeBoxes[timeBoxIndex];
     if (!timeBox || !timeBox.tasks) {
-      console.error(`TimeBox or tasks array not found at index ${timeBoxIndex}`);
+      log.error(`TimeBox or tasks array not found at index ${timeBoxIndex}`);
       return;
     }
 
@@ -512,11 +514,11 @@ export const useSession = ({
 
     // Only proceed if the status has actually changed
     if (currentTask.status === task.status) {
-      console.log('Task status unchanged, no update needed');
+      log.debug('Task status unchanged, no update needed');
       return;
     }
 
-    console.log('Updating task status from', currentTask.status, 'to', task.status);
+    log.debug('Updating task status from', currentTask.status, 'to', task.status);
 
     // Update the task with the new status
     timeBox.tasks[taskIndex] = {
@@ -736,7 +738,7 @@ export const useSession = ({
 
     // Make sure startTime is set for all timeboxes when active
     if (timeBox && !timeBox.startTime && timeBox.status === 'in-progress') {
-      console.log(
+      log.debug(
         `Setting missing startTime for active TimeBox - Type: ${timeBox.type}, ID: ${activeTimeBox()!.storyId}-${activeTimeBox()!.timeBoxIndex}`
       );
       timeBox.startTime = new Date().toISOString();

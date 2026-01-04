@@ -15,6 +15,9 @@
 import { SessionStorageService } from './session-storage.service';
 import { TimeBoxTask, Session, StoryBlock, TimeBox } from '../lib/types';
 import { formatDuration } from '../lib/durationUtils';
+import { logger } from '../../../lib/logger';
+
+const log = logger.create('TaskRollover');
 
 export class TaskRolloverService {
   private sessionStorage: SessionStorageService;
@@ -160,7 +163,7 @@ export class TaskRolloverService {
       const success = await this.sessionStorage.archiveSession(date);
       return success;
     } catch (error) {
-      console.error('[TaskRolloverService] Failed to archive session:', error);
+      log.error('Failed to archive session:', error);
       return false;
     }
   }
@@ -179,7 +182,7 @@ export class TaskRolloverService {
       const success = await this.sessionStorage.unarchiveSession(date);
       return success;
     } catch (error) {
-      console.error('[TaskRolloverService] Failed to unarchive session:', error);
+      log.error('Failed to unarchive session:', error);
       return false;
     }
   }

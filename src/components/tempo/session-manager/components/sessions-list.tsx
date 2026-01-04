@@ -15,6 +15,7 @@ import { Badge } from '../../ui/badge';
 import { tempoDesign } from '../../theme/tempo-design';
 import { SessionStorageService } from '../../services/session-storage.service';
 import type { Session } from '../../lib/types';
+import { logger } from '../../../../lib/logger';
 
 interface SessionsListProps {
   onSessionSelect?: (sessionId: string) => void;
@@ -68,7 +69,7 @@ export const SessionsList: Component<SessionsListProps> = (props) => {
         );
         setSessions(sorted);
       } catch (err) {
-        console.error('Failed to load sessions:', err);
+        logger.storage.error('Failed to load sessions:', err);
         setError(err instanceof Error ? err.message : 'Failed to load sessions');
       } finally {
         setLoading(false);

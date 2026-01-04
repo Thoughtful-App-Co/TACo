@@ -1,3 +1,5 @@
+import { logger } from '../../../lib/logger';
+
 export interface SessionMetrics {
   totalFocusTime: number; // in seconds
   totalBreakTime: number; // in seconds
@@ -55,7 +57,7 @@ export class DebriefStorageService {
 
       return true;
     } catch (error) {
-      console.error('Failed to save debrief data:', error);
+      logger.storage.error('Failed to save debrief data:', error);
       return false;
     }
   }
@@ -71,7 +73,7 @@ export class DebriefStorageService {
       const allDebriefs = this.getAllDebriefs();
       return allDebriefs.find((debrief) => debrief.sessionDate === sessionDate) || null;
     } catch (error) {
-      console.error('Failed to retrieve debrief data:', error);
+      logger.storage.error('Failed to retrieve debrief data:', error);
       return null;
     }
   }
@@ -86,7 +88,7 @@ export class DebriefStorageService {
       const debriefDataJson = localStorage.getItem(this.DEBRIEF_STORAGE_KEY);
       return debriefDataJson ? JSON.parse(debriefDataJson) : [];
     } catch (error) {
-      console.error('Failed to retrieve all debrief data:', error);
+      logger.storage.error('Failed to retrieve all debrief data:', error);
       return [];
     }
   }
@@ -108,7 +110,7 @@ export class DebriefStorageService {
 
       return true;
     } catch (error) {
-      console.error('Failed to delete debrief data:', error);
+      logger.storage.error('Failed to delete debrief data:', error);
       return false;
     }
   }

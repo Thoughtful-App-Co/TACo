@@ -47,8 +47,7 @@ export const SettingsModal: Component<SettingsModalProps> = (props) => {
         // If not already subscribed, the user would need to complete payment
         // This is a placeholder for future Stripe integration
         if (!ApiConfigService.hasManagedSubscription()) {
-          // TODO: Redirect to payment flow
-          console.log('Redirect to payment for managed API key service');
+          // TODO: Redirect to payment for managed API key service
         }
       }
 

@@ -7,6 +7,7 @@ import type {
   TimeBoxType,
   BaseStatus,
 } from './types';
+import { logger } from '../../../lib/logger';
 
 export interface StoredSession extends SessionPlan {
   totalSessions: number;
@@ -37,7 +38,7 @@ export const sessionStorage = {
       // Save to localStorage
       localStorage.setItem(`${SESSION_PREFIX}${date}`, JSON.stringify(updatedSession));
     } catch (error) {
-      console.error('Failed to save session:', error);
+      logger.storage.error('Failed to save session:', error);
     }
   },
 
@@ -56,7 +57,7 @@ export const sessionStorage = {
       }
       return null;
     } catch (error) {
-      console.error('Failed to get session:', error);
+      logger.storage.error('Failed to get session:', error);
       return null;
     }
   },
@@ -80,7 +81,7 @@ export const sessionStorage = {
         }
       }
     } catch (error) {
-      console.error('Failed to get all sessions:', error);
+      logger.storage.error('Failed to get all sessions:', error);
     }
 
     return sessions;
@@ -94,7 +95,7 @@ export const sessionStorage = {
       // Delete from localStorage
       localStorage.removeItem(`${SESSION_PREFIX}${date}`);
     } catch (error) {
-      console.error('Failed to delete session:', error);
+      logger.storage.error('Failed to delete session:', error);
     }
   },
 
@@ -113,7 +114,7 @@ export const sessionStorage = {
       }
       keys.forEach((key) => localStorage.removeItem(key));
     } catch (error) {
-      console.error('Failed to clear sessions:', error);
+      logger.storage.error('Failed to clear sessions:', error);
     }
   },
 
@@ -208,7 +209,7 @@ export const sessionStorage = {
 
       return updated;
     } catch (error) {
-      console.error('Failed to update time box status:', error);
+      logger.storage.error('Failed to update time box status:', error);
       return false;
     }
   },
@@ -363,7 +364,7 @@ export const sessionStorage = {
   isValidSession(data: unknown): data is StoredSession {
     // Check if data exists and is an object
     if (!data || typeof data !== 'object') {
-      console.error('Invalid session: data is not an object', data);
+      logger.storage.error('Invalid session: data is not an object', data);
       return false;
     }
 
@@ -388,24 +389,24 @@ export const sessionStorage = {
 
     // Check for minimal required properties
     if (!Array.isArray(sessionData.storyBlocks)) {
-      console.error('Invalid session: storyBlocks is not an array', data);
+      logger.storage.error('Invalid session: storyBlocks is not an array', data);
       return false;
     }
 
     // Set defaults for other properties if they're missing
     // This makes validation more fault-tolerant
     if (typeof sessionData.totalSessions !== 'number') {
-      console.warn('Session missing totalSessions, using default', data);
+      logger.storage.warn('Session missing totalSessions, using default', data);
       sessionData.totalSessions = 1;
     }
 
     if (typeof sessionData.startTime !== 'string') {
-      console.warn('Session missing startTime, using default', data);
+      logger.storage.warn('Session missing startTime, using default', data);
       sessionData.startTime = new Date().toISOString();
     }
 
     if (typeof sessionData.endTime !== 'string') {
-      console.warn('Session missing endTime, using default', data);
+      logger.storage.warn('Session missing endTime, using default', data);
       sessionData.endTime = new Date().toISOString();
     }
 
@@ -448,12 +449,12 @@ export const sessionStorage = {
           };
         }
       } catch (timerError) {
-        console.error('Failed to get separate timer state:', timerError);
+        logger.storage.error('Failed to get separate timer state:', timerError);
       }
 
       return null;
     } catch (error) {
-      console.error('Failed to get timer state:', error);
+      logger.storage.error('Failed to get timer state:', error);
       return null;
     }
   },
@@ -498,7 +499,7 @@ export const sessionStorage = {
 
       return true;
     } catch (error) {
-      console.error('Failed to save timer state:', error);
+      logger.storage.error('Failed to save timer state:', error);
       return false;
     }
   },
@@ -528,7 +529,7 @@ export const sessionStorage = {
     const normalizedStoryBlocks = storyBlocks.map((block) => {
       // Ensure block is an object
       if (!block || typeof block !== 'object') {
-        console.warn('Invalid story block, replacing with empty block', block);
+        logger.storage.warn('Invalid story block, replacing with empty block', block);
         return {
           id: `story-${Math.random().toString(36).substring(2, 9)}`,
           title: 'Unnamed Story',

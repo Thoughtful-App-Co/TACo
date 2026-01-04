@@ -1,5 +1,6 @@
 import { nanoid } from 'nanoid';
 import type { Task } from '../lib/types';
+import { logger } from '../../../lib/logger';
 
 const STORAGE_KEY = 'tempo_tasks';
 
@@ -51,7 +52,7 @@ export class TaskPersistenceService {
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(mergedTasks));
     } catch (error) {
-      console.error('Error saving tasks:', error);
+      logger.storage.error('Error saving tasks:', error);
       throw new Error('Failed to save tasks');
     }
   }
@@ -69,7 +70,7 @@ export class TaskPersistenceService {
         lastUpdated: task.lastUpdated,
       }));
     } catch (error) {
-      console.error('Error retrieving tasks:', error);
+      logger.storage.error('Error retrieving tasks:', error);
       throw new Error('Failed to retrieve tasks');
     }
   }
@@ -112,7 +113,7 @@ export class TaskPersistenceService {
     try {
       localStorage.removeItem(STORAGE_KEY);
     } catch (error) {
-      console.error('Error clearing tasks:', error);
+      logger.storage.error('Error clearing tasks:', error);
       throw new Error('Failed to clear tasks');
     }
   }

@@ -5,6 +5,9 @@ import type { DifficultyLevel, ProcessedStory, ProcessedTask, BaseStatus } from 
 import { DURATION_RULES, roundToNearestBlock } from '../lib/durationUtils';
 import { TaskPersistenceService } from './task-persistence.service';
 import { ApiConfigService } from './api-config.service';
+import { logger } from '../../../lib/logger';
+
+const log = logger.create('BrainDump');
 
 // API Error types
 export interface ApiError {
@@ -100,14 +103,14 @@ const modifyStoriesForRetry = (
   // Create a deep copy to avoid mutating the original data
   const modifiedStories = JSON.parse(JSON.stringify(stories)) as ProcessedStory[];
 
-  console.log('Modifying stories for retry. Error details:', (error as any)?.details);
+  log.debug('Modifying stories for retry. Error details:', (error as any)?.details);
 
   // Check if we have a specific error for a block
   const problematicBlock = (error as any)?.details?.block;
 
   // More aggressive task splitting - use duration rules from durationUtils
   modifiedStories.forEach((story) => {
-    console.log(`Processing story "${story.title}" with ${story.tasks.length} tasks`);
+    log.debug(`Processing story "${story.title}" with ${story.tasks.length} tasks`);
     const updatedTasks: ProcessedTask[] = [];
     let cumulativeWorkTime = 0;
 
@@ -129,7 +132,7 @@ const modifyStoriesForRetry = (
 
       // Always split large tasks or tasks that would push us over the limit
       if (task.duration > maxTaskDuration || wouldExceedLimit) {
-        console.log(`Splitting task "${task.title}" (${task.duration} minutes) into smaller parts`);
+        log.debug(`Splitting task "${task.title}" (${task.duration} minutes) into smaller parts`);
 
         // For extremely large tasks, be even more aggressive with splitting
         const effectiveMaxTaskDuration = Math.min(
@@ -225,7 +228,7 @@ const modifyStoriesForRetry = (
 
     // If this is specifically the story mentioned in the error, do additional processing
     if (isProblematicBlock) {
-      console.log(`Found story that caused the error: ${story.title}`);
+      log.debug(`Found story that caused the error: ${story.title}`);
 
       // Add a reference to the original title if this is an affected story
       story.originalTitle = originalTitle;
@@ -240,7 +243,7 @@ const modifyStoriesForRetry = (
         // If adding this task would exceed the limit, add a break task first
         if (runningWorkTime + task.duration > DURATION_RULES.MAX_WORK_WITHOUT_BREAK) {
           // Add a break task
-          console.log(
+          log.debug(
             `Inserting additional break before task "${task.title}" (running work time: ${runningWorkTime})`
           );
 
@@ -294,7 +297,7 @@ function recalculateStoryDuration(story: ProcessedStory): void {
   );
 
   story.estimatedDuration = roundToNearestBlock(totalWorkTime + totalBreakTime);
-  console.log(
+  log.debug(
     `Recalculated duration for "${story.title}": ${story.estimatedDuration} minutes (work: ${totalWorkTime}, breaks: ${totalBreakTime})`
   );
 }
@@ -346,7 +349,7 @@ const createSession = async (stories: ProcessedStory[], startTime: string, maxRe
     });
   });
 
-  console.log(`Created mapping for ${titleToStoryMap.size} potential story titles`);
+  log.debug(`Created mapping for ${titleToStoryMap.size} potential story titles`);
 
   // Only validate that the totalDuration is a valid multiple of BLOCK_SIZE and above MIN_DURATION
   const totalDuration = currentStories.reduce((sum, story) => sum + story.estimatedDuration, 0);
@@ -361,8 +364,8 @@ const createSession = async (stories: ProcessedStory[], startTime: string, maxRe
 
   while (retryCount < maxRetries) {
     try {
-      console.log(`Attempting to create session (attempt ${retryCount + 1}/${maxRetries})`);
-      console.log('Total duration:', totalDuration, 'minutes');
+      log.debug(`Attempting to create session (attempt ${retryCount + 1}/${maxRetries})`);
+      log.debug('Total duration:', totalDuration, 'minutes');
 
       // Convert processed stories to tasks and save them
       const tasks = currentStories.flatMap((story) =>
@@ -392,7 +395,7 @@ const createSession = async (stories: ProcessedStory[], startTime: string, maxRe
         story.tasks.forEach((task) => {
           if (!task.id) {
             task.id = crypto.randomUUID();
-            console.log(`Added missing ID to task: ${task.title}`);
+            log.debug(`Added missing ID to task: ${task.title}`);
           }
         });
       });
@@ -437,8 +440,8 @@ const createSession = async (stories: ProcessedStory[], startTime: string, maxRe
       try {
         data = JSON.parse(rawText);
       } catch (parseError) {
-        console.error('Failed to parse response as JSON:', parseError);
-        console.log('Raw response:', rawText.substring(0, 1000) + '...');
+        log.error('Failed to parse response as JSON:', parseError);
+        log.debug('Raw response:', rawText.substring(0, 1000) + '...');
 
         // Try to recover from common JSON issues
         const cleanedText = rawText.replace(/\n/g, '').replace(/\r/g, '').replace(/\t/g, '').trim();
@@ -493,7 +496,7 @@ const createSession = async (stories: ProcessedStory[], startTime: string, maxRe
 
       if (typeof data.totalDuration !== 'number' || data.totalDuration <= 0) {
         // If totalDuration is missing or invalid, calculate it from story blocks
-        console.warn('Session response missing valid totalDuration, calculating from story blocks');
+        log.warn('Session response missing valid totalDuration, calculating from story blocks');
 
         const calculatedTotalDuration = data.storyBlocks.reduce(
           (sum: number, block: any) => sum + (block.totalDuration || 0),
@@ -508,14 +511,14 @@ const createSession = async (stories: ProcessedStory[], startTime: string, maxRe
 
         // Set the calculated duration
         data.totalDuration = calculatedTotalDuration;
-        console.log(`Set totalDuration to calculated value: ${calculatedTotalDuration} minutes`);
+        log.debug(`Set totalDuration to calculated value: ${calculatedTotalDuration} minutes`);
       }
 
       // Save session to localStorage
       // TODO: Replace with SessionStorageService once ported
       try {
         const today = new Date(startTime).toISOString().split('T')[0];
-        console.log(`Saving session for date: ${today} with data:`, {
+        log.debug(`Saving session for date: ${today} with data:`, {
           summary: {
             totalDuration: data.totalDuration,
             storyBlocksCount: data.storyBlocks.length,
@@ -555,24 +558,24 @@ const createSession = async (stories: ProcessedStory[], startTime: string, maxRe
         // Save to localStorage (temporary until SessionStorageService is ported)
         const storageKey = `tempo-session-${today}`;
         localStorage.setItem(storageKey, JSON.stringify(sessionToSave));
-        console.log(`Session saved to localStorage with key: ${storageKey}`);
+        log.debug(`Session saved to localStorage with key: ${storageKey}`);
 
         // Verify the session was saved correctly
         const savedSession = localStorage.getItem(storageKey);
         if (!savedSession) {
-          console.error('Failed to verify saved session - not found in localStorage');
+          log.error('Failed to verify saved session - not found in localStorage');
           throw new Error('Session was not properly saved to storage');
         } else {
-          console.log(`Session successfully saved and verified`);
+          log.info(`Session successfully saved and verified`);
         }
 
         return data;
       } catch (error) {
-        console.error('Failed to save session:', error);
+        log.error('Failed to save session:', error);
         throw new Error('Failed to save session to storage');
       }
     } catch (error) {
-      console.error(`Session creation attempt ${retryCount + 1} failed:`, error);
+      log.error(`Session creation attempt ${retryCount + 1} failed:`, error);
       lastError = error;
 
       // Check if this is a parsing error that might benefit from retry
@@ -582,9 +585,7 @@ const createSession = async (stories: ProcessedStory[], startTime: string, maxRe
 
       // Don't retry on the last attempt or if it's not a parsing error
       if (retryCount >= maxRetries - 1 || !shouldRetry) {
-        console.error(
-          `Maximum retry limit (${maxRetries}) reached or non-retryable error. Giving up.`
-        );
+        log.error(`Maximum retry limit (${maxRetries}) reached or non-retryable error. Giving up.`);
         break;
       }
 

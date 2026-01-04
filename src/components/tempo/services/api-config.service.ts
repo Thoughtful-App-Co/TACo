@@ -5,6 +5,10 @@
  * Stores configuration in localStorage for persistence
  */
 
+import { logger } from '../../../lib/logger';
+
+const log = logger.create('APIConfig');
+
 const STORAGE_KEY = 'tempo-api-config';
 
 export type ApiKeyMode = 'bring-your-own' | 'managed';
@@ -33,7 +37,7 @@ export const ApiConfigService = {
         return JSON.parse(stored);
       }
     } catch (error) {
-      console.error('Failed to parse stored API config:', error);
+      log.error('Failed to parse stored API config:', error);
     }
 
     // Return default config
@@ -72,10 +76,10 @@ export const ApiConfigService = {
 
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-      console.log('API configuration saved successfully');
+      log.info('API configuration saved successfully');
       return updated;
     } catch (error) {
-      console.error('Failed to save API configuration:', error);
+      log.error('Failed to save API configuration:', error);
       throw new Error('Failed to save API configuration to localStorage');
     }
   },
@@ -93,9 +97,9 @@ export const ApiConfigService = {
   clearConfig(): void {
     try {
       localStorage.removeItem(STORAGE_KEY);
-      console.log('API configuration cleared');
+      log.info('API configuration cleared');
     } catch (error) {
-      console.error('Failed to clear API configuration:', error);
+      log.error('Failed to clear API configuration:', error);
     }
   },
 

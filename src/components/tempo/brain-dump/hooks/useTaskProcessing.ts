@@ -3,6 +3,9 @@ import { createSignal } from 'solid-js';
 import { brainDumpService } from '../services/brain-dump-services';
 import type { ProcessedStory } from '../../lib/types';
 import type { ErrorDetails } from '../types';
+import { logger } from '../../../../lib/logger';
+
+const log = logger.create('BrainDump');
 
 export function useTaskProcessing() {
   const [processedStories, setProcessedStories] = createSignal<ProcessedStory[]>([]);
@@ -34,7 +37,7 @@ export function useTaskProcessing() {
 
       // Validate the response structure
       if (!data.stories || !Array.isArray(data.stories)) {
-        console.error('Invalid response structure:', data);
+        log.error('Invalid response structure: ' + JSON.stringify(data));
         throw new Error('Invalid response format: missing stories array');
       }
 
@@ -44,7 +47,7 @@ export function useTaskProcessing() {
       });
 
       if (invalidStories.length > 0) {
-        console.error('Invalid stories found:', invalidStories);
+        log.error('Invalid stories found: ' + JSON.stringify(invalidStories));
         throw new Error('Some stories are missing required fields');
       }
 
@@ -55,7 +58,7 @@ export function useTaskProcessing() {
 
       return data.stories;
     } catch (error) {
-      console.error('Failed to process tasks:', error);
+      log.error('Failed to process tasks: ' + String(error));
 
       let errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
       const errorCode = 'UNKNOWN_ERROR';
