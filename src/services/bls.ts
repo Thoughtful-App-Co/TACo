@@ -40,6 +40,7 @@ import type {
 } from '../types/bls.types';
 
 import { getStateByAbbrev, getMsaByCode, STATE_FIPS } from '../data/geographic-codes';
+import { logger } from '../lib/logger';
 
 // =============================================================================
 // Constants
@@ -160,7 +161,7 @@ export function setCachedData<T>(key: string, data: T): void {
     localStorage.setItem(key, JSON.stringify(entry));
   } catch (error) {
     // localStorage might be full or disabled - fail silently
-    console.warn('Failed to cache BLS data:', error);
+    logger.laborMarket.warn('Failed to cache BLS data:', error);
   }
 }
 
@@ -183,7 +184,7 @@ export function clearBlsCache(): number {
       removedCount++;
     });
   } catch (error) {
-    console.warn('Failed to clear BLS cache:', error);
+    logger.laborMarket.warn('Failed to clear BLS cache:', error);
   }
   return removedCount;
 }
@@ -301,7 +302,7 @@ export async function fetchBlsSeries(
     const messages = data.messages || data.message || [];
 
     // Log for debugging
-    console.log('[BLS] fetchBlsSeries response:', {
+    logger.laborMarket.debug('fetchBlsSeries response:', {
       success: data.success,
       status,
       hasResults: !!results,
@@ -1319,7 +1320,7 @@ export async function getLaborMarketSnapshot(): Promise<BlsResult<LaborMarketSna
     getCurrentCpi(),
   ]);
 
-  console.log('[BLS] getLaborMarketSnapshot API results:', {
+  logger.laborMarket.debug('getLaborMarketSnapshot API results:', {
     unemployment: unemploymentResult.success,
     jolts: joltsResult.success,
     cpi: cpiResult.success,

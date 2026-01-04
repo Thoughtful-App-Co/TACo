@@ -16,6 +16,10 @@
  * @module services/geolocation
  */
 
+import { logger } from '../lib/logger';
+
+const geoLogger = logger.create('Geo');
+
 // =============================================================================
 // Types
 // =============================================================================
@@ -534,7 +538,7 @@ function getCachedLocation(): UserLocation | null {
 
     return cached.data;
   } catch (error) {
-    console.warn('Failed to read location cache:', error);
+    geoLogger.warn('Failed to read location cache:', error);
     try {
       localStorage.removeItem(LOCATION_CACHE_KEY);
     } catch {
@@ -558,7 +562,7 @@ function setCachedLocation(location: UserLocation): void {
     };
     localStorage.setItem(LOCATION_CACHE_KEY, JSON.stringify(cached));
   } catch (error) {
-    console.warn('Failed to cache location data:', error);
+    geoLogger.warn('Failed to cache location data:', error);
     // Fail silently - caching is not critical
   }
 }
@@ -570,7 +574,7 @@ export function clearLocationCache(): void {
   try {
     localStorage.removeItem(LOCATION_CACHE_KEY);
   } catch (error) {
-    console.warn('Failed to clear location cache:', error);
+    geoLogger.warn('Failed to clear location cache:', error);
   }
 }
 
@@ -631,7 +635,7 @@ export function detectCountryFromTimezone(): CountryCode {
     // Default fallback
     return 'US';
   } catch (error) {
-    console.warn('Failed to detect timezone:', error);
+    geoLogger.warn('Failed to detect timezone:', error);
     return 'US';
   }
 }
@@ -689,7 +693,7 @@ export function detectCountryFromLocale(): CountryCode {
 
     return languageCountryMap[language] || 'US';
   } catch (error) {
-    console.warn('Failed to detect locale:', error);
+    geoLogger.warn('Failed to detect locale:', error);
     return 'US';
   }
 }
@@ -737,7 +741,7 @@ async function detectFromIpApi(): Promise<UserLocation | null> {
       isManualOverride: false,
     };
   } catch (error) {
-    console.warn('Primary IP API failed:', error);
+    geoLogger.warn('Primary IP API failed:', error);
 
     // Try fallback API
     try {
@@ -771,7 +775,7 @@ async function detectFromIpApi(): Promise<UserLocation | null> {
         isManualOverride: false,
       };
     } catch (fallbackError) {
-      console.warn('Fallback IP API failed:', fallbackError);
+      geoLogger.warn('Fallback IP API failed:', fallbackError);
       return null;
     }
   }

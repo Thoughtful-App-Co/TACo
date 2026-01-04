@@ -1,3 +1,4 @@
+import { logger } from '../lib/logger';
 import { searchJobTitleMappings } from '../data/job-title-mappings';
 
 const BASE_URL = 'https://api-v2.onetcenter.org';
@@ -39,14 +40,14 @@ export async function searchCareers(keyword: string): Promise<OnetCareer[]> {
     });
 
     if (!response.ok) {
-      console.error('O*NET API Error:', response.statusText);
+      logger.onet.error('API Error:', response.statusText);
       return [];
     }
 
     const data: OnetSearchResponse = await response.json();
     return data.career || [];
   } catch (error) {
-    console.error('Failed to fetch from O*NET:', error);
+    logger.onet.error('Failed to fetch:', error);
     return [];
   }
 }
@@ -95,7 +96,7 @@ export async function searchCareersEnhanced(keyword: string): Promise<EnhancedOn
   try {
     onetResults = await searchCareers(keyword);
   } catch (error) {
-    console.error('O*NET API failed, returning mapped results only:', error);
+    logger.onet.warn('API failed, returning mapped results only:', error);
   }
 
   // Step 3: Merge O*NET results
@@ -201,14 +202,14 @@ export async function getInterestProfilerQuestions(
     );
 
     if (!response.ok) {
-      console.error('O*NET API Error:', response.statusText);
+      logger.onet.error('API Error:', response.statusText);
       return [];
     }
 
     const data: OnetQuestionsResponse = await response.json();
     return data.question || [];
   } catch (error) {
-    console.error('Failed to fetch questions:', error);
+    logger.onet.error('Failed to fetch questions:', error);
     return [];
   }
 }
@@ -224,7 +225,7 @@ export async function getInterestProfilerResults(
     });
 
     if (!response.ok) {
-      console.error('O*NET API Error:', response.statusText);
+      logger.onet.error('API Error:', response.statusText);
       return null;
     }
 
@@ -242,7 +243,7 @@ export async function getInterestProfilerResults(
 
     return scores as RiasecScoreWithDetails;
   } catch (error) {
-    console.error('Failed to fetch results:', error);
+    logger.onet.error('Failed to fetch results:', error);
     return null;
   }
 }
@@ -274,7 +275,7 @@ export async function getCareerDetails(code: string): Promise<OnetCareerDetails 
     ]);
 
     if (!careerRes.ok) {
-      console.error('O*NET API Error (Career):', careerRes.statusText);
+      logger.onet.error('API Error (Career):', careerRes.statusText);
       return null;
     }
 
@@ -305,7 +306,7 @@ export async function getCareerDetails(code: string): Promise<OnetCareerDetails 
       skills: skillsData,
     };
   } catch (error) {
-    console.error('Failed to fetch career details:', error);
+    logger.onet.error('Failed to fetch career details:', error);
     return null;
   }
 }
@@ -344,14 +345,14 @@ export async function getInterestProfilerCareers(
     );
 
     if (!response.ok) {
-      console.error('O*NET API Error:', response.statusText);
+      logger.onet.error('API Error:', response.statusText);
       return [];
     }
 
     const data: OnetCareersResponse = await response.json();
     return data.career || [];
   } catch (error) {
-    console.error('Failed to fetch careers:', error);
+    logger.onet.error('Failed to fetch careers:', error);
     return [];
   }
 }
@@ -423,7 +424,7 @@ export async function getOccupationDetails(
       tasks: tasks.map((t: any) => t.statement || ''),
     };
   } catch (error) {
-    console.error('Failed to fetch occupation details:', error);
+    logger.onet.error('Failed to fetch occupation details:', error);
     return null;
   }
 }
@@ -452,7 +453,7 @@ export async function searchOccupationByTitle(
       title: o.title,
     }));
   } catch (error) {
-    console.error('Failed to search occupations:', error);
+    logger.onet.error('Failed to search occupations:', error);
     return [];
   }
 }
