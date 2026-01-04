@@ -9,6 +9,7 @@
 
 import { registerSW } from 'virtual:pwa-register';
 import { createSignal } from 'solid-js';
+import { logger } from '../logger';
 
 export interface PWAUpdateInfo {
   hasUpdate: boolean;
@@ -30,24 +31,24 @@ export function initPWA() {
   updateSWCallback = registerSW({
     immediate: true,
     onNeedRefresh() {
-      console.log('[PWA] New version available');
+      logger.pwa.info('New version available');
       setPwaUpdateAvailable(true);
       // Store update info for changelog display
       localStorage.setItem('pwa_update_pending', Date.now().toString());
     },
     onOfflineReady() {
-      console.log('[PWA] App ready to work offline');
+      logger.pwa.info('App ready to work offline');
       setPwaOfflineReady(true);
     },
     onRegisteredSW(swUrl, registration) {
-      console.log('[PWA] Service worker registered:', swUrl);
+      logger.pwa.info('Service worker registered:', swUrl);
       setPwaRegistered(true);
 
       // Check for updates every hour
       if (registration) {
         setInterval(
           () => {
-            console.log('[PWA] Checking for updates...');
+            logger.pwa.info('Checking for updates...');
             registration.update();
           },
           60 * 60 * 1000
@@ -55,11 +56,11 @@ export function initPWA() {
       }
     },
     onRegisterError(error) {
-      console.error('[PWA] Service worker registration error:', error);
+      logger.pwa.error('Service worker registration error:', error);
     },
   });
 
-  console.log('[PWA] Initialization complete');
+  logger.pwa.info('Initialization complete');
 }
 
 /**
@@ -67,10 +68,10 @@ export function initPWA() {
  */
 export function applyUpdate() {
   if (updateSWCallback) {
-    console.log('[PWA] Applying update...');
+    logger.pwa.info('Applying update...');
     updateSWCallback(true);
   } else {
-    console.warn('[PWA] No update callback available');
+    logger.pwa.warn('No update callback available');
   }
 }
 
@@ -80,7 +81,7 @@ export function applyUpdate() {
  */
 export function dismissUpdate() {
   setPwaUpdateAvailable(false);
-  console.log('[PWA] Update dismissed');
+  logger.pwa.info('Update dismissed');
 }
 
 /**

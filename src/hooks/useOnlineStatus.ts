@@ -8,6 +8,9 @@
  */
 
 import { createSignal, onMount, onCleanup } from 'solid-js';
+import { logger } from '../lib/logger';
+
+const log = logger.create('Network');
 
 export interface OnlineStatus {
   isOnline: boolean;
@@ -32,7 +35,7 @@ export function useOnlineStatus() {
 
   onMount(() => {
     const handleOnline = () => {
-      console.log('[Network] Back online');
+      log.info('Back online');
       setIsOnline(true);
       if (!isOnline()) {
         setWasOffline(true);
@@ -42,7 +45,7 @@ export function useOnlineStatus() {
     };
 
     const handleOffline = () => {
-      console.log('[Network] Went offline');
+      log.info('Went offline');
       setIsOnline(false);
     };
 
@@ -54,7 +57,7 @@ export function useOnlineStatus() {
           downlink: connection.downlink || null,
           rtt: connection.rtt || null,
         });
-        console.log('[Network] Connection updated:', {
+        log.info('Connection updated:', {
           type: connection.effectiveType,
           downlink: connection.downlink,
           rtt: connection.rtt,

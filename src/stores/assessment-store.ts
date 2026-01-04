@@ -9,6 +9,7 @@
 
 import { RiasecScoreWithDetails } from '../services/onet';
 import { OceanProfile, BfiAnswer } from '../schemas/ocean.schema';
+import { logger } from '../lib/logger';
 
 // Storage key
 export const ASSESSMENT_STORE_KEY = 'tenure_assessments';
@@ -78,7 +79,7 @@ export function loadAssessmentStore(): AssessmentStore {
       return { ...DEFAULT_STORE, ...parsed };
     }
   } catch (e) {
-    console.error('Failed to load assessment store:', e);
+    logger.storage.error('Failed to load assessment store:', e);
   }
   return { ...DEFAULT_STORE };
 }
@@ -90,7 +91,7 @@ export function saveAssessmentStore(store: AssessmentStore): void {
   try {
     localStorage.setItem(ASSESSMENT_STORE_KEY, JSON.stringify(store));
   } catch (e) {
-    console.error('Failed to save assessment store:', e);
+    logger.storage.error('Failed to save assessment store:', e);
   }
 }
 
@@ -269,10 +270,10 @@ export function migrateLegacyRiasecData(): void {
         completedAt: new Date().toISOString(), // Approximate
       });
 
-      console.log('Successfully migrated legacy RIASEC data to unified store');
+      logger.storage.info('Successfully migrated legacy RIASEC data to unified store');
     }
   } catch (e) {
-    console.error('Failed to migrate legacy RIASEC data:', e);
+    logger.storage.error('Failed to migrate legacy RIASEC data:', e);
   }
 }
 
@@ -299,7 +300,7 @@ export function importAssessmentData(data: string): boolean {
 
     return false;
   } catch (e) {
-    console.error('Failed to import assessment data:', e);
+    logger.storage.error('Failed to import assessment data:', e);
     return false;
   }
 }

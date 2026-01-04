@@ -7,6 +7,8 @@
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
+import { logger } from './logger';
+
 // ============================================================================
 // TYPES
 // ============================================================================
@@ -64,7 +66,7 @@ function loadUsageData(): UsageData {
       return data;
     }
   } catch (error) {
-    console.error('Failed to load usage data:', error);
+    logger.storage.error('Failed to load usage data:', error);
   }
 
   // Return default empty data
@@ -88,7 +90,7 @@ function saveUsageData(data: UsageData): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   } catch (error) {
-    console.error('Failed to save usage data:', error);
+    logger.storage.error('Failed to save usage data:', error);
   }
 }
 

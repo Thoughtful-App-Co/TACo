@@ -8,6 +8,9 @@
  */
 
 import { get, set, del, keys } from 'idb-keyval';
+import { logger } from '../logger';
+
+const log = logger.create('OfflineQueue');
 
 export interface QueuedRequest {
   id: string;
@@ -48,7 +51,7 @@ export async function queueRequest(
 
   await set(id, queuedRequest);
 
-  console.log(`[OfflineQueue] Queued request: ${id}`, { url, method: options.method });
+  log.info(`Queued request: ${id}`, { url, method: options.method });
   return id;
 }
 
@@ -85,7 +88,7 @@ export async function processQueue(): Promise<{
   let processed = 0;
   let failed = 0;
 
-  console.log(`[OfflineQueue] Processing ${requests.length} queued requests...`);
+  log.info(`Processing ${requests.length} queued requests...`);
 
   for (const request of requests) {
     try {
@@ -98,37 +101,33 @@ export async function processQueue(): Promise<{
       if (response.ok) {
         await del(request.id);
         processed++;
-        console.log(`[OfflineQueue] ✓ Processed: ${request.url}`);
+        log.info(`✓ Processed: ${request.url}`);
       } else if (response.status >= 400 && response.status < 500) {
         // Client error - don't retry
         await del(request.id);
         failed++;
-        console.log(`[OfflineQueue] ✗ Failed (client error ${response.status}): ${request.url}`);
+        log.info(`✗ Failed (client error ${response.status}): ${request.url}`);
       } else {
         // Server error - retry
         request.retries++;
         if (request.retries >= request.maxRetries) {
           await del(request.id);
           failed++;
-          console.log(`[OfflineQueue] ✗ Failed (max retries): ${request.url}`);
+          log.info(`✗ Failed (max retries): ${request.url}`);
         } else {
           await set(request.id, request);
-          console.log(
-            `[OfflineQueue] ↻ Retry ${request.retries}/${request.maxRetries}: ${request.url}`
-          );
+          log.info(`↻ Retry ${request.retries}/${request.maxRetries}: ${request.url}`);
         }
       }
     } catch (error) {
       // Network error - keep in queue
-      console.log(`[OfflineQueue] Network error, keeping: ${request.url}`, error);
+      log.info(`Network error, keeping: ${request.url}`, error);
     }
   }
 
   const remaining = (await getQueuedRequests()).length;
 
-  console.log(
-    `[OfflineQueue] Complete: ${processed} processed, ${failed} failed, ${remaining} remaining`
-  );
+  log.info(`Complete: ${processed} processed, ${failed} failed, ${remaining} remaining`);
 
   return { processed, failed, remaining };
 }
@@ -146,7 +145,7 @@ export async function clearQueue(): Promise<void> {
     await del(key);
   }
 
-  console.log(`[OfflineQueue] Cleared ${queueKeys.length} requests`);
+  log.info(`Cleared ${queueKeys.length} requests`);
 }
 
 /**
@@ -154,18 +153,16 @@ export async function clearQueue(): Promise<void> {
  */
 export async function removeFromQueue(id: string): Promise<void> {
   await del(id);
-  console.log(`[OfflineQueue] Removed: ${id}`);
+  log.info(`Removed: ${id}`);
 }
 
 // Auto-process queue when coming back online
 if (typeof window !== 'undefined') {
   window.addEventListener('online', () => {
-    console.log('[OfflineQueue] Back online, processing queue...');
+    log.info('Back online, processing queue...');
     processQueue().then(({ processed, failed, remaining }) => {
       if (processed > 0 || failed > 0) {
-        console.log(
-          `[OfflineQueue] Results: ${processed} succeeded, ${failed} failed, ${remaining} queued`
-        );
+        log.info(`Results: ${processed} succeeded, ${failed} failed, ${remaining} queued`);
       }
     });
   });

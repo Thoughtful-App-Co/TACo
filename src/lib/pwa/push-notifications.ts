@@ -9,6 +9,7 @@
 
 import { createSignal } from 'solid-js';
 import { set, del } from 'idb-keyval';
+import { logger } from '../logger';
 
 // Get VAPID public key from environment
 const VAPID_PUBLIC_KEY = import.meta.env.VITE_VAPID_PUBLIC_KEY || '';
@@ -24,12 +25,12 @@ export const [pushSubscription, setPushSubscription] = createSignal<PushSubscrip
 export async function initPushNotifications(): Promise<void> {
   // Check if push is supported
   if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-    console.log('[Push] Not supported in this browser');
+    logger.push.info('Not supported in this browser');
     return;
   }
 
   if (!VAPID_PUBLIC_KEY) {
-    console.log('[Push] VAPID public key not configured');
+    logger.push.info('VAPID public key not configured');
     return;
   }
 
@@ -43,10 +44,10 @@ export async function initPushNotifications(): Promise<void> {
 
     if (subscription) {
       setPushSubscription(subscription);
-      console.log('[Push] Existing subscription found');
+      logger.push.info('Existing subscription found');
     }
   } catch (error) {
-    console.error('[Push] Failed to get subscription:', error);
+    logger.push.error('Failed to get subscription:', error);
   }
 }
 
@@ -64,13 +65,13 @@ export async function requestPushPermission(): Promise<NotificationPermission> {
  */
 export async function subscribeToPush(): Promise<PushSubscription | null> {
   if (!pushSupported()) {
-    console.log('[Push] Not supported');
+    logger.push.info('Not supported');
     return null;
   }
 
   const permission = await requestPushPermission();
   if (permission !== 'granted') {
-    console.log('[Push] Permission denied');
+    logger.push.info('Permission denied');
     return null;
   }
 
@@ -91,10 +92,10 @@ export async function subscribeToPush(): Promise<PushSubscription | null> {
     // Sync with server
     await syncSubscriptionWithServer(subscription);
 
-    console.log('[Push] Subscribed successfully');
+    logger.push.info('Subscribed successfully');
     return subscription;
   } catch (error) {
-    console.error('[Push] Subscription failed:', error);
+    logger.push.error('Subscription failed:', error);
     return null;
   }
 }
@@ -111,10 +112,10 @@ export async function unsubscribeFromPush(): Promise<boolean> {
     setPushSubscription(null);
     await del('push_subscription');
 
-    console.log('[Push] Unsubscribed');
+    logger.push.info('Unsubscribed');
     return true;
   } catch (error) {
-    console.error('[Push] Unsubscribe failed:', error);
+    logger.push.error('Unsubscribe failed:', error);
     return false;
   }
 }
@@ -133,7 +134,7 @@ async function syncSubscriptionWithServer(subscription: PushSubscription): Promi
       }),
     });
   } catch (error) {
-    console.error('[Push] Failed to sync subscription:', error);
+    logger.push.error('Failed to sync subscription:', error);
   }
 }
 

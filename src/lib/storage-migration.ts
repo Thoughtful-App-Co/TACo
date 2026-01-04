@@ -10,6 +10,8 @@
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
+import { logger } from './logger';
+
 export const MIGRATION_VERSION = 1;
 export const MIGRATION_KEY = 'tenure_migration_version';
 
@@ -93,11 +95,11 @@ export function runStorageMigration(deleteOldKeys: boolean = false): MigrationRe
   // Check if already migrated
   if (isMigrationComplete()) {
     result.alreadyMigrated = true;
-    console.log('[StorageMigration] Already at version', MIGRATION_VERSION);
+    logger.storage.info('Already at version', MIGRATION_VERSION);
     return result;
   }
 
-  console.log('[StorageMigration] Starting migration to version', MIGRATION_VERSION);
+  logger.storage.info('Starting migration to version', MIGRATION_VERSION);
 
   for (const [oldKey, newKey] of Object.entries(KEY_MIGRATIONS)) {
     try {
@@ -125,18 +127,18 @@ export function runStorageMigration(deleteOldKeys: boolean = false): MigrationRe
         localStorage.removeItem(oldKey);
       }
 
-      console.log(`[StorageMigration] Migrated: ${oldKey} → ${newKey}`);
+      logger.storage.info(`Migrated: ${oldKey} → ${newKey}`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       result.errors.push({ key: oldKey, error: errorMessage });
-      console.error(`[StorageMigration] Error migrating ${oldKey}:`, error);
+      logger.storage.error(`Error migrating ${oldKey}:`, error);
     }
   }
 
   // Mark migration as complete
   localStorage.setItem(MIGRATION_KEY, String(MIGRATION_VERSION));
 
-  console.log('[StorageMigration] Complete:', {
+  logger.storage.info('Complete:', {
     migrated: result.migratedKeys.length,
     skipped: result.skippedKeys.length,
     errors: result.errors.length,
@@ -192,7 +194,7 @@ export function getMigrationStatus(): {
  */
 export function resetMigrationStatus(): void {
   localStorage.removeItem(MIGRATION_KEY);
-  console.log('[StorageMigration] Migration status reset');
+  logger.storage.info('Migration status reset');
 }
 
 /**
@@ -211,7 +213,7 @@ export function cleanupOldKeys(): { deleted: string[]; notFound: string[] } {
     }
   }
 
-  console.log('[StorageMigration] Cleaned up old keys:', { deleted: deleted.length });
+  logger.storage.info('Cleaned up old keys:', { deleted: deleted.length });
   return { deleted, notFound };
 }
 
@@ -224,11 +226,7 @@ export function autoMigrate(): void {
     const result = runStorageMigration(false); // Keep old keys for safety
 
     if (!result.alreadyMigrated && result.migratedKeys.length > 0) {
-      console.log(
-        '[StorageMigration] Auto-migration complete:',
-        result.migratedKeys.length,
-        'keys migrated'
-      );
+      logger.storage.info('Auto-migration complete:', result.migratedKeys.length, 'keys migrated');
     }
   }
 }

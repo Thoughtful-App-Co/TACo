@@ -8,6 +8,7 @@
  */
 
 import { createSignal } from 'solid-js';
+import { logger } from '../logger';
 
 // BeforeInstallPromptEvent type
 interface BeforeInstallPromptEvent extends Event {
@@ -43,11 +44,11 @@ export function initInstallPrompt() {
     e.preventDefault();
     deferredPrompt = e as BeforeInstallPromptEvent;
     setCanInstall(true);
-    console.log('[PWA] Install prompt captured');
+    logger.pwa.info('Install prompt captured');
   });
 
   window.addEventListener('appinstalled', () => {
-    console.log('[PWA] App installed');
+    logger.pwa.info('App installed');
     setIsInstalled(true);
     setCanInstall(false);
     deferredPrompt = null;
@@ -63,14 +64,14 @@ export function initInstallPrompt() {
  */
 export async function promptInstall(): Promise<'accepted' | 'dismissed' | 'unavailable'> {
   if (!deferredPrompt) {
-    console.log('[PWA] No install prompt available');
+    logger.pwa.info('No install prompt available');
     return 'unavailable';
   }
 
   deferredPrompt.prompt();
   const { outcome } = await deferredPrompt.userChoice;
 
-  console.log(`[PWA] Install outcome: ${outcome}`);
+  logger.pwa.info(`Install outcome: ${outcome}`);
 
   if (outcome === 'accepted') {
     setCanInstall(false);

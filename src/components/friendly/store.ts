@@ -11,6 +11,7 @@ import {
   TimeSlot,
   BADGES,
 } from '../../schemas/friendly.schema';
+import { logger } from '../../lib/logger';
 
 // --- INITIAL DATA ---
 const INITIAL_PROFILE: UserProfile = {
@@ -160,7 +161,7 @@ const loadState = (): StoreState => {
 
       return parsed;
     } catch (e) {
-      console.error('Failed to load state', e);
+      logger.storage.error('Failed to load state: ' + String(e));
     }
   }
   return {

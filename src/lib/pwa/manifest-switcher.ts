@@ -9,6 +9,7 @@
 
 import { createEffect } from 'solid-js';
 import { useLocation } from '@solidjs/router';
+import { logger } from '../logger';
 
 export interface ManifestConfig {
   path: string;
@@ -63,7 +64,7 @@ export function useManifestSwitcher() {
         (a, b) => b.path.length - a.path.length
       )[0] || MANIFEST_MAP.find((m) => m.path === '/')!;
 
-    console.log(`[ManifestSwitcher] Switching to ${config.appleTitle} manifest`);
+    logger.pwa.info(`Switching to ${config.appleTitle} manifest`);
 
     // Update manifest link
     let manifestLink = document.querySelector('link[rel="manifest"]') as HTMLLinkElement;

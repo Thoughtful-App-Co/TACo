@@ -1,8 +1,8 @@
 /**
  * Feature Gates - Premium Feature Access Control
  *
- * Provides stubs for checking premium feature access.
- * Ready to integrate with authentication system when available.
+ * Provides real subscription-based access control.
+ * Integrates with auth context for subscription status.
  *
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
@@ -13,6 +13,8 @@ import {
   getRegionCapabilities,
 } from '../services/geolocation';
 import type { RegionCapabilities } from '../services/geolocation';
+import { getStoredToken } from './auth';
+import { logger } from './logger';
 
 // ============================================================================
 // TYPES
@@ -22,81 +24,256 @@ export interface FeatureGateResult {
   allowed: boolean;
   reason?: string;
   upgradeUrl?: string;
+  requiresAuth?: boolean;
+  requiresSubscription?: string;
 }
 
 export type FeatureName =
   | 'mutation'
   | 'variant_export'
   | 'ai_optimization'
-  | 'v2_market_comparison'
-  | 'v2_bls_integration';
+  | 'backup'
+  | 'sync'
+  | 'tempo_ai'
+  | 'cover_letter';
+
+export type SubscriptionTier = 'free' | 'tenure_extras' | 'tempo_extras' | 'sync' | 'taco_club';
 
 /**
  * Labor market data feature availability
  * Varies by user's geographic region
  */
 export interface LaborMarketFeatures {
-  /** Whether any labor market data is available */
   available: boolean;
-  /** Specific capabilities for user's region */
   capabilities: RegionCapabilities;
-  /** User's detected country code */
   countryCode: string;
-  /** User-friendly message if unavailable */
   unavailableMessage?: string;
 }
 
 // ============================================================================
-// V2 FEATURE FLAGS (DEFERRED TO MVP 2)
+// AUTH STATE CACHE
 // ============================================================================
 
-/**
- * Feature flags for v2 functionality
- * These features are implemented but not yet production-ready
- *
- * To enable a feature for testing, set the flag to true.
- * All flags default to false for the 0.1.0-beta release.
- */
-export const V2_FLAGS = {
-  /** BLS market comparison in Your Worth salary tracking (requires SOC code mapping) */
-  MARKET_COMPARISON: false,
-  /** Full BLS API integration for wage data, outlook, and labor market stats */
-  BLS_INTEGRATION: false,
-  /** SOC code auto-detection from job titles using O*NET crosswalk */
-  SOC_CODE_MAPPING: false,
-} as const;
+// Cache for subscription status to avoid repeated API calls
+let cachedSubscriptions: string[] | null = null;
+let cacheTimestamp: number = 0;
+const CACHE_TTL = 60 * 1000; // 1 minute
 
 /**
- * Check if a v2 feature is enabled
- * @param feature - The v2 feature to check
- * @returns Whether the feature is enabled
+ * Get cached subscriptions or fetch fresh
  */
-export function isV2FeatureEnabled(feature: keyof typeof V2_FLAGS): boolean {
-  return V2_FLAGS[feature];
+async function getSubscriptions(): Promise<string[]> {
+  const token = getStoredToken();
+
+  if (!token) {
+    cachedSubscriptions = null;
+    return [];
+  }
+
+  // Return cached if fresh
+  if (cachedSubscriptions && Date.now() - cacheTimestamp < CACHE_TTL) {
+    return cachedSubscriptions;
+  }
+
+  try {
+    const response = await fetch('/api/auth/validate', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      cachedSubscriptions = null;
+      return [];
+    }
+
+    const data = await response.json();
+    const subs: string[] = data.subscriptions || [];
+    cachedSubscriptions = subs;
+    cacheTimestamp = Date.now();
+    return subs;
+  } catch {
+    if (cachedSubscriptions) {
+      return cachedSubscriptions;
+    }
+    return [];
+  }
+}
+
+/**
+ * Synchronous check using cached data
+ */
+function getCachedSubscriptions(): string[] {
+  return cachedSubscriptions || [];
+}
+
+/**
+ * Check if user is authenticated (has token)
+ */
+function isAuthenticated(): boolean {
+  return !!getStoredToken();
+}
+
+/**
+ * Clear subscription cache (call after login/logout)
+ */
+export function clearSubscriptionCache(): void {
+  cachedSubscriptions = null;
+  cacheTimestamp = 0;
 }
 
 // ============================================================================
-// FEATURE GATES (AUTH STUBS)
+// V2 FEATURE FLAGS (Legacy compatibility)
+// ============================================================================
+
+/**
+ * V2 Feature flags for gradual rollout
+ * These control access to newer features during development
+ *
+ * @deprecated Use subscription-based feature gates instead
+ */
+export type V2Feature = 'laborMarket' | 'salaryBenchmark' | 'matches' | 'seasonalInsights';
+
+/**
+ * Check if a V2 feature is enabled
+ * Currently all V2 features are enabled by default
+ *
+ * @deprecated Use subscription-based feature gates instead
+ */
+export function isV2FeatureEnabled(feature: V2Feature): boolean {
+  // Check for localStorage override (for testing)
+  if (typeof window !== 'undefined') {
+    const override = localStorage.getItem(`v2_${feature}`);
+    if (override === 'true') return true;
+    if (override === 'false') return false;
+  }
+
+  switch (feature) {
+    case 'laborMarket':
+    case 'salaryBenchmark':
+    case 'matches':
+      return true;
+    case 'seasonalInsights':
+      // Disabled until v2 launch - set localStorage.setItem('v2_seasonalInsights', 'true') to test
+      return false;
+    default:
+      return false;
+  }
+}
+
+/**
+ * Check if Seasonal Insights v2 features are enabled
+ * Includes: improved layout, industry-specific patterns, geographic adjustments
+ */
+export function isSeasonalInsightsEnabled(): boolean {
+  return isV2FeatureEnabled('seasonalInsights');
+}
+
+// ============================================================================
+// FEATURE GATES
 // ============================================================================
 
 /**
  * Check if user can use the resume mutation feature
- *
- * TODO: Replace with actual auth check when authentication is implemented
  */
 export function canUseMutation(): FeatureGateResult {
-  // STUB: Allow all users during development
+  if (!isAuthenticated()) {
+    return {
+      allowed: false,
+      reason: 'Sign in required',
+      requiresAuth: true,
+      upgradeUrl: '/pricing',
+    };
+  }
+
+  const subs = getCachedSubscriptions();
+
+  if (subs.includes('tenure_extras') || subs.includes('taco_club')) {
+    return { allowed: true };
+  }
+
   return {
-    allowed: true,
+    allowed: false,
+    reason: 'Tenure Extras subscription required',
+    requiresSubscription: 'tenure_extras',
+    upgradeUrl: '/pricing#tenure-extras',
   };
+}
+
+/**
+ * Check if user can use backup/sync features
+ */
+export function canUseBackup(): FeatureGateResult {
+  if (!isAuthenticated()) {
+    return {
+      allowed: false,
+      reason: 'Sign in required',
+      requiresAuth: true,
+      upgradeUrl: '/pricing',
+    };
+  }
+
+  const subs = getCachedSubscriptions();
+
+  const hasSyncSub = subs.some(
+    (s) => s === 'sync_all' || s.startsWith('sync_') || s === 'taco_club'
+  );
+
+  if (hasSyncSub) {
+    return { allowed: true };
+  }
+
+  return {
+    allowed: false,
+    reason: 'Sync & Backup subscription required',
+    requiresSubscription: 'sync',
+    upgradeUrl: '/pricing#sync',
+  };
+}
+
+/**
+ * Check if user can use Tempo AI features (brain dump processing, session creation)
+ */
+export function canUseTempoAI(): FeatureGateResult {
+  if (!isAuthenticated()) {
+    return {
+      allowed: false,
+      reason: 'Sign in required',
+      requiresAuth: true,
+      upgradeUrl: '/pricing',
+    };
+  }
+
+  const subs = getCachedSubscriptions();
+
+  if (subs.includes('tempo_extras') || subs.includes('taco_club')) {
+    return { allowed: true };
+  }
+
+  return {
+    allowed: false,
+    reason: 'Tempo Extras subscription required',
+    requiresSubscription: 'tempo_extras',
+    upgradeUrl: '/pricing#tempo-extras',
+  };
+}
+
+/**
+ * Check if user can use Cover Letter generation (part of Tenure Extras)
+ */
+export function canUseCoverLetter(): FeatureGateResult {
+  // Cover letter uses the same gate as mutation (Tenure Extras)
+  return canUseMutation();
 }
 
 /**
  * Check if user is a premium subscriber
  */
 export function isPremiumUser(): boolean {
-  // STUB: Return true during development
-  return true;
+  const subs = getCachedSubscriptions();
+  return subs.length > 0;
 }
 
 /**
@@ -105,11 +282,16 @@ export function isPremiumUser(): boolean {
 export function canAccessFeature(feature: FeatureName): FeatureGateResult {
   switch (feature) {
     case 'mutation':
-      return canUseMutation();
-    case 'variant_export':
-      return { allowed: true };
     case 'ai_optimization':
+    case 'cover_letter':
       return canUseMutation();
+    case 'tempo_ai':
+      return canUseTempoAI();
+    case 'backup':
+    case 'sync':
+      return canUseBackup();
+    case 'variant_export':
+      return { allowed: true }; // Free feature
     default:
       return { allowed: false, reason: 'Unknown feature' };
   }
@@ -118,7 +300,14 @@ export function canAccessFeature(feature: FeatureName): FeatureGateResult {
 /**
  * Get user's subscription tier
  */
-export function getSubscriptionTier(): 'free' | 'tenure_extras' | 'enterprise' {
+export function getSubscriptionTier(): SubscriptionTier {
+  const subs = getCachedSubscriptions();
+
+  if (subs.includes('taco_club')) return 'taco_club';
+  if (subs.includes('tenure_extras')) return 'tenure_extras';
+  if (subs.includes('tempo_extras')) return 'tempo_extras';
+  if (subs.some((s) => s.startsWith('sync_'))) return 'sync';
+
   return 'free';
 }
 
@@ -133,18 +322,25 @@ export function getFeatureLimits(): {
   const tier = getSubscriptionTier();
 
   switch (tier) {
+    case 'taco_club':
+      return {
+        mutationsPerMonth: -1, // Unlimited
+        variantsPerResume: -1,
+        aiOptimizationsPerMonth: -1,
+      };
     case 'tenure_extras':
       return {
         mutationsPerMonth: 10,
         variantsPerResume: 20,
         aiOptimizationsPerMonth: 10,
       };
-    case 'enterprise':
+    case 'tempo_extras':
       return {
-        mutationsPerMonth: -1,
-        variantsPerResume: -1,
-        aiOptimizationsPerMonth: -1,
+        mutationsPerMonth: 0,
+        variantsPerResume: 5,
+        aiOptimizationsPerMonth: 50,
       };
+    case 'sync':
     case 'free':
     default:
       return {
@@ -173,14 +369,64 @@ export function hasReachedLimit(feature: FeatureName, currentUsage: number): boo
   }
 }
 
+/**
+ * Async check with fresh subscription data
+ */
+export async function canUseMutationAsync(): Promise<FeatureGateResult> {
+  if (!isAuthenticated()) {
+    return {
+      allowed: false,
+      reason: 'Sign in required',
+      requiresAuth: true,
+      upgradeUrl: '/pricing',
+    };
+  }
+
+  const subs = await getSubscriptions();
+
+  if (subs.includes('tenure_extras') || subs.includes('taco_club')) {
+    return { allowed: true };
+  }
+
+  return {
+    allowed: false,
+    reason: 'Tenure Extras subscription required',
+    requiresSubscription: 'tenure_extras',
+    upgradeUrl: '/pricing#tenure-extras',
+  };
+}
+
+/**
+ * Async check for Tempo AI with fresh subscription data
+ */
+export async function canUseTempoAIAsync(): Promise<FeatureGateResult> {
+  if (!isAuthenticated()) {
+    return {
+      allowed: false,
+      reason: 'Sign in required',
+      requiresAuth: true,
+      upgradeUrl: '/pricing',
+    };
+  }
+
+  const subs = await getSubscriptions();
+
+  if (subs.includes('tempo_extras') || subs.includes('taco_club')) {
+    return { allowed: true };
+  }
+
+  return {
+    allowed: false,
+    reason: 'Tempo Extras subscription required',
+    requiresSubscription: 'tempo_extras',
+    upgradeUrl: '/pricing#tempo-extras',
+  };
+}
+
 // ============================================================================
 // LABOR MARKET FEATURES (GEOLOCATION-AWARE)
 // ============================================================================
 
-/**
- * Check if labor market features are available for user's location
- * @returns Labor market feature availability and capabilities
- */
 export async function getLaborMarketFeatures(): Promise<LaborMarketFeatures> {
   try {
     const location = await getUserLocation();
@@ -196,7 +442,7 @@ export async function getLaborMarketFeatures(): Promise<LaborMarketFeatures> {
         : undefined,
     };
   } catch (error) {
-    console.warn('Failed to check labor market features:', error);
+    logger.features.warn('Failed to check labor market features:', error);
     return {
       available: false,
       capabilities: {
@@ -214,25 +460,14 @@ export async function getLaborMarketFeatures(): Promise<LaborMarketFeatures> {
   }
 }
 
-/**
- * Check if a specific labor market capability is available
- * @param capability - The capability to check
- * @returns Whether the capability is available
- */
 export async function hasLaborMarketCapability(
   capability: keyof RegionCapabilities
 ): Promise<boolean> {
   const features = await getLaborMarketFeatures();
   const value = features.capabilities[capability];
-  // The 'provider' key returns a string, all others are boolean
   return typeof value === 'boolean' ? value : value !== 'none';
 }
 
-/**
- * Get cached labor market features (non-async, may be stale)
- * Useful for synchronous checks in components
- * @returns Cached features or null if not yet loaded
- */
 export function getCachedLaborMarketFeatures(): LaborMarketFeatures | null {
   try {
     const cached = localStorage.getItem('taco_labor_market_features');
@@ -252,21 +487,17 @@ export function getCachedLaborMarketFeatures(): LaborMarketFeatures | null {
   }
 }
 
-/**
- * Cache labor market features for synchronous access
- * Should be called on app initialization
- */
 export async function cacheLaborMarketFeatures(): Promise<void> {
   const features = await getLaborMarketFeatures();
   const cacheEntry = {
     data: features,
     cachedAt: Date.now(),
-    expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
+    expiresAt: Date.now() + 7 * 24 * 60 * 60 * 1000,
   };
 
   try {
     localStorage.setItem('taco_labor_market_features', JSON.stringify(cacheEntry));
   } catch (error) {
-    console.warn('Failed to cache labor market features:', error);
+    logger.features.warn('Failed to cache labor market features:', error);
   }
 }

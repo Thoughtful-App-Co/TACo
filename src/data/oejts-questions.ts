@@ -1,4 +1,7 @@
 import type { OejtsQuestion } from '../schemas/jungian.schema';
+import { logger } from '../lib/logger';
+
+const log = logger.create('OEJTS');
 
 /**
  * Open-Source Jung Type Scales (OEJTS) Questions
@@ -279,7 +282,7 @@ const validateQuestions = () => {
   });
 
   if (errors.length > 0) {
-    console.error('OEJTS Questions validation failed:', errors);
+    log.error('OEJTS Questions validation failed:', errors);
   }
 
   return errors.length === 0;
