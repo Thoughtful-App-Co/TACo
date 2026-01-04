@@ -9,6 +9,13 @@ export default [
   {
     ignores: ['dist', 'node_modules', 'build', 'coverage', '.vite'],
   },
+  // Logger files are allowed to use console.* (they wrap it)
+  {
+    files: ['**/lib/logger.ts', '**/logger.ts'],
+    rules: {
+      'no-console': 'off',
+    },
+  },
   {
     files: ['**/*.{js,jsx,ts,tsx}'],
     languageOptions: {
@@ -53,12 +60,11 @@ export default [
       ],
       '@typescript-eslint/explicit-function-return-types': 'off',
       '@typescript-eslint/explicit-module-boundary-types': 'off',
-      'no-console': [
-        'warn',
-        {
-          allow: ['warn', 'error'],
-        },
-      ],
+      // ========================================
+      // Logging rules - Use logger utility instead of console
+      // See: src/lib/logger.ts (frontend) or functions/lib/logger.ts (backend)
+      // ========================================
+      'no-console': 'error', // Enforced - use logger.* instead of console.*
       'no-debugger': 'warn',
       'prefer-const': 'warn',
       'no-var': 'warn',
