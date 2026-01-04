@@ -19,6 +19,7 @@ import {
   ChangeType,
 } from '../../../schemas/papertrail.schema';
 import { ApiConfigService } from './api-config.service';
+import { logger } from '../../../lib/logger';
 
 const CLUSTERS_KEY = 'papertrail-story-clusters';
 
@@ -191,7 +192,7 @@ Only return valid JSON, no other text.`;
       return JSON.parse(content);
     }
   } catch (error) {
-    console.error('[PaperTrail] AI summarization failed:', error);
+    logger.news.error('AI summarization failed:', error);
     // Fallback to simple summarization
     return {
       title: articles[0].title.substring(0, 80),
@@ -316,7 +317,7 @@ If no significant changes, return []. Only return valid JSON.`;
       }));
     }
   } catch (error) {
-    console.error('[PaperTrail] AI changelog detection failed:', error);
+    logger.news.error('AI changelog detection failed:', error);
     return [];
   }
 }
@@ -334,7 +335,7 @@ export const StoryClusteringService = {
       const stored = localStorage.getItem(CLUSTERS_KEY);
       return stored ? JSON.parse(stored) : [];
     } catch (error) {
-      console.error('[PaperTrail] Failed to parse clusters:', error);
+      logger.news.error('Failed to parse clusters:', error);
       return [];
     }
   },
@@ -346,7 +347,7 @@ export const StoryClusteringService = {
     try {
       localStorage.setItem(CLUSTERS_KEY, JSON.stringify(clusters));
     } catch (error) {
-      console.error('[PaperTrail] Failed to save clusters:', error);
+      logger.news.error('Failed to save clusters:', error);
     }
   },
 
@@ -357,13 +358,13 @@ export const StoryClusteringService = {
     const aiConfig = ApiConfigService.getAIConfig();
 
     if (!aiConfig) {
-      console.warn('[PaperTrail] AI not configured - clusters will be basic');
+      logger.news.warn('AI not configured - clusters will be basic');
     }
 
     // Step 1: Cluster articles by similarity
     const articleClusters = clusterArticles(articles);
-    console.log(
-      `[PaperTrail] Found ${articleClusters.length} story clusters from ${articles.length} articles`
+    logger.news.info(
+      `Found ${articleClusters.length} story clusters from ${articles.length} articles`
     );
 
     // Step 2: Generate AI summaries for each cluster
@@ -433,7 +434,7 @@ export const StoryClusteringService = {
     try {
       localStorage.removeItem(CLUSTERS_KEY);
     } catch (error) {
-      console.error('[PaperTrail] Failed to clear clusters:', error);
+      logger.news.error('Failed to clear clusters:', error);
     }
   },
 } as const;

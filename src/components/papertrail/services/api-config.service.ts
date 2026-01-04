@@ -7,6 +7,7 @@
  */
 
 import { ApiConfig, AI_PRESETS } from '../../../schemas/papertrail.schema';
+import { logger } from '../../../lib/logger';
 
 const STORAGE_KEY = 'papertrail-api-config';
 
@@ -21,7 +22,7 @@ export const ApiConfigService = {
         return JSON.parse(stored);
       }
     } catch (error) {
-      console.error('[PaperTrail] Failed to parse stored API config:', error);
+      logger.news.error('Failed to parse stored API config:', error);
     }
     return null;
   },
@@ -64,10 +65,10 @@ export const ApiConfigService = {
 
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-      console.log('[PaperTrail] API configuration saved');
+      logger.news.info('API configuration saved');
       return updated;
     } catch (error) {
-      console.error('[PaperTrail] Failed to save API configuration:', error);
+      logger.news.error('Failed to save API configuration:', error);
       throw new Error('Failed to save API configuration');
     }
   },
@@ -90,9 +91,9 @@ export const ApiConfigService = {
   clearConfig(): void {
     try {
       localStorage.removeItem(STORAGE_KEY);
-      console.log('[PaperTrail] API configuration cleared');
+      logger.news.info('API configuration cleared');
     } catch (error) {
-      console.error('[PaperTrail] Failed to clear API configuration:', error);
+      logger.news.error('Failed to clear API configuration:', error);
     }
   },
 

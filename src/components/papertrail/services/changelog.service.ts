@@ -7,6 +7,7 @@
  */
 
 import { Article, ChangelogEntry, ChangeType } from '../../../schemas/papertrail.schema';
+import { logger } from '../../../lib/logger';
 
 const ARTICLES_KEY = 'papertrail-articles';
 const CHANGELOG_KEY = 'papertrail-changelog';
@@ -96,7 +97,7 @@ export const ChangelogService = {
       const stored = localStorage.getItem(ARTICLES_KEY);
       return stored ? JSON.parse(stored) : {};
     } catch (error) {
-      console.error('[PaperTrail] Failed to parse cached articles:', error);
+      logger.news.error('Failed to parse cached articles:', error);
       return {};
     }
   },
@@ -109,7 +110,7 @@ export const ChangelogService = {
       const stored = localStorage.getItem(CHANGELOG_KEY);
       return stored ? JSON.parse(stored) : [];
     } catch (error) {
-      console.error('[PaperTrail] Failed to parse changelog:', error);
+      logger.news.error('Failed to parse changelog:', error);
       return [];
     }
   },
@@ -206,7 +207,7 @@ export const ChangelogService = {
     this.saveChangelog(changelog);
 
     if (newEntries.length > 0) {
-      console.log(`[PaperTrail] Detected ${newEntries.length} change(s)`);
+      logger.news.debug(`Detected ${newEntries.length} change(s)`);
     }
 
     return newEntries;
@@ -219,7 +220,7 @@ export const ChangelogService = {
     try {
       localStorage.setItem(ARTICLES_KEY, JSON.stringify(articles));
     } catch (error) {
-      console.error('[PaperTrail] Failed to save articles cache:', error);
+      logger.news.error('Failed to save articles cache:', error);
     }
   },
 
@@ -230,7 +231,7 @@ export const ChangelogService = {
     try {
       localStorage.setItem(CHANGELOG_KEY, JSON.stringify(changelog));
     } catch (error) {
-      console.error('[PaperTrail] Failed to save changelog:', error);
+      logger.news.error('Failed to save changelog:', error);
     }
   },
 
@@ -241,9 +242,9 @@ export const ChangelogService = {
     try {
       localStorage.removeItem(ARTICLES_KEY);
       localStorage.removeItem(CHANGELOG_KEY);
-      console.log('[PaperTrail] Cache cleared');
+      logger.news.info('Cache cleared');
     } catch (error) {
-      console.error('[PaperTrail] Failed to clear cache:', error);
+      logger.news.error('Failed to clear cache:', error);
     }
   },
 

@@ -16,6 +16,7 @@
 
 import { Component, createSignal, Show, onCleanup, onMount } from 'solid-js';
 import { papertrail, yellowScale, papertrailCSS, kineticAnimations } from '../../theme/papertrail';
+import { logger } from '../../lib/logger';
 import { useNews } from './hooks/useNews';
 import { useChangelog } from './hooks/useChangelog';
 import { useEntities } from './hooks/useEntities';
@@ -78,7 +79,7 @@ export const PaperTrailApp: Component = () => {
   // Auto-refresh setup
   onMount(() => {
     const intervalId = setInterval(async () => {
-      console.log('[PaperTrail] Auto-refreshing news...');
+      logger.news.info('Auto-refreshing news...');
       await news.refresh();
       if (news.articles().length > 0 && clusters.clusters().length > 0) {
         await clusters.buildClusters(news.articles());

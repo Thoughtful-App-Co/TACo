@@ -14,6 +14,7 @@ import {
   Relation,
 } from '../../../schemas/papertrail.schema';
 import { ApiConfigService } from './api-config.service';
+import { logger } from '../../../lib/logger';
 
 const ENTITIES_KEY = 'papertrail-entities';
 
@@ -290,7 +291,7 @@ async function extractWithAI(
       return JSON.parse(content);
     }
   } catch (error) {
-    console.error('[PaperTrail] AI extraction failed:', error);
+    logger.news.error('AI extraction failed:', error);
     return [];
   }
 }
@@ -308,7 +309,7 @@ export const EntityService = {
       const stored = localStorage.getItem(ENTITIES_KEY);
       return stored ? JSON.parse(stored) : null;
     } catch (error) {
-      console.error('[PaperTrail] Failed to parse entity graph:', error);
+      logger.news.error('Failed to parse entity graph:', error);
       return null;
     }
   },
@@ -320,7 +321,7 @@ export const EntityService = {
     try {
       localStorage.setItem(ENTITIES_KEY, JSON.stringify(graph));
     } catch (error) {
-      console.error('[PaperTrail] Failed to save entity graph:', error);
+      logger.news.error('Failed to save entity graph:', error);
     }
   },
 
@@ -419,9 +420,7 @@ export const EntityService = {
     };
 
     this.saveGraph(graph);
-    console.log(
-      `[PaperTrail] Built graph: ${entities.length} entities, ${relations.length} relations`
-    );
+    logger.news.info(`Built graph: ${entities.length} entities, ${relations.length} relations`);
 
     return graph;
   },
@@ -433,7 +432,7 @@ export const EntityService = {
     try {
       localStorage.removeItem(ENTITIES_KEY);
     } catch (error) {
-      console.error('[PaperTrail] Failed to clear entity graph:', error);
+      logger.news.error('Failed to clear entity graph:', error);
     }
   },
 

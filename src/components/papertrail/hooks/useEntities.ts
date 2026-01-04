@@ -8,6 +8,7 @@
 import { createSignal, createEffect } from 'solid-js';
 import { Article, Entity, Relation } from '../../../schemas/papertrail.schema';
 import { EntityService } from '../services/entity.service';
+import { logger } from '../../../lib/logger';
 
 export interface UseEntitiesReturn {
   entities: () => Entity[];
@@ -45,7 +46,7 @@ export function useEntities(): UseEntitiesReturn {
       setRelations(graph.relations);
       setLastUpdated(graph.lastUpdated);
     } catch (error) {
-      console.error('[PaperTrail] Failed to build graph:', error);
+      logger.news.error('Failed to build graph:', error);
     } finally {
       setIsBuilding(false);
     }

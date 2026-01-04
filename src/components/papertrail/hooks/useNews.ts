@@ -10,6 +10,7 @@ import { createSignal, createEffect, onMount } from 'solid-js';
 import { Article } from '../../../schemas/papertrail.schema';
 import { NewsService, FetchOptions } from '../services/news.service';
 import { ChangelogService } from '../services/changelog.service';
+import { logger } from '../../../lib/logger';
 
 export interface UseNewsReturn {
   articles: () => Article[];
@@ -66,7 +67,7 @@ export function useNews(): UseNewsReturn {
       const changes = ChangelogService.processArticles(newArticles);
 
       if (changes.length > 0) {
-        console.log(`[PaperTrail] Detected ${changes.length} article change(s)`);
+        logger.news.info(`Detected ${changes.length} article change(s)`);
       }
 
       // Update state with all cached articles (which now includes new ones)
@@ -81,7 +82,7 @@ export function useNews(): UseNewsReturn {
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to fetch news';
       setError(message);
-      console.error('[PaperTrail] Fetch error:', err);
+      logger.news.error('Fetch error:', err);
     } finally {
       setIsLoading(false);
     }

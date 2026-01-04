@@ -8,6 +8,7 @@
 import { createSignal, createEffect } from 'solid-js';
 import { Article, StoryCluster } from '../../../schemas/papertrail.schema';
 import { StoryClusteringService } from '../services/story-clustering.service';
+import { logger } from '../../../lib/logger';
 
 export function useStoryClusters() {
   const [clusters, setClusters] = createSignal<StoryCluster[]>([]);
@@ -37,11 +38,11 @@ export function useStoryClusters() {
     try {
       const newClusters = await StoryClusteringService.buildClusters(articles);
       setClusters(newClusters);
-      console.log(`[PaperTrail] Built ${newClusters.length} story clusters`);
+      logger.news.info(`Built ${newClusters.length} story clusters`);
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Failed to build clusters';
       setError(message);
-      console.error('[PaperTrail] Clustering error:', err);
+      logger.news.error('Clustering error:', err);
     } finally {
       setIsBuilding(false);
     }

@@ -15,6 +15,7 @@
  */
 
 import { Article } from '../../../schemas/papertrail.schema';
+import { logger } from '../../../lib/logger';
 
 // =============================================================================
 // NEWS SERVICE
@@ -57,7 +58,7 @@ export const NewsService = {
       const data: NewsApiResponse = await response.json();
       return data.articles || [];
     } catch (error) {
-      console.error('[PaperTrail] Failed to fetch news:', error);
+      logger.news.error('Failed to fetch news:', error);
       throw error;
     }
   },
