@@ -1,10 +1,17 @@
 import { Component, createSignal, createResource, Show } from 'solid-js';
 import { A } from '@solidjs/router';
+import { marked } from 'marked';
 
 interface LegalPageProps {
   title: string;
   markdownPath: string;
 }
+
+// Configure marked for legal documents
+marked.setOptions({
+  gfm: true, // GitHub Flavored Markdown (tables, strikethrough, etc.)
+  breaks: true, // Convert \n to <br>
+});
 
 /**
  * LegalPage - Shared component for Privacy Policy and Terms of Service
@@ -12,44 +19,21 @@ interface LegalPageProps {
  * Features:
  * - TACo-branded header with logo and navigation
  * - Clean, readable typography optimized for legal documents
- * - Rendered markdown content with proper formatting
+ * - Rendered markdown content with proper formatting via marked
  * - Responsive design
  */
 export const LegalPage: Component<LegalPageProps> = (props) => {
-  const [isMobile, setIsMobile] = createSignal(window.innerWidth <= 768);
+  const [isMobile] = createSignal(window.innerWidth <= 768);
 
-  // Fetch markdown content
+  // Fetch and parse markdown content
   const [content] = createResource(async () => {
     const response = await fetch(props.markdownPath);
     if (!response.ok) {
       throw new Error(`Failed to load ${props.title}`);
     }
-    return response.text();
+    const markdown = await response.text();
+    return marked.parse(markdown) as string;
   });
-
-  // Simple markdown-to-HTML converter for basic formatting
-  const renderMarkdown = (md: string) => {
-    return (
-      md
-        // Headers
-        .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-        .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-        .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-        // Bold
-        .replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>')
-        // Links
-        .replace(
-          /\[(.*?)\]\((.*?)\)/gim,
-          '<a href="$2" target="_blank" rel="noopener noreferrer">$1</a>'
-        )
-        // Lists
-        .replace(/^\- (.*$)/gim, '<li>$1</li>')
-        // Paragraphs
-        .replace(/\n\n/g, '</p><p>')
-        // Line breaks
-        .replace(/\n/g, '<br />')
-    );
-  };
 
   return (
     <div
@@ -200,7 +184,7 @@ export const LegalPage: Component<LegalPageProps> = (props) => {
               color: 'rgba(255,255,255,0.9)',
             }}
             // eslint-disable-next-line solid/no-innerhtml
-            innerHTML={renderMarkdown(content() || '')}
+            innerHTML={content() || ''}
             class="legal-content"
           />
         </Show>
@@ -266,10 +250,20 @@ export const LegalPage: Component<LegalPageProps> = (props) => {
             font-weight: 600;
             color: rgba(255,255,255,0.95);
           }
+          .legal-content ul,
+          .legal-content ol {
+            margin: 16px 0;
+            padding-left: 24px;
+          }
           .legal-content li {
-            margin: 8px 0 8px 24px;
-            list-style-type: disc;
+            margin: 8px 0;
             color: rgba(255,255,255,0.8);
+          }
+          .legal-content ul li {
+            list-style-type: disc;
+          }
+          .legal-content ol li {
+            list-style-type: decimal;
           }
           .legal-content a {
             color: #4ECDC4;
@@ -278,6 +272,22 @@ export const LegalPage: Component<LegalPageProps> = (props) => {
           }
           .legal-content a:hover {
             color: #FFE66D;
+          }
+          .legal-content blockquote {
+            margin: 24px 0;
+            padding: 16px 24px;
+            border-left: 4px solid #4ECDC4;
+            background: rgba(255,255,255,0.03);
+            font-style: italic;
+            color: rgba(255,255,255,0.7);
+          }
+          .legal-content blockquote p {
+            margin: 0;
+          }
+          .legal-content hr {
+            border: none;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            margin: 32px 0;
           }
           .legal-content table {
             width: 100%;

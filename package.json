@@ -37,6 +37,7 @@
     "keyword-extractor": "^0.0.28",
     "loglevel": "^1.9.2",
     "mammoth": "^1.8.0",
+    "marked": "^17.0.1",
     "nanoid": "^5.1.6",
     "pdfjs-dist": "^4.0.379",
     "phosphor-solid": "^1.1.5",
