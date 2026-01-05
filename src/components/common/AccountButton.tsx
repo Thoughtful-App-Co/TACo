@@ -8,6 +8,7 @@
  */
 
 import { Component, createSignal, Show, createEffect, onCleanup } from 'solid-js';
+import { Portal } from 'solid-js/web';
 import { useAuth } from '../../lib/auth-context';
 import { getAuthHeaders } from '../../lib/auth';
 import { logger } from '../../lib/logger';
@@ -106,13 +107,28 @@ export const AccountButton: Component<AccountButtonProps> = (props) => {
   const [showLoginModal, setShowLoginModal] = createSignal(false);
   const [showDropdown, setShowDropdown] = createSignal(false);
   const [isLoadingPortal, setIsLoadingPortal] = createSignal(false);
+  const [dropdownPosition, setDropdownPosition] = createSignal({ top: 0, right: 0 });
 
   let dropdownRef: HTMLDivElement | undefined;
   let buttonRef: HTMLButtonElement | undefined;
 
-  // Close dropdown when clicking outside
+  // Update dropdown position based on button location
+  const updateDropdownPosition = () => {
+    if (buttonRef) {
+      const rect = buttonRef.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + 8,
+        right: window.innerWidth - rect.right,
+      });
+    }
+  };
+
+  // Close dropdown when clicking outside and handle resize
   createEffect(() => {
     if (!showDropdown()) return;
+
+    // Update position initially and on resize/scroll
+    updateDropdownPosition();
 
     const handleClickOutside = (e: MouseEvent) => {
       if (
@@ -131,12 +147,20 @@ export const AccountButton: Component<AccountButtonProps> = (props) => {
       }
     };
 
+    const handleResize = () => {
+      updateDropdownPosition();
+    };
+
     document.addEventListener('mousedown', handleClickOutside);
     document.addEventListener('keydown', handleEscape);
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('scroll', handleResize, true);
 
     onCleanup(() => {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleEscape);
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('scroll', handleResize, true);
     });
   });
 
@@ -366,139 +390,185 @@ export const AccountButton: Component<AccountButtonProps> = (props) => {
             {getInitials(auth.user()?.email || '')}
           </button>
 
-          {/* Dropdown menu */}
+          {/* Dropdown menu - rendered via Portal for proper z-index stacking */}
           <Show when={showDropdown()}>
-            <div
-              ref={dropdownRef}
-              role="menu"
-              style={{
-                position: 'absolute',
-                top: 'calc(100% + 8px)',
-                right: '0',
-                width: '260px',
-                background: 'rgba(26, 26, 46, 0.98)',
-                'backdrop-filter': 'blur(16px)',
-                '-webkit-backdrop-filter': 'blur(16px)',
-                border: `1px solid ${tokens.colors.border}`,
-                'border-radius': '12px',
-                'box-shadow': '0 12px 40px rgba(0, 0, 0, 0.4)',
-                overflow: 'hidden',
-                'z-index': 1000,
-                animation: 'accountDropdownFadeIn 0.15s ease',
-              }}
-            >
-              {/* User info section */}
+            <Portal>
               <div
+                ref={dropdownRef}
+                role="menu"
                 style={{
-                  padding: '16px',
-                  'border-bottom': `1px solid ${tokens.colors.border}`,
+                  position: 'fixed',
+                  top: `${dropdownPosition().top}px`,
+                  right: `${dropdownPosition().right}px`,
+                  width: '260px',
+                  background: 'rgba(26, 26, 46, 0.98)',
+                  'backdrop-filter': 'blur(16px)',
+                  '-webkit-backdrop-filter': 'blur(16px)',
+                  border: `1px solid ${tokens.colors.border}`,
+                  'border-radius': '12px',
+                  'box-shadow': '0 12px 40px rgba(0, 0, 0, 0.4)',
+                  overflow: 'hidden',
+                  'z-index': 99999,
+                  animation: 'accountDropdownFadeIn 0.15s ease',
                 }}
               >
-                {/* Email */}
+                {/* User info section */}
                 <div
                   style={{
-                    'font-family': tokens.typography.fontFamily,
-                    'font-size': '14px',
-                    'font-weight': '500',
-                    color: tokens.colors.text.primary,
-                    'margin-bottom': '4px',
-                    'word-break': 'break-all',
+                    padding: '16px',
+                    'border-bottom': `1px solid ${tokens.colors.border}`,
                   }}
                 >
-                  {auth.user()?.email}
-                </div>
-
-                {/* Subscription badges */}
-                <Show when={subscriptionBadges().length > 0}>
-                  <div
-                    style={{
-                      display: 'flex',
-                      'flex-wrap': 'wrap',
-                      gap: '6px',
-                      'margin-top': '10px',
-                    }}
-                  >
-                    {subscriptionBadges().map((badge) => (
-                      <span
-                        style={{
-                          padding: '3px 8px',
-                          background: 'rgba(78, 205, 196, 0.15)',
-                          border: '1px solid rgba(78, 205, 196, 0.3)',
-                          'border-radius': '4px',
-                          'font-family': tokens.typography.fontFamily,
-                          'font-size': '11px',
-                          'font-weight': '500',
-                          color: '#4ECDC4',
-                        }}
-                      >
-                        {badge}
-                      </span>
-                    ))}
-                  </div>
-                </Show>
-
-                <Show when={subscriptionBadges().length === 0}>
+                  {/* Email */}
                   <div
                     style={{
                       'font-family': tokens.typography.fontFamily,
-                      'font-size': '12px',
-                      color: tokens.colors.text.muted,
-                      'margin-top': '4px',
+                      'font-size': '14px',
+                      'font-weight': '500',
+                      color: tokens.colors.text.primary,
+                      'margin-bottom': '4px',
+                      'word-break': 'break-all',
                     }}
                   >
-                    Free plan
+                    {auth.user()?.email}
                   </div>
-                </Show>
-              </div>
 
-              {/* Actions section */}
-              <div style={{ padding: '8px' }}>
-                {/* Manage Billing */}
-                <button
-                  onClick={handleManageBilling}
-                  disabled={isLoadingPortal()}
-                  role="menuitem"
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    background: 'transparent',
-                    border: 'none',
-                    'border-radius': '8px',
-                    color: tokens.colors.text.primary,
-                    'font-family': tokens.typography.fontFamily,
-                    'font-size': '13px',
-                    'font-weight': '500',
-                    cursor: isLoadingPortal() ? 'not-allowed' : 'pointer',
-                    display: 'flex',
-                    'align-items': 'center',
-                    gap: '10px',
-                    transition: 'background 0.15s ease',
-                    opacity: isLoadingPortal() ? 0.6 : 1,
-                    'text-align': 'left',
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isLoadingPortal()) {
-                      e.currentTarget.style.background = tokens.colors.hover;
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'transparent';
-                  }}
-                >
-                  <Show
-                    when={!isLoadingPortal()}
-                    fallback={
-                      <div
-                        style={{
-                          width: '18px',
-                          height: '18px',
-                          border: '2px solid rgba(255, 255, 255, 0.1)',
-                          'border-top-color': 'rgba(255, 255, 255, 0.5)',
-                          'border-radius': '50%',
-                          animation: 'accountButtonSpin 0.8s linear infinite',
-                        }}
-                      />
-                    }
+                  {/* Subscription badges */}
+                  <Show when={subscriptionBadges().length > 0}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        'flex-wrap': 'wrap',
+                        gap: '6px',
+                        'margin-top': '10px',
+                      }}
+                    >
+                      {subscriptionBadges().map((badge) => (
+                        <span
+                          style={{
+                            padding: '3px 8px',
+                            background: 'rgba(78, 205, 196, 0.15)',
+                            border: '1px solid rgba(78, 205, 196, 0.3)',
+                            'border-radius': '4px',
+                            'font-family': tokens.typography.fontFamily,
+                            'font-size': '11px',
+                            'font-weight': '500',
+                            color: '#4ECDC4',
+                          }}
+                        >
+                          {badge}
+                        </span>
+                      ))}
+                    </div>
+                  </Show>
+
+                  <Show when={subscriptionBadges().length === 0}>
+                    <div
+                      style={{
+                        'font-family': tokens.typography.fontFamily,
+                        'font-size': '12px',
+                        color: tokens.colors.text.muted,
+                        'margin-top': '4px',
+                      }}
+                    >
+                      Free plan
+                    </div>
+                  </Show>
+                </div>
+
+                {/* Actions section */}
+                <div style={{ padding: '8px' }}>
+                  {/* Manage Billing */}
+                  <button
+                    onClick={handleManageBilling}
+                    disabled={isLoadingPortal()}
+                    role="menuitem"
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      background: 'transparent',
+                      border: 'none',
+                      'border-radius': '8px',
+                      color: tokens.colors.text.primary,
+                      'font-family': tokens.typography.fontFamily,
+                      'font-size': '13px',
+                      'font-weight': '500',
+                      cursor: isLoadingPortal() ? 'not-allowed' : 'pointer',
+                      display: 'flex',
+                      'align-items': 'center',
+                      gap: '10px',
+                      transition: 'background 0.15s ease',
+                      opacity: isLoadingPortal() ? 0.6 : 1,
+                      'text-align': 'left',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isLoadingPortal()) {
+                        e.currentTarget.style.background = tokens.colors.hover;
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'transparent';
+                    }}
+                  >
+                    <Show
+                      when={!isLoadingPortal()}
+                      fallback={
+                        <div
+                          style={{
+                            width: '18px',
+                            height: '18px',
+                            border: '2px solid rgba(255, 255, 255, 0.1)',
+                            'border-top-color': 'rgba(255, 255, 255, 0.5)',
+                            'border-radius': '50%',
+                            animation: 'accountButtonSpin 0.8s linear infinite',
+                          }}
+                        />
+                      }
+                    >
+                      <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
+                        <line x1="1" y1="10" x2="23" y2="10" />
+                      </svg>
+                    </Show>
+                    Manage Billing
+                  </button>
+
+                  {/* Sign Out */}
+                  <button
+                    onClick={handleSignOut}
+                    role="menuitem"
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px',
+                      background: 'transparent',
+                      border: 'none',
+                      'border-radius': '8px',
+                      color: '#EF4444',
+                      'font-family': tokens.typography.fontFamily,
+                      'font-size': '13px',
+                      'font-weight': '500',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      'align-items': 'center',
+                      gap: '10px',
+                      transition: 'background 0.15s ease',
+                      'text-align': 'left',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.background = 'transparent';
+                    }}
                   >
                     <svg
                       width="18"
@@ -510,59 +580,15 @@ export const AccountButton: Component<AccountButtonProps> = (props) => {
                       stroke-linecap="round"
                       stroke-linejoin="round"
                     >
-                      <rect x="1" y="4" width="22" height="16" rx="2" ry="2" />
-                      <line x1="1" y1="10" x2="23" y2="10" />
+                      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                      <polyline points="16 17 21 12 16 7" />
+                      <line x1="21" y1="12" x2="9" y2="12" />
                     </svg>
-                  </Show>
-                  Manage Billing
-                </button>
-
-                {/* Sign Out */}
-                <button
-                  onClick={handleSignOut}
-                  role="menuitem"
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    background: 'transparent',
-                    border: 'none',
-                    'border-radius': '8px',
-                    color: '#EF4444',
-                    'font-family': tokens.typography.fontFamily,
-                    'font-size': '13px',
-                    'font-weight': '500',
-                    cursor: 'pointer',
-                    display: 'flex',
-                    'align-items': 'center',
-                    gap: '10px',
-                    transition: 'background 0.15s ease',
-                    'text-align': 'left',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(239, 68, 68, 0.1)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'transparent';
-                  }}
-                >
-                  <svg
-                    width="18"
-                    height="18"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                    <polyline points="16 17 21 12 16 7" />
-                    <line x1="21" y1="12" x2="9" y2="12" />
-                  </svg>
-                  Sign Out
-                </button>
+                    Sign Out
+                  </button>
+                </div>
               </div>
-            </div>
+            </Portal>
           </Show>
         </Show>
       </div>
