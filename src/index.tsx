@@ -3,6 +3,9 @@ import { render } from 'solid-js/web';
 import { Router, Route } from '@solidjs/router';
 import { App, LandingPage, AppPage } from './App';
 import { PricingPage } from './components/PricingPage';
+import { InvestorsPage } from './components/InvestorsPage';
+import { PrivacyPolicyPage } from './components/PrivacyPolicyPage';
+import { TermsOfServicePage } from './components/TermsOfServicePage';
 import { AuthProvider } from './lib/auth-context';
 
 // Initialize PWA service worker
@@ -186,6 +189,9 @@ if (root) {
         <Router root={App}>
           <Route path="/" component={LandingPage} />
           <Route path="/pricing" component={PricingPage} />
+          <Route path="/investors" component={InvestorsPage} />
+          <Route path="/privacy" component={PrivacyPolicyPage} />
+          <Route path="/terms" component={TermsOfServicePage} />
           {/* All app routes - :appId handles base path, /* captures any sub-paths */}
           <Route path="/:appId/*" component={AppPage} />
         </Router>
