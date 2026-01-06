@@ -10,6 +10,8 @@ import { useBrainDump } from '../hooks/useBrainDump';
 import { ProcessedStories } from './ProcessedStories';
 import type { ProcessedStory } from '../../lib/types';
 import { tempoDesign } from '../../theme/tempo-design';
+import { useTempoAIAccess } from '../../hooks/useTempoAIAccess';
+import { Paywall } from '../../../common/Paywall';
 
 interface BrainDumpProps {
   onTasksProcessed?: (stories: ProcessedStory[]) => void;
@@ -38,150 +40,162 @@ export const BrainDump = (props: BrainDumpProps) => {
     handleRetry,
   } = useBrainDump(props.onTasksProcessed);
 
+  // AI access control - checks both API key AND subscription
+  const { requireAccess, showPaywall, setShowPaywall } = useTempoAIAccess();
+
   return (
-    <Card>
-      <CardContent
-        style={{ display: 'flex', 'flex-direction': 'column', gap: '16px', padding: '16px' }}
-      >
-        <div style={{ position: 'relative' }}>
-          <Textarea
-            placeholder={`task .init
+    <>
+      <Card>
+        <CardContent
+          style={{ display: 'flex', 'flex-direction': 'column', gap: '16px', padding: '16px' }}
+        >
+          <div style={{ position: 'relative' }}>
+            <Textarea
+              placeholder={`task .init
 Update client dashboard design 🐸
 Send weekly progress report - 20m
 Research API integration - 1h
 Schedule team meeting - by Thursday
 Update project docs
 Finalize product specs - EOD`}
-            value={tasks()}
-            onInput={(e) => !isInputLocked() && setTasks(e.currentTarget.value)}
-            disabled={isInputLocked()}
-            style={{
-              'min-height': '150px',
-              'font-family': tempoDesign.typography.monoFamily,
-              'font-size': tempoDesign.typography.sizes.base,
-            }}
-          />
-          <div style={{ position: 'absolute', top: '8px', right: '8px' }}>
-            <Button
-              variant="ghost"
-              size="icon"
-              style={{ color: tempoDesign.colors.mutedForeground }}
-              title="Task entry tips: Use clear verbs, estimate time (30m), prioritize with 🐸 FROG, add deadlines"
-            >
-              <Question style={{ height: '16px', width: '16px' }} />
-            </Button>
+              value={tasks()}
+              onInput={(e) => !isInputLocked() && setTasks(e.currentTarget.value)}
+              disabled={isInputLocked()}
+              style={{
+                'min-height': '150px',
+                'font-family': tempoDesign.typography.monoFamily,
+                'font-size': tempoDesign.typography.sizes.base,
+              }}
+            />
+            <div style={{ position: 'absolute', top: '8px', right: '8px' }}>
+              <Button
+                variant="ghost"
+                size="icon"
+                style={{ color: tempoDesign.colors.mutedForeground }}
+                title="Task entry tips: Use clear verbs, estimate time (30m), prioritize with 🐸 FROG, add deadlines"
+              >
+                <Question style={{ height: '16px', width: '16px' }} />
+              </Button>
+            </div>
           </div>
-        </div>
 
-        <div
-          style={{
-            display: 'flex',
-            'justify-content': 'flex-end',
-            'align-items': 'center',
-            gap: '8px',
-          }}
-        >
           <div
             style={{
-              'font-size': tempoDesign.typography.sizes.xs,
-              color: tempoDesign.colors.mutedForeground,
               display: 'flex',
+              'justify-content': 'flex-end',
               'align-items': 'center',
-              gap: '4px',
-            }}
-          >
-            <CaretRight style={{ height: '12px', width: '12px' }} />
-            <span>Analyze to optimize</span>
-          </div>
-          <Button
-            onClick={() => processTasks(false)}
-            disabled={!tasks().trim() || isProcessing() || isInputLocked()}
-            style={{ width: '128px' }}
-          >
-            <Show
-              when={isProcessing()}
-              fallback={
-                <Show when={isInputLocked()} fallback="Analyze">
-                  <>
-                    <Lock style={{ 'margin-right': '8px', height: '16px', width: '16px' }} />
-                    Locked
-                  </>
-                </Show>
-              }
-            >
-              <>
-                <CircleDashed
-                  style={{
-                    'margin-right': '8px',
-                    height: '16px',
-                    width: '16px',
-                    animation: 'spin 1s linear infinite',
-                  }}
-                />
-                Analyzing
-              </>
-            </Show>
-          </Button>
-        </div>
-
-        <Show when={processedStories().length > 0}>
-          <div
-            style={{
-              display: 'flex',
-              'flex-direction': 'column',
-              gap: '16px',
-              'padding-top': '16px',
-              'border-top': `1px solid ${tempoDesign.colors.border}`,
+              gap: '8px',
             }}
           >
             <div
               style={{
+                'font-size': tempoDesign.typography.sizes.xs,
+                color: tempoDesign.colors.mutedForeground,
                 display: 'flex',
                 'align-items': 'center',
-                'justify-content': 'space-between',
+                gap: '4px',
               }}
             >
-              <h3
-                style={{
-                  'font-size': tempoDesign.typography.sizes.lg,
-                  'font-weight': tempoDesign.typography.weights.medium,
-                  margin: 0,
-                }}
-              >
-                Work Blocks
-              </h3>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <Button onClick={handleRetry} variant="outline" size="sm">
-                  Reset
-                </Button>
-                <Button onClick={handleCreateSession} size="sm" disabled={isCreatingSession()}>
-                  <Show when={isCreatingSession()} fallback="Create Session">
+              <CaretRight style={{ height: '12px', width: '12px' }} />
+              <span>Analyze to optimize</span>
+            </div>
+            <Button
+              onClick={() => requireAccess(() => processTasks(false), { showPaywallModal: true })}
+              disabled={!tasks().trim() || isProcessing() || isInputLocked()}
+              style={{ width: '128px' }}
+            >
+              <Show
+                when={isProcessing()}
+                fallback={
+                  <Show when={isInputLocked()} fallback="Analyze">
                     <>
-                      <CircleDashed
-                        style={{
-                          'margin-right': '8px',
-                          height: '16px',
-                          width: '16px',
-                          animation: 'spin 1s linear infinite',
-                        }}
-                      />
-                      {processingStep() || 'Creating'}
+                      <Lock style={{ 'margin-right': '8px', height: '16px', width: '16px' }} />
+                      Locked
                     </>
                   </Show>
-                </Button>
-              </div>
-            </div>
-            <ProcessedStories
-              stories={processedStories()}
-              editedDurations={editedDurations()}
-              isCreatingSession={isCreatingSession()}
-              onDurationChange={handleDurationChange}
-              onRetry={handleRetry}
-              onCreateSession={handleCreateSession}
-            />
+                }
+              >
+                <>
+                  <CircleDashed
+                    style={{
+                      'margin-right': '8px',
+                      height: '16px',
+                      width: '16px',
+                      animation: 'spin 1s linear infinite',
+                    }}
+                  />
+                  Analyzing
+                </>
+              </Show>
+            </Button>
           </div>
-        </Show>
-      </CardContent>
-    </Card>
+
+          <Show when={processedStories().length > 0}>
+            <div
+              style={{
+                display: 'flex',
+                'flex-direction': 'column',
+                gap: '16px',
+                'padding-top': '16px',
+                'border-top': `1px solid ${tempoDesign.colors.border}`,
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  'align-items': 'center',
+                  'justify-content': 'space-between',
+                }}
+              >
+                <h3
+                  style={{
+                    'font-size': tempoDesign.typography.sizes.lg,
+                    'font-weight': tempoDesign.typography.weights.medium,
+                    margin: 0,
+                  }}
+                >
+                  Work Blocks
+                </h3>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <Button onClick={handleRetry} variant="outline" size="sm">
+                    Reset
+                  </Button>
+                  <Button onClick={handleCreateSession} size="sm" disabled={isCreatingSession()}>
+                    <Show when={isCreatingSession()} fallback="Create Session">
+                      <>
+                        <CircleDashed
+                          style={{
+                            'margin-right': '8px',
+                            height: '16px',
+                            width: '16px',
+                            animation: 'spin 1s linear infinite',
+                          }}
+                        />
+                        {processingStep() || 'Creating'}
+                      </>
+                    </Show>
+                  </Button>
+                </div>
+              </div>
+              <ProcessedStories
+                stories={processedStories()}
+                editedDurations={editedDurations()}
+                isCreatingSession={isCreatingSession()}
+                onDurationChange={handleDurationChange}
+                onRetry={handleRetry}
+                onCreateSession={handleCreateSession}
+              />
+            </div>
+          </Show>
+        </CardContent>
+      </Card>
+      {/* Paywall modal - rendered outside Card to avoid z-index issues */}
+      <Paywall
+        isOpen={showPaywall()}
+        onClose={() => setShowPaywall(false)}
+        feature="tempo_extras"
+        featureName="AI Brain Dump Processing"
+      />
+    </>
   );
 };
