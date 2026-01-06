@@ -7,10 +7,11 @@
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
-import { Component, Show, For, createSignal } from 'solid-js';
+import { Component, Show, For, createSignal, JSX } from 'solid-js';
 import { useAuth } from '../../lib/auth-context';
 import { logger } from '../../lib/logger';
 import { LoginModal } from './LoginModal';
+import { DoodleRocket, DoodleShield } from './DoodleIcons';
 
 // ============================================================================
 // TYPES
@@ -32,6 +33,7 @@ interface FeatureConfig {
   priceSubtext?: string;
   priceId: string;
   ctaText: string;
+  icon: 'rocket' | 'shield'; // Which Doodle icon to use
 }
 
 // ============================================================================
@@ -53,6 +55,7 @@ const FEATURE_CONFIGS: Record<string, FeatureConfig> = {
     priceAnnual: '$30/year',
     priceId: 'price_tenure_extras_monthly',
     ctaText: 'Upgrade to Tenure Extras',
+    icon: 'rocket', // Rocket for "extras" = launch/boost
   },
   tempo_extras: {
     title: 'Tempo Extras',
@@ -67,6 +70,7 @@ const FEATURE_CONFIGS: Record<string, FeatureConfig> = {
     price: '$12/mo',
     priceId: 'price_tempo_extras_monthly',
     ctaText: 'Upgrade to Tempo Extras',
+    icon: 'rocket', // Rocket for productivity boost
   },
   sync: {
     title: 'Sync & Backup',
@@ -81,6 +85,7 @@ const FEATURE_CONFIGS: Record<string, FeatureConfig> = {
     price: '$3.50/mo',
     priceId: 'price_sync_all_monthly',
     ctaText: 'Enable Sync & Backup',
+    icon: 'shield', // Shield for data protection
   },
   backup: {
     title: 'Sync & Backup',
@@ -95,6 +100,7 @@ const FEATURE_CONFIGS: Record<string, FeatureConfig> = {
     price: '$3.50/mo',
     priceId: 'price_sync_all_monthly',
     ctaText: 'Enable Backup',
+    icon: 'shield', // Shield for backup security
   },
 };
 
@@ -108,6 +114,13 @@ export const Paywall: Component<PaywallProps> = (props) => {
   const [isLoading, setIsLoading] = createSignal(false);
 
   const config = () => FEATURE_CONFIGS[props.feature] || FEATURE_CONFIGS.sync;
+
+  // Debug logging
+  logger.billing.debug('Paywall component rendered', {
+    isOpen: props.isOpen,
+    feature: props.feature,
+    featureName: props.featureName,
+  });
 
   const handleUpgrade = async () => {
     // If not logged in, show login first
@@ -149,7 +162,12 @@ export const Paywall: Component<PaywallProps> = (props) => {
     // After login, user can try upgrade again
   };
 
-  if (!props.isOpen) return null;
+  if (!props.isOpen) {
+    logger.billing.debug('Paywall not showing - isOpen is false');
+    return null;
+  }
+
+  logger.billing.info('Paywall is showing', { feature: props.feature });
 
   return (
     <>
@@ -244,7 +262,7 @@ export const Paywall: Component<PaywallProps> = (props) => {
                 </svg>
               </button>
 
-              {/* Lock icon */}
+              {/* Feature Icon - Dynamic Doodle Icon */}
               <div
                 style={{
                   width: '64px',
@@ -257,17 +275,12 @@ export const Paywall: Component<PaywallProps> = (props) => {
                   'justify-content': 'center',
                 }}
               >
-                <svg
-                  width="32"
-                  height="32"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="white"
-                  stroke-width="2"
-                >
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                  <path d="M7 11V7a5 5 0 0110 0v4" />
-                </svg>
+                <Show when={config().icon === 'rocket'}>
+                  <DoodleRocket size={36} color="white" />
+                </Show>
+                <Show when={config().icon === 'shield'}>
+                  <DoodleShield size={36} color="white" />
+                </Show>
               </div>
 
               <h2
