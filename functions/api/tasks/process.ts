@@ -289,17 +289,29 @@ class TaskProcessingError extends Error {
 export async function onRequestPost(context: { request: Request; env: Env }) {
   const { request, env } = context;
 
-  // SECURITY: Validate authentication and check tempo_extras subscription
-  const authResult = await authorizeSubscriptionFeature(request, env, {
-    requiredProducts: ['tempo_extras'],
-  });
+  // Check for BYOK (Bring Your Own Key) - user provides their own Claude API key
+  const userApiKey = request.headers.get('X-API-Key');
+  let apiKey: string;
 
-  if (!authResult.success) {
-    return authResult.response;
+  if (userApiKey && userApiKey.startsWith('sk-ant-')) {
+    // BYOK mode: User provides their own API key, no subscription required
+    // NOTE: We do NOT store this key - it's used for this request only
+    tasksLog.info('Using BYOK (user-provided API key)');
+    apiKey = userApiKey;
+  } else {
+    // Subscription mode: Validate authentication and check tempo_extras subscription
+    const authResult = await authorizeSubscriptionFeature(request, env, {
+      requiredProducts: ['tempo_extras'],
+    });
+
+    if (!authResult.success) {
+      return authResult.response;
+    }
+
+    // Use server's API key for subscribers
+    apiKey = env.ANTHROPIC_API_KEY;
+    tasksLog.info('Using server API key (subscription mode)');
   }
-
-  // Use environment API key (no more BYOK support - security risk)
-  const apiKey = env.ANTHROPIC_API_KEY;
 
   if (!apiKey) {
     return new Response(
