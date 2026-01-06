@@ -1,12 +1,14 @@
 // /features/brain-dump/components/BrainDumpForm.tsx
 // Solid.js component
-import { Show } from 'solid-js';
+import { Show, createSignal } from 'solid-js';
 import { Button } from '../../ui/button';
 import { Textarea } from '../../ui/textarea';
 import { Info, CircleDashed, Lock, LockOpen, XCircle, Bug } from 'phosphor-solid';
 import { ProcessedStories } from './ProcessedStories';
 import { useBrainDump } from '../hooks/useBrainDump';
+import { Paywall } from '../../../common/Paywall';
 import type { ProcessedStory } from '../../lib/types';
+import { useTempoAIAccess } from '../../hooks/useTempoAIAccess';
 
 interface BrainDumpFormProps {
   onTasksProcessed?: (stories: ProcessedStory[]) => void;
@@ -29,6 +31,9 @@ export const BrainDumpForm = (props: BrainDumpFormProps) => {
     handleDurationChange,
     handleRetry,
   } = useBrainDump(props.onTasksProcessed);
+
+  // AI access control - checks both API key AND subscription
+  const { accessStatus, requireAccess, showPaywall, setShowPaywall } = useTempoAIAccess();
 
   return (
     <>
@@ -167,7 +172,7 @@ Task 4 - due by 5pm`}
             </Button>
           </Show>
           <Button
-            onClick={() => processTasks(false)}
+            onClick={() => requireAccess(() => processTasks(false), { showPaywallModal: true })}
             disabled={!tasks().trim() || isProcessing() || isInputLocked()}
             class="w-32"
           >
@@ -188,6 +193,12 @@ Task 4 - due by 5pm`}
               </>
             </Show>
           </Button>
+          <Show when={!accessStatus().allowed}>
+            <div class="flex items-center gap-1 text-xs text-muted-foreground">
+              <Lock class="h-3 w-3" />
+              <span>Premium feature</span>
+            </div>
+          </Show>
         </div>
 
         <ProcessedStories
@@ -199,6 +210,12 @@ Task 4 - due by 5pm`}
           onCreateSession={handleCreateSession}
         />
       </div>
+      <Paywall
+        isOpen={showPaywall()}
+        onClose={() => setShowPaywall(false)}
+        feature="tempo_extras"
+        featureName="AI Task Processing"
+      />
     </>
   );
 };
