@@ -20,6 +20,7 @@ export const SettingsSidebar: Component<SettingsSidebarProps> = (props) => {
   const [success, setSuccess] = createSignal(false);
   const [isSaving, setIsSaving] = createSignal(false);
   const [showSecurityWarning, setShowSecurityWarning] = createSignal(false);
+  const [isViewRisksHovering, setIsViewRisksHovering] = createSignal(false);
 
   const handleSave = async () => {
     setError(null);
@@ -381,17 +382,26 @@ export const SettingsSidebar: Component<SettingsSidebarProps> = (props) => {
                         e.stopPropagation();
                         setShowSecurityWarning(true);
                       }}
+                      onMouseEnter={() => setIsViewRisksHovering(true)}
+                      onMouseLeave={() => setIsViewRisksHovering(false)}
                       style={{
                         display: 'flex',
                         'align-items': 'center',
                         gap: '4px',
-                        background: 'transparent',
+                        background: isViewRisksHovering()
+                          ? `${tempoDesign.colors.destructive}15`
+                          : 'transparent',
                         border: 'none',
                         cursor: 'pointer',
                         'font-size': tempoDesign.typography.sizes.xs,
                         color: tempoDesign.colors.destructive,
                         padding: '2px 6px',
                         'border-radius': tempoDesign.radius.sm,
+                        transition: 'all 0.2s ease-out',
+                        transform: isViewRisksHovering() ? 'scale(1.05)' : 'scale(1)',
+                        'box-shadow': isViewRisksHovering()
+                          ? `0 0 8px ${tempoDesign.colors.destructive}40`
+                          : 'none',
                       }}
                       title="Security Notice"
                     >
