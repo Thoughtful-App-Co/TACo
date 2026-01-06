@@ -6,6 +6,7 @@ import type { ProcessedStory, ProcessedTask } from '../../lib/types';
 import { TaskRolloverService } from '../../services/task-rollover.service';
 import { ErrorDetails } from '../types';
 import { logger } from '../../../../lib/logger';
+import { showNotification } from '../../../../lib/notifications';
 
 const log = logger.create('BrainDump');
 
@@ -110,11 +111,18 @@ export function useBrainDump(onTasksProcessed?: (stories: ProcessedStory[]) => v
 
       setTaskProcessingProgress(100);
       setTaskProcessingStep('Complete!');
+
+      // Show success notification to user
+      showNotification({
+        type: 'success',
+        message: `Analyzed ${data.stories.length} work block${data.stories.length === 1 ? '' : 's'}. Review and create session when ready.`,
+        duration: 4000,
+      });
     } catch (error) {
       log.error('Failed to process tasks: ' + String(error));
 
       let errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
-      const errorCode = 'UNKNOWN_ERROR';
+      let errorCode = 'UNKNOWN_ERROR';
       let errorDetails = error;
 
       // Error handling logic
@@ -145,6 +153,62 @@ export function useBrainDump(onTasksProcessed?: (stories: ProcessedStory[]) => v
           errorDetails = error.message;
         }
       }
+
+      // Determine user-friendly message and notification type based on error
+      let userMessage = errorMessage;
+      let notificationAction: { label: string; onClick: () => void } | undefined;
+
+      if (
+        errorMessage.includes('Authentication required') ||
+        errorMessage.includes('Sign in required') ||
+        errorMessage.includes('MISSING_AUTH')
+      ) {
+        errorCode = 'AUTH_REQUIRED';
+        userMessage = 'Please sign in to use AI features';
+        notificationAction = {
+          label: 'Sign In',
+          onClick: () => {
+            // Trigger sign in flow - dispatch event that App.tsx can listen to
+            window.dispatchEvent(new CustomEvent('taco:show-login'));
+          },
+        };
+      } else if (
+        errorMessage.includes('Subscription required') ||
+        errorMessage.includes('SUBSCRIPTION_REQUIRED') ||
+        errorMessage.includes('tempo_extras')
+      ) {
+        errorCode = 'SUBSCRIPTION_REQUIRED';
+        userMessage = 'Tempo Extras subscription required to use AI features ($12/mo)';
+        notificationAction = {
+          label: 'Subscribe',
+          onClick: () => {
+            window.location.href = '/pricing#tempo-extras';
+          },
+        };
+      } else if (
+        errorMessage.includes('Session expired') ||
+        errorMessage.includes('SESSION_EXPIRED')
+      ) {
+        errorCode = 'SESSION_EXPIRED';
+        userMessage = 'Your session has expired. Please sign in again.';
+        notificationAction = {
+          label: 'Sign In',
+          onClick: () => {
+            window.dispatchEvent(new CustomEvent('taco:show-login'));
+          },
+        };
+      } else if (errorMessage.includes('rate limit') || errorMessage.includes('429')) {
+        errorCode = 'RATE_LIMITED';
+        userMessage = 'Too many requests. Please wait a moment and try again.';
+      }
+
+      // Show toast notification to user
+      showNotification({
+        type: 'error',
+        message: userMessage,
+        duration: 8000,
+        action: notificationAction,
+      });
 
       setTaskProcessingError({
         message: errorMessage,
@@ -284,6 +348,13 @@ export function useBrainDump(onTasksProcessed?: (stories: ProcessedStory[]) => v
 
       // Session created successfully - user can navigate via Sessions tab
       log.info(`Session created successfully for date: ${today}`);
+
+      // Show success notification to user
+      showNotification({
+        type: 'success',
+        message: 'Session created! Navigate to Sessions tab to start.',
+        duration: 5000,
+      });
     } catch (error) {
       log.error('Failed to create session: ' + String(error));
 
@@ -319,6 +390,13 @@ export function useBrainDump(onTasksProcessed?: (stories: ProcessedStory[]) => v
           errorMessage = 'Invalid session duration. Please check your task durations.';
         }
       }
+
+      // Show toast notification to user for session creation errors
+      showNotification({
+        type: 'error',
+        message: errorMessage,
+        duration: 8000,
+      });
 
       setSessionCreationError({
         message: errorMessage,
