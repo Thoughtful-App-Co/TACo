@@ -28,22 +28,25 @@ const determineDifficulty = (duration: number): DifficultyLevel => {
 };
 
 const processTasks = async (taskList: string[]) => {
-  // Check if API key is configured
-  if (!ApiConfigService.hasApiKey()) {
+  // Check for BYOK (Bring Your Own Key) - user provides their own Claude API key
+  const userApiKey = ApiConfigService.getClaudeApiKey();
+  const authToken = localStorage.getItem('taco_session_token');
+
+  // User needs either their own API key OR to be authenticated (for subscription)
+  if (!userApiKey && !authToken) {
     throw new Error(
-      'API key not configured. Please configure your Claude API key in settings before processing tasks.'
+      'To use AI features, add your Claude API key in Settings or sign in with a Tempo Extras subscription.'
     );
   }
-
-  // Get the API key from localStorage
-  const apiKey = ApiConfigService.getClaudeApiKey();
 
   const response = await fetch('/api/tasks/process', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      // Send API key in header for "Bring Your Own Key" feature
-      ...(apiKey ? { 'X-API-Key': apiKey } : {}),
+      // Send user's API key if available (BYOK mode)
+      ...(userApiKey ? { 'X-API-Key': userApiKey } : {}),
+      // Send auth token for subscription mode
+      ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
     },
     body: JSON.stringify({ tasks: taskList }),
   });
@@ -438,15 +441,25 @@ const createSession = async (stories: ProcessedStory[], startTime: string, maxRe
         })),
       };
 
-      // Get the API key from localStorage
-      const apiKey = ApiConfigService.getClaudeApiKey();
+      // Check for BYOK (Bring Your Own Key) or subscription authentication
+      const userApiKey = ApiConfigService.getClaudeApiKey();
+      const authToken = localStorage.getItem('taco_session_token');
+
+      // User needs either their own API key OR to be authenticated (for subscription)
+      if (!userApiKey && !authToken) {
+        throw new Error(
+          'To use AI features, add your Claude API key in Settings or sign in with a Tempo Extras subscription.'
+        );
+      }
 
       const response = await fetch('/api/tasks/create-session', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          // Send API key in header for "Bring Your Own Key" feature
-          ...(apiKey ? { 'X-API-Key': apiKey } : {}),
+          // Send user's API key if available (BYOK mode)
+          ...(userApiKey ? { 'X-API-Key': userApiKey } : {}),
+          // Send auth token for subscription mode
+          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
         },
         body: JSON.stringify(request),
       });
