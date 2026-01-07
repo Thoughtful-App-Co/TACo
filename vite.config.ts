@@ -57,6 +57,9 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // 3 MiB
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff,woff2,otf}'],
         navigateFallback: '/index.html',
+        // Allow all navigation requests except /api/* routes
+        // This ensures deep routes like /tenure/prospect/pipeline work with the service worker
+        navigateFallbackAllowlist: [/^\/(?!api\/).*/],
         navigateFallbackDenylist: [/^\/api/],
         runtimeCaching: [
           // Google Fonts stylesheets
@@ -157,6 +160,7 @@ export default defineConfig({
     }),
   ],
   server: {
+    host: '0.0.0.0', // Listen on all network interfaces
     port: 3000,
     proxy: {
       '/api': {
