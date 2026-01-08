@@ -20,7 +20,7 @@ import { DoodleRocket, DoodleShield } from './DoodleIcons';
 interface PaywallProps {
   isOpen: boolean;
   onClose: () => void;
-  feature: 'tenure_extras' | 'tempo_extras' | 'sync' | 'backup';
+  feature: 'tenure_extras' | 'tempo_extras' | 'echoprax_extras' | 'sync' | 'backup';
   featureName?: string;
 }
 
@@ -71,6 +71,22 @@ const FEATURE_CONFIGS: Record<string, FeatureConfig> = {
     priceId: 'price_tempo_extras_monthly',
     ctaText: 'Upgrade to Tempo Extras',
     icon: 'rocket', // Rocket for productivity boost
+  },
+  echoprax_extras: {
+    title: 'Echoprax Extras',
+    description: 'Unlimited AI-powered workout generation.',
+    benefits: [
+      'Unlimited AI workout generation',
+      'Advanced workout scheduling',
+      'Workout history sync',
+      'Custom exercise library',
+      'Priority support',
+    ],
+    price: '$8/mo',
+    priceAnnual: '$80/year',
+    priceId: 'price_echoprax_extras_monthly',
+    ctaText: 'Upgrade to Echoprax Extras',
+    icon: 'rocket', // Rocket for fitness boost
   },
   sync: {
     title: 'Sync & Backup',
