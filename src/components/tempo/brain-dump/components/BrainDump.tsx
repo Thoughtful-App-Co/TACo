@@ -5,13 +5,15 @@ import { createSignal, Show } from 'solid-js';
 import { Card, CardContent } from '../../ui/card';
 import { Button } from '../../ui/button';
 import { Textarea } from '../../ui/textarea';
-import { CircleDashed, Lock, CaretRight, Question } from 'phosphor-solid';
+import { CircleDashed, Lock, CaretRight, Question, Tray, ArrowSquareIn } from 'phosphor-solid';
 import { useBrainDump } from '../hooks/useBrainDump';
 import { ProcessedStories } from './ProcessedStories';
 import type { ProcessedStory } from '../../lib/types';
 import { tempoDesign } from '../../theme/tempo-design';
 import { useTempoAIAccess } from '../../hooks/useTempoAIAccess';
 import { Paywall } from '../../../common/Paywall';
+import { QueuePickerModal } from '../../queue/components/QueuePickerModal';
+import type { QueueTask } from '../../queue/types';
 
 interface BrainDumpProps {
   onTasksProcessed?: (stories: ProcessedStory[]) => void;
@@ -33,15 +35,35 @@ export const BrainDump = (props: BrainDumpProps) => {
     isInputLocked,
     isProcessing,
     isCreatingSession,
+    isSendingToQueue,
     processingStep,
     processTasks,
     handleCreateSession,
+    handleSendToQueue,
     handleDurationChange,
     handleRetry,
   } = useBrainDump(props.onTasksProcessed);
 
   // AI access control - checks both API key AND subscription
   const { requireAccess, showPaywall, setShowPaywall } = useTempoAIAccess();
+
+  // Queue picker state
+  const [showQueuePicker, setShowQueuePicker] = createSignal(false);
+
+  // Handle pulling tasks from the queue into the textarea
+  const handlePullFromQueue = (queueTasks: QueueTask[]) => {
+    const taskLines = queueTasks
+      .map((t) => {
+        let line = t.title;
+        if (t.duration) line += ` - ${t.duration}m`;
+        if (t.isFrog) line += ' FROG';
+        return line;
+      })
+      .join('\n');
+
+    const current = tasks();
+    setTasks(current ? current + '\n' + taskLines : taskLines);
+  };
 
   return (
     <>
@@ -52,7 +74,7 @@ export const BrainDump = (props: BrainDumpProps) => {
           <div style={{ position: 'relative' }}>
             <Textarea
               placeholder={`task .init
-Update client dashboard design 🐸
+Update client dashboard design FROG
 Send weekly progress report - 20m
 Research API integration - 1h
 Schedule team meeting - by Thursday
@@ -72,7 +94,7 @@ Finalize product specs - EOD`}
                 variant="ghost"
                 size="icon"
                 style={{ color: tempoDesign.colors.mutedForeground }}
-                title="Task entry tips: Use clear verbs, estimate time (30m), prioritize with 🐸 FROG, add deadlines"
+                title="Task entry tips: Use clear verbs, estimate time (30m), prioritize with FROG keyword, add deadlines"
               >
                 <Question style={{ height: '16px', width: '16px' }} />
               </Button>
@@ -87,6 +109,15 @@ Finalize product specs - EOD`}
               gap: '8px',
             }}
           >
+            <Button
+              variant="outline"
+              onClick={() => setShowQueuePicker(true)}
+              disabled={isInputLocked()}
+              title="Pull tasks from The Queue"
+            >
+              <ArrowSquareIn style={{ 'margin-right': '6px', height: '14px', width: '14px' }} />
+              Pull from Queue
+            </Button>
             <div
               style={{
                 'font-size': tempoDesign.typography.sizes.xs,
@@ -160,7 +191,46 @@ Finalize product specs - EOD`}
                   <Button onClick={handleRetry} variant="outline" size="sm">
                     Reset
                   </Button>
-                  <Button onClick={handleCreateSession} size="sm" disabled={isCreatingSession()}>
+                  <Button
+                    onClick={handleSendToQueue}
+                    variant="outline"
+                    size="sm"
+                    disabled={isSendingToQueue() || isCreatingSession()}
+                    title="Add tasks to The Queue for later scheduling"
+                  >
+                    <Show
+                      when={isSendingToQueue()}
+                      fallback={
+                        <>
+                          <Tray
+                            style={{
+                              'margin-right': '6px',
+                              height: '14px',
+                              width: '14px',
+                            }}
+                          />
+                          To Queue
+                        </>
+                      }
+                    >
+                      <>
+                        <CircleDashed
+                          style={{
+                            'margin-right': '6px',
+                            height: '14px',
+                            width: '14px',
+                            animation: 'spin 1s linear infinite',
+                          }}
+                        />
+                        Adding...
+                      </>
+                    </Show>
+                  </Button>
+                  <Button
+                    onClick={handleCreateSession}
+                    size="sm"
+                    disabled={isCreatingSession() || isSendingToQueue()}
+                  >
                     <Show when={isCreatingSession()} fallback="Create Session">
                       <>
                         <CircleDashed
@@ -195,6 +265,13 @@ Finalize product specs - EOD`}
         onClose={() => setShowPaywall(false)}
         feature="tempo_extras"
         featureName="AI Brain Dump Processing"
+      />
+
+      {/* Queue picker modal for pulling tasks */}
+      <QueuePickerModal
+        isOpen={showQueuePicker()}
+        onClose={() => setShowQueuePicker(false)}
+        onSelect={handlePullFromQueue}
       />
     </>
   );

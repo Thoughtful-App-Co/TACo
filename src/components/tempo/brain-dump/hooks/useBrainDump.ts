@@ -4,6 +4,7 @@ import { brainDumpService } from '../services/brain-dump-services';
 import { SessionStorageService } from '../../services/session-storage.service';
 import type { ProcessedStory, ProcessedTask } from '../../lib/types';
 import { TaskRolloverService } from '../../services/task-rollover.service';
+import { QueueService } from '../../queue/services/queue.service';
 import { ErrorDetails } from '../types';
 import { logger } from '../../../../lib/logger';
 import { showNotification } from '../../../../lib/notifications';
@@ -571,6 +572,72 @@ export function useBrainDump(onTasksProcessed?: (stories: ProcessedStory[]) => v
     setSessionCreationError(null);
   };
 
+  // State for sending to queue
+  const [isSendingToQueue, setIsSendingToQueue] = createSignal(false);
+
+  const handleSendToQueue = async () => {
+    const stories = processedStories();
+    if (stories.length === 0) return;
+
+    setIsSendingToQueue(true);
+
+    try {
+      const currentDurations = editedDurations();
+      let totalTasksAdded = 0;
+
+      // Extract all tasks from all stories and add to queue
+      for (const story of stories) {
+        const storyDuration = currentDurations[story.title] || story.estimatedDuration;
+        const taskCount = story.tasks.length;
+
+        // If story has multiple tasks, distribute duration proportionally
+        // If single task, use story duration
+        for (const task of story.tasks) {
+          const taskDuration =
+            taskCount === 1
+              ? storyDuration
+              : Math.round((task.duration / story.estimatedDuration) * storyDuration);
+
+          await QueueService.createTask({
+            title: task.title,
+            duration: taskDuration || task.duration || 25,
+            priority: task.isFrog ? 'high' : 'medium',
+            isFrog: task.isFrog || false,
+            source: {
+              type: 'brain-dump',
+              extractedAt: new Date().toISOString(),
+            },
+          });
+          totalTasksAdded++;
+        }
+      }
+
+      // Clear the form
+      setTasks('');
+      setProcessedStories([]);
+      setEditedDurations({});
+      setIsInputLocked(false);
+
+      log.info(`Sent ${totalTasksAdded} tasks to queue`);
+
+      showNotification({
+        type: 'success',
+        message: `Added ${totalTasksAdded} task${totalTasksAdded === 1 ? '' : 's'} to The Queue`,
+        duration: 4000,
+      });
+    } catch (error) {
+      log.error('Failed to send tasks to queue:', error);
+
+      showNotification({
+        type: 'error',
+        message: 'Failed to add tasks to queue. Please try again.',
+        duration: 5000,
+      });
+    } finally {
+      setIsSendingToQueue(false);
+    }
+  };
+
   return {
     // State - return signals directly
     tasks,
@@ -583,6 +650,7 @@ export function useBrainDump(onTasksProcessed?: (stories: ProcessedStory[]) => v
     // Processing status - return signals directly
     isProcessing,
     isCreatingSession,
+    isSendingToQueue,
     processingStep: currentProcessingStep,
     processingProgress: currentProcessingProgress,
     error: currentError,
@@ -590,6 +658,7 @@ export function useBrainDump(onTasksProcessed?: (stories: ProcessedStory[]) => v
     // Actions
     processTasks,
     handleCreateSession,
+    handleSendToQueue,
     handleDurationChange,
     handleRetry,
   };
