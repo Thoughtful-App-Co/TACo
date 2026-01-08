@@ -14,9 +14,10 @@ export type TaskCategory = TaskType;
 
 // Consolidated status types
 export type BaseStatus = 'todo' | 'completed' | 'in-progress';
+export type ExtendedTaskStatus = BaseStatus | 'backlog' | 'scheduled' | 'discarded' | 'pending';
 export type TaskStatus = BaseStatus | 'pending'; // TaskStatus extends base Status with additional states
 export type TimeBoxStatus = BaseStatus; // TimeBox uses base Status
-export type SessionStatus = 'planned' | 'in-progress' | 'completed' | 'archived'; // Session has a special 'planned' state and 'archived' state
+export type SessionStatus = 'planned' | 'in-progress' | 'completed' | 'incomplete' | 'archived'; // Session has a special 'planned' state, 'incomplete' state, and 'archived' state
 
 export type StoryType = 'timeboxed' | 'flexible' | 'milestone';
 export type TimeBoxType = 'work' | 'short-break' | 'long-break' | 'debrief';
@@ -24,6 +25,18 @@ export type TimeBoxType = 'work' | 'short-break' | 'long-break' | 'debrief';
 // Consolidated difficulty types
 export type DifficultyLevel = 'low' | 'medium' | 'high';
 export type TaskComplexity = DifficultyLevel;
+
+// Task priority for backlog ordering
+export type TaskPriority = 'urgent' | 'high' | 'medium' | 'low';
+
+// Source tracking for tasks extracted from sessions
+export interface TaskSource {
+  type: 'brain-dump' | 'session-closeout' | 'manual' | 'import';
+  sessionDate?: string;
+  focusBlockId?: string;
+  focusBlockTitle?: string;
+  extractedAt?: string;
+}
 
 // Badge configurations
 export interface BadgeConfig {
@@ -47,7 +60,22 @@ export interface Task {
   taskCategory: TaskCategory;
   projectType?: string;
   isFrog: boolean;
-  status: BaseStatus;
+
+  // Enhanced status - now includes backlog states
+  status: BaseStatus | 'backlog' | 'scheduled' | 'discarded';
+
+  // Source tracking (for tasks extracted from sessions)
+  source?: TaskSource;
+
+  // Scheduling
+  scheduledFor?: string; // date string YYYY-MM-DD
+  scheduledFocusBlockId?: string;
+
+  // Priority for backlog ordering
+  priority?: TaskPriority;
+  tags?: string[];
+
+  // Existing fields
   children: Task[];
   refined: boolean;
   needsSplitting?: boolean;
@@ -55,7 +83,18 @@ export interface Task {
   storyId?: string;
   groupId?: string;
   originalTitle?: string;
+
+  // Timestamps
+  createdAt?: string;
   lastUpdated?: string;
+  completedAt?: string;
+}
+
+// BacklogTask type for easier typing
+export interface BacklogTask extends Task {
+  status: 'backlog';
+  source: TaskSource;
+  priority: TaskPriority;
 }
 
 export interface TaskBreak {

@@ -1,11 +1,28 @@
 import { Component, createSignal, For, Show } from 'solid-js';
 import { tempoDesign } from '../theme/tempo-design';
 
+// Add fade-in animation for tooltips
+const tooltipStyles = document.createElement('style');
+tooltipStyles.textContent = `
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateX(-50%) translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  }
+`;
+document.head.appendChild(tooltipStyles);
+
 export interface Tab {
   id: string;
   label: string;
   icon?: Component;
   disabled?: boolean;
+  tooltip?: string;
 }
 
 interface TabsProps {
@@ -18,6 +35,7 @@ interface TabsProps {
 
 export const Tabs: Component<TabsProps> = (props) => {
   const [activeTab, setActiveTab] = createSignal(props.defaultTab || props.tabs[0]?.id || '');
+  const [hoveredTab, setHoveredTab] = createSignal<string | null>(null);
 
   const handleTabChange = (tabId: string) => {
     if (!props.tabs.find((t) => t.id === tabId)?.disabled) {
@@ -31,49 +49,93 @@ export const Tabs: Component<TabsProps> = (props) => {
       style={{
         display: 'flex',
         'border-bottom': `2px solid ${tempoDesign.colors.border}`,
+        position: 'relative',
         ...(props.style as any),
       }}
       class={props.class}
     >
       <For each={props.tabs}>
         {(tab) => (
-          <button
-            onClick={() => handleTabChange(tab.id)}
-            disabled={tab.disabled}
-            style={{
-              padding: '12px 16px',
-              background: 'none',
-              border: 'none',
-              'border-bottom': `2px solid ${activeTab() === tab.id ? tempoDesign.colors.primary : 'transparent'}`,
-              color:
-                activeTab() === tab.id
-                  ? tempoDesign.colors.primary
-                  : tab.disabled
-                    ? tempoDesign.colors.mutedForeground
-                    : tempoDesign.colors.foreground,
-              cursor: tab.disabled ? 'not-allowed' : 'pointer',
-              'font-size': tempoDesign.typography.sizes.sm,
-              'font-weight': tempoDesign.typography.weights.medium,
-              transition: 'all 0.2s ease-out',
-              display: 'flex',
-              'align-items': 'center',
-              gap: '8px',
-              opacity: tab.disabled ? 0.5 : 1,
-            }}
-            onMouseEnter={(e) => {
-              if (!tab.disabled) {
-                e.currentTarget.style.color = tempoDesign.colors.primary;
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!tab.disabled && activeTab() !== tab.id) {
-                e.currentTarget.style.color = tempoDesign.colors.foreground;
-              }
-            }}
-          >
-            <Show when={tab.icon}>{tab.icon && <tab.icon />}</Show>
-            {tab.label}
-          </button>
+          <div style={{ position: 'relative' }}>
+            <button
+              onClick={() => handleTabChange(tab.id)}
+              disabled={tab.disabled}
+              style={{
+                padding: '12px 16px',
+                background: 'none',
+                border: 'none',
+                'border-bottom': `2px solid ${activeTab() === tab.id ? tempoDesign.colors.primary : 'transparent'}`,
+                color:
+                  activeTab() === tab.id
+                    ? tempoDesign.colors.primary
+                    : tab.disabled
+                      ? tempoDesign.colors.mutedForeground
+                      : tempoDesign.colors.foreground,
+                cursor: tab.disabled ? 'not-allowed' : 'pointer',
+                'font-size': tempoDesign.typography.sizes.sm,
+                'font-weight': tempoDesign.typography.weights.medium,
+                transition: 'all 0.2s ease-out',
+                display: 'flex',
+                'align-items': 'center',
+                gap: '8px',
+                opacity: tab.disabled ? 0.5 : 1,
+              }}
+              onMouseEnter={(e) => {
+                if (!tab.disabled) {
+                  e.currentTarget.style.color = tempoDesign.colors.primary;
+                  if (tab.tooltip) {
+                    setHoveredTab(tab.id);
+                  }
+                }
+              }}
+              onMouseLeave={(e) => {
+                if (!tab.disabled && activeTab() !== tab.id) {
+                  e.currentTarget.style.color = tempoDesign.colors.foreground;
+                }
+                setHoveredTab(null);
+              }}
+            >
+              <Show when={tab.icon}>{tab.icon && <tab.icon />}</Show>
+              {tab.label}
+            </button>
+            <Show when={tab.tooltip && hoveredTab() === tab.id}>
+              <div
+                style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  'margin-top': '8px',
+                  padding: '8px 12px',
+                  background: tempoDesign.colors.card,
+                  border: `1px solid ${tempoDesign.colors.border}`,
+                  'border-radius': tempoDesign.radius.md,
+                  'box-shadow': tempoDesign.shadows.lg,
+                  color: tempoDesign.colors.foreground,
+                  'font-size': tempoDesign.typography.sizes.sm,
+                  'white-space': 'nowrap',
+                  'z-index': 50,
+                  'pointer-events': 'none',
+                  animation: 'fadeIn 0.2s ease-out',
+                }}
+              >
+                {tab.tooltip}
+                <div
+                  style={{
+                    position: 'absolute',
+                    bottom: '100%',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    width: 0,
+                    height: 0,
+                    'border-left': '6px solid transparent',
+                    'border-right': '6px solid transparent',
+                    'border-bottom': `6px solid ${tempoDesign.colors.border}`,
+                  }}
+                />
+              </div>
+            </Show>
+          </div>
         )}
       </For>
     </div>
