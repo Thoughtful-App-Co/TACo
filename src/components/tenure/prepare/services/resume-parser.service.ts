@@ -136,21 +136,17 @@ export async function extractTextFromFile(file: File): Promise<string> {
   const formData = new FormData();
   formData.append('file', file);
 
-  try {
-    const response = await fetch('/api/resume/extract-text', {
-      method: 'POST',
-      body: formData,
-    });
+  const response = await fetch('/api/resume/extract-text', {
+    method: 'POST',
+    body: formData,
+  });
 
-    if (!response.ok) {
-      throw new Error('Text extraction failed');
-    }
-
-    const data = await response.json();
-    return data.text || '';
-  } catch (error) {
-    throw error;
+  if (!response.ok) {
+    throw new Error('Text extraction failed');
   }
+
+  const data = await response.json();
+  return data.text || '';
 }
 
 /**

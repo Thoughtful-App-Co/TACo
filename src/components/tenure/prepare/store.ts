@@ -68,7 +68,9 @@ function loadFromStorage<T>(key: string, defaultValue: T): T {
       const parsed = JSON.parse(stored);
       return reviveDates(parsed);
     }
-  } catch (e) {}
+  } catch (_e) {
+    // Ignore JSON parse errors - return default value
+  }
   return defaultValue;
 }
 

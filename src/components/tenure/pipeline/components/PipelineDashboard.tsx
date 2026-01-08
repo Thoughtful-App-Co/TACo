@@ -134,10 +134,11 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
           return a.companyName.localeCompare(b.companyName) * multiplier;
         case 'role':
           return a.roleName.localeCompare(b.roleName) * multiplier;
-        case 'salary':
+        case 'salary': {
           const aMin = a.salary?.min ?? 0;
           const bMin = b.salary?.min ?? 0;
           return (aMin - bMin) * multiplier;
+        }
         default:
           return 0;
       }

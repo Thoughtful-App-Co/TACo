@@ -126,9 +126,8 @@ export async function extractTextFromDOCX(file: File): Promise<ExtractionResult>
     const text = result.value;
     const wordCount = text.split(/\s+/).filter((w) => w.length > 0).length;
 
-    // Log any warnings
-    if (result.messages && result.messages.length > 0) {
-    }
+    // Warnings from mammoth are informational only
+    // result.messages may contain conversion warnings
 
     return {
       success: true,
