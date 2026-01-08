@@ -1,0 +1,1462 @@
+{
+  "bodyPart": "legs",
+  "exercises": [
+    {
+      "id": "squat_bodyweight",
+      "name": "Bodyweight Squat",
+      "bodyPart": "legs",
+      "targetMuscle": "quadriceps",
+      "secondaryMuscles": ["glutes", "hamstrings", "core"],
+      "equipment": ["floor_space"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "bodyweight"],
+      "constraints": {
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Stand with feet shoulder-width apart, toes slightly pointed out",
+        "Extend arms forward for balance or place hands on hips",
+        "Push hips back and bend knees to lower your body",
+        "Lower until thighs are parallel to the floor or as low as comfortable",
+        "Press through heels to return to standing"
+      ],
+      "cues": [
+        "Knees track over toes",
+        "Keep chest lifted",
+        "Weight in heels",
+        "Core engaged throughout"
+      ]
+    },
+    {
+      "id": "squat_goblet",
+      "name": "Goblet Squat",
+      "bodyPart": "legs",
+      "targetMuscle": "quadriceps",
+      "secondaryMuscles": ["glutes", "hamstrings", "core", "forearms"],
+      "equipment": ["dumbbell", "floor_space"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "weighted"],
+      "constraints": {
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Hold a dumbbell vertically at chest height with both hands cupping the top",
+        "Stand with feet slightly wider than shoulder-width apart",
+        "Push hips back and lower into a squat, keeping the weight close to chest",
+        "Lower until elbows touch inside of knees or thighs are parallel",
+        "Drive through heels to stand back up"
+      ],
+      "cues": [
+        "Elbows point down",
+        "Keep torso upright",
+        "Squeeze glutes at top",
+        "Don't let knees cave in"
+      ]
+    },
+    {
+      "id": "squat_barbell_back",
+      "name": "Barbell Back Squat",
+      "bodyPart": "legs",
+      "targetMuscle": "quadriceps",
+      "secondaryMuscles": ["glutes", "hamstrings", "core", "lower_back"],
+      "equipment": ["barbell", "squat_rack"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["compound", "weighted", "barbell"],
+      "constraints": {
+        "noiseLevel": "moderate"
+      },
+      "instructions": [
+        "Set barbell on squat rack at upper chest height",
+        "Step under the bar, positioning it across upper back on rear deltoids",
+        "Grip bar wider than shoulder-width and unrack by standing up",
+        "Step back and set feet shoulder-width apart",
+        "Brace core, push hips back, and lower until thighs are parallel",
+        "Drive through heels to return to standing"
+      ],
+      "cues": [
+        "Bar stays over midfoot",
+        "Brace core before descent",
+        "Chest up throughout",
+        "Knees track over toes"
+      ]
+    },
+    {
+      "id": "squat_barbell_front",
+      "name": "Barbell Front Squat",
+      "bodyPart": "legs",
+      "targetMuscle": "quadriceps",
+      "secondaryMuscles": ["glutes", "core", "upper_back"],
+      "equipment": ["barbell", "squat_rack"],
+      "category": "strength",
+      "difficulty": "advanced",
+      "tags": ["compound", "weighted", "barbell"],
+      "constraints": {
+        "noiseLevel": "moderate"
+      },
+      "instructions": [
+        "Set barbell on rack at shoulder height",
+        "Position bar across front deltoids with elbows high",
+        "Use clean grip or crossed-arm grip to secure bar",
+        "Unrack and step back with feet shoulder-width apart",
+        "Lower into squat keeping torso very upright",
+        "Drive up through heels maintaining high elbow position"
+      ],
+      "cues": [
+        "Elbows high throughout",
+        "More upright than back squat",
+        "Core braced tight",
+        "Drive knees out"
+      ]
+    },
+    {
+      "id": "squat_bulgarian_split",
+      "name": "Bulgarian Split Squat",
+      "bodyPart": "legs",
+      "targetMuscle": "quadriceps",
+      "secondaryMuscles": ["glutes", "hamstrings", "hip_flexors"],
+      "equipment": ["flat_bench", "floor_space"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["compound", "unilateral", "bodyweight"],
+      "constraints": {
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Stand about two feet in front of a bench facing away",
+        "Place top of rear foot on the bench behind you",
+        "Lower your body by bending the front knee",
+        "Descend until front thigh is parallel to floor",
+        "Push through front heel to return to start",
+        "Complete all reps on one side before switching"
+      ],
+      "cues": [
+        "Front knee tracks over toes",
+        "Torso stays upright",
+        "Most weight on front leg",
+        "Control the descent"
+      ]
+    },
+    {
+      "id": "squat_bulgarian_split_dumbbell",
+      "name": "Dumbbell Bulgarian Split Squat",
+      "bodyPart": "legs",
+      "targetMuscle": "quadriceps",
+      "secondaryMuscles": ["glutes", "hamstrings", "hip_flexors", "grip"],
+      "equipment": ["dumbbell", "flat_bench", "floor_space"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["compound", "unilateral", "weighted"],
+      "constraints": {
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Hold a dumbbell in each hand at your sides",
+        "Stand about two feet in front of a bench facing away",
+        "Place top of rear foot on the bench",
+        "Lower by bending front knee until thigh is parallel",
+        "Press through front heel to stand",
+        "Complete all reps then switch sides"
+      ],
+      "cues": [
+        "Arms hang naturally",
+        "Keep shoulders level",
+        "Control the weight",
+        "Don't lean forward"
+      ]
+    },
+    {
+      "id": "squat_sumo",
+      "name": "Sumo Squat",
+      "bodyPart": "legs",
+      "targetMuscle": "adductors",
+      "secondaryMuscles": ["quadriceps", "glutes", "hamstrings"],
+      "equipment": ["floor_space"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "bodyweight"],
+      "constraints": {
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Stand with feet wider than shoulder-width, toes pointed out 45 degrees",
+        "Place hands together at chest or on hips",
+        "Push hips back and bend knees to lower",
+        "Lower until thighs are parallel to floor",
+        "Press through heels and squeeze inner thighs to stand"
+      ],
+      "cues": [
+        "Knees track over toes",
+        "Keep back straight",
+        "Squeeze adductors at top",
+        "Weight distributed evenly"
+      ]
+    },
+    {
+      "id": "squat_sumo_dumbbell",
+      "name": "Dumbbell Sumo Squat",
+      "bodyPart": "legs",
+      "targetMuscle": "adductors",
+      "secondaryMuscles": ["quadriceps", "glutes", "hamstrings", "forearms"],
+      "equipment": ["dumbbell", "floor_space"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "weighted"],
+      "constraints": {
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Stand with wide stance, toes pointed out",
+        "Hold one dumbbell with both hands hanging between legs",
+        "Push hips back and lower into squat",
+        "Descend until dumbbell nearly touches floor",
+        "Drive through heels to return to standing"
+      ],
+      "cues": [
+        "Arms stay straight",
+        "Keep chest lifted",
+        "Squeeze glutes at top",
+        "Control the weight down"
+      ]
+    },
+    {
+      "id": "squat_pistol",
+      "name": "Pistol Squat",
+      "bodyPart": "legs",
+      "targetMuscle": "quadriceps",
+      "secondaryMuscles": ["glutes", "hamstrings", "hip_flexors", "core"],
+      "equipment": ["floor_space"],
+      "category": "strength",
+      "difficulty": "advanced",
+      "tags": ["compound", "bodyweight", "unilateral", "balance"],
+      "constraints": {
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Stand on one leg with other leg extended straight in front",
+        "Extend arms forward for balance",
+        "Slowly lower your body on the standing leg",
+        "Descend as low as possible while keeping extended leg off floor",
+        "Press through heel to stand back up",
+        "Complete all reps then switch legs"
+      ],
+      "cues": [
+        "Keep extended leg straight",
+        "Control the descent",
+        "Don't let knee cave in",
+        "Engage core for balance"
+      ]
+    },
+    {
+      "id": "squat_box",
+      "name": "Box Squat",
+      "bodyPart": "legs",
+      "targetMuscle": "quadriceps",
+      "secondaryMuscles": ["glutes", "hamstrings", "core"],
+      "equipment": ["plyo_box", "floor_space"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "bodyweight"],
+      "constraints": {
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Stand in front of a box with feet shoulder-width apart",
+        "Push hips back and lower until seated on the box",
+        "Pause briefly on the box without relaxing completely",
+        "Drive through heels to stand back up explosively",
+        "Fully extend hips at the top"
+      ],
+      "cues": [
+        "Sit back not down",
+        "Light touch on box",
+        "Explode up from seated",
+        "Keep tension throughout"
+      ]
+    },
+    {
+      "id": "lunge_forward",
+      "name": "Forward Lunge",
+      "bodyPart": "legs",
+      "targetMuscle": "quadriceps",
+      "secondaryMuscles": ["glutes", "hamstrings", "hip_flexors"],
+      "equipment": ["floor_space"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "bodyweight", "unilateral"],
+      "constraints": {
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Stand with feet hip-width apart, hands on hips",
+        "Step forward with one leg about 2-3 feet",
+        "Lower your body until both knees are at 90 degrees",
+        "Front thigh should be parallel to floor",
+        "Push off front foot to return to starting position",
+        "Alternate legs or complete all reps on one side"
+      ],
+      "cues": [
+        "Front knee over ankle",
+        "Back knee hovers above floor",
+        "Keep torso upright",
+        "Step far enough forward"
+      ]
+    },
+    {
+      "id": "lunge_forward_dumbbell",
+      "name": "Dumbbell Forward Lunge",
+      "bodyPart": "legs",
+      "targetMuscle": "quadriceps",
+      "secondaryMuscles": ["glutes", "hamstrings", "hip_flexors", "grip"],
+      "equipment": ["dumbbell", "floor_space"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "weighted", "unilateral"],
+      "constraints": {
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Stand holding dumbbells at sides with palms facing in",
+        "Step forward with one leg about 2-3 feet",
+        "Lower until both knees reach 90 degrees",
+        "Push through front heel to return to start",
+        "Alternate legs each rep"
+      ],
+      "cues": [
+        "Arms hang naturally",
+        "Don't swing weights",
+        "Control each step",
+        "Keep core engaged"
+      ]
+    },
+    {
+      "id": "lunge_reverse",
+      "name": "Reverse Lunge",
+      "bodyPart": "legs",
+      "targetMuscle": "glutes",
+      "secondaryMuscles": ["quadriceps", "hamstrings", "hip_flexors"],
+      "equipment": ["floor_space"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "bodyweight", "unilateral"],
+      "constraints": {
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Stand with feet hip-width apart",
+        "Step backward with one leg about 2-3 feet",
+        "Lower until both knees are at 90 degrees",
+        "Keep front shin vertical",
+        "Push through front heel to return to standing",
+        "Alternate legs or complete set on one side"
+      ],
+      "cues": [
+        "More glute emphasis than forward lunge",
+        "Control the step back",
+        "Don't lean forward",
+        "Back knee hovers above floor"
+      ]
+    },
+    {
+      "id": "lunge_reverse_dumbbell",
+      "name": "Dumbbell Reverse Lunge",
+      "bodyPart": "legs",
+      "targetMuscle": "glutes",
+      "secondaryMuscles": ["quadriceps", "hamstrings", "hip_flexors", "grip"],
+      "equipment": ["dumbbell", "floor_space"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "weighted", "unilateral"],
+      "constraints": {
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Hold dumbbells at sides with neutral grip",
+        "Step backward with one leg",
+        "Lower until both knees are bent 90 degrees",
+        "Drive through front heel to return to start",
+        "Alternate sides each rep"
+      ],
+      "cues": [
+        "Weights stay close to body",
+        "Controlled step back",
+        "Keep shoulders level",
+        "Full hip extension at top"
+      ]
+    },
+    {
+      "id": "lunge_walking",
+      "name": "Walking Lunge",
+      "bodyPart": "legs",
+      "targetMuscle": "quadriceps",
+      "secondaryMuscles": ["glutes", "hamstrings", "hip_flexors", "core"],
+      "equipment": ["floor_space"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "bodyweight", "unilateral"],
+      "constraints": {
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Stand with feet together, hands on hips or at sides",
+        "Step forward into a lunge position",
+        "Lower until both knees are at 90 degrees",
+        "Push off back foot and bring it forward to step into next lunge",
+        "Continue walking forward alternating legs"
+      ],
+      "cues": [
+        "Smooth continuous motion",
+        "Stay upright throughout",
+        "Equal stride length",
+        "Land softly"
+      ]
+    },
+    {
+      "id": "lunge_lateral",
+      "name": "Lateral Lunge",
+      "bodyPart": "legs",
+      "targetMuscle": "adductors",
+      "secondaryMuscles": ["quadriceps", "glutes", "hamstrings"],
+      "equipment": ["floor_space"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "bodyweight", "unilateral"],
+      "constraints": {
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Stand with feet together, hands at chest or on hips",
+        "Take a large step directly to the side",
+        "Push hips back and bend stepping leg while keeping other leg straight",
+        "Lower until stepping thigh is parallel to floor",
+        "Push through heel to return to start",
+        "Alternate sides or complete all reps on one side"
+      ],
+      "cues": [
+        "Keep both feet pointing forward",
+        "Sit back into the lunge",
+        "Straight leg stays extended",
+        "Don't let knee cave in"
+      ]
+    },
+    {
+      "id": "lunge_curtsy",
+      "name": "Curtsy Lunge",
+      "bodyPart": "legs",
+      "targetMuscle": "glutes",
+      "secondaryMuscles": ["quadriceps", "adductors", "hip_flexors"],
+      "equipment": ["floor_space"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["compound", "bodyweight", "unilateral"],
+      "constraints": {
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Stand with feet hip-width apart, hands on hips",
+        "Step one leg diagonally behind and across your body",
+        "Lower until front thigh is parallel to floor",
+        "Keep torso upright and hips facing forward",
+        "Push through front heel to return to start",
+        "Alternate sides or complete set on one side"
+      ],
+      "cues": [
+        "Cross behind not beside",
+        "Keep hips square",
+        "Front knee tracks over toes",
+        "Targets glute medius"
+      ]
+    },
+    {
+      "id": "deadlift_romanian_dumbbell",
+      "name": "Dumbbell Romanian Deadlift",
+      "bodyPart": "legs",
+      "targetMuscle": "hamstrings",
+      "secondaryMuscles": ["glutes", "lower_back", "grip"],
+      "equipment": ["dumbbell", "floor_space"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["compound", "weighted", "hip_hinge"],
+      "constraints": {
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Stand with feet hip-width apart holding dumbbells in front of thighs",
+        "Keep slight bend in knees throughout the movement",
+        "Push hips back and lower weights along front of legs",
+        "Lower until you feel stretch in hamstrings or weights reach shin level",
+        "Drive hips forward to return to standing",
+        "Squeeze glutes at the top"
+      ],
+      "cues": [
+        "Flat back throughout",
+        "Weights stay close to legs",
+        "Hinge at hips not waist",
+        "Feel hamstring stretch"
+      ]
+    },
+    {
+      "id": "deadlift_romanian_barbell",
+      "name": "Barbell Romanian Deadlift",
+      "bodyPart": "legs",
+      "targetMuscle": "hamstrings",
+      "secondaryMuscles": ["glutes", "lower_back", "grip", "core"],
+      "equipment": ["barbell", "floor_space"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["compound", "weighted", "barbell", "hip_hinge"],
+      "constraints": {
+        "noiseLevel": "moderate"
+      },
+      "instructions": [
+        "Stand holding barbell with overhand grip at hip level",
+        "Feet hip-width apart, slight bend in knees",
+        "Push hips back while lowering bar along legs",
+        "Keep bar close to body throughout",
+        "Lower until hamstrings are fully stretched",
+        "Drive hips forward to return to standing"
+      ],
+      "cues": [
+        "Bar drags along thighs",
+        "Shoulders over bar",
+        "Neutral spine",
+        "Don't round lower back"
+      ]
+    },
+    {
+      "id": "deadlift_single_leg",
+      "name": "Single-Leg Romanian Deadlift",
+      "bodyPart": "legs",
+      "targetMuscle": "hamstrings",
+      "secondaryMuscles": ["glutes", "lower_back", "core"],
+      "equipment": ["floor_space"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["compound", "bodyweight", "unilateral", "balance", "hip_hinge"],
+      "constraints": {
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Stand on one leg with slight bend in the knee",
+        "Extend arms down or out for balance",
+        "Hinge at hip lowering torso while lifting back leg",
+        "Keep back leg and torso in a straight line",
+        "Lower until torso is nearly parallel to floor",
+        "Return to standing by driving hip forward"
+      ],
+      "cues": ["Hips stay square", "Back leg extends behind", "Controlled balance", "Core engaged"]
+    },
+    {
+      "id": "deadlift_single_leg_dumbbell",
+      "name": "Dumbbell Single-Leg Romanian Deadlift",
+      "bodyPart": "legs",
+      "targetMuscle": "hamstrings",
+      "secondaryMuscles": ["glutes", "lower_back", "core", "grip"],
+      "equipment": ["dumbbell", "floor_space"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["compound", "weighted", "unilateral", "balance", "hip_hinge"],
+      "constraints": {
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Stand on one leg holding dumbbell in opposite hand",
+        "Keep standing leg slightly bent",
+        "Hinge forward lowering weight while back leg extends",
+        "Lower until torso is parallel to floor",
+        "Drive hip forward to return to standing",
+        "Complete all reps then switch sides"
+      ],
+      "cues": [
+        "Weight in opposite hand aids balance",
+        "Keep hips level",
+        "Flat back position",
+        "Control the descent"
+      ]
+    },
+    {
+      "id": "deadlift_sumo",
+      "name": "Sumo Deadlift",
+      "bodyPart": "legs",
+      "targetMuscle": "glutes",
+      "secondaryMuscles": ["quadriceps", "hamstrings", "adductors", "lower_back", "grip"],
+      "equipment": ["barbell", "floor_space"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["compound", "weighted", "barbell", "hip_hinge"],
+      "constraints": {
+        "noiseLevel": "moderate"
+      },
+      "instructions": [
+        "Stand with very wide stance, toes pointed out",
+        "Grip barbell inside your legs with arms straight",
+        "Push hips back and lower to grip the bar",
+        "Brace core and drive through heels to stand",
+        "Keep bar close to body throughout lift",
+        "Lower with control by pushing hips back"
+      ],
+      "cues": [
+        "Knees track over toes",
+        "Chest up throughout",
+        "Push floor away",
+        "Lock out hips at top"
+      ]
+    },
+    {
+      "id": "hip_thrust_barbell",
+      "name": "Barbell Hip Thrust",
+      "bodyPart": "legs",
+      "targetMuscle": "glutes",
+      "secondaryMuscles": ["hamstrings", "core"],
+      "equipment": ["barbell", "flat_bench"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["compound", "weighted", "barbell"],
+      "constraints": {
+        "requiresLyingDown": true,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Sit on floor with upper back against bench",
+        "Roll barbell over hips and position pad for comfort",
+        "Feet flat on floor about hip-width apart",
+        "Drive through heels and thrust hips toward ceiling",
+        "Squeeze glutes hard at top of movement",
+        "Lower hips with control and repeat"
+      ],
+      "cues": [
+        "Chin tucked throughout",
+        "Full hip extension at top",
+        "Feet positioned so shins are vertical at top",
+        "Don't hyperextend lower back"
+      ]
+    },
+    {
+      "id": "hip_thrust_dumbbell",
+      "name": "Dumbbell Hip Thrust",
+      "bodyPart": "legs",
+      "targetMuscle": "glutes",
+      "secondaryMuscles": ["hamstrings", "core"],
+      "equipment": ["dumbbell", "flat_bench"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "weighted"],
+      "constraints": {
+        "requiresLyingDown": true,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Sit on floor with upper back against bench",
+        "Place dumbbell on hip crease and hold with both hands",
+        "Position feet flat on floor hip-width apart",
+        "Thrust hips up by driving through heels",
+        "Squeeze glutes at the top",
+        "Lower with control"
+      ],
+      "cues": [
+        "Keep weight centered",
+        "Full lockout at top",
+        "Don't arch back",
+        "Control the descent"
+      ]
+    },
+    {
+      "id": "glute_bridge",
+      "name": "Glute Bridge",
+      "bodyPart": "legs",
+      "targetMuscle": "glutes",
+      "secondaryMuscles": ["hamstrings", "core"],
+      "equipment": ["yoga_mat"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "bodyweight"],
+      "constraints": {
+        "requiresLyingDown": true,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Lie on back with knees bent and feet flat on floor",
+        "Arms at sides with palms down",
+        "Push through heels to lift hips off floor",
+        "Raise until body forms straight line from shoulders to knees",
+        "Squeeze glutes hard at the top",
+        "Lower hips back down with control"
+      ],
+      "cues": [
+        "Don't push through toes",
+        "Squeeze glutes not lower back",
+        "Keep core engaged",
+        "Full extension at top"
+      ]
+    },
+    {
+      "id": "glute_bridge_single_leg",
+      "name": "Single-Leg Glute Bridge",
+      "bodyPart": "legs",
+      "targetMuscle": "glutes",
+      "secondaryMuscles": ["hamstrings", "core"],
+      "equipment": ["yoga_mat"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["isolation", "bodyweight", "unilateral"],
+      "constraints": {
+        "requiresLyingDown": true,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Lie on back with knees bent and feet flat",
+        "Extend one leg straight up toward ceiling",
+        "Push through heel of grounded foot to lift hips",
+        "Raise until body forms straight line",
+        "Keep extended leg pointing up throughout",
+        "Complete all reps then switch legs"
+      ],
+      "cues": [
+        "Hips stay level",
+        "Don't rotate pelvis",
+        "Squeeze working glute",
+        "Control throughout"
+      ]
+    },
+    {
+      "id": "glute_bridge_banded",
+      "name": "Banded Glute Bridge",
+      "bodyPart": "legs",
+      "targetMuscle": "glutes",
+      "secondaryMuscles": ["hamstrings", "hip_abductors", "core"],
+      "equipment": ["mini_band", "yoga_mat"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "banded"],
+      "constraints": {
+        "requiresLyingDown": true,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Place mini band around thighs just above knees",
+        "Lie on back with knees bent, feet hip-width apart",
+        "Push knees out against band tension",
+        "Drive through heels to lift hips",
+        "Maintain outward knee pressure throughout",
+        "Lower with control keeping tension on band"
+      ],
+      "cues": [
+        "Constant tension on band",
+        "Knees push out not in",
+        "Activates glute medius",
+        "Squeeze at top"
+      ]
+    },
+    {
+      "id": "good_morning",
+      "name": "Good Morning",
+      "bodyPart": "legs",
+      "targetMuscle": "hamstrings",
+      "secondaryMuscles": ["glutes", "lower_back", "core"],
+      "equipment": ["barbell", "squat_rack"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["compound", "weighted", "barbell", "hip_hinge"],
+      "constraints": {
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Position barbell across upper back as in back squat",
+        "Stand with feet shoulder-width apart",
+        "Keep slight bend in knees throughout",
+        "Hinge at hips pushing them back",
+        "Lower torso until nearly parallel to floor",
+        "Drive hips forward to return to standing"
+      ],
+      "cues": [
+        "Back stays flat",
+        "Feel hamstring stretch",
+        "Don't round spine",
+        "Controlled movement"
+      ]
+    },
+    {
+      "id": "leg_press",
+      "name": "Leg Press",
+      "bodyPart": "legs",
+      "targetMuscle": "quadriceps",
+      "secondaryMuscles": ["glutes", "hamstrings"],
+      "equipment": ["leg_press"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "machine"],
+      "constraints": {
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Sit in leg press machine with back flat against pad",
+        "Place feet shoulder-width apart on platform",
+        "Release safety handles and extend legs",
+        "Lower platform by bending knees toward chest",
+        "Lower until knees are at 90 degrees",
+        "Press through feet to extend legs without locking knees"
+      ],
+      "cues": [
+        "Full foot contact",
+        "Don't lock out knees",
+        "Lower back stays on pad",
+        "Control the negative"
+      ]
+    },
+    {
+      "id": "leg_press_narrow",
+      "name": "Narrow Stance Leg Press",
+      "bodyPart": "legs",
+      "targetMuscle": "quadriceps",
+      "secondaryMuscles": ["glutes"],
+      "equipment": ["leg_press"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "machine"],
+      "constraints": {
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Sit in leg press with back flat against pad",
+        "Place feet close together in center of platform",
+        "Release safeties and extend legs",
+        "Lower platform with control",
+        "Press back up without locking knees"
+      ],
+      "cues": [
+        "Emphasizes outer quad sweep",
+        "Knees track over toes",
+        "Deeper range of motion",
+        "Control throughout"
+      ]
+    },
+    {
+      "id": "hack_squat",
+      "name": "Hack Squat",
+      "bodyPart": "legs",
+      "targetMuscle": "quadriceps",
+      "secondaryMuscles": ["glutes", "hamstrings"],
+      "equipment": ["hack_squat"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "machine"],
+      "constraints": {
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Position yourself in hack squat machine with shoulders under pads",
+        "Place feet shoulder-width apart on platform",
+        "Release safety handles and stand to full extension",
+        "Lower by bending knees until thighs are parallel",
+        "Press through feet to return to standing",
+        "Don't lock knees at the top"
+      ],
+      "cues": [
+        "Back stays flat on pad",
+        "Heels stay down",
+        "Controlled descent",
+        "Full range of motion"
+      ]
+    },
+    {
+      "id": "leg_extension",
+      "name": "Leg Extension",
+      "bodyPart": "legs",
+      "targetMuscle": "quadriceps",
+      "secondaryMuscles": [],
+      "equipment": ["leg_extension"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "machine"],
+      "constraints": {
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Sit in leg extension machine with back against pad",
+        "Position pad on lower shins just above ankles",
+        "Grip handles at sides for stability",
+        "Extend legs until straight but not locked",
+        "Squeeze quads at the top",
+        "Lower with control to starting position"
+      ],
+      "cues": ["Don't use momentum", "Pause at top", "Control the negative", "Keep back flat"]
+    },
+    {
+      "id": "leg_curl_lying",
+      "name": "Lying Leg Curl",
+      "bodyPart": "legs",
+      "targetMuscle": "hamstrings",
+      "secondaryMuscles": ["calves"],
+      "equipment": ["leg_curl"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "machine"],
+      "constraints": {
+        "requiresLyingDown": true,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Lie face down on leg curl machine",
+        "Position pad just above heels",
+        "Grip handles and keep hips flat on pad",
+        "Curl legs up by bending knees",
+        "Bring heels as close to glutes as possible",
+        "Lower with control"
+      ],
+      "cues": ["Hips stay down", "Full range of motion", "Squeeze at top", "Don't swing legs"]
+    },
+    {
+      "id": "leg_curl_seated",
+      "name": "Seated Leg Curl",
+      "bodyPart": "legs",
+      "targetMuscle": "hamstrings",
+      "secondaryMuscles": ["calves"],
+      "equipment": ["leg_curl"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "machine"],
+      "constraints": {
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Sit in seated leg curl machine",
+        "Position pad on back of lower legs above heels",
+        "Secure thigh pad above knees",
+        "Curl legs down and back bending at knees",
+        "Squeeze hamstrings at bottom position",
+        "Return to start with control"
+      ],
+      "cues": [
+        "Keep torso still",
+        "Full contraction at bottom",
+        "Control the return",
+        "Don't bounce at bottom"
+      ]
+    },
+    {
+      "id": "leg_curl_standing",
+      "name": "Standing Leg Curl",
+      "bodyPart": "legs",
+      "targetMuscle": "hamstrings",
+      "secondaryMuscles": ["calves"],
+      "equipment": ["leg_curl"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "machine", "unilateral"],
+      "constraints": {
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Stand facing standing leg curl machine",
+        "Position pad on back of one ankle",
+        "Hold handles for support",
+        "Curl heel toward glute by bending knee",
+        "Squeeze hamstring at top",
+        "Lower with control and repeat"
+      ],
+      "cues": ["Keep hips stable", "Don't swing", "Full range of motion", "Switch legs after set"]
+    },
+    {
+      "id": "calf_raise_standing",
+      "name": "Standing Calf Raise",
+      "bodyPart": "legs",
+      "targetMuscle": "calves",
+      "secondaryMuscles": [],
+      "equipment": ["calf_raise"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "machine"],
+      "constraints": {
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Position shoulders under pads of calf raise machine",
+        "Stand with balls of feet on platform, heels hanging off",
+        "Lower heels below platform for full stretch",
+        "Push through balls of feet to raise heels high",
+        "Squeeze calves at the top",
+        "Lower with control"
+      ],
+      "cues": [
+        "Full stretch at bottom",
+        "High on toes at top",
+        "Don't bounce",
+        "Slow and controlled"
+      ]
+    },
+    {
+      "id": "calf_raise_seated",
+      "name": "Seated Calf Raise",
+      "bodyPart": "legs",
+      "targetMuscle": "calves",
+      "secondaryMuscles": [],
+      "equipment": ["calf_raise"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "machine"],
+      "constraints": {
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Sit at seated calf raise machine",
+        "Place balls of feet on platform with knees under pad",
+        "Release safety and lower heels for stretch",
+        "Push through toes to raise heels as high as possible",
+        "Squeeze calves at the top",
+        "Lower with control"
+      ],
+      "cues": [
+        "Targets soleus muscle",
+        "Full range of motion",
+        "Pause at top and bottom",
+        "No bouncing"
+      ]
+    },
+    {
+      "id": "calf_raise_single_leg",
+      "name": "Single-Leg Calf Raise",
+      "bodyPart": "legs",
+      "targetMuscle": "calves",
+      "secondaryMuscles": [],
+      "equipment": ["stairs"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["isolation", "bodyweight", "unilateral"],
+      "constraints": {
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Stand on edge of step on one foot",
+        "Hold wall or railing for balance",
+        "Lower heel below step level for full stretch",
+        "Push through ball of foot to rise as high as possible",
+        "Squeeze calf at the top",
+        "Complete all reps then switch legs"
+      ],
+      "cues": [
+        "Full range of motion",
+        "Control the negative",
+        "Don't rush",
+        "Balance with minimal support"
+      ]
+    },
+    {
+      "id": "calf_raise_dumbbell",
+      "name": "Dumbbell Calf Raise",
+      "bodyPart": "legs",
+      "targetMuscle": "calves",
+      "secondaryMuscles": ["grip"],
+      "equipment": ["dumbbell", "weight_plates"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "weighted"],
+      "constraints": {
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Stand with balls of feet on weight plate, heels on floor",
+        "Hold dumbbells at sides",
+        "Rise up on toes as high as possible",
+        "Squeeze calves at the top",
+        "Lower heels back to floor with control",
+        "Repeat for desired reps"
+      ],
+      "cues": ["Stay balanced", "Full contraction at top", "Control descent", "Don't bounce"]
+    },
+    {
+      "id": "step_up",
+      "name": "Step-Up",
+      "bodyPart": "legs",
+      "targetMuscle": "quadriceps",
+      "secondaryMuscles": ["glutes", "hamstrings", "calves"],
+      "equipment": ["plyo_box"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "bodyweight", "unilateral"],
+      "constraints": {
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Stand facing a box or bench at knee height",
+        "Place one foot entirely on the box",
+        "Press through heel to step up onto the box",
+        "Bring other foot up to stand on box",
+        "Step back down with control",
+        "Alternate lead leg or complete all reps on one side"
+      ],
+      "cues": [
+        "Drive through heel not toes",
+        "Don't push off back foot",
+        "Keep torso upright",
+        "Control the step down"
+      ]
+    },
+    {
+      "id": "step_up_dumbbell",
+      "name": "Dumbbell Step-Up",
+      "bodyPart": "legs",
+      "targetMuscle": "quadriceps",
+      "secondaryMuscles": ["glutes", "hamstrings", "calves", "grip"],
+      "equipment": ["dumbbell", "plyo_box"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["compound", "weighted", "unilateral"],
+      "constraints": {
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Hold dumbbells at sides facing a box",
+        "Place one foot on the box",
+        "Drive through heel to step up",
+        "Stand fully on box then step down",
+        "Alternate legs or complete set on one side"
+      ],
+      "cues": [
+        "Arms hang naturally",
+        "Use lead leg only",
+        "Controlled movement",
+        "Full hip extension at top"
+      ]
+    },
+    {
+      "id": "box_jump",
+      "name": "Box Jump",
+      "bodyPart": "legs",
+      "targetMuscle": "quadriceps",
+      "secondaryMuscles": ["glutes", "hamstrings", "calves", "core"],
+      "equipment": ["plyo_box"],
+      "category": "plyometric",
+      "difficulty": "intermediate",
+      "tags": ["compound", "bodyweight", "explosive", "plyometric"],
+      "constraints": {
+        "requiresJumping": true,
+        "noiseLevel": "loud"
+      },
+      "instructions": [
+        "Stand facing box with feet shoulder-width apart",
+        "Swing arms back while bending at hips and knees",
+        "Explosively jump up driving arms forward",
+        "Land softly on box with both feet",
+        "Stand fully then step down carefully",
+        "Reset and repeat"
+      ],
+      "cues": [
+        "Land soft with bent knees",
+        "Full hip extension on box",
+        "Step down don't jump",
+        "Use arm swing for power"
+      ]
+    },
+    {
+      "id": "jump_squat",
+      "name": "Jump Squat",
+      "bodyPart": "legs",
+      "targetMuscle": "quadriceps",
+      "secondaryMuscles": ["glutes", "hamstrings", "calves", "core"],
+      "equipment": ["floor_space"],
+      "category": "plyometric",
+      "difficulty": "intermediate",
+      "tags": ["compound", "bodyweight", "explosive", "plyometric"],
+      "constraints": {
+        "requiresJumping": true,
+        "noiseLevel": "loud"
+      },
+      "instructions": [
+        "Stand with feet shoulder-width apart",
+        "Lower into a squat position",
+        "Explosively jump up as high as possible",
+        "Swing arms up to generate momentum",
+        "Land softly with bent knees",
+        "Immediately lower into next rep"
+      ],
+      "cues": [
+        "Soft landing",
+        "Full triple extension",
+        "Arms help propel",
+        "Land and absorb impact"
+      ]
+    },
+    {
+      "id": "wall_sit",
+      "name": "Wall Sit",
+      "bodyPart": "legs",
+      "targetMuscle": "quadriceps",
+      "secondaryMuscles": ["glutes", "hamstrings", "core"],
+      "equipment": ["wall"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isometric", "bodyweight"],
+      "constraints": {
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Stand with back against wall",
+        "Walk feet out and slide down wall",
+        "Lower until thighs are parallel to floor",
+        "Knees should be at 90 degree angle",
+        "Keep back flat against wall",
+        "Hold position for time"
+      ],
+      "cues": [
+        "Thighs parallel to floor",
+        "Back stays on wall",
+        "Don't rest hands on thighs",
+        "Breathe steadily"
+      ]
+    },
+    {
+      "id": "leg_swing_forward",
+      "name": "Forward Leg Swing",
+      "bodyPart": "legs",
+      "targetMuscle": "hip_flexors",
+      "secondaryMuscles": ["hamstrings", "quadriceps", "glutes"],
+      "equipment": ["wall"],
+      "category": "mobility",
+      "difficulty": "beginner",
+      "tags": ["dynamic_stretch", "mobility", "warmup"],
+      "constraints": {
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Stand sideways to wall holding it for support",
+        "Shift weight to inside leg",
+        "Swing outside leg forward and back in controlled arc",
+        "Keep torso upright throughout",
+        "Gradually increase range of motion",
+        "Complete reps then switch sides"
+      ],
+      "cues": [
+        "Control the swing",
+        "Keep standing leg stable",
+        "Don't rotate hips",
+        "Dynamic mobility"
+      ]
+    },
+    {
+      "id": "leg_swing_lateral",
+      "name": "Lateral Leg Swing",
+      "bodyPart": "legs",
+      "targetMuscle": "adductors",
+      "secondaryMuscles": ["hip_abductors", "glutes"],
+      "equipment": ["wall"],
+      "category": "mobility",
+      "difficulty": "beginner",
+      "tags": ["dynamic_stretch", "mobility", "warmup"],
+      "constraints": {
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Face wall with both hands on it for support",
+        "Shift weight to one leg",
+        "Swing other leg side to side across body",
+        "Keep torso facing forward",
+        "Gradually increase range of motion",
+        "Switch legs after completing reps"
+      ],
+      "cues": [
+        "Control the movement",
+        "Hips stay square",
+        "Loosens hip adductors",
+        "Great for warmup"
+      ]
+    },
+    {
+      "id": "hip_abduction_machine",
+      "name": "Hip Abduction Machine",
+      "bodyPart": "legs",
+      "targetMuscle": "hip_abductors",
+      "secondaryMuscles": ["glutes"],
+      "equipment": ["hip_abductor"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "machine"],
+      "constraints": {
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Sit in hip abduction machine with legs inside pads",
+        "Grip handles and keep back against pad",
+        "Press legs outward against resistance",
+        "Push as wide as comfortable",
+        "Slowly return to starting position",
+        "Control the return motion"
+      ],
+      "cues": [
+        "Don't use momentum",
+        "Full range of motion",
+        "Squeeze outer glutes",
+        "Control the negative"
+      ]
+    },
+    {
+      "id": "hip_adduction_machine",
+      "name": "Hip Adduction Machine",
+      "bodyPart": "legs",
+      "targetMuscle": "adductors",
+      "secondaryMuscles": [],
+      "equipment": ["hip_abductor"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "machine"],
+      "constraints": {
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Sit in hip adduction machine with legs outside pads",
+        "Start with legs spread wide",
+        "Grip handles and keep back against pad",
+        "Squeeze legs together against resistance",
+        "Bring legs as close together as possible",
+        "Slowly return to starting position"
+      ],
+      "cues": [
+        "Squeeze inner thighs",
+        "Control throughout",
+        "Full range of motion",
+        "Don't let weight slam"
+      ]
+    },
+    {
+      "id": "glute_kickback_machine",
+      "name": "Glute Kickback Machine",
+      "bodyPart": "legs",
+      "targetMuscle": "glutes",
+      "secondaryMuscles": ["hamstrings"],
+      "equipment": ["glute_machine"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "machine", "unilateral"],
+      "constraints": {
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Position yourself on glute kickback machine",
+        "Place one foot on platform or pad",
+        "Grip handles for stability",
+        "Push leg back in arc motion",
+        "Squeeze glute at full extension",
+        "Return with control and repeat"
+      ],
+      "cues": [
+        "Don't arch lower back",
+        "Squeeze glute at top",
+        "Control the motion",
+        "Keep hips square"
+      ]
+    },
+    {
+      "id": "squat_smith_machine",
+      "name": "Smith Machine Squat",
+      "bodyPart": "legs",
+      "targetMuscle": "quadriceps",
+      "secondaryMuscles": ["glutes", "hamstrings", "core"],
+      "equipment": ["smith_machine"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "machine"],
+      "constraints": {
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Position bar across upper back under Smith machine",
+        "Stand with feet slightly forward of bar path",
+        "Unrack by rotating bar hooks",
+        "Lower into squat keeping bar path vertical",
+        "Descend until thighs are parallel",
+        "Drive up through heels to return"
+      ],
+      "cues": [
+        "Feet slightly forward",
+        "Controlled descent",
+        "Bar path is fixed",
+        "Good for learning squat pattern"
+      ]
+    },
+    {
+      "id": "lunge_barbell",
+      "name": "Barbell Lunge",
+      "bodyPart": "legs",
+      "targetMuscle": "quadriceps",
+      "secondaryMuscles": ["glutes", "hamstrings", "core"],
+      "equipment": ["barbell", "squat_rack"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["compound", "weighted", "barbell", "unilateral"],
+      "constraints": {
+        "noiseLevel": "moderate"
+      },
+      "instructions": [
+        "Position barbell across upper back as in squat",
+        "Unrack and step back from rack",
+        "Step forward into lunge position",
+        "Lower until both knees are at 90 degrees",
+        "Push through front heel to return",
+        "Alternate legs each rep"
+      ],
+      "cues": [
+        "Keep torso upright",
+        "Front knee tracks over toes",
+        "Control with weight",
+        "Full depth each rep"
+      ]
+    },
+    {
+      "id": "banded_squat",
+      "name": "Banded Squat",
+      "bodyPart": "legs",
+      "targetMuscle": "quadriceps",
+      "secondaryMuscles": ["glutes", "hamstrings", "hip_abductors"],
+      "equipment": ["mini_band", "floor_space"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "banded"],
+      "constraints": {
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Place mini band around thighs just above knees",
+        "Stand with feet shoulder-width apart",
+        "Push knees out against band tension",
+        "Lower into squat while maintaining outward knee pressure",
+        "Descend until thighs are parallel",
+        "Drive up while keeping tension on band"
+      ],
+      "cues": [
+        "Constant outward pressure",
+        "Activates glute medius",
+        "Knees track over toes",
+        "Great for activation"
+      ]
+    },
+    {
+      "id": "banded_lateral_walk",
+      "name": "Banded Lateral Walk",
+      "bodyPart": "legs",
+      "targetMuscle": "hip_abductors",
+      "secondaryMuscles": ["glutes", "quadriceps"],
+      "equipment": ["mini_band", "floor_space"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "banded"],
+      "constraints": {
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Place mini band around thighs above knees or around ankles",
+        "Stand in quarter squat position",
+        "Step laterally leading with one foot",
+        "Follow with other foot maintaining tension",
+        "Take small controlled steps",
+        "Complete steps in one direction then reverse"
+      ],
+      "cues": [
+        "Stay low throughout",
+        "Maintain band tension",
+        "Don't let feet come together",
+        "Feel the burn in outer glutes"
+      ]
+    }
+  ]
+}

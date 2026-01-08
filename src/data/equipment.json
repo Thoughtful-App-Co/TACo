@@ -1,0 +1,223 @@
+{
+  "version": "1.0.0",
+  "categories": [
+    {
+      "id": "bodyweight",
+      "name": "Bodyweight / Environment",
+      "description": "No equipment needed, uses your body and surroundings",
+      "items": [
+        { "id": "floor_space", "name": "Floor Space", "default": true, "icon": "square" },
+        { "id": "wall", "name": "Wall", "default": true, "icon": "layout" },
+        { "id": "chair", "name": "Chair or Sturdy Surface", "default": false, "icon": "armchair" },
+        { "id": "stairs", "name": "Stairs", "default": false, "icon": "stairs" },
+        { "id": "outdoor_space", "name": "Outdoor Space", "default": false, "icon": "sun" }
+      ]
+    },
+    {
+      "id": "free_weights",
+      "name": "Free Weights",
+      "description": "Dumbbells, barbells, and other weighted equipment",
+      "items": [
+        { "id": "dumbbell", "name": "Dumbbells", "hasWeightRange": true, "icon": "dumbbell" },
+        { "id": "barbell", "name": "Barbell", "hasWeightRange": true, "icon": "barbell" },
+        { "id": "kettlebell", "name": "Kettlebell", "hasWeightRange": true, "icon": "kettlebell" },
+        {
+          "id": "medicine_ball",
+          "name": "Medicine Ball",
+          "hasWeightRange": true,
+          "icon": "circle"
+        },
+        { "id": "weight_plates", "name": "Weight Plates", "hasWeightRange": true, "icon": "disc" },
+        { "id": "ez_curl_bar", "name": "EZ Curl Bar", "hasWeightRange": false, "icon": "barbell" },
+        { "id": "trap_bar", "name": "Trap/Hex Bar", "hasWeightRange": false, "icon": "hexagon" }
+      ]
+    },
+    {
+      "id": "machines",
+      "name": "Machines",
+      "description": "Gym machines for guided movements",
+      "items": [
+        { "id": "cable_machine", "name": "Cable Machine", "icon": "git-pull-request" },
+        { "id": "smith_machine", "name": "Smith Machine", "icon": "columns" },
+        { "id": "leg_press", "name": "Leg Press", "icon": "chevrons-up" },
+        { "id": "leg_curl", "name": "Leg Curl Machine", "icon": "corner-down-left" },
+        { "id": "leg_extension", "name": "Leg Extension Machine", "icon": "corner-up-right" },
+        { "id": "lat_pulldown", "name": "Lat Pulldown", "icon": "arrow-down" },
+        { "id": "seated_row", "name": "Seated Row Machine", "icon": "arrow-left" },
+        { "id": "chest_press", "name": "Chest Press Machine", "icon": "maximize" },
+        { "id": "pec_deck", "name": "Pec Deck / Fly Machine", "icon": "git-merge" },
+        { "id": "shoulder_press", "name": "Shoulder Press Machine", "icon": "arrow-up" },
+        { "id": "hack_squat", "name": "Hack Squat Machine", "icon": "trending-up" },
+        { "id": "calf_raise", "name": "Calf Raise Machine", "icon": "chevron-up" },
+        { "id": "hip_abductor", "name": "Hip Abductor/Adductor", "icon": "move-horizontal" },
+        { "id": "glute_machine", "name": "Glute Kickback Machine", "icon": "corner-right-up" },
+        { "id": "assisted_pullup", "name": "Assisted Pull-up Machine", "icon": "help-circle" }
+      ]
+    },
+    {
+      "id": "cardio",
+      "name": "Cardio Equipment",
+      "description": "Machines and equipment for cardiovascular exercise",
+      "items": [
+        { "id": "treadmill", "name": "Treadmill", "icon": "activity" },
+        { "id": "stationary_bike", "name": "Stationary Bike", "icon": "circle" },
+        { "id": "spin_bike", "name": "Spin Bike", "icon": "disc" },
+        { "id": "elliptical", "name": "Elliptical", "icon": "more-horizontal" },
+        { "id": "rowing_machine", "name": "Rowing Machine", "icon": "minus" },
+        { "id": "stair_climber", "name": "Stair Climber", "icon": "trending-up" },
+        { "id": "assault_bike", "name": "Assault/Air Bike", "icon": "wind" },
+        { "id": "ski_erg", "name": "Ski Erg", "icon": "chevrons-down" },
+        { "id": "jump_rope", "name": "Jump Rope", "icon": "rotate-cw" }
+      ]
+    },
+    {
+      "id": "benches_racks",
+      "name": "Benches & Racks",
+      "description": "Benches, racks, and support structures",
+      "items": [
+        { "id": "flat_bench", "name": "Flat Bench", "icon": "minus" },
+        { "id": "adjustable_bench", "name": "Adjustable Incline Bench", "icon": "trending-up" },
+        { "id": "decline_bench", "name": "Decline Bench", "icon": "trending-down" },
+        { "id": "preacher_bench", "name": "Preacher Curl Bench", "icon": "corner-down-right" },
+        { "id": "squat_rack", "name": "Squat Rack / Power Cage", "icon": "square" },
+        { "id": "bench_press_station", "name": "Bench Press Station", "icon": "maximize-2" },
+        { "id": "hyperextension_bench", "name": "Hyperextension Bench", "icon": "corner-up-right" }
+      ]
+    },
+    {
+      "id": "pull_push",
+      "name": "Pull & Push Stations",
+      "description": "Bars and stations for pulling and pushing movements",
+      "items": [
+        { "id": "pull_up_bar", "name": "Pull-up Bar", "icon": "minus" },
+        { "id": "dip_station", "name": "Dip Station / Parallel Bars", "icon": "columns" },
+        {
+          "id": "captain_chair",
+          "name": "Captain's Chair (Leg Raise)",
+          "icon": "corner-left-down"
+        },
+        { "id": "roman_chair", "name": "Roman Chair", "icon": "corner-right-down" }
+      ]
+    },
+    {
+      "id": "bands_suspension",
+      "name": "Bands & Suspension",
+      "description": "Resistance bands and suspension training equipment",
+      "items": [
+        { "id": "resistance_band_light", "name": "Light Resistance Band", "icon": "minus" },
+        { "id": "resistance_band_medium", "name": "Medium Resistance Band", "icon": "minus" },
+        { "id": "resistance_band_heavy", "name": "Heavy Resistance Band", "icon": "minus" },
+        { "id": "mini_band", "name": "Mini Band (Hip Circle)", "icon": "circle" },
+        { "id": "trx", "name": "TRX / Suspension Trainer", "icon": "link" },
+        { "id": "gymnastic_rings", "name": "Gymnastic Rings", "icon": "target" }
+      ]
+    },
+    {
+      "id": "accessories",
+      "name": "Accessories",
+      "description": "Mats, rollers, and other workout accessories",
+      "items": [
+        { "id": "yoga_mat", "name": "Yoga / Exercise Mat", "icon": "square" },
+        { "id": "foam_roller", "name": "Foam Roller", "icon": "cylinder" },
+        { "id": "ab_wheel", "name": "Ab Wheel", "icon": "circle" },
+        { "id": "stability_ball", "name": "Stability Ball", "icon": "circle" },
+        { "id": "bosu_ball", "name": "BOSU Ball", "icon": "semicircle" },
+        { "id": "slam_ball", "name": "Slam Ball", "icon": "circle" },
+        { "id": "battle_ropes", "name": "Battle Ropes", "icon": "activity" },
+        { "id": "landmine", "name": "Landmine Attachment", "icon": "corner-up-left" },
+        { "id": "parallettes", "name": "Parallettes", "icon": "columns" },
+        { "id": "plyo_box", "name": "Plyo Box / Step", "icon": "box" },
+        { "id": "ankle_weights", "name": "Ankle Weights", "icon": "circle" },
+        { "id": "wrist_weights", "name": "Wrist Weights", "icon": "circle" },
+        { "id": "weighted_vest", "name": "Weighted Vest", "icon": "shield" }
+      ]
+    },
+    {
+      "id": "improvised",
+      "name": "Improvised / Household",
+      "description": "Common household items that can substitute for equipment",
+      "items": [
+        {
+          "id": "towel",
+          "name": "Towel",
+          "icon": "layout",
+          "substitutesFor": ["resistance_band_light"]
+        },
+        {
+          "id": "backpack",
+          "name": "Backpack (weighted)",
+          "icon": "briefcase",
+          "substitutesFor": ["weighted_vest"]
+        },
+        {
+          "id": "water_bottles",
+          "name": "Water Bottles / Jugs",
+          "icon": "droplet",
+          "substitutesFor": ["dumbbell"]
+        },
+        {
+          "id": "books",
+          "name": "Heavy Books",
+          "icon": "book",
+          "substitutesFor": ["weight_plates"]
+        },
+        {
+          "id": "door_frame",
+          "name": "Door Frame",
+          "icon": "maximize",
+          "substitutesFor": ["pull_up_bar"]
+        },
+        {
+          "id": "couch",
+          "name": "Couch / Sofa",
+          "icon": "monitor",
+          "substitutesFor": ["flat_bench"]
+        }
+      ]
+    }
+  ],
+  "spaceConstraints": [
+    {
+      "id": "no_jumping",
+      "name": "Can't Jump",
+      "description": "Apartment, downstairs neighbors, or joint issues",
+      "icon": "arrow-down",
+      "excludesTags": ["plyometric", "jumping", "high_impact"]
+    },
+    {
+      "id": "no_sprinting",
+      "name": "Can't Sprint",
+      "description": "No running space, need outdoor or track",
+      "icon": "pause",
+      "excludesTags": ["sprinting", "running"]
+    },
+    {
+      "id": "no_lying_down",
+      "name": "Can't Lie Down",
+      "description": "Limited floor space or standing only",
+      "icon": "user",
+      "excludesTags": ["supine", "prone", "floor_exercise"]
+    },
+    {
+      "id": "low_ceiling",
+      "name": "Low Ceiling",
+      "description": "Basement, attic, or low overhead clearance",
+      "icon": "minimize-2",
+      "excludesTags": ["overhead", "jumping"]
+    },
+    {
+      "id": "must_be_quiet",
+      "name": "Must Be Quiet",
+      "description": "Early morning, shared space, or noise restrictions",
+      "icon": "volume-x",
+      "excludesTags": ["loud", "high_impact", "dropping_weights"]
+    },
+    {
+      "id": "outdoor_available",
+      "name": "Outdoor Space Available",
+      "description": "Access to yard, park, or outdoor area",
+      "icon": "sun",
+      "enablesTags": ["outdoor", "sprinting", "running"]
+    }
+  ]
+}

@@ -1,0 +1,751 @@
+{
+  "bodyPart": "chest",
+  "exercises": [
+    {
+      "id": "push_up",
+      "name": "Push-up",
+      "bodyPart": "chest",
+      "targetMuscle": "pectoralis_major",
+      "secondaryMuscles": ["triceps", "anterior_deltoid", "core"],
+      "equipment": ["floor_space"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "bodyweight", "pushing"],
+      "constraints": {
+        "requiresLyingDown": true,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Start in a plank position with hands slightly wider than shoulder-width",
+        "Keep body in a straight line from head to heels",
+        "Lower chest toward the floor by bending elbows",
+        "Push back up to starting position with arms fully extended"
+      ],
+      "cues": ["Core tight", "Elbows at 45 degrees", "Full range of motion"],
+      "variations": ["diamond_push_up", "wide_push_up", "incline_push_up", "decline_push_up"],
+      "substitutions": [
+        { "equipment": ["floor_space", "chair"], "exercise": "incline_push_up" },
+        { "equipment": ["wall"], "exercise": "wall_push_up" }
+      ]
+    },
+    {
+      "id": "diamond_push_up",
+      "name": "Diamond Push-up",
+      "bodyPart": "chest",
+      "targetMuscle": "pectoralis_major",
+      "secondaryMuscles": ["triceps", "anterior_deltoid", "core"],
+      "equipment": ["floor_space"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["compound", "bodyweight", "pushing", "tricep_focus"],
+      "constraints": {
+        "requiresLyingDown": true,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Start in plank position with hands together forming a diamond shape",
+        "Position hands directly under chest with thumbs and index fingers touching",
+        "Lower chest toward hands, keeping elbows close to body",
+        "Push back up to starting position"
+      ],
+      "cues": ["Hands form diamond", "Elbows stay tight", "Control the descent"],
+      "variations": ["push_up", "close_grip_push_up"],
+      "substitutions": [{ "equipment": ["floor_space"], "exercise": "push_up" }]
+    },
+    {
+      "id": "wide_push_up",
+      "name": "Wide Push-up",
+      "bodyPart": "chest",
+      "targetMuscle": "pectoralis_major",
+      "secondaryMuscles": ["anterior_deltoid", "triceps", "serratus_anterior"],
+      "equipment": ["floor_space"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "bodyweight", "pushing", "chest_focus"],
+      "constraints": {
+        "requiresLyingDown": true,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Start in plank position with hands placed wider than shoulder-width",
+        "Keep body straight and core engaged",
+        "Lower chest toward floor, allowing elbows to flare out",
+        "Push back up to starting position"
+      ],
+      "cues": ["Hands wider than shoulders", "Feel chest stretch at bottom", "Chest to floor"],
+      "variations": ["push_up", "archer_push_up"],
+      "substitutions": [{ "equipment": ["floor_space"], "exercise": "push_up" }]
+    },
+    {
+      "id": "incline_push_up",
+      "name": "Incline Push-up",
+      "bodyPart": "chest",
+      "targetMuscle": "pectoralis_major",
+      "secondaryMuscles": ["triceps", "anterior_deltoid"],
+      "equipment": ["floor_space", "chair"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "bodyweight", "pushing", "regression"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Place hands on elevated surface like a bench, chair, or step",
+        "Walk feet back until body forms a straight line at an angle",
+        "Lower chest toward the elevated surface",
+        "Push back up to starting position"
+      ],
+      "cues": ["Higher surface = easier", "Same form as regular push-up", "Great for beginners"],
+      "variations": ["push_up", "wall_push_up"],
+      "substitutions": [{ "equipment": ["wall"], "exercise": "wall_push_up" }]
+    },
+    {
+      "id": "decline_push_up",
+      "name": "Decline Push-up",
+      "bodyPart": "chest",
+      "targetMuscle": "upper_pectoralis",
+      "secondaryMuscles": ["anterior_deltoid", "triceps", "core"],
+      "equipment": ["floor_space", "chair"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["compound", "bodyweight", "pushing", "upper_chest"],
+      "constraints": {
+        "requiresLyingDown": true,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Place feet on elevated surface with hands on floor",
+        "Position hands slightly wider than shoulder-width",
+        "Lower chest toward floor while maintaining straight body",
+        "Push back up to starting position"
+      ],
+      "cues": ["Higher feet = harder", "Targets upper chest", "Keep core tight"],
+      "variations": ["push_up", "pike_push_up"],
+      "substitutions": [{ "equipment": ["floor_space"], "exercise": "push_up" }]
+    },
+    {
+      "id": "archer_push_up",
+      "name": "Archer Push-up",
+      "bodyPart": "chest",
+      "targetMuscle": "pectoralis_major",
+      "secondaryMuscles": ["triceps", "anterior_deltoid", "core"],
+      "equipment": ["floor_space"],
+      "category": "strength",
+      "difficulty": "advanced",
+      "tags": ["compound", "bodyweight", "pushing", "unilateral"],
+      "constraints": {
+        "requiresLyingDown": true,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Start in wide push-up position with hands pointed outward",
+        "Shift weight to one arm while keeping the other arm straight",
+        "Lower toward the working arm, keeping straight arm extended",
+        "Push back up and alternate sides"
+      ],
+      "cues": [
+        "One arm does the work",
+        "Straight arm stays extended",
+        "Progress to one-arm push-up"
+      ],
+      "variations": ["wide_push_up", "one_arm_push_up"],
+      "substitutions": [{ "equipment": ["floor_space"], "exercise": "wide_push_up" }]
+    },
+    {
+      "id": "clap_push_up",
+      "name": "Clap Push-up",
+      "bodyPart": "chest",
+      "targetMuscle": "pectoralis_major",
+      "secondaryMuscles": ["triceps", "anterior_deltoid", "core"],
+      "equipment": ["floor_space"],
+      "category": "strength",
+      "difficulty": "advanced",
+      "tags": ["compound", "bodyweight", "pushing", "explosive", "plyometric"],
+      "constraints": {
+        "requiresLyingDown": true,
+        "noiseLevel": "moderate"
+      },
+      "instructions": [
+        "Start in standard push-up position",
+        "Lower chest toward floor",
+        "Explosively push up so hands leave the ground",
+        "Clap hands together and land softly back in starting position"
+      ],
+      "cues": ["Explosive push", "Land with soft elbows", "Build to this exercise"],
+      "variations": ["push_up", "plyo_push_up"],
+      "substitutions": [{ "equipment": ["floor_space"], "exercise": "push_up" }]
+    },
+    {
+      "id": "barbell_bench_press",
+      "name": "Barbell Bench Press",
+      "bodyPart": "chest",
+      "targetMuscle": "pectoralis_major",
+      "secondaryMuscles": ["triceps", "anterior_deltoid"],
+      "equipment": ["barbell", "flat_bench"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["compound", "free_weight", "pushing", "horizontal_press"],
+      "constraints": {
+        "requiresLyingDown": true,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Lie on bench with eyes under the bar, feet flat on floor",
+        "Grip bar slightly wider than shoulder-width, unrack with straight arms",
+        "Lower bar to mid-chest with control, elbows at roughly 45 degrees",
+        "Press bar back up to starting position"
+      ],
+      "cues": ["Retract shoulder blades", "Arch upper back slightly", "Drive feet into floor"],
+      "variations": ["incline_barbell_press", "close_grip_bench_press"],
+      "substitutions": [
+        { "equipment": ["dumbbell", "flat_bench"], "exercise": "dumbbell_bench_press" },
+        { "equipment": ["smith_machine", "flat_bench"], "exercise": "smith_machine_bench_press" },
+        { "equipment": ["chest_press"], "exercise": "machine_chest_press" }
+      ]
+    },
+    {
+      "id": "dumbbell_bench_press",
+      "name": "Dumbbell Bench Press",
+      "bodyPart": "chest",
+      "targetMuscle": "pectoralis_major",
+      "secondaryMuscles": ["triceps", "anterior_deltoid"],
+      "equipment": ["dumbbell", "flat_bench"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "free_weight", "pushing", "horizontal_press"],
+      "constraints": {
+        "requiresLyingDown": true,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Sit on bench with dumbbells on thighs, lie back while bringing weights to chest level",
+        "Press dumbbells up until arms are extended, palms facing forward",
+        "Lower dumbbells with control until they are at chest level",
+        "Press back up, bringing dumbbells slightly together at the top"
+      ],
+      "cues": [
+        "Greater range of motion than barbell",
+        "Control the descent",
+        "Squeeze chest at top"
+      ],
+      "variations": ["incline_dumbbell_press", "neutral_grip_dumbbell_press"],
+      "substitutions": [
+        { "equipment": ["barbell", "flat_bench"], "exercise": "barbell_bench_press" },
+        { "equipment": ["floor_space", "dumbbell"], "exercise": "dumbbell_floor_press" }
+      ]
+    },
+    {
+      "id": "incline_dumbbell_press",
+      "name": "Incline Dumbbell Press",
+      "bodyPart": "chest",
+      "targetMuscle": "upper_pectoralis",
+      "secondaryMuscles": ["anterior_deltoid", "triceps"],
+      "equipment": ["dumbbell", "adjustable_bench"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "free_weight", "pushing", "upper_chest"],
+      "constraints": {
+        "requiresLyingDown": true,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Set bench to 30-45 degree incline",
+        "Lie back with dumbbells at shoulder level",
+        "Press dumbbells up and slightly together",
+        "Lower with control to starting position"
+      ],
+      "cues": [
+        "30-45 degree angle optimal",
+        "Targets upper chest",
+        "Don't flare elbows excessively"
+      ],
+      "variations": ["dumbbell_bench_press", "incline_barbell_press"],
+      "substitutions": [
+        { "equipment": ["barbell", "adjustable_bench"], "exercise": "incline_barbell_press" },
+        { "equipment": ["cable_machine", "adjustable_bench"], "exercise": "incline_cable_press" }
+      ]
+    },
+    {
+      "id": "decline_dumbbell_press",
+      "name": "Decline Dumbbell Press",
+      "bodyPart": "chest",
+      "targetMuscle": "lower_pectoralis",
+      "secondaryMuscles": ["triceps", "anterior_deltoid"],
+      "equipment": ["dumbbell", "decline_bench"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["compound", "free_weight", "pushing", "lower_chest"],
+      "constraints": {
+        "requiresLyingDown": true,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Secure legs at top of decline bench",
+        "Lie back with dumbbells at lower chest level",
+        "Press dumbbells up toward ceiling",
+        "Lower with control back to starting position"
+      ],
+      "cues": ["Targets lower chest", "Secure your legs", "Control is key on decline"],
+      "variations": ["dumbbell_bench_press", "decline_barbell_press"],
+      "substitutions": [
+        { "equipment": ["dip_station"], "exercise": "chest_dip" },
+        { "equipment": ["dumbbell", "flat_bench"], "exercise": "dumbbell_bench_press" }
+      ]
+    },
+    {
+      "id": "dumbbell_floor_press",
+      "name": "Dumbbell Floor Press",
+      "bodyPart": "chest",
+      "targetMuscle": "pectoralis_major",
+      "secondaryMuscles": ["triceps", "anterior_deltoid"],
+      "equipment": ["dumbbell", "floor_space"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "free_weight", "pushing", "limited_rom"],
+      "constraints": {
+        "requiresLyingDown": true,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Lie on floor with knees bent, holding dumbbells",
+        "Start with dumbbells pressed up over chest",
+        "Lower until upper arms touch the floor",
+        "Pause briefly, then press back up"
+      ],
+      "cues": ["Floor limits range of motion", "Great for tricep focus", "Pause at bottom"],
+      "variations": ["dumbbell_bench_press", "barbell_floor_press"],
+      "substitutions": [
+        { "equipment": ["dumbbell", "flat_bench"], "exercise": "dumbbell_bench_press" }
+      ]
+    },
+    {
+      "id": "dumbbell_chest_fly",
+      "name": "Dumbbell Chest Fly",
+      "bodyPart": "chest",
+      "targetMuscle": "pectoralis_major",
+      "secondaryMuscles": ["anterior_deltoid", "biceps"],
+      "equipment": ["dumbbell", "flat_bench"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "free_weight", "chest_stretch"],
+      "constraints": {
+        "requiresLyingDown": true,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Lie on bench with dumbbells pressed up, palms facing each other",
+        "With a slight bend in elbows, lower dumbbells out to sides in an arc",
+        "Lower until you feel a stretch in the chest",
+        "Squeeze chest to bring dumbbells back together"
+      ],
+      "cues": ["Slight elbow bend throughout", "Hug a tree motion", "Feel the stretch"],
+      "variations": ["incline_dumbbell_fly", "cable_crossover"],
+      "substitutions": [
+        { "equipment": ["cable_machine"], "exercise": "cable_crossover" },
+        { "equipment": ["pec_deck"], "exercise": "pec_deck_fly" },
+        { "equipment": ["resistance_band_medium"], "exercise": "resistance_band_fly" }
+      ]
+    },
+    {
+      "id": "incline_dumbbell_fly",
+      "name": "Incline Dumbbell Fly",
+      "bodyPart": "chest",
+      "targetMuscle": "upper_pectoralis",
+      "secondaryMuscles": ["anterior_deltoid", "biceps"],
+      "equipment": ["dumbbell", "adjustable_bench"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "free_weight", "upper_chest", "chest_stretch"],
+      "constraints": {
+        "requiresLyingDown": true,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Set bench to 30-45 degree incline",
+        "Start with dumbbells pressed up, palms facing each other",
+        "Lower dumbbells out to sides with slight elbow bend",
+        "Squeeze chest to bring weights back together"
+      ],
+      "cues": ["Targets upper chest", "Control the stretch", "Light to moderate weight"],
+      "variations": ["dumbbell_chest_fly", "low_cable_fly"],
+      "substitutions": [{ "equipment": ["cable_machine"], "exercise": "low_cable_fly" }]
+    },
+    {
+      "id": "cable_crossover",
+      "name": "Cable Crossover",
+      "bodyPart": "chest",
+      "targetMuscle": "pectoralis_major",
+      "secondaryMuscles": ["anterior_deltoid", "biceps"],
+      "equipment": ["cable_machine"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["isolation", "machine", "chest_stretch", "constant_tension"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Set cables to high position, stand in center with handles in each hand",
+        "Step forward with one foot, lean slightly forward",
+        "With slight elbow bend, bring handles together in front of chest",
+        "Return with control to starting position, feeling the stretch"
+      ],
+      "cues": ["Constant tension throughout", "Cross hands slightly at bottom", "Squeeze chest"],
+      "variations": ["low_cable_fly", "mid_cable_fly"],
+      "substitutions": [
+        { "equipment": ["dumbbell", "flat_bench"], "exercise": "dumbbell_chest_fly" },
+        { "equipment": ["resistance_band_medium", "door_frame"], "exercise": "resistance_band_fly" }
+      ]
+    },
+    {
+      "id": "low_cable_fly",
+      "name": "Low Cable Fly",
+      "bodyPart": "chest",
+      "targetMuscle": "upper_pectoralis",
+      "secondaryMuscles": ["anterior_deltoid", "biceps"],
+      "equipment": ["cable_machine"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["isolation", "machine", "upper_chest", "constant_tension"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Set cables to lowest position",
+        "Grip handles and step forward into split stance",
+        "With slight elbow bend, bring handles up and together at chest height",
+        "Lower with control back to starting position"
+      ],
+      "cues": ["Low to high arc", "Targets upper chest", "Squeeze at top"],
+      "variations": ["cable_crossover", "incline_dumbbell_fly"],
+      "substitutions": [
+        { "equipment": ["dumbbell", "adjustable_bench"], "exercise": "incline_dumbbell_fly" }
+      ]
+    },
+    {
+      "id": "pec_deck_fly",
+      "name": "Pec Deck Fly",
+      "bodyPart": "chest",
+      "targetMuscle": "pectoralis_major",
+      "secondaryMuscles": ["anterior_deltoid"],
+      "equipment": ["pec_deck"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "machine", "chest_squeeze"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Adjust seat so handles are at chest level",
+        "Sit with back flat against pad, grip handles or place forearms on pads",
+        "Squeeze chest to bring handles/pads together in front",
+        "Return with control, feeling the stretch in chest"
+      ],
+      "cues": ["Keep back against pad", "Focus on squeezing chest", "Control the negative"],
+      "variations": ["cable_crossover"],
+      "substitutions": [
+        { "equipment": ["cable_machine"], "exercise": "cable_crossover" },
+        { "equipment": ["dumbbell", "flat_bench"], "exercise": "dumbbell_chest_fly" }
+      ]
+    },
+    {
+      "id": "machine_chest_press",
+      "name": "Machine Chest Press",
+      "bodyPart": "chest",
+      "targetMuscle": "pectoralis_major",
+      "secondaryMuscles": ["triceps", "anterior_deltoid"],
+      "equipment": ["chest_press"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "machine", "pushing", "horizontal_press"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Adjust seat so handles align with mid-chest",
+        "Sit with back flat against pad, grip handles",
+        "Press handles forward until arms are extended",
+        "Return with control to starting position"
+      ],
+      "cues": ["Great for beginners", "Fixed path reduces injury risk", "Focus on chest squeeze"],
+      "variations": ["incline_machine_press"],
+      "substitutions": [
+        { "equipment": ["dumbbell", "flat_bench"], "exercise": "dumbbell_bench_press" },
+        { "equipment": ["barbell", "flat_bench"], "exercise": "barbell_bench_press" }
+      ]
+    },
+    {
+      "id": "smith_machine_bench_press",
+      "name": "Smith Machine Bench Press",
+      "bodyPart": "chest",
+      "targetMuscle": "pectoralis_major",
+      "secondaryMuscles": ["triceps", "anterior_deltoid"],
+      "equipment": ["smith_machine", "flat_bench"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "machine", "pushing", "horizontal_press"],
+      "constraints": {
+        "requiresLyingDown": true,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Position flat bench under Smith machine bar",
+        "Lie back with bar over mid-chest",
+        "Unrack and lower bar to chest with control",
+        "Press bar up until arms are extended"
+      ],
+      "cues": ["Fixed bar path", "Good for solo training", "Rotate wrists to unrack"],
+      "variations": ["incline_smith_press"],
+      "substitutions": [
+        { "equipment": ["barbell", "flat_bench"], "exercise": "barbell_bench_press" },
+        { "equipment": ["dumbbell", "flat_bench"], "exercise": "dumbbell_bench_press" }
+      ]
+    },
+    {
+      "id": "chest_dip",
+      "name": "Chest Dip",
+      "bodyPart": "chest",
+      "targetMuscle": "lower_pectoralis",
+      "secondaryMuscles": ["triceps", "anterior_deltoid"],
+      "equipment": ["dip_station"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["compound", "bodyweight", "pushing", "lower_chest"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Grip parallel bars and lift yourself up with arms extended",
+        "Lean forward slightly to emphasize chest",
+        "Lower body by bending elbows until you feel a stretch in chest",
+        "Push back up to starting position"
+      ],
+      "cues": ["Lean forward for chest focus", "Elbows flare slightly", "Deep stretch at bottom"],
+      "variations": ["tricep_dip", "weighted_dip"],
+      "substitutions": [
+        { "equipment": ["flat_bench", "floor_space"], "exercise": "bench_dip" },
+        { "equipment": ["dumbbell", "decline_bench"], "exercise": "decline_dumbbell_press" }
+      ]
+    },
+    {
+      "id": "resistance_band_chest_press",
+      "name": "Resistance Band Chest Press",
+      "bodyPart": "chest",
+      "targetMuscle": "pectoralis_major",
+      "secondaryMuscles": ["triceps", "anterior_deltoid"],
+      "equipment": ["resistance_band_medium", "door_frame"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "resistance_band", "pushing", "portable"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Anchor band at chest height behind you",
+        "Hold handles at chest level, step forward for tension",
+        "Press hands forward until arms are extended",
+        "Return with control to starting position"
+      ],
+      "cues": ["Increasing resistance as you press", "Great for travel", "Maintain tension"],
+      "variations": ["resistance_band_fly"],
+      "substitutions": [
+        { "equipment": ["dumbbell"], "exercise": "standing_dumbbell_press" },
+        { "equipment": ["cable_machine"], "exercise": "cable_chest_press" }
+      ]
+    },
+    {
+      "id": "resistance_band_fly",
+      "name": "Resistance Band Fly",
+      "bodyPart": "chest",
+      "targetMuscle": "pectoralis_major",
+      "secondaryMuscles": ["anterior_deltoid", "biceps"],
+      "equipment": ["resistance_band_light", "door_frame"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "resistance_band", "portable", "chest_stretch"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Anchor band at chest height behind you",
+        "Hold handles with arms extended out to sides",
+        "Bring hands together in front of chest with slight elbow bend",
+        "Return with control to starting position"
+      ],
+      "cues": ["Hug a tree motion", "Feel the chest squeeze", "Control the return"],
+      "variations": ["resistance_band_chest_press"],
+      "substitutions": [
+        { "equipment": ["cable_machine"], "exercise": "cable_crossover" },
+        { "equipment": ["dumbbell", "flat_bench"], "exercise": "dumbbell_chest_fly" }
+      ]
+    },
+    {
+      "id": "trx_chest_press",
+      "name": "TRX Chest Press",
+      "bodyPart": "chest",
+      "targetMuscle": "pectoralis_major",
+      "secondaryMuscles": ["triceps", "anterior_deltoid", "core"],
+      "equipment": ["trx"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["compound", "bodyweight", "pushing", "suspension", "instability"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "ceilingHeight": "normal",
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Hold TRX handles and lean forward with arms extended",
+        "Keep body in a straight line, core engaged",
+        "Lower chest toward hands by bending elbows",
+        "Push back up to starting position"
+      ],
+      "cues": ["Steeper angle = harder", "Core stability crucial", "Control throughout"],
+      "variations": ["trx_fly", "push_up"],
+      "substitutions": [{ "equipment": ["floor_space"], "exercise": "push_up" }]
+    },
+    {
+      "id": "trx_fly",
+      "name": "TRX Fly",
+      "bodyPart": "chest",
+      "targetMuscle": "pectoralis_major",
+      "secondaryMuscles": ["anterior_deltoid", "biceps", "core"],
+      "equipment": ["trx"],
+      "category": "strength",
+      "difficulty": "advanced",
+      "tags": ["isolation", "bodyweight", "suspension", "instability", "chest_stretch"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "ceilingHeight": "normal",
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Hold TRX handles and lean forward with arms extended",
+        "With slight elbow bend, open arms out to sides",
+        "Lower until you feel a stretch in chest",
+        "Squeeze chest to bring handles back together"
+      ],
+      "cues": ["Very challenging exercise", "Start with less angle", "Core engaged throughout"],
+      "variations": ["trx_chest_press", "dumbbell_chest_fly"],
+      "substitutions": [
+        { "equipment": ["dumbbell", "flat_bench"], "exercise": "dumbbell_chest_fly" },
+        { "equipment": ["cable_machine"], "exercise": "cable_crossover" }
+      ]
+    },
+    {
+      "id": "landmine_press",
+      "name": "Landmine Press",
+      "bodyPart": "chest",
+      "targetMuscle": "upper_pectoralis",
+      "secondaryMuscles": ["anterior_deltoid", "triceps", "core"],
+      "equipment": ["barbell", "landmine"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["compound", "free_weight", "pushing", "upper_chest", "unilateral"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Set barbell in landmine attachment or corner",
+        "Hold end of barbell at shoulder height with one or both hands",
+        "Press the barbell up and forward at an angle",
+        "Lower with control back to starting position"
+      ],
+      "cues": [
+        "Arc motion unique to this exercise",
+        "Targets upper chest and shoulders",
+        "Can go heavy"
+      ],
+      "variations": ["single_arm_landmine_press"],
+      "substitutions": [
+        { "equipment": ["dumbbell", "adjustable_bench"], "exercise": "incline_dumbbell_press" }
+      ]
+    },
+    {
+      "id": "svend_press",
+      "name": "Svend Press",
+      "bodyPart": "chest",
+      "targetMuscle": "pectoralis_major",
+      "secondaryMuscles": ["anterior_deltoid", "triceps"],
+      "equipment": ["weight_plates"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "free_weight", "chest_squeeze", "activation"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Hold two weight plates together at chest level, squeezing them between your palms",
+        "Keep constant inward pressure on the plates",
+        "Press plates straight out in front of you",
+        "Return to chest while maintaining squeeze"
+      ],
+      "cues": ["Constant squeezing tension", "Great chest activation", "Light weight is fine"],
+      "variations": ["hex_press"],
+      "substitutions": [{ "equipment": ["dumbbell", "flat_bench"], "exercise": "hex_press" }]
+    },
+    {
+      "id": "hex_press",
+      "name": "Hex Press",
+      "bodyPart": "chest",
+      "targetMuscle": "pectoralis_major",
+      "secondaryMuscles": ["triceps", "anterior_deltoid"],
+      "equipment": ["dumbbell", "flat_bench"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "free_weight", "pushing", "chest_squeeze"],
+      "constraints": {
+        "requiresLyingDown": true,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Lie on bench holding dumbbells together over chest with neutral grip",
+        "Keep dumbbells pressed together throughout the movement",
+        "Lower dumbbells to chest while maintaining contact between them",
+        "Press back up while squeezing dumbbells together"
+      ],
+      "cues": ["Dumbbells stay touching", "Constant inward pressure", "Great chest activation"],
+      "variations": ["dumbbell_bench_press", "svend_press"],
+      "substitutions": [
+        { "equipment": ["dumbbell", "flat_bench"], "exercise": "dumbbell_bench_press" }
+      ]
+    },
+    {
+      "id": "wall_push_up",
+      "name": "Wall Push-up",
+      "bodyPart": "chest",
+      "targetMuscle": "pectoralis_major",
+      "secondaryMuscles": ["triceps", "anterior_deltoid"],
+      "equipment": ["wall"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "bodyweight", "pushing", "regression"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Stand facing a wall at arm's length",
+        "Place hands on wall at shoulder height and width",
+        "Bend elbows to bring chest toward wall",
+        "Push back to starting position"
+      ],
+      "cues": [
+        "Easiest push-up variation",
+        "Great for beginners or rehab",
+        "Progress to incline push-up"
+      ],
+      "variations": ["incline_push_up", "push_up"],
+      "substitutions": [{ "equipment": ["floor_space", "chair"], "exercise": "incline_push_up" }]
+    }
+  ]
+}

@@ -1,0 +1,535 @@
+{
+  "bodyPart": "shoulders",
+  "exercises": [
+    {
+      "id": "overhead_press_barbell",
+      "name": "Barbell Overhead Press",
+      "bodyPart": "shoulders",
+      "targetMuscle": "anterior_deltoid",
+      "secondaryMuscles": ["lateral_deltoid", "triceps", "upper_chest", "core"],
+      "equipment": ["barbell"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["compound", "pressing", "standing"],
+      "constraints": { "ceilingHeight": "high", "noiseLevel": "moderate" },
+      "instructions": [
+        "Stand with feet shoulder-width apart, barbell racked at shoulder height",
+        "Grip the bar slightly wider than shoulder width with palms facing forward",
+        "Unrack and hold the bar at collarbone level, elbows slightly in front of the bar",
+        "Brace your core and squeeze your glutes",
+        "Press the bar straight up, moving your head back slightly to clear the bar path",
+        "Lock out arms overhead with the bar directly over mid-foot",
+        "Lower the bar under control back to the starting position"
+      ],
+      "cues": [
+        "Keep your core tight throughout",
+        "Push your head through once the bar passes your forehead",
+        "Squeeze glutes to prevent lower back arch",
+        "Bar path should be straight up and down"
+      ]
+    },
+    {
+      "id": "overhead_press_dumbbell",
+      "name": "Dumbbell Overhead Press",
+      "bodyPart": "shoulders",
+      "targetMuscle": "anterior_deltoid",
+      "secondaryMuscles": ["lateral_deltoid", "triceps", "core"],
+      "equipment": ["dumbbell"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "pressing", "unilateral"],
+      "constraints": { "ceilingHeight": "high", "noiseLevel": "quiet" },
+      "instructions": [
+        "Sit or stand with a dumbbell in each hand at shoulder height",
+        "Position dumbbells with palms facing forward, elbows bent at 90 degrees",
+        "Brace your core and press both dumbbells straight overhead",
+        "Bring dumbbells together at the top without clanking",
+        "Lower dumbbells back to shoulder height with control"
+      ],
+      "cues": [
+        "Keep wrists stacked over elbows",
+        "Don't let elbows flare too wide",
+        "Control the descent, don't drop the weights",
+        "Exhale as you press up"
+      ]
+    },
+    {
+      "id": "overhead_press_kettlebell",
+      "name": "Kettlebell Overhead Press",
+      "bodyPart": "shoulders",
+      "targetMuscle": "anterior_deltoid",
+      "secondaryMuscles": ["lateral_deltoid", "triceps", "core", "forearms"],
+      "equipment": ["kettlebell"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["compound", "pressing", "unilateral", "grip"],
+      "constraints": { "ceilingHeight": "high", "noiseLevel": "quiet" },
+      "instructions": [
+        "Clean the kettlebell to the rack position at shoulder height",
+        "Keep the kettlebell close to your body with elbow tucked",
+        "Rotate your wrist as you press so your palm faces forward at the top",
+        "Lock out arm completely overhead",
+        "Reverse the motion to return to the rack position"
+      ],
+      "cues": [
+        "Keep the bell close to your centerline",
+        "Let the bell rotate naturally as you press",
+        "Engage your lat to stabilize the shoulder",
+        "Keep your core braced throughout"
+      ]
+    },
+    {
+      "id": "arnold_press",
+      "name": "Arnold Press",
+      "bodyPart": "shoulders",
+      "targetMuscle": "anterior_deltoid",
+      "secondaryMuscles": ["lateral_deltoid", "triceps"],
+      "equipment": ["dumbbell", "adjustable_bench"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["compound", "pressing", "rotational"],
+      "constraints": { "ceilingHeight": "normal", "noiseLevel": "quiet" },
+      "instructions": [
+        "Sit on a bench with back support, dumbbells at shoulder height",
+        "Start with palms facing your body, like the top of a curl",
+        "As you press up, rotate your wrists so palms face forward at the top",
+        "Press until arms are fully extended overhead",
+        "Reverse the rotation as you lower back to start"
+      ],
+      "cues": [
+        "Smooth rotation throughout the movement",
+        "Don't rush the rotation, it happens throughout the press",
+        "Keep elbows from flaring too wide",
+        "Control the weight on the way down"
+      ]
+    },
+    {
+      "id": "lateral_raise_dumbbell",
+      "name": "Dumbbell Lateral Raise",
+      "bodyPart": "shoulders",
+      "targetMuscle": "lateral_deltoid",
+      "secondaryMuscles": ["anterior_deltoid", "traps"],
+      "equipment": ["dumbbell"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "lateral"],
+      "constraints": { "ceilingHeight": "normal", "noiseLevel": "quiet" },
+      "instructions": [
+        "Stand with feet shoulder-width apart, dumbbell in each hand at your sides",
+        "Keep a slight bend in your elbows throughout",
+        "Raise arms out to the sides until parallel to the floor",
+        "Pause briefly at the top",
+        "Lower with control back to starting position"
+      ],
+      "cues": [
+        "Lead with your elbows, not your hands",
+        "Don't swing or use momentum",
+        "Keep traps relaxed, don't shrug",
+        "Thumbs slightly down at the top to emphasize lateral delt"
+      ]
+    },
+    {
+      "id": "lateral_raise_cable",
+      "name": "Cable Lateral Raise",
+      "bodyPart": "shoulders",
+      "targetMuscle": "lateral_deltoid",
+      "secondaryMuscles": ["anterior_deltoid"],
+      "equipment": ["cable_machine"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "lateral", "constant_tension"],
+      "constraints": { "ceilingHeight": "normal", "noiseLevel": "quiet" },
+      "instructions": [
+        "Set cable to lowest position with single handle attachment",
+        "Stand sideways to the machine, grab handle with far hand",
+        "Keep slight bend in elbow, arm hanging in front of body",
+        "Raise arm out to the side until parallel to floor",
+        "Lower with control and repeat, then switch sides"
+      ],
+      "cues": [
+        "Constant tension throughout the movement",
+        "Don't lean away from the cable",
+        "Lead with the elbow",
+        "Control the negative portion"
+      ]
+    },
+    {
+      "id": "lateral_raise_band",
+      "name": "Resistance Band Lateral Raise",
+      "bodyPart": "shoulders",
+      "targetMuscle": "lateral_deltoid",
+      "secondaryMuscles": ["anterior_deltoid"],
+      "equipment": ["resistance_band_light"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "lateral", "home_friendly"],
+      "constraints": { "ceilingHeight": "normal", "noiseLevel": "quiet" },
+      "instructions": [
+        "Stand on the center of a resistance band with feet shoulder-width apart",
+        "Hold a handle in each hand at your sides",
+        "Keep slight bend in elbows throughout",
+        "Raise arms out to sides until parallel to floor",
+        "Lower with control back to start"
+      ],
+      "cues": [
+        "Band tension increases at the top, control it",
+        "Keep core tight to prevent swaying",
+        "Don't shrug your shoulders",
+        "Smooth controlled movement throughout"
+      ]
+    },
+    {
+      "id": "front_raise_dumbbell",
+      "name": "Dumbbell Front Raise",
+      "bodyPart": "shoulders",
+      "targetMuscle": "anterior_deltoid",
+      "secondaryMuscles": ["lateral_deltoid", "upper_chest"],
+      "equipment": ["dumbbell"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "frontal"],
+      "constraints": { "ceilingHeight": "normal", "noiseLevel": "quiet" },
+      "instructions": [
+        "Stand with feet shoulder-width apart, dumbbells in front of thighs",
+        "Palms can face down or toward each other (neutral grip)",
+        "Keep slight bend in elbows",
+        "Raise one or both arms in front until parallel to floor",
+        "Lower with control and repeat"
+      ],
+      "cues": [
+        "Don't swing the weights",
+        "Keep core braced to prevent leaning back",
+        "Stop at shoulder height, no higher needed",
+        "Alternate arms or do both together"
+      ]
+    },
+    {
+      "id": "front_raise_plate",
+      "name": "Plate Front Raise",
+      "bodyPart": "shoulders",
+      "targetMuscle": "anterior_deltoid",
+      "secondaryMuscles": ["lateral_deltoid", "upper_chest", "forearms"],
+      "equipment": ["weight_plates"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "frontal", "grip"],
+      "constraints": { "ceilingHeight": "normal", "noiseLevel": "quiet" },
+      "instructions": [
+        "Stand holding a weight plate with both hands at 9 and 3 o'clock positions",
+        "Hold plate at thigh level with arms extended",
+        "Keep slight bend in elbows",
+        "Raise plate in front until arms are parallel to floor",
+        "Lower with control back to starting position"
+      ],
+      "cues": [
+        "Squeeze the plate tight throughout",
+        "Don't lean back as you raise",
+        "Control the descent",
+        "Keep shoulders down, don't shrug"
+      ]
+    },
+    {
+      "id": "rear_delt_fly_dumbbell",
+      "name": "Bent-Over Dumbbell Rear Delt Fly",
+      "bodyPart": "shoulders",
+      "targetMuscle": "posterior_deltoid",
+      "secondaryMuscles": ["rhomboids", "middle_traps"],
+      "equipment": ["dumbbell"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "rear_delt", "bent_over"],
+      "constraints": { "ceilingHeight": "normal", "noiseLevel": "quiet" },
+      "instructions": [
+        "Hold dumbbells and hinge at the hips until torso is nearly parallel to floor",
+        "Let arms hang straight down, palms facing each other",
+        "Keep slight bend in elbows throughout",
+        "Raise arms out to sides, squeezing shoulder blades together",
+        "Lower with control back to start"
+      ],
+      "cues": [
+        "Keep back flat, don't round",
+        "Lead with elbows, not hands",
+        "Squeeze at the top for a moment",
+        "Don't use momentum or swing"
+      ]
+    },
+    {
+      "id": "rear_delt_fly_cable",
+      "name": "Cable Rear Delt Fly",
+      "bodyPart": "shoulders",
+      "targetMuscle": "posterior_deltoid",
+      "secondaryMuscles": ["rhomboids", "middle_traps"],
+      "equipment": ["cable_machine"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["isolation", "rear_delt", "constant_tension"],
+      "constraints": { "ceilingHeight": "normal", "noiseLevel": "quiet" },
+      "instructions": [
+        "Set cables at upper chest height with no attachments or rope handles",
+        "Stand centered between cables, grab left cable with right hand, right with left",
+        "Step back slightly, arms extended in front crossing over",
+        "Pull cables apart and back, keeping arms at shoulder height",
+        "Squeeze shoulder blades together at the end position",
+        "Return to start with control"
+      ],
+      "cues": [
+        "Keep slight bend in elbows",
+        "Don't shrug shoulders up",
+        "Focus on squeezing rear delts",
+        "Control the cables back to start"
+      ]
+    },
+    {
+      "id": "reverse_pec_deck",
+      "name": "Reverse Pec Deck",
+      "bodyPart": "shoulders",
+      "targetMuscle": "posterior_deltoid",
+      "secondaryMuscles": ["rhomboids", "middle_traps"],
+      "equipment": ["cable_machine"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "rear_delt", "machine"],
+      "constraints": { "ceilingHeight": "normal", "noiseLevel": "quiet" },
+      "instructions": [
+        "Adjust the pec deck so handles are at shoulder height when seated facing the pad",
+        "Sit facing the machine, chest against the pad",
+        "Grip handles with arms extended in front",
+        "Open arms out to the sides, squeezing shoulder blades together",
+        "Return to start with control"
+      ],
+      "cues": [
+        "Keep chest pressed against pad",
+        "Don't use body momentum",
+        "Squeeze rear delts at the end range",
+        "Control the return phase"
+      ]
+    },
+    {
+      "id": "face_pull",
+      "name": "Cable Face Pull",
+      "bodyPart": "shoulders",
+      "targetMuscle": "posterior_deltoid",
+      "secondaryMuscles": ["rhomboids", "middle_traps", "external_rotators"],
+      "equipment": ["cable_machine"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "rear_delt", "rotator_cuff", "posture"],
+      "constraints": { "ceilingHeight": "normal", "noiseLevel": "quiet" },
+      "instructions": [
+        "Set cable at upper chest to face height with rope attachment",
+        "Grab rope with palms facing down, step back to create tension",
+        "Pull rope toward your face, separating hands as you pull",
+        "Pull until hands are beside your ears, elbows high and back",
+        "Squeeze shoulder blades together at the end",
+        "Return to start with control"
+      ],
+      "cues": [
+        "Keep elbows high throughout",
+        "Pull to your face, not your chest",
+        "External rotate at the end of the movement",
+        "Don't lean back excessively"
+      ]
+    },
+    {
+      "id": "upright_row_barbell",
+      "name": "Barbell Upright Row",
+      "bodyPart": "shoulders",
+      "targetMuscle": "lateral_deltoid",
+      "secondaryMuscles": ["anterior_deltoid", "traps", "biceps"],
+      "equipment": ["barbell"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["compound", "pulling"],
+      "constraints": { "ceilingHeight": "normal", "noiseLevel": "quiet" },
+      "instructions": [
+        "Stand with feet shoulder-width apart, grip barbell with hands slightly narrower than shoulders",
+        "Let bar hang at arm's length in front of thighs",
+        "Pull bar straight up along your body, leading with elbows",
+        "Raise until bar reaches upper chest level, elbows pointing out and up",
+        "Lower with control back to start"
+      ],
+      "cues": [
+        "Keep the bar close to your body",
+        "Lead with elbows, not hands",
+        "Don't go too high if you feel shoulder impingement",
+        "Wider grip is easier on shoulders"
+      ]
+    },
+    {
+      "id": "upright_row_dumbbell",
+      "name": "Dumbbell Upright Row",
+      "bodyPart": "shoulders",
+      "targetMuscle": "lateral_deltoid",
+      "secondaryMuscles": ["anterior_deltoid", "traps", "biceps"],
+      "equipment": ["dumbbell"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "pulling", "unilateral"],
+      "constraints": { "ceilingHeight": "normal", "noiseLevel": "quiet" },
+      "instructions": [
+        "Stand with feet shoulder-width apart, dumbbell in each hand",
+        "Let dumbbells hang at arm's length in front of thighs, palms facing body",
+        "Pull dumbbells up along your body, leading with elbows",
+        "Raise until dumbbells reach upper chest level",
+        "Lower with control back to start"
+      ],
+      "cues": [
+        "More shoulder-friendly than barbell version",
+        "Keep dumbbells close to body",
+        "Lead with elbows",
+        "Stop if you feel any shoulder pinching"
+      ]
+    },
+    {
+      "id": "shrug_dumbbell",
+      "name": "Dumbbell Shrug",
+      "bodyPart": "shoulders",
+      "targetMuscle": "upper_traps",
+      "secondaryMuscles": ["levator_scapulae"],
+      "equipment": ["dumbbell"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "traps"],
+      "constraints": { "ceilingHeight": "normal", "noiseLevel": "quiet" },
+      "instructions": [
+        "Stand with feet shoulder-width apart, dumbbell in each hand at sides",
+        "Let arms hang fully extended, palms facing your body",
+        "Shrug shoulders straight up toward your ears",
+        "Hold briefly at the top",
+        "Lower with control back to start"
+      ],
+      "cues": [
+        "Straight up and down, no rolling",
+        "Don't bend elbows",
+        "Hold the squeeze at the top",
+        "Keep head neutral, don't jut chin forward"
+      ]
+    },
+    {
+      "id": "shrug_barbell",
+      "name": "Barbell Shrug",
+      "bodyPart": "shoulders",
+      "targetMuscle": "upper_traps",
+      "secondaryMuscles": ["levator_scapulae"],
+      "equipment": ["barbell"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "traps"],
+      "constraints": { "ceilingHeight": "normal", "noiseLevel": "quiet" },
+      "instructions": [
+        "Stand with feet shoulder-width apart, barbell in front of thighs",
+        "Grip bar slightly wider than shoulder width, arms fully extended",
+        "Shrug shoulders straight up toward ears",
+        "Hold briefly at the top",
+        "Lower with control back to start"
+      ],
+      "cues": [
+        "Keep arms straight throughout",
+        "Don't roll shoulders",
+        "Pause at the top for full contraction",
+        "Use straps if grip is limiting"
+      ]
+    },
+    {
+      "id": "pike_pushup",
+      "name": "Pike Push-Up",
+      "bodyPart": "shoulders",
+      "targetMuscle": "anterior_deltoid",
+      "secondaryMuscles": ["triceps", "upper_chest", "core"],
+      "equipment": ["floor_space"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["compound", "pressing", "bodyweight", "home_friendly"],
+      "constraints": { "ceilingHeight": "normal", "noiseLevel": "quiet" },
+      "instructions": [
+        "Start in a push-up position, then walk hands back and hips up into a pike/downward dog position",
+        "Hands shoulder-width apart, head between arms looking at feet",
+        "Bend elbows and lower head toward the floor between your hands",
+        "Push back up to the starting pike position",
+        "Keep hips high throughout the movement"
+      ],
+      "cues": [
+        "The steeper the pike, the harder the exercise",
+        "Head goes forward and down, not straight down",
+        "Keep core tight",
+        "Elbows track at 45 degrees, not flared"
+      ]
+    },
+    {
+      "id": "wall_handstand_pushup",
+      "name": "Wall Handstand Push-Up",
+      "bodyPart": "shoulders",
+      "targetMuscle": "anterior_deltoid",
+      "secondaryMuscles": ["triceps", "upper_chest", "core", "traps"],
+      "equipment": ["wall", "floor_space"],
+      "category": "strength",
+      "difficulty": "advanced",
+      "tags": ["compound", "pressing", "bodyweight", "inverted"],
+      "constraints": { "ceilingHeight": "high", "noiseLevel": "quiet" },
+      "instructions": [
+        "Kick up into a handstand with your back facing the wall, heels resting on wall",
+        "Hands shoulder-width apart, fingers spread wide",
+        "Brace core and squeeze glutes to maintain straight body line",
+        "Bend elbows to lower head toward the floor",
+        "Push back up to full arm extension",
+        "Start with partial range of motion and progress deeper"
+      ],
+      "cues": [
+        "Keep body tight like a plank",
+        "Head goes slightly forward as you descend",
+        "Don't arch lower back",
+        "Use a mat or pillow under head when learning"
+      ]
+    },
+    {
+      "id": "band_pull_apart",
+      "name": "Band Pull-Apart",
+      "bodyPart": "shoulders",
+      "targetMuscle": "posterior_deltoid",
+      "secondaryMuscles": ["rhomboids", "middle_traps", "external_rotators"],
+      "equipment": ["resistance_band_light"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "rear_delt", "posture", "home_friendly", "warmup"],
+      "constraints": { "ceilingHeight": "normal", "noiseLevel": "quiet" },
+      "instructions": [
+        "Hold resistance band in front of you at shoulder height with both hands",
+        "Arms extended, hands about shoulder-width apart on the band",
+        "Keep arms straight and pull the band apart by moving hands out to sides",
+        "Squeeze shoulder blades together at the end position",
+        "Return to start with control"
+      ],
+      "cues": [
+        "Keep arms at shoulder height throughout",
+        "Don't shrug shoulders",
+        "Squeeze shoulder blades together at the end",
+        "Control the return, don't let the band snap back"
+      ]
+    },
+    {
+      "id": "landmine_press",
+      "name": "Landmine Press",
+      "bodyPart": "shoulders",
+      "targetMuscle": "anterior_deltoid",
+      "secondaryMuscles": ["upper_chest", "triceps", "core"],
+      "equipment": ["landmine", "barbell"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["compound", "pressing", "unilateral", "shoulder_friendly"],
+      "constraints": { "ceilingHeight": "normal", "noiseLevel": "moderate" },
+      "instructions": [
+        "Set up barbell in landmine attachment or wedged into a corner",
+        "Stand facing the end of the bar, grab it with one hand at shoulder height",
+        "Position feet staggered or square, core braced",
+        "Press the bar up and forward in an arc",
+        "Lower with control and repeat, then switch arms"
+      ],
+      "cues": [
+        "Arc path is easier on shoulders than straight overhead",
+        "Keep core tight to prevent rotation",
+        "Don't lean back excessively",
+        "Great for those with shoulder mobility issues"
+      ]
+    }
+  ]
+}

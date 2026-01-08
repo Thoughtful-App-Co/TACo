@@ -1,0 +1,137 @@
+{
+  "version": "1.0.0",
+  "templates": [
+    {
+      "id": "bodyweight_only",
+      "name": "Bodyweight Only",
+      "description": "No equipment needed - work out anywhere",
+      "icon": "user",
+      "suggestedFor": "Travel, beginners, hotel rooms, anywhere",
+      "equipment": ["floor_space", "wall"],
+      "constraints": {
+        "noJumping": false,
+        "noSprinting": true,
+        "noLyingDown": false,
+        "lowCeiling": false,
+        "mustBeQuiet": false,
+        "outdoorAvailable": false
+      }
+    },
+    {
+      "id": "minimal_home",
+      "name": "Minimal Home",
+      "description": "Basic home setup with resistance bands and light weights",
+      "icon": "home",
+      "suggestedFor": "Apartment dwellers, home fitness beginners",
+      "equipment": [
+        "floor_space",
+        "wall",
+        "chair",
+        "yoga_mat",
+        "resistance_band_light",
+        "resistance_band_medium",
+        "mini_band"
+      ],
+      "constraints": {
+        "noJumping": true,
+        "noSprinting": true,
+        "noLyingDown": false,
+        "lowCeiling": false,
+        "mustBeQuiet": true,
+        "outdoorAvailable": false
+      }
+    },
+    {
+      "id": "dumbbell_home",
+      "name": "Dumbbell Home Gym",
+      "description": "Home setup with dumbbells and an adjustable bench",
+      "icon": "dumbbell",
+      "suggestedFor": "Serious home gym, garage gym basics",
+      "equipment": [
+        "floor_space",
+        "wall",
+        "yoga_mat",
+        "dumbbell",
+        "adjustable_bench",
+        "resistance_band_light",
+        "resistance_band_medium",
+        "resistance_band_heavy",
+        "pull_up_bar"
+      ],
+      "equipmentDetails": {
+        "dumbbell": { "minWeight": 5, "maxWeight": 50 }
+      },
+      "constraints": {
+        "noJumping": false,
+        "noSprinting": true,
+        "noLyingDown": false,
+        "lowCeiling": false,
+        "mustBeQuiet": false,
+        "outdoorAvailable": false
+      }
+    },
+    {
+      "id": "resistance_bands",
+      "name": "Resistance Bands Only",
+      "description": "Portable band workout - great for travel or limited space",
+      "icon": "link",
+      "suggestedFor": "Travelers, office workers, small apartments",
+      "equipment": [
+        "floor_space",
+        "wall",
+        "door_frame",
+        "resistance_band_light",
+        "resistance_band_medium",
+        "resistance_band_heavy",
+        "mini_band"
+      ],
+      "constraints": {
+        "noJumping": true,
+        "noSprinting": true,
+        "noLyingDown": false,
+        "lowCeiling": false,
+        "mustBeQuiet": true,
+        "outdoorAvailable": false
+      }
+    },
+    {
+      "id": "outdoor_park",
+      "name": "Outdoor / Park",
+      "description": "Outdoor workout with access to park equipment",
+      "icon": "sun",
+      "suggestedFor": "Outdoor fitness enthusiasts, calisthenics",
+      "equipment": [
+        "floor_space",
+        "outdoor_space",
+        "pull_up_bar",
+        "dip_station",
+        "flat_bench",
+        "stairs"
+      ],
+      "constraints": {
+        "noJumping": false,
+        "noSprinting": false,
+        "noLyingDown": false,
+        "lowCeiling": false,
+        "mustBeQuiet": false,
+        "outdoorAvailable": true
+      }
+    },
+    {
+      "id": "hotel_room",
+      "name": "Hotel Room",
+      "description": "Limited space workout for travelers",
+      "icon": "briefcase",
+      "suggestedFor": "Business travelers, vacation fitness",
+      "equipment": ["floor_space", "wall", "chair", "towel"],
+      "constraints": {
+        "noJumping": true,
+        "noSprinting": true,
+        "noLyingDown": true,
+        "lowCeiling": false,
+        "mustBeQuiet": true,
+        "outdoorAvailable": false
+      }
+    }
+  ]
+}

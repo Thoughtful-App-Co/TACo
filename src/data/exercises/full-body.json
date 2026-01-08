@@ -1,0 +1,638 @@
+{
+  "bodyPart": "full_body",
+  "exercises": [
+    {
+      "id": "burpee",
+      "name": "Burpee",
+      "bodyPart": "full_body",
+      "targetMuscle": "full_body",
+      "secondaryMuscles": ["chest", "quadriceps", "core", "shoulders"],
+      "equipment": ["floor_space"],
+      "category": "cardio",
+      "difficulty": "intermediate",
+      "tags": ["compound", "plyometric", "high_intensity"],
+      "constraints": { "requiresJumping": true, "requiresLyingDown": true, "noiseLevel": "loud" },
+      "instructions": [
+        "Stand with feet shoulder-width apart",
+        "Drop into a squat and place hands on the floor",
+        "Jump or step feet back into a plank position",
+        "Perform a push-up (optional)",
+        "Jump or step feet forward to hands",
+        "Explosively jump up with arms overhead",
+        "Land softly and immediately begin next rep"
+      ],
+      "cues": [
+        "Keep core tight throughout",
+        "Land softly on the balls of your feet",
+        "Maintain a flat back in plank position"
+      ]
+    },
+    {
+      "id": "burpee_no_pushup",
+      "name": "Burpee (No Push-Up)",
+      "bodyPart": "full_body",
+      "targetMuscle": "full_body",
+      "secondaryMuscles": ["quadriceps", "core", "shoulders"],
+      "equipment": ["floor_space"],
+      "category": "cardio",
+      "difficulty": "beginner",
+      "tags": ["compound", "plyometric", "high_intensity"],
+      "constraints": { "requiresJumping": true, "requiresLyingDown": true, "noiseLevel": "loud" },
+      "instructions": [
+        "Stand with feet shoulder-width apart",
+        "Drop into a squat and place hands on the floor",
+        "Jump or step feet back into a plank position",
+        "Immediately jump or step feet forward to hands",
+        "Explosively jump up with arms overhead",
+        "Land softly and immediately begin next rep"
+      ],
+      "cues": [
+        "Keep core engaged in plank",
+        "Move quickly between positions",
+        "Control your breathing"
+      ]
+    },
+    {
+      "id": "burpee_no_jump",
+      "name": "Burpee (No Jump)",
+      "bodyPart": "full_body",
+      "targetMuscle": "full_body",
+      "secondaryMuscles": ["chest", "quadriceps", "core", "shoulders"],
+      "equipment": ["floor_space"],
+      "category": "cardio",
+      "difficulty": "beginner",
+      "tags": ["compound", "low_impact"],
+      "constraints": {
+        "requiresJumping": false,
+        "requiresLyingDown": true,
+        "noiseLevel": "moderate"
+      },
+      "instructions": [
+        "Stand with feet shoulder-width apart",
+        "Drop into a squat and place hands on the floor",
+        "Step feet back into a plank position",
+        "Perform a push-up (optional)",
+        "Step feet forward to hands",
+        "Stand up tall and reach arms overhead",
+        "Lower arms and repeat"
+      ],
+      "cues": [
+        "Step back one foot at a time for control",
+        "Keep core tight throughout",
+        "Great low-impact alternative"
+      ]
+    },
+    {
+      "id": "mountain_climber",
+      "name": "Mountain Climbers",
+      "bodyPart": "full_body",
+      "targetMuscle": "core",
+      "secondaryMuscles": ["shoulders", "hip_flexors", "quadriceps"],
+      "equipment": ["floor_space"],
+      "category": "cardio",
+      "difficulty": "beginner",
+      "tags": ["compound", "high_intensity", "core"],
+      "constraints": {
+        "requiresJumping": false,
+        "requiresLyingDown": true,
+        "noiseLevel": "moderate"
+      },
+      "instructions": [
+        "Start in a high plank position with hands under shoulders",
+        "Drive one knee toward your chest",
+        "Quickly switch legs, driving the other knee forward",
+        "Continue alternating legs at a rapid pace",
+        "Keep hips level and core engaged throughout"
+      ],
+      "cues": [
+        "Keep your back flat, not piked",
+        "Drive knees straight forward, not out to the side",
+        "Maintain steady breathing"
+      ]
+    },
+    {
+      "id": "bear_crawl",
+      "name": "Bear Crawl",
+      "bodyPart": "full_body",
+      "targetMuscle": "core",
+      "secondaryMuscles": ["shoulders", "quadriceps", "triceps"],
+      "equipment": ["floor_space"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "functional", "coordination"],
+      "constraints": {
+        "requiresJumping": false,
+        "requiresLyingDown": false,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Start on all fours with knees hovering 1-2 inches off the ground",
+        "Move forward by stepping opposite hand and foot together",
+        "Keep your back flat and hips low",
+        "Continue crawling forward for desired distance",
+        "Reverse direction to crawl backward"
+      ],
+      "cues": [
+        "Keep knees close to the ground",
+        "Move opposite hand and foot simultaneously",
+        "Engage your core to prevent hip sway"
+      ]
+    },
+    {
+      "id": "inchworm",
+      "name": "Inchworm",
+      "bodyPart": "full_body",
+      "targetMuscle": "core",
+      "secondaryMuscles": ["shoulders", "hamstrings", "chest"],
+      "equipment": ["floor_space"],
+      "category": "mobility",
+      "difficulty": "beginner",
+      "tags": ["compound", "mobility", "warm_up"],
+      "constraints": { "requiresJumping": false, "requiresLyingDown": true, "noiseLevel": "quiet" },
+      "instructions": [
+        "Stand tall with feet hip-width apart",
+        "Hinge at hips and place hands on the floor",
+        "Walk hands forward until you reach a plank position",
+        "Optionally perform a push-up",
+        "Walk feet toward hands keeping legs as straight as possible",
+        "Stand up and repeat"
+      ],
+      "cues": [
+        "Keep legs straight to stretch hamstrings",
+        "Engage core in plank position",
+        "Move with control, not speed"
+      ]
+    },
+    {
+      "id": "sprawl",
+      "name": "Sprawl",
+      "bodyPart": "full_body",
+      "targetMuscle": "full_body",
+      "secondaryMuscles": ["hip_flexors", "core", "shoulders"],
+      "equipment": ["floor_space"],
+      "category": "cardio",
+      "difficulty": "intermediate",
+      "tags": ["compound", "high_intensity", "athletic"],
+      "constraints": {
+        "requiresJumping": false,
+        "requiresLyingDown": true,
+        "noiseLevel": "moderate"
+      },
+      "instructions": [
+        "Stand with feet shoulder-width apart",
+        "Drop your hips and place hands on the floor",
+        "Kick feet back while dropping hips to the floor",
+        "Push up and immediately jump feet forward",
+        "Return to standing position",
+        "Repeat in a fluid motion"
+      ],
+      "cues": [
+        "Drop hips low to the ground",
+        "Explode back up quickly",
+        "Different from burpee - no jump at top"
+      ]
+    },
+    {
+      "id": "breakdancer_kick",
+      "name": "Breakdancer Kicks",
+      "bodyPart": "full_body",
+      "targetMuscle": "core",
+      "secondaryMuscles": ["shoulders", "obliques", "hip_flexors"],
+      "equipment": ["floor_space"],
+      "category": "cardio",
+      "difficulty": "intermediate",
+      "tags": ["compound", "coordination", "rotational"],
+      "constraints": {
+        "requiresJumping": false,
+        "requiresLyingDown": false,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Start in a bear crawl position (hands and feet on floor, knees hovering)",
+        "Lift one hand and rotate body while kicking opposite leg through",
+        "Extend the kicking leg straight out to the side",
+        "Return to starting position",
+        "Repeat on the other side",
+        "Continue alternating sides"
+      ],
+      "cues": [
+        "Keep supporting arm strong and stable",
+        "Rotate through your core, not just your limbs",
+        "Kick leg through with control"
+      ]
+    },
+    {
+      "id": "dumbbell_thruster",
+      "name": "Dumbbell Thruster",
+      "bodyPart": "full_body",
+      "targetMuscle": "full_body",
+      "secondaryMuscles": ["quadriceps", "glutes", "shoulders", "triceps"],
+      "equipment": ["dumbbell"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["compound", "power", "functional"],
+      "constraints": {
+        "requiresJumping": false,
+        "requiresLyingDown": false,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Hold dumbbells at shoulder height with palms facing each other",
+        "Squat down until thighs are parallel to floor",
+        "Drive through heels to stand while pressing dumbbells overhead",
+        "Lock out arms at the top",
+        "Lower dumbbells back to shoulders as you descend into next squat"
+      ],
+      "cues": [
+        "Use leg drive to power the press",
+        "Keep core tight throughout",
+        "One fluid motion from squat to press"
+      ]
+    },
+    {
+      "id": "barbell_thruster",
+      "name": "Barbell Thruster",
+      "bodyPart": "full_body",
+      "targetMuscle": "full_body",
+      "secondaryMuscles": ["quadriceps", "glutes", "shoulders", "triceps", "core"],
+      "equipment": ["barbell"],
+      "category": "strength",
+      "difficulty": "advanced",
+      "tags": ["compound", "power", "olympic"],
+      "constraints": {
+        "requiresJumping": false,
+        "requiresLyingDown": false,
+        "noiseLevel": "moderate"
+      },
+      "instructions": [
+        "Hold barbell in front rack position (bar on front shoulders)",
+        "Squat down until thighs are parallel or below",
+        "Drive explosively through heels to stand",
+        "Use momentum to press barbell overhead",
+        "Lock out arms at the top",
+        "Lower bar back to front rack as you descend"
+      ],
+      "cues": [
+        "Keep elbows high in front rack",
+        "Drive through the heels",
+        "Seamless transition from squat to press"
+      ]
+    },
+    {
+      "id": "kettlebell_thruster",
+      "name": "Kettlebell Thruster",
+      "bodyPart": "full_body",
+      "targetMuscle": "full_body",
+      "secondaryMuscles": ["quadriceps", "glutes", "shoulders", "triceps"],
+      "equipment": ["kettlebell"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["compound", "power", "functional"],
+      "constraints": {
+        "requiresJumping": false,
+        "requiresLyingDown": false,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Hold kettlebells in rack position at shoulders",
+        "Squat down keeping chest up",
+        "Drive through heels to stand explosively",
+        "Press kettlebells overhead as you rise",
+        "Lock out arms at the top",
+        "Return to rack position and repeat"
+      ],
+      "cues": [
+        "Keep wrists straight, bells resting on forearms",
+        "Use hip drive to initiate the press",
+        "Control the descent"
+      ]
+    },
+    {
+      "id": "clean_and_press",
+      "name": "Clean and Press",
+      "bodyPart": "full_body",
+      "targetMuscle": "full_body",
+      "secondaryMuscles": ["traps", "shoulders", "glutes", "hamstrings", "core"],
+      "equipment": ["barbell", "dumbbell", "kettlebell"],
+      "category": "strength",
+      "difficulty": "advanced",
+      "tags": ["compound", "power", "olympic"],
+      "constraints": {
+        "requiresJumping": false,
+        "requiresLyingDown": false,
+        "noiseLevel": "moderate"
+      },
+      "instructions": [
+        "Start with weight on the floor, feet hip-width apart",
+        "Hinge at hips and grip the weight",
+        "Explosively extend hips and pull weight to shoulders (clean)",
+        "Catch in front rack position with slight knee bend",
+        "Press weight overhead to lockout",
+        "Lower to shoulders, then back to floor"
+      ],
+      "cues": [
+        "Pull with your hips, not your arms",
+        "Catch the clean with soft knees",
+        "Full hip extension before the pull"
+      ]
+    },
+    {
+      "id": "kettlebell_swing",
+      "name": "Kettlebell Swing",
+      "bodyPart": "full_body",
+      "targetMuscle": "glutes",
+      "secondaryMuscles": ["hamstrings", "core", "shoulders", "lats"],
+      "equipment": ["kettlebell"],
+      "category": "power",
+      "difficulty": "intermediate",
+      "tags": ["compound", "power", "hip_hinge"],
+      "constraints": {
+        "requiresJumping": false,
+        "requiresLyingDown": false,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Stand with feet slightly wider than shoulder-width",
+        "Hinge at hips and grip kettlebell with both hands",
+        "Swing bell back between legs, keeping back flat",
+        "Explosively drive hips forward to swing bell to chest height",
+        "Let the bell swing back down, hinging at hips",
+        "Repeat in a continuous fluid motion"
+      ],
+      "cues": [
+        "Power comes from the hips, not the arms",
+        "Squeeze glutes hard at the top",
+        "Keep arms relaxed, shoulders packed"
+      ]
+    },
+    {
+      "id": "turkish_getup",
+      "name": "Turkish Get-Up",
+      "bodyPart": "full_body",
+      "targetMuscle": "core",
+      "secondaryMuscles": ["shoulders", "glutes", "hip_flexors", "triceps"],
+      "equipment": ["kettlebell", "dumbbell"],
+      "category": "strength",
+      "difficulty": "advanced",
+      "tags": ["compound", "stability", "functional", "unilateral"],
+      "constraints": { "requiresJumping": false, "requiresLyingDown": true, "noiseLevel": "quiet" },
+      "instructions": [
+        "Lie on back with kettlebell pressed up in one hand",
+        "Bend knee on same side, foot flat on floor",
+        "Roll onto opposite elbow, then hand",
+        "Bridge hips up high",
+        "Sweep back leg through to kneeling lunge",
+        "Stand up while keeping weight overhead",
+        "Reverse the movement to return to floor"
+      ],
+      "cues": [
+        "Keep eyes on the weight throughout",
+        "Move slowly and with control",
+        "Keep the arm locked out at all times"
+      ]
+    },
+    {
+      "id": "man_maker",
+      "name": "Man Maker",
+      "bodyPart": "full_body",
+      "targetMuscle": "full_body",
+      "secondaryMuscles": ["chest", "back", "shoulders", "core", "quadriceps"],
+      "equipment": ["dumbbell"],
+      "category": "strength",
+      "difficulty": "advanced",
+      "tags": ["compound", "high_intensity", "complex"],
+      "constraints": { "requiresJumping": true, "requiresLyingDown": true, "noiseLevel": "loud" },
+      "instructions": [
+        "Start standing with dumbbells at sides",
+        "Place dumbbells on floor and jump feet back to plank",
+        "Perform a push-up",
+        "Row one dumbbell to hip, lower, row the other",
+        "Jump feet forward to hands",
+        "Clean dumbbells to shoulders",
+        "Perform a thruster (squat to overhead press)",
+        "Return to start and repeat"
+      ],
+      "cues": [
+        "Keep hips stable during rows",
+        "Control the dumbbells throughout",
+        "This is a complex movement - master each part first"
+      ]
+    },
+    {
+      "id": "man_maker_no_jump",
+      "name": "Man Maker (No Jump)",
+      "bodyPart": "full_body",
+      "targetMuscle": "full_body",
+      "secondaryMuscles": ["chest", "back", "shoulders", "core", "quadriceps"],
+      "equipment": ["dumbbell"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["compound", "low_impact", "complex"],
+      "constraints": {
+        "requiresJumping": false,
+        "requiresLyingDown": true,
+        "noiseLevel": "moderate"
+      },
+      "instructions": [
+        "Start standing with dumbbells at sides",
+        "Place dumbbells on floor and step feet back to plank",
+        "Perform a push-up",
+        "Row one dumbbell to hip, lower, row the other",
+        "Step feet forward to hands",
+        "Clean dumbbells to shoulders",
+        "Perform a thruster (squat to overhead press)",
+        "Return to start and repeat"
+      ],
+      "cues": [
+        "Step back one foot at a time",
+        "Keep hips stable during rows",
+        "Great low-impact alternative"
+      ]
+    },
+    {
+      "id": "devil_press",
+      "name": "Devil Press",
+      "bodyPart": "full_body",
+      "targetMuscle": "full_body",
+      "secondaryMuscles": ["shoulders", "chest", "glutes", "hamstrings", "core"],
+      "equipment": ["dumbbell"],
+      "category": "power",
+      "difficulty": "advanced",
+      "tags": ["compound", "power", "high_intensity"],
+      "constraints": { "requiresJumping": true, "requiresLyingDown": true, "noiseLevel": "loud" },
+      "instructions": [
+        "Start with dumbbells on floor, feet shoulder-width apart",
+        "Grip dumbbells and jump feet back to plank",
+        "Perform a burpee (chest to floor)",
+        "Jump feet forward outside hands",
+        "Swing dumbbells back between legs",
+        "Explosively swing dumbbells overhead in one motion (like a snatch)",
+        "Lower dumbbells to floor and repeat"
+      ],
+      "cues": [
+        "Use hip power for the swing",
+        "Keep arms straight during the swing portion",
+        "Land softly from the jump"
+      ]
+    },
+    {
+      "id": "dumbbell_snatch",
+      "name": "Dumbbell Snatch",
+      "bodyPart": "full_body",
+      "targetMuscle": "full_body",
+      "secondaryMuscles": ["shoulders", "traps", "glutes", "hamstrings", "core"],
+      "equipment": ["dumbbell"],
+      "category": "power",
+      "difficulty": "intermediate",
+      "tags": ["compound", "power", "unilateral", "explosive"],
+      "constraints": {
+        "requiresJumping": false,
+        "requiresLyingDown": false,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Stand with feet shoulder-width apart, dumbbell between feet",
+        "Hinge at hips and grip dumbbell with one hand",
+        "Explosively extend hips and pull dumbbell up",
+        "As dumbbell rises, rotate arm and punch up to catch overhead",
+        "Lock out arm at the top",
+        "Lower with control and repeat"
+      ],
+      "cues": [
+        "Drive through the hips, not the arm",
+        "Keep the dumbbell close to your body",
+        "Punch up to catch, don't swing around"
+      ]
+    },
+    {
+      "id": "kettlebell_snatch",
+      "name": "Kettlebell Snatch",
+      "bodyPart": "full_body",
+      "targetMuscle": "full_body",
+      "secondaryMuscles": ["shoulders", "traps", "glutes", "hamstrings", "core"],
+      "equipment": ["kettlebell"],
+      "category": "power",
+      "difficulty": "advanced",
+      "tags": ["compound", "power", "unilateral", "explosive"],
+      "constraints": {
+        "requiresJumping": false,
+        "requiresLyingDown": false,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Stand with feet shoulder-width apart, kettlebell between feet",
+        "Hinge at hips and grip kettlebell with one hand",
+        "Swing kettlebell back between legs",
+        "Explosively drive hips forward and pull kettlebell up",
+        "As it rises, punch hand through and catch overhead",
+        "Lock out arm, then let it swing back down"
+      ],
+      "cues": [
+        "Tame the arc - keep the bell close",
+        "Punch through at the top to avoid banging wrist",
+        "Power comes from the hips"
+      ]
+    },
+    {
+      "id": "battle_rope_slam",
+      "name": "Battle Rope Slams",
+      "bodyPart": "full_body",
+      "targetMuscle": "full_body",
+      "secondaryMuscles": ["shoulders", "core", "lats", "forearms"],
+      "equipment": ["battle_ropes"],
+      "category": "cardio",
+      "difficulty": "intermediate",
+      "tags": ["compound", "power", "high_intensity"],
+      "constraints": { "requiresJumping": false, "requiresLyingDown": false, "noiseLevel": "loud" },
+      "instructions": [
+        "Stand facing anchor point with feet shoulder-width apart",
+        "Hold one rope end in each hand",
+        "Raise both arms overhead",
+        "Slam ropes down forcefully while hinging slightly at hips",
+        "Immediately raise arms and repeat",
+        "Maintain a fast, powerful rhythm"
+      ],
+      "cues": [
+        "Use your whole body, not just arms",
+        "Hinge at hips as you slam down",
+        "Create big, powerful waves"
+      ]
+    },
+    {
+      "id": "slam_ball_throw",
+      "name": "Slam Ball Throw",
+      "bodyPart": "full_body",
+      "targetMuscle": "core",
+      "secondaryMuscles": ["shoulders", "lats", "triceps", "hip_flexors"],
+      "equipment": ["slam_ball"],
+      "category": "power",
+      "difficulty": "beginner",
+      "tags": ["compound", "power", "explosive"],
+      "constraints": { "requiresJumping": false, "requiresLyingDown": false, "noiseLevel": "loud" },
+      "instructions": [
+        "Stand with feet shoulder-width apart holding slam ball",
+        "Raise the ball overhead, extending fully",
+        "Engage core and slam ball down forcefully",
+        "Hinge at hips and follow through with the slam",
+        "Pick up the ball and repeat"
+      ],
+      "cues": [
+        "Throw the ball INTO the ground, not at it",
+        "Use your core and lats, not just arms",
+        "Squat down to pick up, protect your back"
+      ]
+    },
+    {
+      "id": "trx_atomic_pushup",
+      "name": "TRX Atomic Push-Up",
+      "bodyPart": "full_body",
+      "targetMuscle": "core",
+      "secondaryMuscles": ["chest", "shoulders", "triceps", "hip_flexors"],
+      "equipment": ["trx"],
+      "category": "strength",
+      "difficulty": "advanced",
+      "tags": ["compound", "stability", "suspension"],
+      "constraints": { "requiresJumping": false, "requiresLyingDown": true, "noiseLevel": "quiet" },
+      "instructions": [
+        "Place feet in TRX straps, hands on floor in push-up position",
+        "Perform a push-up",
+        "At the top, drive knees toward chest (knee tuck)",
+        "Extend legs back to plank",
+        "Repeat push-up and knee tuck combo"
+      ],
+      "cues": [
+        "Keep hips level during push-up",
+        "Control the knee tuck, don't swing",
+        "Engage core throughout entire movement"
+      ]
+    },
+    {
+      "id": "wall_ball",
+      "name": "Wall Ball",
+      "bodyPart": "full_body",
+      "targetMuscle": "quadriceps",
+      "secondaryMuscles": ["glutes", "shoulders", "core", "triceps"],
+      "equipment": ["medicine_ball"],
+      "category": "power",
+      "difficulty": "intermediate",
+      "tags": ["compound", "power", "functional"],
+      "constraints": {
+        "requiresJumping": false,
+        "requiresLyingDown": false,
+        "noiseLevel": "moderate"
+      },
+      "instructions": [
+        "Stand facing wall, arm's length away, holding medicine ball at chest",
+        "Squat down until thighs are parallel to floor",
+        "Explosively stand and throw ball to target on wall (8-10 feet high)",
+        "Catch ball as it returns and immediately descend into next squat",
+        "Repeat in continuous motion"
+      ],
+      "cues": [
+        "Use leg drive to power the throw",
+        "Keep chest up during the squat",
+        "Catch and absorb into the next squat smoothly"
+      ]
+    }
+  ]
+}

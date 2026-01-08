@@ -1,0 +1,862 @@
+{
+  "bodyPart": "back",
+  "exercises": [
+    {
+      "id": "pull_up",
+      "name": "Pull-up",
+      "bodyPart": "back",
+      "targetMuscle": "latissimus_dorsi",
+      "secondaryMuscles": ["biceps", "rhomboids", "rear_deltoid", "core"],
+      "equipment": ["pull_up_bar"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["compound", "bodyweight", "pulling", "vertical_pull"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "ceilingHeight": "normal",
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Grip the bar with hands slightly wider than shoulder-width, palms facing away",
+        "Hang with arms fully extended and shoulders engaged",
+        "Pull yourself up until your chin clears the bar",
+        "Lower with control to full arm extension"
+      ],
+      "cues": ["Engage lats first", "Lead with chest", "Avoid swinging"],
+      "variations": ["wide_grip_pull_up", "close_grip_pull_up", "chin_up"],
+      "substitutions": [
+        { "equipment": ["assisted_pullup"], "exercise": "assisted_pull_up" },
+        { "equipment": ["lat_pulldown"], "exercise": "lat_pulldown" },
+        {
+          "equipment": ["resistance_band_heavy", "pull_up_bar"],
+          "exercise": "band_assisted_pull_up"
+        }
+      ]
+    },
+    {
+      "id": "wide_grip_pull_up",
+      "name": "Wide Grip Pull-up",
+      "bodyPart": "back",
+      "targetMuscle": "latissimus_dorsi",
+      "secondaryMuscles": ["teres_major", "rhomboids", "biceps"],
+      "equipment": ["pull_up_bar"],
+      "category": "strength",
+      "difficulty": "advanced",
+      "tags": ["compound", "bodyweight", "pulling", "vertical_pull"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "ceilingHeight": "normal",
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Grip the bar with hands 1.5x shoulder-width apart, palms facing away",
+        "Hang with arms fully extended",
+        "Pull up, focusing on driving elbows down and out",
+        "Lower with control until arms are fully extended"
+      ],
+      "cues": ["Wide elbow path", "Squeeze shoulder blades", "Control the descent"],
+      "variations": ["pull_up", "close_grip_pull_up"],
+      "substitutions": [{ "equipment": ["lat_pulldown"], "exercise": "wide_grip_lat_pulldown" }]
+    },
+    {
+      "id": "close_grip_pull_up",
+      "name": "Close Grip Pull-up",
+      "bodyPart": "back",
+      "targetMuscle": "latissimus_dorsi",
+      "secondaryMuscles": ["biceps", "brachialis", "rhomboids"],
+      "equipment": ["pull_up_bar"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["compound", "bodyweight", "pulling", "vertical_pull"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "ceilingHeight": "normal",
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Grip the bar with hands 6-8 inches apart, palms facing away",
+        "Hang with arms fully extended",
+        "Pull up keeping elbows close to your body",
+        "Lower with control to starting position"
+      ],
+      "cues": ["Elbows stay tight", "Feel the lower lats", "Full range of motion"],
+      "variations": ["pull_up", "chin_up"],
+      "substitutions": [{ "equipment": ["lat_pulldown"], "exercise": "close_grip_lat_pulldown" }]
+    },
+    {
+      "id": "chin_up",
+      "name": "Chin-up",
+      "bodyPart": "back",
+      "targetMuscle": "latissimus_dorsi",
+      "secondaryMuscles": ["biceps", "brachialis", "forearms"],
+      "equipment": ["pull_up_bar"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["compound", "bodyweight", "pulling", "vertical_pull"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "ceilingHeight": "normal",
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Grip the bar with hands shoulder-width apart, palms facing toward you",
+        "Hang with arms fully extended",
+        "Pull yourself up until chin clears the bar",
+        "Lower with control to full extension"
+      ],
+      "cues": ["Supinated grip", "Drive elbows down", "Squeeze at top"],
+      "variations": ["pull_up", "neutral_grip_pull_up"],
+      "substitutions": [{ "equipment": ["lat_pulldown"], "exercise": "underhand_lat_pulldown" }]
+    },
+    {
+      "id": "assisted_pull_up",
+      "name": "Assisted Pull-up",
+      "bodyPart": "back",
+      "targetMuscle": "latissimus_dorsi",
+      "secondaryMuscles": ["biceps", "rhomboids", "rear_deltoid"],
+      "equipment": ["assisted_pullup"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "machine", "pulling", "vertical_pull"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Set the counterweight to an appropriate assistance level",
+        "Step onto the platform and grip the handles",
+        "Pull yourself up until chin reaches handle height",
+        "Lower with control, keeping tension throughout"
+      ],
+      "cues": [
+        "Same form as regular pull-up",
+        "Gradually reduce assistance",
+        "Control the negative"
+      ],
+      "variations": ["band_assisted_pull_up"],
+      "substitutions": [
+        {
+          "equipment": ["resistance_band_heavy", "pull_up_bar"],
+          "exercise": "band_assisted_pull_up"
+        },
+        { "equipment": ["lat_pulldown"], "exercise": "lat_pulldown" }
+      ]
+    },
+    {
+      "id": "band_assisted_pull_up",
+      "name": "Band Assisted Pull-up",
+      "bodyPart": "back",
+      "targetMuscle": "latissimus_dorsi",
+      "secondaryMuscles": ["biceps", "rhomboids", "rear_deltoid"],
+      "equipment": ["pull_up_bar", "resistance_band_heavy"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "bodyweight", "pulling", "vertical_pull"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "ceilingHeight": "normal",
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Loop a resistance band over the pull-up bar",
+        "Place one or both knees in the band loop",
+        "Grip the bar and perform a pull-up with band assistance",
+        "Lower with control, using the band for support"
+      ],
+      "cues": ["Use less band over time", "Maintain proper form", "Don't bounce"],
+      "variations": ["assisted_pull_up", "pull_up"],
+      "substitutions": [{ "equipment": ["assisted_pullup"], "exercise": "assisted_pull_up" }]
+    },
+    {
+      "id": "lat_pulldown",
+      "name": "Lat Pulldown",
+      "bodyPart": "back",
+      "targetMuscle": "latissimus_dorsi",
+      "secondaryMuscles": ["biceps", "rhomboids", "rear_deltoid"],
+      "equipment": ["lat_pulldown"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "machine", "pulling", "vertical_pull"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Sit at the machine and secure your thighs under the pads",
+        "Grip the bar slightly wider than shoulder-width",
+        "Pull the bar down to upper chest level",
+        "Slowly return to starting position with arms extended"
+      ],
+      "cues": ["Lean back slightly", "Pull elbows down and back", "Squeeze at bottom"],
+      "variations": ["wide_grip_lat_pulldown", "close_grip_lat_pulldown", "underhand_lat_pulldown"],
+      "substitutions": [
+        { "equipment": ["cable_machine"], "exercise": "cable_lat_pulldown" },
+        { "equipment": ["resistance_band_heavy", "door_frame"], "exercise": "band_lat_pulldown" }
+      ]
+    },
+    {
+      "id": "wide_grip_lat_pulldown",
+      "name": "Wide Grip Lat Pulldown",
+      "bodyPart": "back",
+      "targetMuscle": "latissimus_dorsi",
+      "secondaryMuscles": ["teres_major", "rhomboids", "biceps"],
+      "equipment": ["lat_pulldown"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "machine", "pulling", "vertical_pull"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Grip the bar with hands 1.5x shoulder-width apart",
+        "Sit with thighs secured under the pads",
+        "Pull the bar to upper chest, driving elbows out and down",
+        "Return with control to full arm extension"
+      ],
+      "cues": ["Wide elbow flare", "Chest up", "Full stretch at top"],
+      "variations": ["lat_pulldown", "close_grip_lat_pulldown"],
+      "substitutions": [{ "equipment": ["pull_up_bar"], "exercise": "wide_grip_pull_up" }]
+    },
+    {
+      "id": "close_grip_lat_pulldown",
+      "name": "Close Grip Lat Pulldown",
+      "bodyPart": "back",
+      "targetMuscle": "latissimus_dorsi",
+      "secondaryMuscles": ["biceps", "brachialis", "rhomboids"],
+      "equipment": ["lat_pulldown"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "machine", "pulling", "vertical_pull"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Attach a close-grip V-bar or use narrow grip on the bar",
+        "Sit with thighs secured under the pads",
+        "Pull the attachment to upper chest, keeping elbows close",
+        "Return with control to starting position"
+      ],
+      "cues": ["Elbows tight to body", "Squeeze the lats", "Control the negative"],
+      "variations": ["lat_pulldown", "underhand_lat_pulldown"],
+      "substitutions": [{ "equipment": ["pull_up_bar"], "exercise": "close_grip_pull_up" }]
+    },
+    {
+      "id": "underhand_lat_pulldown",
+      "name": "Underhand Lat Pulldown",
+      "bodyPart": "back",
+      "targetMuscle": "latissimus_dorsi",
+      "secondaryMuscles": ["biceps", "brachialis", "lower_lats"],
+      "equipment": ["lat_pulldown"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "machine", "pulling", "vertical_pull"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Grip the bar with palms facing you, shoulder-width apart",
+        "Sit with thighs secured under the pads",
+        "Pull the bar to upper chest, keeping elbows forward",
+        "Return with control, feeling the stretch in lats"
+      ],
+      "cues": ["Supinated grip", "Feel the biceps work", "Full range of motion"],
+      "variations": ["lat_pulldown", "close_grip_lat_pulldown"],
+      "substitutions": [{ "equipment": ["pull_up_bar"], "exercise": "chin_up" }]
+    },
+    {
+      "id": "barbell_row",
+      "name": "Barbell Bent-Over Row",
+      "bodyPart": "back",
+      "targetMuscle": "latissimus_dorsi",
+      "secondaryMuscles": ["rhomboids", "rear_deltoid", "biceps", "erector_spinae"],
+      "equipment": ["barbell"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["compound", "free_weight", "pulling", "horizontal_pull"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Stand with feet hip-width apart, holding barbell with overhand grip",
+        "Hinge at hips until torso is roughly 45 degrees to floor",
+        "Pull the bar to your lower chest/upper abdomen",
+        "Lower with control, keeping back flat throughout"
+      ],
+      "cues": ["Flat back", "Drive elbows back", "Squeeze shoulder blades"],
+      "variations": ["pendlay_row", "underhand_barbell_row"],
+      "substitutions": [
+        { "equipment": ["dumbbell"], "exercise": "dumbbell_row" },
+        { "equipment": ["cable_machine"], "exercise": "cable_row" }
+      ]
+    },
+    {
+      "id": "pendlay_row",
+      "name": "Pendlay Row",
+      "bodyPart": "back",
+      "targetMuscle": "latissimus_dorsi",
+      "secondaryMuscles": ["rhomboids", "rear_deltoid", "biceps", "erector_spinae"],
+      "equipment": ["barbell"],
+      "category": "strength",
+      "difficulty": "advanced",
+      "tags": ["compound", "free_weight", "pulling", "horizontal_pull", "explosive"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "noiseLevel": "moderate"
+      },
+      "instructions": [
+        "Set up with barbell on the floor, hinge until back is parallel to ground",
+        "Grip bar wider than shoulder-width with overhand grip",
+        "Explosively row the bar to your lower chest",
+        "Lower the bar back to the floor, resetting between reps"
+      ],
+      "cues": ["Back parallel to floor", "Explosive pull", "Reset each rep"],
+      "variations": ["barbell_row"],
+      "substitutions": [{ "equipment": ["dumbbell"], "exercise": "dumbbell_row" }]
+    },
+    {
+      "id": "dumbbell_row",
+      "name": "Single Arm Dumbbell Row",
+      "bodyPart": "back",
+      "targetMuscle": "latissimus_dorsi",
+      "secondaryMuscles": ["rhomboids", "rear_deltoid", "biceps", "core"],
+      "equipment": ["dumbbell", "flat_bench"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "free_weight", "pulling", "horizontal_pull", "unilateral"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Place one knee and hand on a bench, other foot on floor",
+        "Hold dumbbell in free hand with arm extended",
+        "Row the dumbbell to your hip, keeping elbow close to body",
+        "Lower with control and repeat, then switch sides"
+      ],
+      "cues": ["Flat back", "Row to hip", "Minimal torso rotation"],
+      "variations": ["chest_supported_dumbbell_row", "meadows_row"],
+      "substitutions": [
+        { "equipment": ["kettlebell", "flat_bench"], "exercise": "kettlebell_row" },
+        { "equipment": ["cable_machine"], "exercise": "single_arm_cable_row" }
+      ]
+    },
+    {
+      "id": "chest_supported_dumbbell_row",
+      "name": "Chest Supported Dumbbell Row",
+      "bodyPart": "back",
+      "targetMuscle": "rhomboids",
+      "secondaryMuscles": ["latissimus_dorsi", "rear_deltoid", "biceps"],
+      "equipment": ["dumbbell", "adjustable_bench"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "free_weight", "pulling", "horizontal_pull"],
+      "constraints": {
+        "requiresLyingDown": true,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Set adjustable bench to 30-45 degree incline",
+        "Lie face down on bench, holding dumbbells with arms hanging",
+        "Row both dumbbells up, squeezing shoulder blades together",
+        "Lower with control to full arm extension"
+      ],
+      "cues": ["Chest stays on bench", "Retract scapula", "No momentum"],
+      "variations": ["dumbbell_row", "seal_row"],
+      "substitutions": [{ "equipment": ["barbell", "adjustable_bench"], "exercise": "seal_row" }]
+    },
+    {
+      "id": "cable_row",
+      "name": "Seated Cable Row",
+      "bodyPart": "back",
+      "targetMuscle": "rhomboids",
+      "secondaryMuscles": ["latissimus_dorsi", "rear_deltoid", "biceps", "erector_spinae"],
+      "equipment": ["seated_row"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "machine", "pulling", "horizontal_pull"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Sit at the machine with feet on footplates, knees slightly bent",
+        "Grip the handle with arms extended",
+        "Pull the handle to your lower chest/upper abdomen",
+        "Return with control, allowing slight forward lean"
+      ],
+      "cues": ["Chest up", "Squeeze shoulder blades", "Control the return"],
+      "variations": ["wide_grip_cable_row", "single_arm_cable_row"],
+      "substitutions": [
+        { "equipment": ["resistance_band_medium"], "exercise": "band_seated_row" },
+        { "equipment": ["dumbbell", "flat_bench"], "exercise": "dumbbell_row" }
+      ]
+    },
+    {
+      "id": "single_arm_cable_row",
+      "name": "Single Arm Cable Row",
+      "bodyPart": "back",
+      "targetMuscle": "latissimus_dorsi",
+      "secondaryMuscles": ["rhomboids", "rear_deltoid", "biceps", "obliques"],
+      "equipment": ["cable_machine"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["compound", "machine", "pulling", "horizontal_pull", "unilateral"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Set cable to mid-height with single handle attachment",
+        "Stand or kneel facing the machine, grip handle with one hand",
+        "Row the handle to your hip, rotating torso slightly",
+        "Return with control and complete reps before switching sides"
+      ],
+      "cues": ["Controlled rotation", "Row to hip", "Feel the lat stretch"],
+      "variations": ["cable_row", "face_pull"],
+      "substitutions": [{ "equipment": ["dumbbell", "flat_bench"], "exercise": "dumbbell_row" }]
+    },
+    {
+      "id": "inverted_row",
+      "name": "Inverted Row",
+      "bodyPart": "back",
+      "targetMuscle": "rhomboids",
+      "secondaryMuscles": ["latissimus_dorsi", "rear_deltoid", "biceps", "core"],
+      "equipment": ["barbell", "squat_rack"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "bodyweight", "pulling", "horizontal_pull"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Set barbell in rack at about waist height",
+        "Hang underneath with arms extended, body straight, heels on floor",
+        "Pull your chest to the bar by squeezing shoulder blades",
+        "Lower with control to full arm extension"
+      ],
+      "cues": ["Body stays straight", "Chest to bar", "Squeeze at top"],
+      "variations": ["trx_row", "ring_row"],
+      "substitutions": [
+        { "equipment": ["trx"], "exercise": "trx_row" },
+        { "equipment": ["gymnastic_rings"], "exercise": "ring_row" }
+      ]
+    },
+    {
+      "id": "trx_row",
+      "name": "TRX Row",
+      "bodyPart": "back",
+      "targetMuscle": "rhomboids",
+      "secondaryMuscles": ["latissimus_dorsi", "rear_deltoid", "biceps", "core"],
+      "equipment": ["trx"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "bodyweight", "pulling", "horizontal_pull", "suspension"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "ceilingHeight": "normal",
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Hold TRX handles and lean back with arms extended",
+        "Keep body in a straight line from head to heels",
+        "Pull chest toward handles by squeezing shoulder blades",
+        "Lower with control to starting position"
+      ],
+      "cues": ["Adjust angle for difficulty", "Core tight", "Full range of motion"],
+      "variations": ["inverted_row", "ring_row"],
+      "substitutions": [{ "equipment": ["barbell", "squat_rack"], "exercise": "inverted_row" }]
+    },
+    {
+      "id": "band_seated_row",
+      "name": "Resistance Band Seated Row",
+      "bodyPart": "back",
+      "targetMuscle": "rhomboids",
+      "secondaryMuscles": ["latissimus_dorsi", "rear_deltoid", "biceps"],
+      "equipment": ["resistance_band_medium", "floor_space"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "resistance_band", "pulling", "horizontal_pull"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Sit on floor with legs extended, band looped around feet",
+        "Hold band handles with arms extended",
+        "Pull handles to your lower ribs, squeezing shoulder blades",
+        "Return with control to starting position"
+      ],
+      "cues": ["Sit tall", "Elbows close to body", "Squeeze at contraction"],
+      "variations": ["band_face_pull"],
+      "substitutions": [
+        { "equipment": ["seated_row"], "exercise": "cable_row" },
+        { "equipment": ["dumbbell"], "exercise": "dumbbell_row" }
+      ]
+    },
+    {
+      "id": "conventional_deadlift",
+      "name": "Conventional Deadlift",
+      "bodyPart": "back",
+      "targetMuscle": "erector_spinae",
+      "secondaryMuscles": ["glutes", "hamstrings", "quadriceps", "forearms", "trapezius"],
+      "equipment": ["barbell"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["compound", "free_weight", "hip_hinge", "full_body"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "noiseLevel": "moderate"
+      },
+      "instructions": [
+        "Stand with feet hip-width apart, bar over mid-foot",
+        "Hinge and grip bar just outside your legs",
+        "Brace core, drive through floor while keeping bar close to body",
+        "Stand tall, then hinge back down with control"
+      ],
+      "cues": ["Neutral spine", "Bar stays close", "Drive through legs"],
+      "variations": ["sumo_deadlift", "romanian_deadlift", "trap_bar_deadlift"],
+      "substitutions": [
+        { "equipment": ["trap_bar"], "exercise": "trap_bar_deadlift" },
+        { "equipment": ["dumbbell"], "exercise": "dumbbell_deadlift" }
+      ]
+    },
+    {
+      "id": "romanian_deadlift",
+      "name": "Romanian Deadlift",
+      "bodyPart": "back",
+      "targetMuscle": "erector_spinae",
+      "secondaryMuscles": ["hamstrings", "glutes", "forearms"],
+      "equipment": ["barbell"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["compound", "free_weight", "hip_hinge"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Stand holding barbell at hip level with slight knee bend",
+        "Hinge at hips, pushing them back while lowering bar along legs",
+        "Lower until you feel a stretch in hamstrings (mid-shin level)",
+        "Drive hips forward to return to standing"
+      ],
+      "cues": ["Soft knees", "Hips back", "Bar traces legs"],
+      "variations": ["single_leg_rdl", "dumbbell_rdl"],
+      "substitutions": [
+        { "equipment": ["dumbbell"], "exercise": "dumbbell_rdl" },
+        { "equipment": ["kettlebell"], "exercise": "kettlebell_rdl" }
+      ]
+    },
+    {
+      "id": "sumo_deadlift",
+      "name": "Sumo Deadlift",
+      "bodyPart": "back",
+      "targetMuscle": "erector_spinae",
+      "secondaryMuscles": ["glutes", "adductors", "hamstrings", "quadriceps"],
+      "equipment": ["barbell"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["compound", "free_weight", "hip_hinge", "full_body"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "noiseLevel": "moderate"
+      },
+      "instructions": [
+        "Stand with feet wide apart, toes pointed out 30-45 degrees",
+        "Grip the bar with hands inside your legs",
+        "Push knees out, brace core, and drive through floor",
+        "Stand tall, then lower with control"
+      ],
+      "cues": ["Knees track toes", "Chest up", "Push the floor away"],
+      "variations": ["conventional_deadlift", "trap_bar_deadlift"],
+      "substitutions": [{ "equipment": ["dumbbell"], "exercise": "dumbbell_sumo_deadlift" }]
+    },
+    {
+      "id": "trap_bar_deadlift",
+      "name": "Trap Bar Deadlift",
+      "bodyPart": "back",
+      "targetMuscle": "erector_spinae",
+      "secondaryMuscles": ["glutes", "hamstrings", "quadriceps", "forearms", "trapezius"],
+      "equipment": ["trap_bar"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "free_weight", "hip_hinge", "full_body"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "noiseLevel": "moderate"
+      },
+      "instructions": [
+        "Step inside the trap bar with feet hip-width apart",
+        "Hinge down and grip the handles at your sides",
+        "Brace core and drive through floor to stand",
+        "Lower with control back to starting position"
+      ],
+      "cues": ["Neutral grip reduces strain", "Stay centered", "Push through floor"],
+      "variations": ["conventional_deadlift"],
+      "substitutions": [{ "equipment": ["barbell"], "exercise": "conventional_deadlift" }]
+    },
+    {
+      "id": "back_extension",
+      "name": "Back Extension",
+      "bodyPart": "back",
+      "targetMuscle": "erector_spinae",
+      "secondaryMuscles": ["glutes", "hamstrings"],
+      "equipment": ["hyperextension_bench"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "machine", "hip_hinge"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Position yourself on the hyperextension bench, hips on pad",
+        "Cross arms over chest or behind head",
+        "Lower upper body toward floor with control",
+        "Raise back up until body is in a straight line"
+      ],
+      "cues": ["Don't hyperextend", "Controlled movement", "Squeeze glutes at top"],
+      "variations": ["weighted_back_extension", "reverse_hyperextension"],
+      "substitutions": [
+        { "equipment": ["stability_ball"], "exercise": "stability_ball_back_extension" },
+        { "equipment": ["floor_space"], "exercise": "superman" }
+      ]
+    },
+    {
+      "id": "weighted_back_extension",
+      "name": "Weighted Back Extension",
+      "bodyPart": "back",
+      "targetMuscle": "erector_spinae",
+      "secondaryMuscles": ["glutes", "hamstrings"],
+      "equipment": ["hyperextension_bench", "weight_plates"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["isolation", "machine", "hip_hinge", "weighted"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Position yourself on the hyperextension bench",
+        "Hold a weight plate against your chest",
+        "Lower upper body toward floor with control",
+        "Raise back up until body is in a straight line"
+      ],
+      "cues": ["Secure the weight", "Same form as bodyweight", "Progressive overload"],
+      "variations": ["back_extension"],
+      "substitutions": [
+        { "equipment": ["hyperextension_bench", "dumbbell"], "exercise": "back_extension" }
+      ]
+    },
+    {
+      "id": "superman",
+      "name": "Superman",
+      "bodyPart": "back",
+      "targetMuscle": "erector_spinae",
+      "secondaryMuscles": ["glutes", "hamstrings", "rear_deltoid"],
+      "equipment": ["floor_space"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "bodyweight", "prone"],
+      "constraints": {
+        "requiresLyingDown": true,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Lie face down with arms extended overhead",
+        "Simultaneously lift arms, chest, and legs off the floor",
+        "Hold at the top for 2-3 seconds",
+        "Lower with control and repeat"
+      ],
+      "cues": ["Squeeze glutes", "Look at floor", "Don't strain neck"],
+      "variations": ["alternating_superman", "swimmer"],
+      "substitutions": [{ "equipment": ["hyperextension_bench"], "exercise": "back_extension" }]
+    },
+    {
+      "id": "face_pull",
+      "name": "Face Pull",
+      "bodyPart": "back",
+      "targetMuscle": "rear_deltoid",
+      "secondaryMuscles": ["rhomboids", "trapezius", "rotator_cuff"],
+      "equipment": ["cable_machine"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "machine", "pulling", "shoulder_health"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Set cable to face height with rope attachment",
+        "Grip rope with palms facing each other",
+        "Pull rope toward face, separating hands and externally rotating",
+        "Return with control to starting position"
+      ],
+      "cues": ["High elbows", "Pull to ears", "External rotation at end"],
+      "variations": ["band_face_pull"],
+      "substitutions": [{ "equipment": ["resistance_band_light"], "exercise": "band_face_pull" }]
+    },
+    {
+      "id": "band_face_pull",
+      "name": "Resistance Band Face Pull",
+      "bodyPart": "back",
+      "targetMuscle": "rear_deltoid",
+      "secondaryMuscles": ["rhomboids", "trapezius", "rotator_cuff"],
+      "equipment": ["resistance_band_light", "door_frame"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "resistance_band", "pulling", "shoulder_health"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Anchor band at face height on door or sturdy object",
+        "Grip band with both hands, palms down",
+        "Pull band toward face, separating hands to sides of head",
+        "Return with control and repeat"
+      ],
+      "cues": ["Keep tension", "Elbows high", "Squeeze shoulder blades"],
+      "variations": ["face_pull"],
+      "substitutions": [{ "equipment": ["cable_machine"], "exercise": "face_pull" }]
+    },
+    {
+      "id": "barbell_shrug",
+      "name": "Barbell Shrug",
+      "bodyPart": "back",
+      "targetMuscle": "trapezius",
+      "secondaryMuscles": ["levator_scapulae", "rhomboids"],
+      "equipment": ["barbell"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "free_weight"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Stand holding barbell at thigh level with arms extended",
+        "Keep arms straight and shrug shoulders straight up toward ears",
+        "Hold the contraction briefly at the top",
+        "Lower with control to starting position"
+      ],
+      "cues": ["Straight up, not rolling", "Pause at top", "Heavy weight okay"],
+      "variations": ["dumbbell_shrug", "trap_bar_shrug"],
+      "substitutions": [
+        { "equipment": ["dumbbell"], "exercise": "dumbbell_shrug" },
+        { "equipment": ["trap_bar"], "exercise": "trap_bar_shrug" }
+      ]
+    },
+    {
+      "id": "dumbbell_shrug",
+      "name": "Dumbbell Shrug",
+      "bodyPart": "back",
+      "targetMuscle": "trapezius",
+      "secondaryMuscles": ["levator_scapulae", "rhomboids"],
+      "equipment": ["dumbbell"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "free_weight"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Stand holding dumbbells at your sides",
+        "Shrug shoulders straight up toward ears",
+        "Hold briefly at the top",
+        "Lower with control"
+      ],
+      "cues": ["Arms stay straight", "No rolling", "Feel the traps squeeze"],
+      "variations": ["barbell_shrug"],
+      "substitutions": [
+        { "equipment": ["barbell"], "exercise": "barbell_shrug" },
+        { "equipment": ["kettlebell"], "exercise": "kettlebell_shrug" }
+      ]
+    },
+    {
+      "id": "straight_arm_pulldown",
+      "name": "Straight Arm Pulldown",
+      "bodyPart": "back",
+      "targetMuscle": "latissimus_dorsi",
+      "secondaryMuscles": ["teres_major", "triceps_long_head", "rear_deltoid"],
+      "equipment": ["cable_machine"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["isolation", "machine", "pulling"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Stand facing cable machine with bar attachment at high position",
+        "Grip bar with arms extended, slight bend in elbows",
+        "Pull bar down in an arc to your thighs, keeping arms straight",
+        "Return with control to starting position"
+      ],
+      "cues": ["Arms stay nearly straight", "Feel the lats stretch", "Controlled arc motion"],
+      "variations": ["band_straight_arm_pulldown"],
+      "substitutions": [
+        {
+          "equipment": ["resistance_band_medium", "pull_up_bar"],
+          "exercise": "band_straight_arm_pulldown"
+        }
+      ]
+    },
+    {
+      "id": "meadows_row",
+      "name": "Meadows Row",
+      "bodyPart": "back",
+      "targetMuscle": "latissimus_dorsi",
+      "secondaryMuscles": ["rhomboids", "rear_deltoid", "biceps", "obliques"],
+      "equipment": ["barbell", "landmine"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["compound", "free_weight", "pulling", "horizontal_pull", "unilateral"],
+      "constraints": {
+        "requiresLyingDown": false,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Set up landmine with barbell, stand perpendicular to the bar",
+        "Stagger stance with inside leg back, hinge forward",
+        "Grip the bar end with outside hand using overhand grip",
+        "Row explosively to your hip, allowing slight torso rotation"
+      ],
+      "cues": ["Drive elbow back", "Stretch at bottom", "Explosive pull"],
+      "variations": ["dumbbell_row", "landmine_row"],
+      "substitutions": [{ "equipment": ["dumbbell", "flat_bench"], "exercise": "dumbbell_row" }]
+    },
+    {
+      "id": "dumbbell_pullover",
+      "name": "Dumbbell Pullover",
+      "bodyPart": "back",
+      "targetMuscle": "latissimus_dorsi",
+      "secondaryMuscles": ["pectoralis_major", "triceps", "serratus_anterior"],
+      "equipment": ["dumbbell", "flat_bench"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["isolation", "free_weight"],
+      "constraints": {
+        "requiresLyingDown": true,
+        "noiseLevel": "quiet"
+      },
+      "instructions": [
+        "Lie on bench with only upper back supported, feet flat on floor",
+        "Hold one dumbbell with both hands over chest, arms slightly bent",
+        "Lower dumbbell in an arc behind your head until you feel a stretch",
+        "Pull the weight back over chest using lats"
+      ],
+      "cues": ["Keep slight elbow bend", "Feel the lat stretch", "Control the arc"],
+      "variations": ["cable_pullover"],
+      "substitutions": [
+        { "equipment": ["cable_machine", "flat_bench"], "exercise": "cable_pullover" }
+      ]
+    }
+  ]
+}

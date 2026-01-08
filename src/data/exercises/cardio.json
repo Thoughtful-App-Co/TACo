@@ -1,0 +1,626 @@
+{
+  "bodyPart": "cardio",
+  "exercises": [
+    {
+      "id": "jumping_jacks",
+      "name": "Jumping Jacks",
+      "bodyPart": "cardio",
+      "targetMuscle": "full_body",
+      "secondaryMuscles": ["calves", "shoulders", "hip_adductors"],
+      "equipment": ["floor_space"],
+      "category": "cardio",
+      "difficulty": "beginner",
+      "tags": ["plyometric", "warmup", "high_impact"],
+      "constraints": { "requiresJumping": true, "noiseLevel": "loud" },
+      "instructions": [
+        "Stand with feet together and arms at your sides",
+        "Jump feet out wide while simultaneously raising arms overhead",
+        "Jump feet back together while lowering arms to sides",
+        "Repeat in a continuous rhythmic motion"
+      ],
+      "cues": [
+        "Land softly on the balls of your feet",
+        "Keep core engaged throughout",
+        "Maintain a steady breathing rhythm"
+      ]
+    },
+    {
+      "id": "star_jumps",
+      "name": "Star Jumps",
+      "bodyPart": "cardio",
+      "targetMuscle": "full_body",
+      "secondaryMuscles": ["quadriceps", "glutes", "shoulders"],
+      "equipment": ["floor_space"],
+      "category": "cardio",
+      "difficulty": "intermediate",
+      "tags": ["plyometric", "high_impact", "explosive"],
+      "constraints": { "requiresJumping": true, "noiseLevel": "loud" },
+      "instructions": [
+        "Start in a quarter squat position with arms at your sides",
+        "Explosively jump up, spreading arms and legs out to form a star shape",
+        "Land softly back in the starting quarter squat position",
+        "Immediately repeat"
+      ],
+      "cues": [
+        "Fully extend arms and legs at the peak of the jump",
+        "Absorb landing through bent knees",
+        "Drive through the balls of your feet"
+      ]
+    },
+    {
+      "id": "high_knees",
+      "name": "High Knees",
+      "bodyPart": "cardio",
+      "targetMuscle": "hip_flexors",
+      "secondaryMuscles": ["quadriceps", "calves", "core"],
+      "equipment": ["floor_space"],
+      "category": "cardio",
+      "difficulty": "beginner",
+      "tags": ["plyometric", "warmup", "high_impact", "running"],
+      "constraints": { "requiresJumping": true, "noiseLevel": "moderate" },
+      "instructions": [
+        "Stand tall with feet hip-width apart",
+        "Drive one knee up toward chest while hopping on the opposite foot",
+        "Quickly alternate legs in a running motion",
+        "Pump arms in opposition to legs"
+      ],
+      "cues": [
+        "Bring knees to hip height or higher",
+        "Stay on the balls of your feet",
+        "Keep chest up and core tight"
+      ]
+    },
+    {
+      "id": "butt_kickers",
+      "name": "Butt Kickers",
+      "bodyPart": "cardio",
+      "targetMuscle": "hamstrings",
+      "secondaryMuscles": ["calves", "quadriceps", "glutes"],
+      "equipment": ["floor_space"],
+      "category": "cardio",
+      "difficulty": "beginner",
+      "tags": ["plyometric", "warmup", "high_impact", "running"],
+      "constraints": { "requiresJumping": true, "noiseLevel": "moderate" },
+      "instructions": [
+        "Stand tall with feet hip-width apart",
+        "Jog in place, kicking heels up toward your glutes",
+        "Alternate legs rapidly",
+        "Keep arms pumping naturally"
+      ],
+      "cues": [
+        "Try to tap your glutes with each heel",
+        "Keep knees pointing down, not forward",
+        "Maintain an upright posture"
+      ]
+    },
+    {
+      "id": "jump_squats",
+      "name": "Jump Squats",
+      "bodyPart": "cardio",
+      "targetMuscle": "quadriceps",
+      "secondaryMuscles": ["glutes", "hamstrings", "calves"],
+      "equipment": ["floor_space"],
+      "category": "cardio",
+      "difficulty": "intermediate",
+      "tags": ["plyometric", "high_impact", "explosive", "lower_body"],
+      "constraints": { "requiresJumping": true, "noiseLevel": "loud" },
+      "instructions": [
+        "Stand with feet shoulder-width apart",
+        "Lower into a squat position, thighs parallel to floor",
+        "Explosively jump up, extending through hips, knees, and ankles",
+        "Land softly and immediately descend into the next squat"
+      ],
+      "cues": [
+        "Swing arms to generate momentum",
+        "Land with soft knees to absorb impact",
+        "Keep chest up throughout the movement"
+      ]
+    },
+    {
+      "id": "squat_jacks",
+      "name": "Squat Jacks",
+      "bodyPart": "cardio",
+      "targetMuscle": "quadriceps",
+      "secondaryMuscles": ["glutes", "hip_adductors", "calves"],
+      "equipment": ["floor_space"],
+      "category": "cardio",
+      "difficulty": "intermediate",
+      "tags": ["plyometric", "high_impact", "lower_body"],
+      "constraints": { "requiresJumping": true, "noiseLevel": "loud" },
+      "instructions": [
+        "Start in a squat position with feet together and hands at chest",
+        "Jump feet out wide while staying in the squat position",
+        "Jump feet back together",
+        "Maintain the squat depth throughout"
+      ],
+      "cues": [
+        "Stay low in the squat the entire time",
+        "Keep weight in your heels",
+        "Engage your core for stability"
+      ]
+    },
+    {
+      "id": "skaters",
+      "name": "Skaters",
+      "bodyPart": "cardio",
+      "targetMuscle": "glutes",
+      "secondaryMuscles": ["quadriceps", "hip_abductors", "calves"],
+      "equipment": ["floor_space"],
+      "category": "cardio",
+      "difficulty": "intermediate",
+      "tags": ["plyometric", "high_impact", "lateral", "balance"],
+      "constraints": { "requiresJumping": true, "noiseLevel": "moderate" },
+      "instructions": [
+        "Stand on one leg with a slight bend in the knee",
+        "Leap laterally to the opposite side, landing on the other foot",
+        "Swing the trailing leg behind the landing leg",
+        "Immediately leap back to the other side"
+      ],
+      "cues": [
+        "Push off through the ball of your foot",
+        "Land softly with knee tracking over toes",
+        "Use arms for balance and momentum"
+      ]
+    },
+    {
+      "id": "tuck_jumps",
+      "name": "Tuck Jumps",
+      "bodyPart": "cardio",
+      "targetMuscle": "quadriceps",
+      "secondaryMuscles": ["glutes", "hip_flexors", "calves", "core"],
+      "equipment": ["floor_space"],
+      "category": "cardio",
+      "difficulty": "advanced",
+      "tags": ["plyometric", "high_impact", "explosive"],
+      "constraints": { "requiresJumping": true, "noiseLevel": "loud" },
+      "instructions": [
+        "Stand with feet shoulder-width apart",
+        "Jump explosively upward",
+        "At the peak, pull both knees toward your chest",
+        "Extend legs and land softly, immediately jumping again"
+      ],
+      "cues": [
+        "Drive arms up to increase jump height",
+        "Tuck knees as high as possible",
+        "Land with soft knees and absorb the impact"
+      ]
+    },
+    {
+      "id": "sprint_in_place",
+      "name": "Sprint in Place",
+      "bodyPart": "cardio",
+      "targetMuscle": "hip_flexors",
+      "secondaryMuscles": ["quadriceps", "calves", "hamstrings", "core"],
+      "equipment": ["floor_space"],
+      "category": "cardio",
+      "difficulty": "intermediate",
+      "tags": ["plyometric", "high_impact", "running", "hiit"],
+      "constraints": { "requiresJumping": true, "noiseLevel": "loud" },
+      "instructions": [
+        "Stand in a running stance with one foot slightly forward",
+        "Drive knees up rapidly while pumping arms",
+        "Move as fast as possible while staying in place",
+        "Maintain the sprint for the designated time"
+      ],
+      "cues": [
+        "Stay on the balls of your feet",
+        "Drive elbows back forcefully",
+        "Keep core tight and chest up"
+      ]
+    },
+    {
+      "id": "marching_in_place",
+      "name": "Marching in Place",
+      "bodyPart": "cardio",
+      "targetMuscle": "hip_flexors",
+      "secondaryMuscles": ["quadriceps", "core"],
+      "equipment": ["floor_space"],
+      "category": "cardio",
+      "difficulty": "beginner",
+      "tags": ["low_impact", "warmup", "senior_friendly"],
+      "constraints": { "requiresJumping": false, "noiseLevel": "quiet" },
+      "instructions": [
+        "Stand tall with feet hip-width apart",
+        "Lift one knee to hip height while keeping foot flexed",
+        "Lower and repeat with the opposite leg",
+        "Swing arms naturally in opposition to legs"
+      ],
+      "cues": [
+        "Keep one foot on the ground at all times",
+        "Maintain an upright posture",
+        "Engage your core throughout"
+      ]
+    },
+    {
+      "id": "jump_rope_basic",
+      "name": "Jump Rope (Basic)",
+      "bodyPart": "cardio",
+      "targetMuscle": "calves",
+      "secondaryMuscles": ["forearms", "shoulders", "core"],
+      "equipment": ["jump_rope", "floor_space"],
+      "category": "cardio",
+      "difficulty": "beginner",
+      "tags": ["plyometric", "high_impact", "coordination"],
+      "constraints": { "requiresJumping": true, "noiseLevel": "moderate" },
+      "instructions": [
+        "Hold rope handles at hip height with elbows close to body",
+        "Swing rope overhead and jump as it passes under feet",
+        "Land softly on the balls of your feet",
+        "Keep jumps small and controlled"
+      ],
+      "cues": [
+        "Use wrists to turn the rope, not shoulders",
+        "Jump just high enough to clear the rope",
+        "Keep core engaged and posture upright"
+      ]
+    },
+    {
+      "id": "jump_rope_double_unders",
+      "name": "Double Unders",
+      "bodyPart": "cardio",
+      "targetMuscle": "calves",
+      "secondaryMuscles": ["forearms", "shoulders", "core"],
+      "equipment": ["jump_rope", "floor_space"],
+      "category": "cardio",
+      "difficulty": "advanced",
+      "tags": ["plyometric", "high_impact", "coordination", "explosive"],
+      "constraints": { "requiresJumping": true, "noiseLevel": "moderate" },
+      "instructions": [
+        "Start with a basic jump rope rhythm",
+        "Jump higher than normal while spinning rope twice under feet",
+        "Land softly and immediately prepare for the next rep",
+        "Maintain a consistent rhythm"
+      ],
+      "cues": [
+        "Spin wrists faster, not arms",
+        "Jump straight up, not forward",
+        "Keep body tight and compact in the air"
+      ]
+    },
+    {
+      "id": "battle_rope_waves",
+      "name": "Battle Rope Waves",
+      "bodyPart": "cardio",
+      "targetMuscle": "shoulders",
+      "secondaryMuscles": ["forearms", "core", "back"],
+      "equipment": ["battle_ropes", "floor_space"],
+      "category": "cardio",
+      "difficulty": "intermediate",
+      "tags": ["upper_body", "hiit", "strength_cardio"],
+      "constraints": { "requiresJumping": false, "noiseLevel": "moderate" },
+      "instructions": [
+        "Stand with feet shoulder-width apart, holding rope ends",
+        "Maintain a quarter squat with core braced",
+        "Alternate raising and lowering arms to create waves in the ropes",
+        "Keep waves continuous and powerful"
+      ],
+      "cues": [
+        "Generate power from your core and hips",
+        "Keep shoulders down and back",
+        "Maintain athletic stance throughout"
+      ]
+    },
+    {
+      "id": "battle_rope_slams",
+      "name": "Battle Rope Slams",
+      "bodyPart": "cardio",
+      "targetMuscle": "shoulders",
+      "secondaryMuscles": ["core", "back", "triceps"],
+      "equipment": ["battle_ropes", "floor_space"],
+      "category": "cardio",
+      "difficulty": "intermediate",
+      "tags": ["upper_body", "hiit", "strength_cardio", "explosive"],
+      "constraints": { "requiresJumping": false, "noiseLevel": "loud" },
+      "instructions": [
+        "Stand with feet shoulder-width apart, holding both rope ends",
+        "Raise both arms overhead simultaneously",
+        "Slam the ropes down forcefully into the ground",
+        "Immediately raise and repeat"
+      ],
+      "cues": [
+        "Use your whole body to generate force",
+        "Engage core on the slam",
+        "Exhale forcefully with each slam"
+      ]
+    },
+    {
+      "id": "box_jumps",
+      "name": "Box Jumps",
+      "bodyPart": "cardio",
+      "targetMuscle": "quadriceps",
+      "secondaryMuscles": ["glutes", "hamstrings", "calves"],
+      "equipment": ["plyo_box", "floor_space"],
+      "category": "cardio",
+      "difficulty": "intermediate",
+      "tags": ["plyometric", "high_impact", "explosive", "lower_body"],
+      "constraints": { "requiresJumping": true, "noiseLevel": "moderate" },
+      "instructions": [
+        "Stand facing a plyo box at arm's length distance",
+        "Drop into a quarter squat and swing arms back",
+        "Explosively jump onto the box, landing with both feet",
+        "Stand fully, then step down and repeat"
+      ],
+      "cues": [
+        "Land softly with knees bent",
+        "Land with full feet on the box, not just toes",
+        "Step down rather than jumping to save your joints"
+      ]
+    },
+    {
+      "id": "box_step_ups",
+      "name": "Box Step Ups",
+      "bodyPart": "cardio",
+      "targetMuscle": "quadriceps",
+      "secondaryMuscles": ["glutes", "hamstrings"],
+      "equipment": ["plyo_box", "floor_space"],
+      "category": "cardio",
+      "difficulty": "beginner",
+      "tags": ["low_impact", "lower_body", "unilateral"],
+      "constraints": { "requiresJumping": false, "noiseLevel": "quiet" },
+      "instructions": [
+        "Stand facing a plyo box or step",
+        "Step up with one foot, driving through the heel",
+        "Bring the other foot up to stand on the box",
+        "Step down and alternate leading leg"
+      ],
+      "cues": [
+        "Keep chest up and core engaged",
+        "Drive through the heel of the stepping leg",
+        "Control the descent"
+      ]
+    },
+    {
+      "id": "treadmill_intervals",
+      "name": "Treadmill Intervals",
+      "bodyPart": "cardio",
+      "targetMuscle": "quadriceps",
+      "secondaryMuscles": ["hamstrings", "glutes", "calves"],
+      "equipment": ["treadmill"],
+      "category": "cardio",
+      "difficulty": "intermediate",
+      "tags": ["running", "hiit", "machine"],
+      "constraints": { "requiresJumping": false, "noiseLevel": "moderate" },
+      "instructions": [
+        "Warm up at a comfortable walking pace for 2-3 minutes",
+        "Increase speed to a challenging run for 30-60 seconds",
+        "Reduce speed to recovery pace for 60-90 seconds",
+        "Repeat intervals for desired duration"
+      ],
+      "cues": [
+        "Use the handrails only for safety, not support",
+        "Maintain proper running form throughout",
+        "Adjust speed based on your fitness level"
+      ]
+    },
+    {
+      "id": "treadmill_incline_walk",
+      "name": "Treadmill Incline Walk",
+      "bodyPart": "cardio",
+      "targetMuscle": "glutes",
+      "secondaryMuscles": ["hamstrings", "calves", "quadriceps"],
+      "equipment": ["treadmill"],
+      "category": "cardio",
+      "difficulty": "beginner",
+      "tags": ["low_impact", "machine", "walking"],
+      "constraints": { "requiresJumping": false, "noiseLevel": "quiet" },
+      "instructions": [
+        "Set treadmill to a steep incline (10-15%)",
+        "Walk at a moderate pace (2.5-3.5 mph)",
+        "Maintain upright posture without holding rails",
+        "Continue for desired duration"
+      ],
+      "cues": [
+        "Lean slightly forward from the ankles",
+        "Take shorter, quicker steps",
+        "Squeeze glutes with each step"
+      ]
+    },
+    {
+      "id": "rowing_machine",
+      "name": "Rowing Machine",
+      "bodyPart": "cardio",
+      "targetMuscle": "back",
+      "secondaryMuscles": ["quadriceps", "glutes", "biceps", "core"],
+      "equipment": ["rowing_machine"],
+      "category": "cardio",
+      "difficulty": "beginner",
+      "tags": ["low_impact", "full_body", "machine"],
+      "constraints": { "requiresJumping": false, "noiseLevel": "quiet" },
+      "instructions": [
+        "Sit on the rower with feet secured in footplates",
+        "Grab handle with overhand grip, arms extended",
+        "Drive through legs first, then lean back slightly and pull handle to lower chest",
+        "Return by extending arms, hinging forward, then bending knees"
+      ],
+      "cues": [
+        "Sequence: legs, back, arms on the drive; arms, back, legs on recovery",
+        "Keep core braced throughout",
+        "Drive through heels, not toes"
+      ]
+    },
+    {
+      "id": "assault_bike",
+      "name": "Assault Bike",
+      "bodyPart": "cardio",
+      "targetMuscle": "quadriceps",
+      "secondaryMuscles": ["hamstrings", "shoulders", "core", "biceps", "triceps"],
+      "equipment": ["assault_bike"],
+      "category": "cardio",
+      "difficulty": "intermediate",
+      "tags": ["full_body", "hiit", "machine"],
+      "constraints": { "requiresJumping": false, "noiseLevel": "moderate" },
+      "instructions": [
+        "Adjust seat height so leg is slightly bent at bottom of pedal stroke",
+        "Grip handles and begin pedaling while pushing and pulling arms",
+        "Coordinate arm and leg movements for maximum power",
+        "Maintain steady rhythm or vary intensity for intervals"
+      ],
+      "cues": [
+        "Push and pull handles actively",
+        "Keep core engaged for power transfer",
+        "Breathe rhythmically with your cadence"
+      ]
+    },
+    {
+      "id": "stair_climber",
+      "name": "Stair Climber",
+      "bodyPart": "cardio",
+      "targetMuscle": "glutes",
+      "secondaryMuscles": ["quadriceps", "hamstrings", "calves"],
+      "equipment": ["stair_climber"],
+      "category": "cardio",
+      "difficulty": "intermediate",
+      "tags": ["low_impact", "lower_body", "machine"],
+      "constraints": { "requiresJumping": false, "noiseLevel": "quiet" },
+      "instructions": [
+        "Step onto the machine and select your desired speed",
+        "Begin stepping with a full range of motion",
+        "Use handrails lightly for balance only",
+        "Maintain consistent pace for desired duration"
+      ],
+      "cues": [
+        "Drive through your whole foot, not just toes",
+        "Keep chest up and avoid leaning on rails",
+        "Take deep, full steps"
+      ]
+    },
+    {
+      "id": "elliptical",
+      "name": "Elliptical Trainer",
+      "bodyPart": "cardio",
+      "targetMuscle": "quadriceps",
+      "secondaryMuscles": ["glutes", "hamstrings", "core"],
+      "equipment": ["elliptical"],
+      "category": "cardio",
+      "difficulty": "beginner",
+      "tags": ["low_impact", "full_body", "machine"],
+      "constraints": { "requiresJumping": false, "noiseLevel": "quiet" },
+      "instructions": [
+        "Step onto the pedals and grip the moving handles",
+        "Begin a smooth elliptical motion with your legs",
+        "Push and pull handles to engage upper body",
+        "Adjust resistance and incline as needed"
+      ],
+      "cues": [
+        "Keep feet flat on pedals",
+        "Maintain upright posture",
+        "Engage core throughout the movement"
+      ]
+    },
+    {
+      "id": "stationary_bike",
+      "name": "Stationary Bike",
+      "bodyPart": "cardio",
+      "targetMuscle": "quadriceps",
+      "secondaryMuscles": ["hamstrings", "glutes", "calves"],
+      "equipment": ["stationary_bike"],
+      "category": "cardio",
+      "difficulty": "beginner",
+      "tags": ["low_impact", "lower_body", "machine", "senior_friendly"],
+      "constraints": { "requiresJumping": false, "noiseLevel": "quiet" },
+      "instructions": [
+        "Adjust seat height so leg is slightly bent at bottom of pedal stroke",
+        "Begin pedaling at a comfortable cadence",
+        "Adjust resistance to increase difficulty",
+        "Maintain consistent pace or vary for intervals"
+      ],
+      "cues": [
+        "Keep knees tracking over toes",
+        "Maintain a neutral spine",
+        "Avoid rocking hips side to side"
+      ]
+    },
+    {
+      "id": "step_touches",
+      "name": "Step Touches",
+      "bodyPart": "cardio",
+      "targetMuscle": "hip_adductors",
+      "secondaryMuscles": ["glutes", "calves"],
+      "equipment": ["floor_space"],
+      "category": "cardio",
+      "difficulty": "beginner",
+      "tags": ["low_impact", "warmup", "senior_friendly"],
+      "constraints": { "requiresJumping": false, "noiseLevel": "quiet" },
+      "instructions": [
+        "Stand with feet together",
+        "Step to the right with right foot",
+        "Bring left foot to meet right foot",
+        "Step to the left and repeat, alternating sides"
+      ],
+      "cues": [
+        "Keep one foot on the ground at all times",
+        "Add arm movements to increase intensity",
+        "Maintain a slight bend in the knees"
+      ]
+    },
+    {
+      "id": "low_impact_jacks",
+      "name": "Low Impact Jacks",
+      "bodyPart": "cardio",
+      "targetMuscle": "full_body",
+      "secondaryMuscles": ["calves", "shoulders", "hip_adductors"],
+      "equipment": ["floor_space"],
+      "category": "cardio",
+      "difficulty": "beginner",
+      "tags": ["low_impact", "warmup", "senior_friendly"],
+      "constraints": { "requiresJumping": false, "noiseLevel": "quiet" },
+      "instructions": [
+        "Stand with feet together and arms at sides",
+        "Step right foot out while raising arms overhead",
+        "Step right foot back in while lowering arms",
+        "Alternate stepping out with left foot"
+      ],
+      "cues": [
+        "Keep one foot planted at all times",
+        "Move at a brisk pace for cardio benefit",
+        "Coordinate arm and leg movements"
+      ]
+    },
+    {
+      "id": "mountain_climbers",
+      "name": "Mountain Climbers",
+      "bodyPart": "cardio",
+      "targetMuscle": "core",
+      "secondaryMuscles": ["hip_flexors", "shoulders", "quadriceps"],
+      "equipment": ["floor_space"],
+      "category": "cardio",
+      "difficulty": "intermediate",
+      "tags": ["plyometric", "high_impact", "core", "hiit"],
+      "constraints": { "requiresJumping": true, "noiseLevel": "moderate" },
+      "instructions": [
+        "Start in a high plank position with hands under shoulders",
+        "Drive one knee toward your chest",
+        "Quickly switch legs, driving the other knee forward",
+        "Continue alternating in a running motion"
+      ],
+      "cues": [
+        "Keep hips level, avoid bouncing",
+        "Maintain a straight line from head to heels",
+        "Drive knees toward opposite elbow for more oblique engagement"
+      ]
+    },
+    {
+      "id": "burpees",
+      "name": "Burpees",
+      "bodyPart": "cardio",
+      "targetMuscle": "full_body",
+      "secondaryMuscles": ["chest", "shoulders", "quadriceps", "core"],
+      "equipment": ["floor_space"],
+      "category": "cardio",
+      "difficulty": "advanced",
+      "tags": ["plyometric", "high_impact", "full_body", "hiit"],
+      "constraints": { "requiresJumping": true, "noiseLevel": "loud" },
+      "instructions": [
+        "Stand with feet shoulder-width apart",
+        "Drop into a squat and place hands on floor",
+        "Jump feet back to plank position, perform a push-up",
+        "Jump feet forward, then explosively jump up with arms overhead"
+      ],
+      "cues": [
+        "Move fluidly through each phase",
+        "Land softly on each jump",
+        "Scale by removing push-up or jump as needed"
+      ]
+    }
+  ]
+}

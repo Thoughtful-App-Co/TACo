@@ -1,0 +1,764 @@
+{
+  "bodyPart": "core",
+  "exercises": [
+    {
+      "id": "plank",
+      "name": "Plank",
+      "bodyPart": "core",
+      "targetMuscle": "rectus_abdominis",
+      "secondaryMuscles": ["obliques", "transverse_abdominis", "lower_back"],
+      "equipment": ["floor_space"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isometric", "bodyweight"],
+      "constraints": { "requiresLyingDown": true, "noiseLevel": "quiet" },
+      "instructions": [
+        "Start in a push-up position with forearms on the ground",
+        "Keep elbows directly beneath shoulders",
+        "Engage core and maintain a straight line from head to heels",
+        "Hold position for the target duration"
+      ],
+      "cues": [
+        "Don't let hips sag or pike up",
+        "Squeeze glutes to maintain alignment",
+        "Breathe steadily throughout"
+      ]
+    },
+    {
+      "id": "side_plank",
+      "name": "Side Plank",
+      "bodyPart": "core",
+      "targetMuscle": "obliques",
+      "secondaryMuscles": ["transverse_abdominis", "gluteus_medius"],
+      "equipment": ["floor_space"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isometric", "bodyweight", "unilateral"],
+      "constraints": { "requiresLyingDown": true, "noiseLevel": "quiet" },
+      "instructions": [
+        "Lie on your side with forearm on the ground, elbow under shoulder",
+        "Stack feet or stagger them for stability",
+        "Lift hips to create a straight line from head to feet",
+        "Hold position, then repeat on the other side"
+      ],
+      "cues": [
+        "Keep hips stacked and lifted",
+        "Avoid rotating forward or backward",
+        "Engage obliques to maintain position"
+      ]
+    },
+    {
+      "id": "up_down_plank",
+      "name": "Up-Down Plank",
+      "bodyPart": "core",
+      "targetMuscle": "rectus_abdominis",
+      "secondaryMuscles": ["obliques", "triceps", "shoulders"],
+      "equipment": ["floor_space"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["dynamic", "bodyweight"],
+      "constraints": { "requiresLyingDown": true, "noiseLevel": "quiet" },
+      "instructions": [
+        "Start in a forearm plank position",
+        "Push up to a high plank one arm at a time",
+        "Lower back down to forearm plank one arm at a time",
+        "Alternate the leading arm each rep"
+      ],
+      "cues": [
+        "Minimize hip rotation during transitions",
+        "Keep core engaged throughout",
+        "Control the movement, don't rush"
+      ]
+    },
+    {
+      "id": "plank_jacks",
+      "name": "Plank Jacks",
+      "bodyPart": "core",
+      "targetMuscle": "rectus_abdominis",
+      "secondaryMuscles": ["obliques", "hip_abductors", "shoulders"],
+      "equipment": ["floor_space"],
+      "category": "cardio",
+      "difficulty": "intermediate",
+      "tags": ["dynamic", "bodyweight", "cardio"],
+      "constraints": { "requiresLyingDown": true, "noiseLevel": "moderate" },
+      "instructions": [
+        "Start in a high plank position with feet together",
+        "Jump feet out wide, then back together",
+        "Maintain a stable core and flat back throughout",
+        "Continue for the target duration or reps"
+      ],
+      "cues": [
+        "Keep hips level, don't let them bounce",
+        "Land softly on the balls of your feet",
+        "Maintain steady breathing"
+      ]
+    },
+    {
+      "id": "crunch",
+      "name": "Crunch",
+      "bodyPart": "core",
+      "targetMuscle": "rectus_abdominis",
+      "secondaryMuscles": ["obliques"],
+      "equipment": ["floor_space"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["dynamic", "bodyweight"],
+      "constraints": { "requiresLyingDown": true, "noiseLevel": "quiet" },
+      "instructions": [
+        "Lie on your back with knees bent, feet flat on floor",
+        "Place hands behind head or across chest",
+        "Curl shoulders off the ground by contracting abs",
+        "Lower back down with control"
+      ],
+      "cues": [
+        "Don't pull on your neck",
+        "Focus on curling the ribcage toward pelvis",
+        "Exhale as you crunch up"
+      ]
+    },
+    {
+      "id": "bicycle_crunch",
+      "name": "Bicycle Crunch",
+      "bodyPart": "core",
+      "targetMuscle": "obliques",
+      "secondaryMuscles": ["rectus_abdominis", "hip_flexors"],
+      "equipment": ["floor_space"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["dynamic", "bodyweight"],
+      "constraints": { "requiresLyingDown": true, "noiseLevel": "quiet" },
+      "instructions": [
+        "Lie on your back with hands behind head, legs raised",
+        "Bring right elbow toward left knee while extending right leg",
+        "Alternate sides in a pedaling motion",
+        "Keep lower back pressed into the floor"
+      ],
+      "cues": [
+        "Rotate through the torso, not just the elbows",
+        "Keep extended leg elevated, not touching the ground",
+        "Control the movement, avoid rushing"
+      ]
+    },
+    {
+      "id": "reverse_crunch",
+      "name": "Reverse Crunch",
+      "bodyPart": "core",
+      "targetMuscle": "rectus_abdominis",
+      "secondaryMuscles": ["hip_flexors", "obliques"],
+      "equipment": ["floor_space"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["dynamic", "bodyweight"],
+      "constraints": { "requiresLyingDown": true, "noiseLevel": "quiet" },
+      "instructions": [
+        "Lie on your back with legs raised, knees bent at 90 degrees",
+        "Place arms at sides for stability",
+        "Curl hips off the floor, bringing knees toward chest",
+        "Lower back down with control"
+      ],
+      "cues": [
+        "Lift with your abs, not momentum",
+        "Keep upper back on the floor",
+        "Exhale as you curl up"
+      ]
+    },
+    {
+      "id": "cable_crunch",
+      "name": "Cable Crunch",
+      "bodyPart": "core",
+      "targetMuscle": "rectus_abdominis",
+      "secondaryMuscles": ["obliques"],
+      "equipment": ["cable_machine"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["dynamic", "weighted"],
+      "constraints": { "requiresLyingDown": false, "noiseLevel": "quiet" },
+      "instructions": [
+        "Kneel facing away from a high cable with rope attachment",
+        "Hold rope at the sides of your head",
+        "Curl torso down, bringing elbows toward knees",
+        "Return to starting position with control"
+      ],
+      "cues": [
+        "Keep hips stationary throughout",
+        "Focus on spinal flexion, not hip flexion",
+        "Control the weight on the way up"
+      ]
+    },
+    {
+      "id": "lying_leg_raise",
+      "name": "Lying Leg Raise",
+      "bodyPart": "core",
+      "targetMuscle": "rectus_abdominis",
+      "secondaryMuscles": ["hip_flexors", "obliques"],
+      "equipment": ["floor_space"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["dynamic", "bodyweight"],
+      "constraints": { "requiresLyingDown": true, "noiseLevel": "quiet" },
+      "instructions": [
+        "Lie on your back with legs extended, arms at sides",
+        "Press lower back into the floor",
+        "Raise legs toward the ceiling, keeping them straight",
+        "Lower legs with control, stopping before they touch the floor"
+      ],
+      "cues": [
+        "Keep lower back pressed into the floor",
+        "If too difficult, bend knees slightly",
+        "Control the descent to increase tension"
+      ]
+    },
+    {
+      "id": "hanging_leg_raise",
+      "name": "Hanging Leg Raise",
+      "bodyPart": "core",
+      "targetMuscle": "rectus_abdominis",
+      "secondaryMuscles": ["hip_flexors", "obliques", "forearms"],
+      "equipment": ["pull_up_bar"],
+      "category": "strength",
+      "difficulty": "advanced",
+      "tags": ["dynamic", "bodyweight"],
+      "constraints": { "requiresLyingDown": false, "noiseLevel": "quiet" },
+      "instructions": [
+        "Hang from a pull-up bar with arms fully extended",
+        "Engage core and raise legs until parallel to the floor (or higher)",
+        "Keep legs straight throughout the movement",
+        "Lower with control back to starting position"
+      ],
+      "cues": [
+        "Minimize swinging",
+        "For easier version, bend knees",
+        "For advanced, raise toes to the bar"
+      ]
+    },
+    {
+      "id": "captains_chair_leg_raise",
+      "name": "Captain's Chair Leg Raise",
+      "bodyPart": "core",
+      "targetMuscle": "rectus_abdominis",
+      "secondaryMuscles": ["hip_flexors", "obliques"],
+      "equipment": ["captain_chair"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["dynamic", "bodyweight"],
+      "constraints": { "requiresLyingDown": false, "noiseLevel": "quiet" },
+      "instructions": [
+        "Position yourself in the captain's chair with back against pad",
+        "Support yourself on the arm rests, legs hanging",
+        "Raise knees toward chest (or legs straight for more difficulty)",
+        "Lower with control"
+      ],
+      "cues": [
+        "Don't swing or use momentum",
+        "Keep upper body stable",
+        "Focus on curling pelvis up, not just lifting legs"
+      ]
+    },
+    {
+      "id": "sit_up",
+      "name": "Sit-Up",
+      "bodyPart": "core",
+      "targetMuscle": "rectus_abdominis",
+      "secondaryMuscles": ["hip_flexors", "obliques"],
+      "equipment": ["floor_space"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["dynamic", "bodyweight"],
+      "constraints": { "requiresLyingDown": true, "noiseLevel": "quiet" },
+      "instructions": [
+        "Lie on your back with knees bent, feet flat or anchored",
+        "Place hands behind head or across chest",
+        "Sit all the way up by contracting your abs",
+        "Lower back down with control"
+      ],
+      "cues": [
+        "Don't pull on your neck",
+        "Engage core from the start of the movement",
+        "Control the descent"
+      ]
+    },
+    {
+      "id": "v_up",
+      "name": "V-Up",
+      "bodyPart": "core",
+      "targetMuscle": "rectus_abdominis",
+      "secondaryMuscles": ["hip_flexors", "obliques"],
+      "equipment": ["floor_space"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["dynamic", "bodyweight"],
+      "constraints": { "requiresLyingDown": true, "noiseLevel": "quiet" },
+      "instructions": [
+        "Lie flat on your back with arms extended overhead",
+        "Simultaneously raise legs and torso, reaching hands toward toes",
+        "Form a V shape at the top of the movement",
+        "Lower back down with control"
+      ],
+      "cues": [
+        "Keep legs and arms straight",
+        "Balance on your tailbone at the top",
+        "Exhale as you crunch up"
+      ]
+    },
+    {
+      "id": "dead_bug",
+      "name": "Dead Bug",
+      "bodyPart": "core",
+      "targetMuscle": "transverse_abdominis",
+      "secondaryMuscles": ["rectus_abdominis", "hip_flexors"],
+      "equipment": ["floor_space"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["dynamic", "bodyweight", "stability"],
+      "constraints": { "requiresLyingDown": true, "noiseLevel": "quiet" },
+      "instructions": [
+        "Lie on your back with arms extended toward ceiling",
+        "Raise legs with knees bent at 90 degrees",
+        "Slowly lower opposite arm and leg toward the floor",
+        "Return to start and repeat on the other side"
+      ],
+      "cues": [
+        "Keep lower back pressed into the floor throughout",
+        "Move slowly and with control",
+        "Exhale as you extend"
+      ]
+    },
+    {
+      "id": "hollow_body_hold",
+      "name": "Hollow Body Hold",
+      "bodyPart": "core",
+      "targetMuscle": "rectus_abdominis",
+      "secondaryMuscles": ["transverse_abdominis", "hip_flexors"],
+      "equipment": ["floor_space"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["isometric", "bodyweight", "gymnastics"],
+      "constraints": { "requiresLyingDown": true, "noiseLevel": "quiet" },
+      "instructions": [
+        "Lie on your back with arms extended overhead",
+        "Press lower back into the floor",
+        "Raise legs and shoulders slightly off the ground",
+        "Hold this position, forming a banana shape"
+      ],
+      "cues": [
+        "Keep lower back glued to the floor",
+        "Point toes and reach through fingertips",
+        "If too hard, bend knees or raise limbs higher"
+      ]
+    },
+    {
+      "id": "ab_wheel_rollout",
+      "name": "Ab Wheel Rollout",
+      "bodyPart": "core",
+      "targetMuscle": "rectus_abdominis",
+      "secondaryMuscles": ["obliques", "lats", "shoulders"],
+      "equipment": ["ab_wheel", "yoga_mat"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["dynamic", "equipment"],
+      "constraints": { "requiresLyingDown": true, "noiseLevel": "quiet" },
+      "instructions": [
+        "Kneel on a mat with ab wheel in front of you",
+        "Grip the handles and engage your core",
+        "Roll the wheel forward, extending your body",
+        "Pull back to starting position using your abs"
+      ],
+      "cues": [
+        "Keep core tight throughout, don't let hips sag",
+        "Go only as far as you can control",
+        "Squeeze abs hard on the way back"
+      ]
+    },
+    {
+      "id": "standing_ab_wheel_rollout",
+      "name": "Standing Ab Wheel Rollout",
+      "bodyPart": "core",
+      "targetMuscle": "rectus_abdominis",
+      "secondaryMuscles": ["obliques", "lats", "shoulders", "hip_flexors"],
+      "equipment": ["ab_wheel"],
+      "category": "strength",
+      "difficulty": "advanced",
+      "tags": ["dynamic", "equipment"],
+      "constraints": { "requiresLyingDown": false, "noiseLevel": "quiet" },
+      "instructions": [
+        "Stand with feet shoulder-width apart, ab wheel on the ground",
+        "Bend at the hips and grip the handles",
+        "Roll the wheel forward, keeping legs straight",
+        "Roll back to starting position"
+      ],
+      "cues": [
+        "Requires significant core strength",
+        "Keep core braced throughout",
+        "Start with partial range of motion"
+      ]
+    },
+    {
+      "id": "mountain_climber",
+      "name": "Mountain Climber",
+      "bodyPart": "core",
+      "targetMuscle": "rectus_abdominis",
+      "secondaryMuscles": ["hip_flexors", "shoulders", "quadriceps"],
+      "equipment": ["floor_space"],
+      "category": "cardio",
+      "difficulty": "beginner",
+      "tags": ["dynamic", "bodyweight", "cardio"],
+      "constraints": { "requiresLyingDown": true, "noiseLevel": "moderate" },
+      "instructions": [
+        "Start in a high plank position",
+        "Drive one knee toward your chest",
+        "Quickly switch legs, bringing the other knee forward",
+        "Continue alternating at your target pace"
+      ],
+      "cues": [
+        "Keep hips level, don't let them bounce up",
+        "Maintain a strong plank position",
+        "Control your breathing"
+      ]
+    },
+    {
+      "id": "russian_twist",
+      "name": "Russian Twist",
+      "bodyPart": "core",
+      "targetMuscle": "obliques",
+      "secondaryMuscles": ["rectus_abdominis", "hip_flexors"],
+      "equipment": ["floor_space"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["dynamic", "bodyweight", "rotational"],
+      "constraints": { "requiresLyingDown": true, "noiseLevel": "quiet" },
+      "instructions": [
+        "Sit with knees bent, feet flat or elevated",
+        "Lean back slightly and lift feet off the ground",
+        "Rotate torso side to side, touching the floor beside you",
+        "Keep core engaged throughout"
+      ],
+      "cues": [
+        "Rotate through the torso, not just arms",
+        "Keep chest lifted",
+        "For added difficulty, hold a weight"
+      ]
+    },
+    {
+      "id": "medicine_ball_russian_twist",
+      "name": "Medicine Ball Russian Twist",
+      "bodyPart": "core",
+      "targetMuscle": "obliques",
+      "secondaryMuscles": ["rectus_abdominis", "hip_flexors"],
+      "equipment": ["medicine_ball", "floor_space"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["dynamic", "weighted", "rotational"],
+      "constraints": { "requiresLyingDown": true, "noiseLevel": "quiet" },
+      "instructions": [
+        "Sit with knees bent, holding a medicine ball at chest",
+        "Lean back and lift feet off the ground",
+        "Rotate torso side to side, moving the ball across your body",
+        "Touch the ball to the floor on each side"
+      ],
+      "cues": [
+        "Control the weight, don't let momentum take over",
+        "Keep feet elevated for more challenge",
+        "Exhale with each rotation"
+      ]
+    },
+    {
+      "id": "cable_woodchop",
+      "name": "Cable Woodchop",
+      "bodyPart": "core",
+      "targetMuscle": "obliques",
+      "secondaryMuscles": ["rectus_abdominis", "shoulders", "hips"],
+      "equipment": ["cable_machine"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["dynamic", "rotational", "functional"],
+      "constraints": { "requiresLyingDown": false, "noiseLevel": "quiet" },
+      "instructions": [
+        "Stand sideways to a cable machine with handle at high position",
+        "Grip handle with both hands, arms extended",
+        "Pull diagonally across body from high to low",
+        "Control the return, then repeat. Switch sides."
+      ],
+      "cues": [
+        "Rotate through hips and torso together",
+        "Keep arms relatively straight",
+        "Control the weight throughout"
+      ]
+    },
+    {
+      "id": "medicine_ball_woodchop",
+      "name": "Medicine Ball Woodchop",
+      "bodyPart": "core",
+      "targetMuscle": "obliques",
+      "secondaryMuscles": ["rectus_abdominis", "shoulders", "hips"],
+      "equipment": ["medicine_ball"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["dynamic", "rotational", "functional"],
+      "constraints": { "requiresLyingDown": false, "noiseLevel": "quiet" },
+      "instructions": [
+        "Stand with feet wider than shoulder-width, holding medicine ball",
+        "Start with ball at one hip",
+        "Rotate and lift ball diagonally across body overhead",
+        "Return with control and repeat. Switch sides."
+      ],
+      "cues": [
+        "Drive the movement from your hips and core",
+        "Keep arms extended throughout",
+        "Control the descent"
+      ]
+    },
+    {
+      "id": "dumbbell_side_bend",
+      "name": "Dumbbell Side Bend",
+      "bodyPart": "core",
+      "targetMuscle": "obliques",
+      "secondaryMuscles": ["quadratus_lumborum"],
+      "equipment": ["dumbbell"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["dynamic", "weighted", "unilateral"],
+      "constraints": { "requiresLyingDown": false, "noiseLevel": "quiet" },
+      "instructions": [
+        "Stand with feet shoulder-width apart, dumbbell in one hand",
+        "Keep other hand behind head or at side",
+        "Bend sideways toward the weighted side",
+        "Contract obliques to return to upright. Switch sides."
+      ],
+      "cues": [
+        "Move in the lateral plane only, no forward/backward lean",
+        "Keep hips stationary",
+        "Control the movement both ways"
+      ]
+    },
+    {
+      "id": "windshield_wiper",
+      "name": "Windshield Wiper",
+      "bodyPart": "core",
+      "targetMuscle": "obliques",
+      "secondaryMuscles": ["rectus_abdominis", "hip_flexors"],
+      "equipment": ["floor_space"],
+      "category": "strength",
+      "difficulty": "advanced",
+      "tags": ["dynamic", "bodyweight", "rotational"],
+      "constraints": { "requiresLyingDown": true, "noiseLevel": "quiet" },
+      "instructions": [
+        "Lie on your back with arms out to sides for stability",
+        "Raise legs straight up toward the ceiling",
+        "Keeping shoulders down, lower legs to one side",
+        "Return to center and lower to the other side"
+      ],
+      "cues": [
+        "Keep both shoulders on the ground",
+        "Move with control, not momentum",
+        "For easier version, bend knees"
+      ]
+    },
+    {
+      "id": "hanging_windshield_wiper",
+      "name": "Hanging Windshield Wiper",
+      "bodyPart": "core",
+      "targetMuscle": "obliques",
+      "secondaryMuscles": ["rectus_abdominis", "lats", "forearms"],
+      "equipment": ["pull_up_bar"],
+      "category": "strength",
+      "difficulty": "advanced",
+      "tags": ["dynamic", "bodyweight", "rotational"],
+      "constraints": { "requiresLyingDown": false, "noiseLevel": "quiet" },
+      "instructions": [
+        "Hang from a pull-up bar with straight arms",
+        "Raise legs up so body forms an L-shape (or higher)",
+        "Rotate legs side to side like a windshield wiper",
+        "Control the movement throughout"
+      ],
+      "cues": [
+        "Requires significant grip and core strength",
+        "Keep upper body as stable as possible",
+        "Start with smaller range of motion"
+      ]
+    },
+    {
+      "id": "superman",
+      "name": "Superman",
+      "bodyPart": "core",
+      "targetMuscle": "lower_back",
+      "secondaryMuscles": ["glutes", "hamstrings", "upper_back"],
+      "equipment": ["floor_space"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["dynamic", "bodyweight"],
+      "constraints": { "requiresLyingDown": true, "noiseLevel": "quiet" },
+      "instructions": [
+        "Lie face down with arms extended overhead",
+        "Simultaneously lift arms, chest, and legs off the ground",
+        "Hold briefly at the top",
+        "Lower back down with control"
+      ],
+      "cues": [
+        "Squeeze glutes and back muscles at the top",
+        "Keep neck neutral, look at the floor",
+        "Avoid hyperextending the lower back"
+      ]
+    },
+    {
+      "id": "bird_dog",
+      "name": "Bird Dog",
+      "bodyPart": "core",
+      "targetMuscle": "lower_back",
+      "secondaryMuscles": ["glutes", "transverse_abdominis", "shoulders"],
+      "equipment": ["floor_space"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["dynamic", "bodyweight", "stability"],
+      "constraints": { "requiresLyingDown": true, "noiseLevel": "quiet" },
+      "instructions": [
+        "Start on hands and knees in a tabletop position",
+        "Extend opposite arm and leg simultaneously",
+        "Hold briefly, maintaining a flat back",
+        "Return to start and repeat with the other side"
+      ],
+      "cues": [
+        "Keep hips level, don't rotate",
+        "Reach through fingertips and heel",
+        "Move slowly and with control"
+      ]
+    },
+    {
+      "id": "back_extension",
+      "name": "Back Extension",
+      "bodyPart": "core",
+      "targetMuscle": "lower_back",
+      "secondaryMuscles": ["glutes", "hamstrings"],
+      "equipment": ["roman_chair"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["dynamic", "bodyweight"],
+      "constraints": { "requiresLyingDown": false, "noiseLevel": "quiet" },
+      "instructions": [
+        "Position yourself face down on a roman chair",
+        "Secure ankles under pads, hips on the pad",
+        "Cross arms over chest or behind head",
+        "Lower torso down, then extend back up to neutral"
+      ],
+      "cues": [
+        "Don't hyperextend past neutral spine",
+        "Squeeze glutes at the top",
+        "Control the descent"
+      ]
+    },
+    {
+      "id": "stability_ball_crunch",
+      "name": "Stability Ball Crunch",
+      "bodyPart": "core",
+      "targetMuscle": "rectus_abdominis",
+      "secondaryMuscles": ["obliques", "hip_flexors"],
+      "equipment": ["stability_ball"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["dynamic", "equipment"],
+      "constraints": { "requiresLyingDown": false, "noiseLevel": "quiet" },
+      "instructions": [
+        "Lie back on a stability ball with feet flat on the floor",
+        "Position ball under lower back",
+        "Place hands behind head or across chest",
+        "Crunch up, then lower back over the ball"
+      ],
+      "cues": [
+        "Use the ball's curve for a greater range of motion",
+        "Keep feet firmly planted for stability",
+        "Don't pull on your neck"
+      ]
+    },
+    {
+      "id": "stability_ball_rollout",
+      "name": "Stability Ball Rollout",
+      "bodyPart": "core",
+      "targetMuscle": "rectus_abdominis",
+      "secondaryMuscles": ["obliques", "shoulders", "lats"],
+      "equipment": ["stability_ball"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["dynamic", "equipment"],
+      "constraints": { "requiresLyingDown": true, "noiseLevel": "quiet" },
+      "instructions": [
+        "Kneel behind a stability ball, forearms resting on top",
+        "Roll the ball forward by extending arms",
+        "Keep core engaged and back flat",
+        "Pull back to starting position using your abs"
+      ],
+      "cues": [
+        "Don't let hips sag or pike up",
+        "Keep movement controlled",
+        "Start with smaller range of motion"
+      ]
+    },
+    {
+      "id": "decline_sit_up",
+      "name": "Decline Sit-Up",
+      "bodyPart": "core",
+      "targetMuscle": "rectus_abdominis",
+      "secondaryMuscles": ["hip_flexors", "obliques"],
+      "equipment": ["decline_bench"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["dynamic", "equipment"],
+      "constraints": { "requiresLyingDown": true, "noiseLevel": "quiet" },
+      "instructions": [
+        "Secure ankles under pads on a decline bench",
+        "Lie back with hands behind head or across chest",
+        "Sit all the way up against gravity",
+        "Lower back down with control"
+      ],
+      "cues": [
+        "Don't use momentum to swing up",
+        "Keep movement controlled throughout",
+        "Exhale as you sit up"
+      ]
+    },
+    {
+      "id": "pallof_press",
+      "name": "Pallof Press",
+      "bodyPart": "core",
+      "targetMuscle": "transverse_abdominis",
+      "secondaryMuscles": ["obliques", "rectus_abdominis"],
+      "equipment": ["cable_machine"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["isometric", "anti_rotation", "functional"],
+      "constraints": { "requiresLyingDown": false, "noiseLevel": "quiet" },
+      "instructions": [
+        "Stand sideways to a cable machine at chest height",
+        "Hold handle at chest with both hands",
+        "Press arms straight out in front of you",
+        "Hold, resisting the rotation, then return to chest"
+      ],
+      "cues": [
+        "Don't let the cable rotate your torso",
+        "Keep hips and shoulders square",
+        "Brace core throughout"
+      ]
+    },
+    {
+      "id": "band_pallof_press",
+      "name": "Band Pallof Press",
+      "bodyPart": "core",
+      "targetMuscle": "transverse_abdominis",
+      "secondaryMuscles": ["obliques", "rectus_abdominis"],
+      "equipment": ["resistance_band_medium"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isometric", "anti_rotation", "functional"],
+      "constraints": { "requiresLyingDown": false, "noiseLevel": "quiet" },
+      "instructions": [
+        "Anchor a resistance band at chest height",
+        "Stand sideways to the anchor, holding band at chest",
+        "Press arms straight out, resisting rotation",
+        "Hold, then return to chest. Repeat, then switch sides."
+      ],
+      "cues": [
+        "Keep your body square to the front",
+        "Resist the pull of the band",
+        "Breathe steadily"
+      ]
+    }
+  ]
+}

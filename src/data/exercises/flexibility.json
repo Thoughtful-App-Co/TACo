@@ -1,0 +1,581 @@
+{
+  "bodyPart": "flexibility",
+  "exercises": [
+    {
+      "id": "standing_quad_stretch",
+      "name": "Standing Quad Stretch",
+      "bodyPart": "flexibility",
+      "targetMuscle": "quadriceps",
+      "secondaryMuscles": ["hip_flexors"],
+      "equipment": ["floor_space"],
+      "category": "flexibility",
+      "difficulty": "beginner",
+      "tags": ["stretch", "static", "lower_body", "balance"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Stand tall with feet hip-width apart",
+        "Shift weight to left leg and bend right knee, bringing heel toward glutes",
+        "Grab right ankle or foot with right hand",
+        "Keep knees together and hips square",
+        "Hold, then switch sides"
+      ],
+      "cues": [
+        "Hold for 30 seconds each side",
+        "Use a wall for balance if needed",
+        "Keep standing knee slightly bent"
+      ]
+    },
+    {
+      "id": "lying_quad_stretch",
+      "name": "Lying Quad Stretch",
+      "bodyPart": "flexibility",
+      "targetMuscle": "quadriceps",
+      "secondaryMuscles": ["hip_flexors"],
+      "equipment": ["yoga_mat"],
+      "category": "flexibility",
+      "difficulty": "beginner",
+      "tags": ["stretch", "static", "lower_body", "supine"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Lie on your right side with legs stacked",
+        "Bend left knee and grab left ankle with left hand",
+        "Gently pull heel toward glutes",
+        "Keep hips stacked and core engaged",
+        "Hold, then switch sides"
+      ],
+      "cues": [
+        "Hold for 30-45 seconds each side",
+        "Keep bottom leg slightly bent for stability",
+        "Avoid arching lower back"
+      ]
+    },
+    {
+      "id": "standing_hamstring_stretch",
+      "name": "Standing Hamstring Stretch",
+      "bodyPart": "flexibility",
+      "targetMuscle": "hamstrings",
+      "secondaryMuscles": ["calves", "lower_back"],
+      "equipment": ["floor_space"],
+      "category": "flexibility",
+      "difficulty": "beginner",
+      "tags": ["stretch", "static", "lower_body"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Stand with feet hip-width apart",
+        "Step right foot forward with heel on ground and toes up",
+        "Hinge at hips and lean forward with flat back",
+        "Place hands on left thigh for support",
+        "Hold, then switch sides"
+      ],
+      "cues": [
+        "Hold for 30 seconds each side",
+        "Keep back flat, not rounded",
+        "Feel the stretch behind the knee and thigh"
+      ]
+    },
+    {
+      "id": "seated_hamstring_stretch",
+      "name": "Seated Hamstring Stretch",
+      "bodyPart": "flexibility",
+      "targetMuscle": "hamstrings",
+      "secondaryMuscles": ["calves", "lower_back"],
+      "equipment": ["yoga_mat"],
+      "category": "flexibility",
+      "difficulty": "beginner",
+      "tags": ["stretch", "static", "lower_body", "floor_exercise"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Sit on floor with legs extended straight in front",
+        "Keep back tall and core engaged",
+        "Hinge at hips and reach toward toes",
+        "Keep knees straight but not locked",
+        "Hold the stretch at your edge"
+      ],
+      "cues": [
+        "Hold for 45-60 seconds",
+        "Lead with chest, not head",
+        "Breathe deeply and relax into the stretch"
+      ]
+    },
+    {
+      "id": "lying_hamstring_stretch",
+      "name": "Lying Hamstring Stretch",
+      "bodyPart": "flexibility",
+      "targetMuscle": "hamstrings",
+      "secondaryMuscles": ["calves", "glutes"],
+      "equipment": ["yoga_mat", "resistance_band_light"],
+      "category": "flexibility",
+      "difficulty": "beginner",
+      "tags": ["stretch", "static", "lower_body", "supine"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Lie on back with both legs extended",
+        "Lift right leg toward ceiling, keeping knee straight",
+        "Loop a strap or band around foot for assistance",
+        "Gently pull leg toward you until stretch is felt",
+        "Hold, then switch sides"
+      ],
+      "cues": [
+        "Hold for 30-45 seconds each side",
+        "Keep opposite leg flat on ground",
+        "Relax shoulders and neck"
+      ]
+    },
+    {
+      "id": "kneeling_hip_flexor_stretch",
+      "name": "Kneeling Hip Flexor Stretch",
+      "bodyPart": "flexibility",
+      "targetMuscle": "hip_flexors",
+      "secondaryMuscles": ["quadriceps", "glutes"],
+      "equipment": ["yoga_mat"],
+      "category": "flexibility",
+      "difficulty": "beginner",
+      "tags": ["stretch", "static", "lower_body", "floor_exercise"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Start in a half-kneeling position with right foot forward",
+        "Keep front knee at 90 degrees, aligned over ankle",
+        "Tuck pelvis under and squeeze glutes",
+        "Shift weight slightly forward until stretch is felt in left hip",
+        "Hold, then switch sides"
+      ],
+      "cues": [
+        "Hold for 30-45 seconds each side",
+        "Keep torso upright",
+        "Add arm reach overhead for deeper stretch"
+      ]
+    },
+    {
+      "id": "pigeon_pose",
+      "name": "Pigeon Pose",
+      "bodyPart": "flexibility",
+      "targetMuscle": "glutes",
+      "secondaryMuscles": ["hip_flexors", "piriformis"],
+      "equipment": ["yoga_mat"],
+      "category": "flexibility",
+      "difficulty": "intermediate",
+      "tags": ["stretch", "static", "lower_body", "floor_exercise", "yoga"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Start in a plank or all-fours position",
+        "Bring right knee forward toward right wrist",
+        "Extend left leg straight back behind you",
+        "Square hips toward the front of the mat",
+        "Fold forward over front leg or stay upright"
+      ],
+      "cues": [
+        "Hold for 60-90 seconds each side",
+        "Use a pillow under hip if needed",
+        "Keep back leg straight and toes pointed"
+      ]
+    },
+    {
+      "id": "figure_four_stretch",
+      "name": "Figure Four Stretch",
+      "bodyPart": "flexibility",
+      "targetMuscle": "glutes",
+      "secondaryMuscles": ["piriformis", "hip_rotators"],
+      "equipment": ["yoga_mat"],
+      "category": "flexibility",
+      "difficulty": "beginner",
+      "tags": ["stretch", "static", "lower_body", "supine"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Lie on back with knees bent and feet flat",
+        "Cross right ankle over left knee, creating a figure four",
+        "Reach hands through and grab behind left thigh",
+        "Gently pull left thigh toward chest",
+        "Hold, then switch sides"
+      ],
+      "cues": [
+        "Hold for 30-45 seconds each side",
+        "Keep head and shoulders relaxed on floor",
+        "Flex the crossed foot to protect the knee"
+      ]
+    },
+    {
+      "id": "standing_calf_stretch",
+      "name": "Standing Calf Stretch",
+      "bodyPart": "flexibility",
+      "targetMuscle": "calves",
+      "secondaryMuscles": ["achilles_tendon"],
+      "equipment": ["wall"],
+      "category": "flexibility",
+      "difficulty": "beginner",
+      "tags": ["stretch", "static", "lower_body"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Stand facing a wall, arms length away",
+        "Place hands on wall at shoulder height",
+        "Step right leg back, keeping it straight with heel on floor",
+        "Bend left knee and lean into wall",
+        "Hold, then switch sides"
+      ],
+      "cues": [
+        "Hold for 30 seconds each side",
+        "Keep back heel pressed into floor",
+        "For deeper stretch, step back foot further"
+      ]
+    },
+    {
+      "id": "ankle_circles",
+      "name": "Ankle Circles",
+      "bodyPart": "flexibility",
+      "targetMuscle": "ankles",
+      "secondaryMuscles": ["calves", "shin_muscles"],
+      "equipment": ["floor_space"],
+      "category": "flexibility",
+      "difficulty": "beginner",
+      "tags": ["mobility", "dynamic", "lower_body", "joint_mobility"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Sit or stand with one foot lifted off ground",
+        "Rotate foot in a circular motion from the ankle",
+        "Complete circles in one direction, then reverse",
+        "Keep movement controlled and full range",
+        "Switch to other ankle"
+      ],
+      "cues": [
+        "10-15 circles each direction, each ankle",
+        "Make circles as large as comfortable",
+        "Can be done seated or standing"
+      ]
+    },
+    {
+      "id": "doorway_chest_stretch",
+      "name": "Doorway Chest Stretch",
+      "bodyPart": "flexibility",
+      "targetMuscle": "chest",
+      "secondaryMuscles": ["anterior_deltoids", "biceps"],
+      "equipment": ["door_frame"],
+      "category": "flexibility",
+      "difficulty": "beginner",
+      "tags": ["stretch", "static", "upper_body"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Stand in a doorway with arms bent at 90 degrees",
+        "Place forearms on door frame, elbows at shoulder height",
+        "Step one foot forward through doorway",
+        "Lean forward until stretch is felt across chest",
+        "Hold and breathe deeply"
+      ],
+      "cues": [
+        "Hold for 30-45 seconds",
+        "Try different arm heights to target different chest fibers",
+        "Keep core engaged and avoid arching back"
+      ]
+    },
+    {
+      "id": "cross_body_shoulder_stretch",
+      "name": "Cross-Body Shoulder Stretch",
+      "bodyPart": "flexibility",
+      "targetMuscle": "posterior_deltoids",
+      "secondaryMuscles": ["rotator_cuff", "upper_back"],
+      "equipment": ["floor_space"],
+      "category": "flexibility",
+      "difficulty": "beginner",
+      "tags": ["stretch", "static", "upper_body"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Stand or sit tall with shoulders relaxed",
+        "Bring right arm across chest at shoulder height",
+        "Use left hand to gently press right arm closer to body",
+        "Keep right shoulder down, not shrugged",
+        "Hold, then switch sides"
+      ],
+      "cues": [
+        "Hold for 30 seconds each side",
+        "Avoid rotating torso",
+        "Feel stretch in back of shoulder"
+      ]
+    },
+    {
+      "id": "overhead_tricep_stretch",
+      "name": "Overhead Tricep Stretch",
+      "bodyPart": "flexibility",
+      "targetMuscle": "triceps",
+      "secondaryMuscles": ["lats", "shoulders"],
+      "equipment": ["floor_space"],
+      "category": "flexibility",
+      "difficulty": "beginner",
+      "tags": ["stretch", "static", "upper_body"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Stand or sit tall with good posture",
+        "Raise right arm overhead and bend elbow",
+        "Reach right hand down between shoulder blades",
+        "Use left hand to gently press right elbow back",
+        "Hold, then switch sides"
+      ],
+      "cues": [
+        "Hold for 30 seconds each side",
+        "Keep head neutral, not pushed forward",
+        "Avoid arching lower back"
+      ]
+    },
+    {
+      "id": "standing_lat_stretch",
+      "name": "Standing Lat Stretch",
+      "bodyPart": "flexibility",
+      "targetMuscle": "lats",
+      "secondaryMuscles": ["obliques", "triceps"],
+      "equipment": ["wall"],
+      "category": "flexibility",
+      "difficulty": "beginner",
+      "tags": ["stretch", "static", "upper_body"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Stand arm's length from a wall or sturdy surface",
+        "Raise right arm and place palm on wall overhead",
+        "Step right foot behind left and lean hips away from wall",
+        "Feel stretch along right side of torso",
+        "Hold, then switch sides"
+      ],
+      "cues": [
+        "Hold for 30 seconds each side",
+        "Keep both feet grounded",
+        "Reach through fingertips for deeper stretch"
+      ]
+    },
+    {
+      "id": "neck_side_stretch",
+      "name": "Neck Side Stretch",
+      "bodyPart": "flexibility",
+      "targetMuscle": "neck",
+      "secondaryMuscles": ["trapezius", "levator_scapulae"],
+      "equipment": ["floor_space"],
+      "category": "flexibility",
+      "difficulty": "beginner",
+      "tags": ["stretch", "static", "upper_body"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Sit or stand tall with shoulders relaxed",
+        "Gently tilt right ear toward right shoulder",
+        "Place right hand on left side of head for gentle pressure",
+        "Keep left shoulder down and relaxed",
+        "Hold, then switch sides"
+      ],
+      "cues": [
+        "Hold for 20-30 seconds each side",
+        "Never force or bounce",
+        "Breathe deeply and relax into stretch"
+      ]
+    },
+    {
+      "id": "cat_cow",
+      "name": "Cat-Cow Stretch",
+      "bodyPart": "flexibility",
+      "targetMuscle": "spine",
+      "secondaryMuscles": ["core", "chest", "upper_back"],
+      "equipment": ["yoga_mat"],
+      "category": "flexibility",
+      "difficulty": "beginner",
+      "tags": ["mobility", "dynamic", "full_body", "floor_exercise", "yoga"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Start on hands and knees in tabletop position",
+        "Inhale: Drop belly, lift chest and tailbone (Cow)",
+        "Exhale: Round spine, tuck chin and pelvis (Cat)",
+        "Flow smoothly between positions with breath",
+        "Continue for desired duration"
+      ],
+      "cues": [
+        "Perform for 60-90 seconds or 10-15 breath cycles",
+        "Move slowly and mindfully",
+        "Initiate movement from pelvis"
+      ]
+    },
+    {
+      "id": "childs_pose",
+      "name": "Child's Pose",
+      "bodyPart": "flexibility",
+      "targetMuscle": "lower_back",
+      "secondaryMuscles": ["lats", "hips", "ankles"],
+      "equipment": ["yoga_mat"],
+      "category": "flexibility",
+      "difficulty": "beginner",
+      "tags": ["stretch", "static", "full_body", "floor_exercise", "yoga", "restorative"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Kneel on floor with big toes together",
+        "Sit back on heels and separate knees hip-width or wider",
+        "Fold forward, extending arms in front or alongside body",
+        "Rest forehead on floor",
+        "Relax and breathe deeply"
+      ],
+      "cues": [
+        "Hold for 60 seconds to 2 minutes",
+        "Widen knees for more hip opening",
+        "Use a pillow under torso if needed"
+      ]
+    },
+    {
+      "id": "downward_dog",
+      "name": "Downward Dog",
+      "bodyPart": "flexibility",
+      "targetMuscle": "hamstrings",
+      "secondaryMuscles": ["calves", "shoulders", "lats", "spine"],
+      "equipment": ["yoga_mat"],
+      "category": "flexibility",
+      "difficulty": "beginner",
+      "tags": ["stretch", "static", "full_body", "floor_exercise", "yoga"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Start on hands and knees in tabletop position",
+        "Tuck toes and lift hips up and back",
+        "Straighten legs and arms, forming an inverted V shape",
+        "Press chest toward thighs, heels toward floor",
+        "Keep head between arms, gaze toward navel"
+      ],
+      "cues": [
+        "Hold for 30-60 seconds",
+        "Bend knees slightly if hamstrings are tight",
+        "Spread fingers wide and press through whole hand"
+      ]
+    },
+    {
+      "id": "worlds_greatest_stretch",
+      "name": "World's Greatest Stretch",
+      "bodyPart": "flexibility",
+      "targetMuscle": "hip_flexors",
+      "secondaryMuscles": ["hamstrings", "spine", "shoulders", "groin"],
+      "equipment": ["yoga_mat"],
+      "category": "flexibility",
+      "difficulty": "intermediate",
+      "tags": ["mobility", "dynamic", "full_body", "floor_exercise"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Start in a push-up position",
+        "Step right foot outside right hand into deep lunge",
+        "Drop left elbow toward floor inside right foot",
+        "Rotate and reach right arm toward ceiling",
+        "Return to start and switch sides"
+      ],
+      "cues": [
+        "Hold each position 3-5 seconds, 5 reps each side",
+        "Keep back leg straight and engaged",
+        "Move through full range of motion"
+      ]
+    },
+    {
+      "id": "leg_swings_front",
+      "name": "Front Leg Swings",
+      "bodyPart": "flexibility",
+      "targetMuscle": "hip_flexors",
+      "secondaryMuscles": ["hamstrings", "glutes"],
+      "equipment": ["wall"],
+      "category": "flexibility",
+      "difficulty": "beginner",
+      "tags": ["mobility", "dynamic", "lower_body", "warmup"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Stand sideways to a wall, hand on wall for balance",
+        "Shift weight to inside leg",
+        "Swing outside leg forward and back in controlled motion",
+        "Keep torso upright and core engaged",
+        "Complete reps, then switch sides"
+      ],
+      "cues": [
+        "15-20 swings each leg",
+        "Gradually increase range of motion",
+        "Keep standing leg slightly bent"
+      ]
+    },
+    {
+      "id": "arm_circles",
+      "name": "Arm Circles",
+      "bodyPart": "flexibility",
+      "targetMuscle": "shoulders",
+      "secondaryMuscles": ["rotator_cuff", "upper_back"],
+      "equipment": ["floor_space"],
+      "category": "flexibility",
+      "difficulty": "beginner",
+      "tags": ["mobility", "dynamic", "upper_body", "warmup"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Stand tall with arms extended out to sides at shoulder height",
+        "Make small circular motions with arms",
+        "Gradually increase circle size",
+        "Reverse direction halfway through",
+        "Keep core engaged throughout"
+      ],
+      "cues": [
+        "20-30 seconds each direction",
+        "Start small and progressively increase size",
+        "Keep shoulders down, not shrugged"
+      ]
+    },
+    {
+      "id": "it_band_foam_roll",
+      "name": "IT Band Foam Roll",
+      "bodyPart": "flexibility",
+      "targetMuscle": "it_band",
+      "secondaryMuscles": ["quadriceps", "hip_abductors"],
+      "equipment": ["foam_roller", "yoga_mat"],
+      "category": "flexibility",
+      "difficulty": "intermediate",
+      "tags": ["foam_rolling", "self_massage", "lower_body", "recovery"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Lie on right side with foam roller under outer thigh",
+        "Support upper body with right forearm",
+        "Stack or stagger legs for balance",
+        "Roll slowly from hip to just above knee",
+        "Pause on tender spots for 20-30 seconds"
+      ],
+      "cues": [
+        "Roll for 60-90 seconds each side",
+        "Avoid rolling directly on knee or hip bone",
+        "Control pressure with supporting arm and leg"
+      ]
+    },
+    {
+      "id": "quad_foam_roll",
+      "name": "Quad Foam Roll",
+      "bodyPart": "flexibility",
+      "targetMuscle": "quadriceps",
+      "secondaryMuscles": ["hip_flexors"],
+      "equipment": ["foam_roller", "yoga_mat"],
+      "category": "flexibility",
+      "difficulty": "beginner",
+      "tags": ["foam_rolling", "self_massage", "lower_body", "recovery", "prone"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Lie face down with foam roller under thighs",
+        "Support upper body on forearms",
+        "Roll slowly from hip to just above knee",
+        "Rotate leg slightly to target inner and outer quad",
+        "Pause on tender spots"
+      ],
+      "cues": [
+        "Roll for 60-90 seconds each leg",
+        "Keep core engaged to protect lower back",
+        "Breathe through tender spots"
+      ]
+    },
+    {
+      "id": "upper_back_foam_roll",
+      "name": "Upper Back Foam Roll",
+      "bodyPart": "flexibility",
+      "targetMuscle": "upper_back",
+      "secondaryMuscles": ["lats", "rhomboids"],
+      "equipment": ["foam_roller", "yoga_mat"],
+      "category": "flexibility",
+      "difficulty": "beginner",
+      "tags": ["foam_rolling", "self_massage", "upper_body", "recovery", "supine"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Lie on back with foam roller under upper back",
+        "Bend knees with feet flat on floor",
+        "Cross arms over chest or support head with hands",
+        "Lift hips and roll from mid-back to upper back",
+        "Pause on tight areas"
+      ],
+      "cues": [
+        "Roll for 60-90 seconds",
+        "Avoid rolling lower back",
+        "Extend over roller to open chest"
+      ]
+    }
+  ]
+}

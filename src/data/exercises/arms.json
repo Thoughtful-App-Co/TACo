@@ -1,0 +1,614 @@
+{
+  "bodyPart": "arms",
+  "exercises": [
+    {
+      "id": "bicep_curl_dumbbell",
+      "name": "Dumbbell Bicep Curl",
+      "bodyPart": "arms",
+      "targetMuscle": "biceps",
+      "secondaryMuscles": ["forearms"],
+      "equipment": ["dumbbell"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "biceps"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Stand with feet shoulder-width apart, holding a dumbbell in each hand at your sides",
+        "Keep your elbows close to your torso and palms facing forward",
+        "Curl the weights up toward your shoulders while keeping upper arms stationary",
+        "Squeeze your biceps at the top of the movement",
+        "Lower the weights back down with control"
+      ],
+      "cues": [
+        "Keep elbows pinned to your sides",
+        "Avoid swinging or using momentum",
+        "Full range of motion from full extension to full contraction"
+      ]
+    },
+    {
+      "id": "bicep_curl_barbell",
+      "name": "Barbell Bicep Curl",
+      "bodyPart": "arms",
+      "targetMuscle": "biceps",
+      "secondaryMuscles": ["forearms"],
+      "equipment": ["barbell"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "biceps"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Stand with feet shoulder-width apart, gripping the barbell with an underhand grip",
+        "Let the bar hang at arm's length in front of your thighs",
+        "Curl the bar up toward your shoulders, keeping elbows stationary",
+        "Squeeze at the top and lower with control"
+      ],
+      "cues": [
+        "Keep your back straight, avoid leaning back",
+        "Grip should be shoulder-width or slightly wider",
+        "Control the negative portion of the lift"
+      ]
+    },
+    {
+      "id": "bicep_curl_ez_bar",
+      "name": "EZ Bar Bicep Curl",
+      "bodyPart": "arms",
+      "targetMuscle": "biceps",
+      "secondaryMuscles": ["forearms"],
+      "equipment": ["ez_curl_bar"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "biceps"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Stand with feet shoulder-width apart, gripping the EZ bar on the angled portions",
+        "Let the bar hang at arm's length with palms facing slightly inward",
+        "Curl the bar up toward your shoulders, keeping elbows close to your body",
+        "Squeeze at the top and lower under control"
+      ],
+      "cues": [
+        "The angled grip reduces wrist strain",
+        "Keep elbows stationary throughout the movement",
+        "Don't swing the weight"
+      ]
+    },
+    {
+      "id": "hammer_curl",
+      "name": "Hammer Curl",
+      "bodyPart": "arms",
+      "targetMuscle": "biceps",
+      "secondaryMuscles": ["brachialis", "forearms"],
+      "equipment": ["dumbbell"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "biceps", "forearms"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Stand with feet shoulder-width apart, holding dumbbells at your sides with palms facing your body",
+        "Keep your elbows close to your torso throughout the movement",
+        "Curl the weights up while maintaining the neutral grip (palms facing each other)",
+        "Squeeze at the top and lower with control"
+      ],
+      "cues": [
+        "Maintain neutral wrist position throughout",
+        "Great for targeting the brachialis and forearms",
+        "Can be done alternating or simultaneously"
+      ]
+    },
+    {
+      "id": "concentration_curl",
+      "name": "Concentration Curl",
+      "bodyPart": "arms",
+      "targetMuscle": "biceps",
+      "secondaryMuscles": ["forearms"],
+      "equipment": ["dumbbell", "flat_bench"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "biceps"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Sit on a bench with legs spread, holding a dumbbell in one hand",
+        "Rest the back of your upper arm against your inner thigh",
+        "Curl the weight up toward your shoulder, keeping upper arm stationary",
+        "Squeeze at the top and lower with control",
+        "Complete all reps on one side before switching"
+      ],
+      "cues": [
+        "Press your arm firmly against your thigh for stability",
+        "Focus on the mind-muscle connection",
+        "Avoid rotating your shoulder during the movement"
+      ]
+    },
+    {
+      "id": "preacher_curl",
+      "name": "Preacher Curl",
+      "bodyPart": "arms",
+      "targetMuscle": "biceps",
+      "secondaryMuscles": ["forearms"],
+      "equipment": ["preacher_bench", "ez_curl_bar"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["isolation", "biceps"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Adjust the preacher bench so your armpits rest at the top of the pad",
+        "Grip the EZ bar with an underhand grip and rest your arms on the pad",
+        "Curl the bar up toward your shoulders",
+        "Lower the weight slowly, stopping just before full extension to maintain tension"
+      ],
+      "cues": [
+        "Keep your armpits firmly on the pad",
+        "Don't let your elbows flare out",
+        "Control the descent - don't drop the weight"
+      ]
+    },
+    {
+      "id": "cable_bicep_curl",
+      "name": "Cable Bicep Curl",
+      "bodyPart": "arms",
+      "targetMuscle": "biceps",
+      "secondaryMuscles": ["forearms"],
+      "equipment": ["cable_machine"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "biceps"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Attach a straight bar or EZ bar to a low cable pulley",
+        "Stand facing the machine and grasp the bar with an underhand grip",
+        "Keep your elbows at your sides and curl the bar up toward your shoulders",
+        "Squeeze at the top and lower with control"
+      ],
+      "cues": [
+        "Constant tension throughout the entire range of motion",
+        "Stand close enough to maintain cable tension at the bottom",
+        "Keep your core engaged"
+      ]
+    },
+    {
+      "id": "resistance_band_bicep_curl",
+      "name": "Resistance Band Bicep Curl",
+      "bodyPart": "arms",
+      "targetMuscle": "biceps",
+      "secondaryMuscles": ["forearms"],
+      "equipment": ["resistance_band_medium"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "biceps"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Stand on the center of the resistance band with feet shoulder-width apart",
+        "Hold the handles with palms facing forward",
+        "Curl your hands up toward your shoulders, keeping elbows stationary",
+        "Squeeze at the top and lower with control"
+      ],
+      "cues": [
+        "Resistance increases as you curl higher",
+        "Keep wrists straight throughout",
+        "Great for home workouts and travel"
+      ]
+    },
+    {
+      "id": "chin_up",
+      "name": "Chin-Up",
+      "bodyPart": "arms",
+      "targetMuscle": "biceps",
+      "secondaryMuscles": ["lats", "forearms", "core"],
+      "equipment": ["pull_up_bar"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["compound", "biceps", "back", "bodyweight"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Grip the pull-up bar with palms facing you, hands shoulder-width apart",
+        "Hang with arms fully extended",
+        "Pull yourself up until your chin is above the bar",
+        "Lower yourself with control to the starting position"
+      ],
+      "cues": [
+        "Engage your lats and biceps to initiate the pull",
+        "Keep your core tight and avoid swinging",
+        "Full extension at the bottom, chin over bar at the top"
+      ]
+    },
+    {
+      "id": "incline_dumbbell_curl",
+      "name": "Incline Dumbbell Curl",
+      "bodyPart": "arms",
+      "targetMuscle": "biceps",
+      "secondaryMuscles": ["forearms"],
+      "equipment": ["dumbbell", "adjustable_bench"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["isolation", "biceps"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Set an adjustable bench to a 45-60 degree incline",
+        "Sit back on the bench holding dumbbells at arm's length",
+        "Let your arms hang straight down with palms facing forward",
+        "Curl the weights up while keeping upper arms stationary",
+        "Squeeze at the top and lower with control"
+      ],
+      "cues": [
+        "The incline provides a greater stretch on the biceps",
+        "Don't let your elbows drift forward",
+        "Keep your back flat against the bench"
+      ]
+    },
+    {
+      "id": "bench_dip",
+      "name": "Bench Dip",
+      "bodyPart": "arms",
+      "targetMuscle": "triceps",
+      "secondaryMuscles": ["chest", "shoulders"],
+      "equipment": ["flat_bench"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "triceps", "bodyweight"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Sit on the edge of a bench with hands gripping the edge beside your hips",
+        "Slide your hips off the bench and extend your legs out in front",
+        "Lower your body by bending your elbows to about 90 degrees",
+        "Push back up to the starting position"
+      ],
+      "cues": [
+        "Keep your back close to the bench",
+        "Don't flare your elbows too wide",
+        "To increase difficulty, elevate your feet on another bench"
+      ]
+    },
+    {
+      "id": "parallel_bar_dip",
+      "name": "Parallel Bar Dip",
+      "bodyPart": "arms",
+      "targetMuscle": "triceps",
+      "secondaryMuscles": ["chest", "shoulders"],
+      "equipment": ["dip_station"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["compound", "triceps", "bodyweight"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Grip the parallel bars and lift yourself up with arms fully extended",
+        "Keep your torso upright to emphasize triceps (leaning forward shifts focus to chest)",
+        "Lower your body by bending your elbows until upper arms are parallel to the floor",
+        "Push back up to full arm extension"
+      ],
+      "cues": [
+        "Keep elbows close to your body for tricep focus",
+        "Don't go too deep if you have shoulder issues",
+        "Control the descent - don't drop"
+      ]
+    },
+    {
+      "id": "overhead_tricep_extension_dumbbell",
+      "name": "Overhead Dumbbell Tricep Extension",
+      "bodyPart": "arms",
+      "targetMuscle": "triceps",
+      "secondaryMuscles": [],
+      "equipment": ["dumbbell"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "triceps", "overhead"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Stand or sit holding one dumbbell with both hands",
+        "Raise the dumbbell overhead with arms fully extended",
+        "Lower the weight behind your head by bending your elbows",
+        "Keep your upper arms stationary and close to your head",
+        "Extend your arms back to the starting position"
+      ],
+      "cues": [
+        "Keep your core tight to protect your lower back",
+        "Elbows should point forward, not out to the sides",
+        "Control the weight - don't let it drop behind your head"
+      ]
+    },
+    {
+      "id": "skull_crusher",
+      "name": "Skull Crusher (Lying Tricep Extension)",
+      "bodyPart": "arms",
+      "targetMuscle": "triceps",
+      "secondaryMuscles": [],
+      "equipment": ["ez_curl_bar", "flat_bench"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["isolation", "triceps", "supine"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Lie on a flat bench holding an EZ bar with arms extended above your chest",
+        "Keep your upper arms stationary and perpendicular to the floor",
+        "Lower the bar toward your forehead by bending only at the elbows",
+        "Stop just before the bar touches your forehead",
+        "Extend your arms back to the starting position"
+      ],
+      "cues": [
+        "Keep upper arms completely still",
+        "Control is critical - hence the name",
+        "Can also be done with dumbbells"
+      ]
+    },
+    {
+      "id": "cable_tricep_pushdown",
+      "name": "Cable Tricep Pushdown",
+      "bodyPart": "arms",
+      "targetMuscle": "triceps",
+      "secondaryMuscles": [],
+      "equipment": ["cable_machine"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "triceps"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Attach a straight bar or rope to a high cable pulley",
+        "Stand facing the machine and grasp the attachment with an overhand grip",
+        "Keep your elbows pinned to your sides",
+        "Push the bar down until your arms are fully extended",
+        "Slowly return to the starting position"
+      ],
+      "cues": [
+        "Don't let your elbows drift forward or back",
+        "Squeeze your triceps at the bottom",
+        "Keep your torso upright"
+      ]
+    },
+    {
+      "id": "rope_tricep_pushdown",
+      "name": "Rope Tricep Pushdown",
+      "bodyPart": "arms",
+      "targetMuscle": "triceps",
+      "secondaryMuscles": [],
+      "equipment": ["cable_machine"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "triceps"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Attach a rope attachment to a high cable pulley",
+        "Grasp the rope with a neutral grip (palms facing each other)",
+        "Keep your elbows pinned to your sides",
+        "Push down and spread the rope apart at the bottom",
+        "Slowly return to the starting position"
+      ],
+      "cues": [
+        "Spread the rope at the bottom for peak contraction",
+        "Keep your wrists neutral",
+        "Squeeze and hold briefly at full extension"
+      ]
+    },
+    {
+      "id": "close_grip_pushup",
+      "name": "Close-Grip Push-Up",
+      "bodyPart": "arms",
+      "targetMuscle": "triceps",
+      "secondaryMuscles": ["chest", "shoulders"],
+      "equipment": ["floor_space"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "triceps", "bodyweight", "floor_exercise"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Start in a push-up position with hands close together (thumbs and index fingers touching to form a diamond, or hands shoulder-width)",
+        "Keep your body in a straight line from head to heels",
+        "Lower your chest toward your hands by bending your elbows",
+        "Push back up to the starting position"
+      ],
+      "cues": [
+        "Keep elbows close to your body",
+        "Engage your core throughout",
+        "The closer your hands, the more tricep emphasis"
+      ]
+    },
+    {
+      "id": "tricep_kickback",
+      "name": "Tricep Kickback",
+      "bodyPart": "arms",
+      "targetMuscle": "triceps",
+      "secondaryMuscles": [],
+      "equipment": ["dumbbell"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "triceps"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Hold a dumbbell in one hand and hinge forward at the hips",
+        "Support yourself with your other hand on a bench or your knee",
+        "Bring your upper arm parallel to your torso with elbow bent at 90 degrees",
+        "Extend your arm straight back, squeezing your tricep",
+        "Return to the bent position with control"
+      ],
+      "cues": [
+        "Keep your upper arm stationary and parallel to the floor",
+        "Squeeze hard at the top of the movement",
+        "Use lighter weight with strict form"
+      ]
+    },
+    {
+      "id": "overhead_cable_tricep_extension",
+      "name": "Overhead Cable Tricep Extension",
+      "bodyPart": "arms",
+      "targetMuscle": "triceps",
+      "secondaryMuscles": [],
+      "equipment": ["cable_machine"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["isolation", "triceps", "overhead"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Attach a rope to a low cable pulley",
+        "Face away from the machine and grasp the rope behind your head",
+        "Step forward and lean slightly forward at the hips",
+        "Extend your arms overhead until fully straight",
+        "Lower the rope back behind your head with control"
+      ],
+      "cues": [
+        "Keep your upper arms close to your head",
+        "Maintain a stable stance throughout",
+        "Feel the stretch in your triceps at the bottom"
+      ]
+    },
+    {
+      "id": "resistance_band_tricep_extension",
+      "name": "Resistance Band Tricep Extension",
+      "bodyPart": "arms",
+      "targetMuscle": "triceps",
+      "secondaryMuscles": [],
+      "equipment": ["resistance_band_medium"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "triceps", "overhead"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Hold one end of the band and place it behind your back",
+        "Grasp the other end with your working arm, elbow bent behind your head",
+        "Extend your arm straight up, keeping upper arm stationary",
+        "Lower back down with control"
+      ],
+      "cues": [
+        "Keep your elbow pointing up toward the ceiling",
+        "The anchor hand stays still at your lower back",
+        "Great for home workouts and warm-ups"
+      ]
+    },
+    {
+      "id": "wrist_curl_dumbbell",
+      "name": "Dumbbell Wrist Curl",
+      "bodyPart": "arms",
+      "targetMuscle": "forearms",
+      "secondaryMuscles": [],
+      "equipment": ["dumbbell", "flat_bench"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "forearms"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Sit on a bench and rest your forearms on your thighs, palms facing up",
+        "Hold dumbbells with your wrists hanging just past your knees",
+        "Lower the weights by extending your wrists down",
+        "Curl the weights up by flexing your wrists"
+      ],
+      "cues": [
+        "Keep your forearms pressed against your thighs",
+        "Move only at the wrist joint",
+        "Use light to moderate weight with high reps"
+      ]
+    },
+    {
+      "id": "reverse_wrist_curl",
+      "name": "Reverse Wrist Curl",
+      "bodyPart": "arms",
+      "targetMuscle": "forearms",
+      "secondaryMuscles": [],
+      "equipment": ["dumbbell", "flat_bench"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["isolation", "forearms"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Sit on a bench and rest your forearms on your thighs, palms facing down",
+        "Hold dumbbells with your wrists hanging just past your knees",
+        "Lower the weights by flexing your wrists down",
+        "Raise the weights by extending your wrists up"
+      ],
+      "cues": [
+        "Keep your forearms stationary",
+        "Use lighter weight than regular wrist curls",
+        "Great for balancing forearm development"
+      ]
+    },
+    {
+      "id": "reverse_curl",
+      "name": "Reverse Curl",
+      "bodyPart": "arms",
+      "targetMuscle": "forearms",
+      "secondaryMuscles": ["biceps", "brachialis"],
+      "equipment": ["barbell"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["isolation", "forearms", "biceps"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Stand holding a barbell with an overhand grip (palms facing down)",
+        "Let the bar hang at arm's length in front of your thighs",
+        "Curl the bar up toward your shoulders, keeping elbows stationary",
+        "Lower with control to the starting position"
+      ],
+      "cues": [
+        "The overhand grip shifts emphasis to forearms and brachialis",
+        "Use lighter weight than regular curls",
+        "Keep wrists straight throughout"
+      ]
+    },
+    {
+      "id": "farmer_carry",
+      "name": "Farmer's Carry",
+      "bodyPart": "arms",
+      "targetMuscle": "forearms",
+      "secondaryMuscles": ["traps", "core", "shoulders"],
+      "equipment": ["dumbbell"],
+      "category": "strength",
+      "difficulty": "beginner",
+      "tags": ["compound", "forearms", "grip", "functional"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Stand between two heavy dumbbells or kettlebells",
+        "Squat down and grip the weights firmly",
+        "Stand up tall with shoulders back and core engaged",
+        "Walk forward with controlled steps for the desired distance or time",
+        "Set the weights down with control"
+      ],
+      "cues": [
+        "Keep your shoulders back and down",
+        "Walk with short, controlled steps",
+        "Squeeze the handles as hard as possible"
+      ]
+    },
+    {
+      "id": "trx_bicep_curl",
+      "name": "TRX Bicep Curl",
+      "bodyPart": "arms",
+      "targetMuscle": "biceps",
+      "secondaryMuscles": ["forearms", "core"],
+      "equipment": ["trx"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["isolation", "biceps", "bodyweight", "suspension"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Face the anchor point and grasp the TRX handles with palms facing up",
+        "Lean back with arms extended, body in a straight line",
+        "The steeper the angle, the harder the exercise",
+        "Curl your body up by bending at the elbows",
+        "Keep upper arms stationary and lower with control"
+      ],
+      "cues": [
+        "Keep your body rigid like a plank",
+        "Only your elbows should bend",
+        "Walk your feet forward to increase difficulty"
+      ]
+    },
+    {
+      "id": "trx_tricep_extension",
+      "name": "TRX Tricep Extension",
+      "bodyPart": "arms",
+      "targetMuscle": "triceps",
+      "secondaryMuscles": ["core"],
+      "equipment": ["trx"],
+      "category": "strength",
+      "difficulty": "intermediate",
+      "tags": ["isolation", "triceps", "bodyweight", "suspension"],
+      "constraints": { "noiseLevel": "quiet" },
+      "instructions": [
+        "Face away from the anchor point and grasp the TRX handles",
+        "Lean forward with arms extended in front of you",
+        "Lower your body by bending at the elbows, hands coming toward your forehead",
+        "Keep upper arms stationary and extend back to the starting position"
+      ],
+      "cues": [
+        "Keep your body in a straight line throughout",
+        "Only your elbows should bend",
+        "The steeper the angle, the harder the exercise"
+      ]
+    }
+  ]
+}
