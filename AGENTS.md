@@ -241,12 +241,52 @@ const secret = env.TACO_ENV === 'production' ? env.JWT_SECRET_PROD : env.JWT_SEC
 3. Destructure props in SolidJS components - breaks reactivity
 4. Commit `.dev.vars` or secrets
 5. Skip `pnpm run validate` before PRs
+6. **Use emojis in code, UI labels, or component text** - keep the interface clean and professional
+
+---
+
+---
+
+### 8. Premium Features & Feature Gating
+
+**ALWAYS use the centralized feature gating system for subscription checks.**
+
+```typescript
+// CORRECT - Use feature-gates.ts
+import { canUseMutation, canUseTempoAI, canUseEchopraxAI } from '@/lib/feature-gates';
+import { Paywall } from '@/components/common/Paywall';
+
+const access = canUseMutation();
+if (!access.allowed) {
+  setShowPaywall(true);
+  return;
+}
+
+<Paywall
+  isOpen={showPaywall()}
+  onClose={() => setShowPaywall(false)}
+  feature="tenure_extras"  // or 'tempo_extras', 'echoprax_extras', 'sync', 'backup'
+/>
+
+// INCORRECT - Don't check subscriptions directly
+if (!user?.subscriptions?.includes('tenure_extras')) { ... }
+```
+
+**Rules:**
+
+1. All subscription checks go through `src/lib/feature-gates.ts`
+2. All upgrade prompts use `src/components/common/Paywall.tsx`
+3. Add new features to `FEATURE_CONFIGS` in Paywall component
+4. Never create custom paywall modals per feature
+
+**See:** `docs/core/FEATURE_GATING.md` for complete patterns and examples
 
 ---
 
 ## Questions?
 
-- Architecture: `docs/context_engineering/development/ARCHITECTURE.md`
-- Setup: `DEVELOPER_SETUP.md`
-- Contributing: `CONTRIBUTING.md`
-- Database: `docs/DATABASE_SETUP.md`
+- **Feature Gating**: `docs/core/FEATURE_GATING.md`
+- **Architecture**: `docs/context_engineering/development/ARCHITECTURE.md`
+- **Setup**: `DEVELOPER_SETUP.md`
+- **Contributing**: `CONTRIBUTING.md`
+- **Database**: `docs/DATABASE_SETUP.md`
