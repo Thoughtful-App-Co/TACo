@@ -8,13 +8,15 @@
  * and protected intellectual property. No infringement or unauthorized use is permitted.
  */
 
-import { Component, createSignal, Show } from 'solid-js';
+import { Component, createSignal, Show, createMemo } from 'solid-js';
+import { useNavigate, useLocation, useParams } from '@solidjs/router';
 import { BrainDump } from './brain-dump';
-import { CaretRight, Gear, ArrowLeft } from 'phosphor-solid';
+import { CaretRight, Gear } from 'phosphor-solid';
+import { QueueView } from './queue';
 import { tempoDesign } from './theme/tempo-design';
 import { TempoLogo } from './ui/logo';
 import { Button } from './ui/button';
-import { SettingsModal } from './ui/settings-modal';
+import { SettingsSidebar } from './ui/settings-sidebar';
 import { Tabs, type Tab } from './ui/tabs';
 import { SessionsList } from './session-manager/components/sessions-list';
 import { SessionView } from './session-manager/components/session-view';
@@ -65,6 +67,10 @@ responsiveStyles.textContent = `
 document.head.appendChild(responsiveStyles);
 
 export const TempoApp: Component = () => {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const params = useParams<{ date?: string }>();
+
   const [stats, setStats] = createSignal<Stats>({
     totalTasks: 0,
     totalDuration: 0,
@@ -73,12 +79,22 @@ export const TempoApp: Component = () => {
   });
 
   const [showSettings, setShowSettings] = createSignal(false);
-  const [activeTab, setActiveTab] = createSignal<string>('tasks');
-  const [selectedSessionDate, setSelectedSessionDate] = createSignal<string | null>(null);
-  const [viewingSession, setViewingSession] = createSignal(false);
 
   // Check if API key is configured
   const [hasApiKey, setHasApiKey] = createSignal(ApiConfigService.hasApiKey());
+
+  // Determine active tab from current route
+  const activeTab = createMemo(() => {
+    const path = location.pathname;
+    if (path.includes('/sessions')) return 'sessions';
+    if (path.includes('/queue')) return 'backlog';
+    return 'tasks';
+  });
+
+  // Check if we're viewing a specific session
+  const isViewingSession = createMemo(() => {
+    return location.pathname.includes('/sessions/') && params.date;
+  });
 
   const handleTasksProcessed = (
     stories: { tasks: { isFrog?: boolean; duration?: number }[]; estimatedDuration?: number }[]
@@ -109,19 +125,28 @@ export const TempoApp: Component = () => {
     setHasApiKey(ApiConfigService.hasApiKey());
   };
 
-  const handleSessionSelect = (date: string) => {
-    setSelectedSessionDate(date);
-    setViewingSession(true);
-  };
-
-  const handleBackToSessions = () => {
-    setViewingSession(false);
-    setSelectedSessionDate(null);
+  const handleTabChange = (tabId: string) => {
+    if (tabId === 'tasks') {
+      navigate('/tempo/create');
+    } else if (tabId === 'sessions') {
+      navigate('/tempo/sessions');
+    } else if (tabId === 'backlog') {
+      navigate('/tempo/queue');
+    }
   };
 
   const tabs: Tab[] = [
     { id: 'tasks', label: 'Create Tasks' },
-    { id: 'sessions', label: 'Your Sessions' },
+    {
+      id: 'sessions',
+      label: 'Your Sessions',
+      tooltip: 'Sessions are your daily to-do lists. Here is your repository of those sessions.',
+    },
+    {
+      id: 'backlog',
+      label: 'The Queue',
+      tooltip: 'Your backlog of unfinished tasks waiting to be scheduled into future sessions.',
+    },
   ];
 
   return (
@@ -173,8 +198,8 @@ export const TempoApp: Component = () => {
         </Button>
       </header>
 
-      {/* Settings Modal */}
-      <SettingsModal
+      {/* Settings Sidebar */}
+      <SettingsSidebar
         isOpen={showSettings()}
         onClose={() => setShowSettings(false)}
         onSave={handleSettingsSave}
@@ -197,7 +222,7 @@ export const TempoApp: Component = () => {
             gap: '12px',
           }}
         >
-          <span>⚠️ Please configure your Claude API key in settings to use Tempo</span>
+          <span>Please configure your Claude API key in settings to use Tempo</span>
           <Button
             variant="ghost"
             size="sm"
@@ -214,27 +239,42 @@ export const TempoApp: Component = () => {
       </Show>
 
       {/* Tab Navigation - Only show when not viewing a session */}
-      <Show when={!viewingSession()}>
-        <Tabs tabs={tabs} defaultTab={activeTab()} onChange={(tabId) => setActiveTab(tabId)} />
+      <Show when={!isViewingSession()}>
+        <Tabs tabs={tabs} defaultTab={activeTab()} onChange={handleTabChange} />
       </Show>
 
       {/* Content Area */}
       <Show
-        when={viewingSession() && selectedSessionDate()}
+        when={isViewingSession()}
         fallback={
           <Show
             when={activeTab() === 'tasks'}
             fallback={
-              <div
-                style={{
-                  'margin-top': '24px',
-                  display: 'flex',
-                  'flex-direction': 'column',
-                  gap: '16px',
-                }}
+              <Show
+                when={activeTab() === 'sessions'}
+                fallback={
+                  /* The Queue View */
+                  <div
+                    style={{
+                      'margin-top': '24px',
+                    }}
+                  >
+                    <QueueView />
+                  </div>
+                }
               >
-                <SessionsList onSessionSelect={handleSessionSelect} />
-              </div>
+                {/* Sessions View */}
+                <div
+                  style={{
+                    'margin-top': '24px',
+                    display: 'flex',
+                    'flex-direction': 'column',
+                    gap: '16px',
+                  }}
+                >
+                  <SessionsList />
+                </div>
+              </Show>
             }
           >
             <div
@@ -279,15 +319,6 @@ export const TempoApp: Component = () => {
                       >
                         Session Preview
                       </h3>
-                      <p
-                        style={{
-                          'font-size': tempoDesign.typography.sizes.sm,
-                          color: tempoDesign.colors.mutedForeground,
-                          margin: '4px 0 0 0',
-                        }}
-                      >
-                        Productivity metrics
-                      </p>
                     </div>
                     <div
                       style={{
@@ -401,9 +432,6 @@ export const TempoApp: Component = () => {
                             }}
                           >
                             <span>Frogs</span>
-                            <span style={{ 'font-size': tempoDesign.typography.sizes.base }}>
-                              🐸
-                            </span>
                           </dt>
                           <dd
                             style={{
@@ -427,22 +455,7 @@ export const TempoApp: Component = () => {
       >
         {/* Session View */}
         <div style={{ 'margin-top': '24px' }}>
-          {/* Back Button */}
-          <Button
-            variant="ghost"
-            onClick={handleBackToSessions}
-            style={{
-              'margin-bottom': '16px',
-              display: 'flex',
-              'align-items': 'center',
-              gap: '8px',
-            }}
-          >
-            <ArrowLeft size={16} />
-            Back to Sessions
-          </Button>
-
-          <SessionView date={selectedSessionDate() || undefined} />
+          <SessionView />
         </div>
       </Show>
     </main>
