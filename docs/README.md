@@ -1,6 +1,6 @@
-# Tempo Documentation
+# TACo Documentation
 
-Complete documentation for the Tempo time-management application built with Solid.js and premium design system.
+Complete documentation for the TACo (Thoughtful App Co) monorepo containing Tempo, Tenure, Echoprax, and other applications.
 
 ## Documentation Structure
 
@@ -11,57 +11,67 @@ Complete documentation for the Tempo time-management application built with Soli
 
 ### 🎨 Design System
 
-- **[Design System](./design/DESIGN_SYSTEM.md)** - Comprehensive design specifications, color palette, typography, components
-- **[Tooltip Positioning](./design/TOOLTIP_POSITIONING.md)** - **MANDATORY: Portal-based tooltip rendering guide**
-- **[Tempo Design System](./design/TEMPO_DESIGN.md)** - Tempo app-specific design tokens and component presets
+- **[Design System](./context_engineering/design/DESIGN_SYSTEM.md)** - Comprehensive design specifications, color palette, typography, components
+- **[Tooltip Positioning](./context_engineering/design/TOOLTIP_POSITIONING.md)** - **MANDATORY: Portal-based tooltip rendering guide**
+- **[Branding Changes](./context_engineering/design/BRANDING_CHANGES.md)** - TACo brand evolution and updates
 
 ### 👨‍💻 Development
 
-- **[Linting & CI/CD](./development/LINTING_AND_CI_CD.md)** - ESLint, Prettier, GitHub Actions pipeline
-- **[Development Guide](./development/DEVELOPMENT.md)** - Development workflow and best practices
-- **[Architecture](./development/ARCHITECTURE.md)** - Project structure and architectural decisions
+- **[Linting & CI/CD](./context_engineering/development/LINTING_AND_CI_CD.md)** - ESLint, Prettier, GitHub Actions pipeline
+- **[Development Guide](./context_engineering/development/DEVELOPMENT.md)** - Development workflow and best practices
+- **[Architecture](./context_engineering/development/ARCHITECTURE.md)** - Project structure and architectural decisions
+- **[Recent Changes](./context_engineering/development/RECENT_CHANGES.md)** - Latest updates and refactors
 
-### 🚀 Deployment
+### 🚀 Deployment & Core Systems
 
-- **[Deployment Guide](./deployment/DEPLOYMENT.md)** - Cloudflare Pages deployment
-- **[Environment Variables](./deployment/ENVIRONMENT.md)** - Configuration and secrets management
+- **[Database Setup](./DATABASE_SETUP.md)** - D1 database configuration
+- **[Secrets Reference](./SECRETS_REFERENCE.md)** - Environment variables and API keys
+- **[Installation](./INSTALLATION.md)** - Project setup and dependencies
 
-### 📚 Guides
+### 🔐 Core Systems
 
-- **[Solid.js Conversion](./guides/SOLID_JS_CONVERSION.md)** - Migration notes from React to Solid.js
-- **[Responsive Design](./guides/RESPONSIVE_DESIGN.md)** - Mobile-first responsive approach
-- **[Contributing](./guides/CONTRIBUTING.md)** - Contribution guidelines
+- **[Feature Gating](./core/FEATURE_GATING.md)** - Premium features and subscription checks (MASTER GUIDE)
+- **[Feature Gating Refactor Summary](./core/FEATURE_GATING_REFACTOR_SUMMARY.md)** - Recent refactor details
+- **[Auth](./core/auth/)** - Authentication system
+- **[Billing](./core/billing/)** - Stripe integration
+- **[O\*NET API Proxy](./core/ONET_API_PROXY.md)** - Career data API
 
-### 🏛️ Other
+### 📱 App-Specific Documentation
 
-- **[Transition Plans](./transition-plans/README.md)** - Tempo Next.js to Solid.js transition documentation
+- **[Tempo](./tempo/)** - Time management and productivity
+- **[Tenure](./tenure/)** - Career management and job search
+- **[Echoprax](./echoprax/)** - Fitness and workout tracking
+- **[Nurture](./nurture/)** - Relationship management (planned)
 
 ## Quick Links
 
 ### For New Developers
 
-1. Read [Setup Guide](./setup/README.md)
-2. Follow [Installation](./setup/INSTALLATION.md)
-3. Review [Development Guide](./development/DEVELOPMENT.md)
-4. Check [Architecture](./development/ARCHITECTURE.md)
+1. Follow [Installation](./INSTALLATION.md)
+2. Set up [Database](./DATABASE_SETUP.md)
+3. Configure [Secrets](./SECRETS_REFERENCE.md)
+4. Review [Architecture](./context_engineering/development/ARCHITECTURE.md)
+5. Check [Development Guide](./context_engineering/development/DEVELOPMENT.md)
+
+### For Adding Premium Features
+
+1. **READ FIRST:** [Feature Gating Master Guide](./core/FEATURE_GATING.md) ⭐
+2. Review [Feature Gating Refactor](./core/FEATURE_GATING_REFACTOR_SUMMARY.md)
+3. See examples in Tenure/Tempo/Echoprax apps
+4. Never create custom paywalls - use centralized system
 
 ### For Designers
 
-1. See [Design System](./design/DESIGN_SYSTEM.md)
-2. Review [Tempo Design Tokens](./design/TEMPO_DESIGN.md)
-3. Check [Responsive Design Guide](./guides/RESPONSIVE_DESIGN.md)
-
-### For DevOps/Deployment
-
-1. Review [Deployment Guide](./deployment/DEPLOYMENT.md)
-2. Check [Environment Variables](./deployment/ENVIRONMENT.md)
-3. See [Linting & CI/CD](./development/LINTING_AND_CI_CD.md)
+1. See [Design System](./context_engineering/design/DESIGN_SYSTEM.md)
+2. Review [Branding Changes](./context_engineering/design/BRANDING_CHANGES.md)
+3. Check [Tooltip Positioning](./context_engineering/design/TOOLTIP_POSITIONING.md)
 
 ### For Contributors
 
-1. Read [Contributing Guidelines](./guides/CONTRIBUTING.md)
-2. Check [Linting & CI/CD](./development/LINTING_AND_CI_CD.md)
-3. Review [Development Guide](./development/DEVELOPMENT.md)
+1. Read root [CONTRIBUTING.md](../CONTRIBUTING.md)
+2. Check [Linting & CI/CD](./context_engineering/development/LINTING_AND_CI_CD.md)
+3. Review [Development Guide](./context_engineering/development/DEVELOPMENT.md)
+4. See [Recent Changes](./context_engineering/development/RECENT_CHANGES.md)
 
 ## Technology Stack
 
@@ -136,30 +146,52 @@ Complete documentation for the Tempo time-management application built with Soli
 ```
 docs/
 ├── README.md (this file)
-├── setup/
+├── DATABASE_SETUP.md
+├── INSTALLATION.md
+├── SECRETS_REFERENCE.md
+├── core/
+│   ├── FEATURE_GATING.md ⭐ (Premium features master guide)
+│   ├── FEATURE_GATING_REFACTOR_SUMMARY.md
+│   ├── ONET_API_PROXY.md
+│   ├── auth/
+│   │   └── UNIFIED_AUTH.md
+│   └── billing/
+│       └── STRIPE_INTEGRATION.md
+├── context_engineering/
+│   ├── design/
+│   │   ├── DESIGN_SYSTEM.md
+│   │   ├── TOOLTIP_POSITIONING.md
+│   │   ├── BRANDING_CHANGES.md
+│   │   └── [40+ design reference files]
+│   ├── development/
+│   │   ├── ARCHITECTURE.md
+│   │   ├── DEVELOPMENT.md
+│   │   ├── LINTING_AND_CI_CD.md
+│   │   ├── LOCAL_API_DEVELOPMENT.md
+│   │   └── RECENT_CHANGES.md
+│   └── judge/
+│       └── [Design evaluation files]
+├── tempo/
+│   ├── SYNC_INTEGRATION.md
+│   ├── deployment/
+│   └── transition-plans/
+├── tenure/
+│   ├── PREMIUM_FEATURES_IMPLEMENTATION.md
+│   ├── SYNC_INTEGRATION.md
+│   ├── THEMING.md
+│   ├── features/
+│   ├── infrastructure/
+│   ├── navigation/
+│   ├── pipeline/
+│   ├── prepare/
+│   └── testing/
+├── echoprax/
 │   ├── README.md
-│   └── INSTALLATION.md
-├── design/
-│   ├── DESIGN_SYSTEM.md
-│   ├── TEMPO_DESIGN.md
-│   └── [40+ design reference files]
-├── development/
-│   ├── LINTING_AND_CI_CD.md
-│   ├── DEVELOPMENT.md
-│   └── ARCHITECTURE.md
-├── deployment/
-│   ├── DEPLOYMENT.md
-│   └── ENVIRONMENT.md
-├── guides/
-│   ├── SOLID_JS_CONVERSION.md
-│   ├── RESPONSIVE_DESIGN.md
-│   └── CONTRIBUTING.md
-├── transition-plans/
-│   └── [Transition documentation]
-├── design/
-│   └── [Design inspiration files]
-└── judge/
-    └── [Design evaluation files]
+│   ├── ARCHITECTURE.md
+│   ├── API_INTEGRATIONS.md
+│   └── PREMIUM_GATING_REFACTOR.md
+└── nurture/
+    └── SYNC_INTEGRATION.md
 ```
 
 ## Contact & Support
