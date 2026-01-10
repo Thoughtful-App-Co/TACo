@@ -1,4 +1,5 @@
-import { Component, createEffect, createSignal, For, Show } from 'solid-js';
+import { Component, createEffect, createSignal, createMemo, For, Show } from 'solid-js';
+import { useNavigate } from '@solidjs/router';
 import { format, isToday, isYesterday } from 'date-fns';
 import {
   Calendar,
@@ -8,20 +9,34 @@ import {
   Clock,
   ListBullets,
   ChartBar,
+  Plus,
+  PencilSimple,
+  Trash,
+  Copy,
+  Warning,
+  Archive,
 } from 'phosphor-solid';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../ui/card';
 import { Button } from '../../ui/button';
 import { Badge } from '../../ui/badge';
 import { tempoDesign } from '../../theme/tempo-design';
-import { SessionStorageService } from '../../services/session-storage.service';
-import type { Session } from '../../lib/types';
+import type { Session, SessionStatus } from '../../lib/types';
 import { logger } from '../../../../lib/logger';
+import { useSessionCrud } from '../hooks/useSessionCrud';
+import { SessionCreateModal } from './session-create-modal';
+import { SessionEditModal } from './session-edit-modal';
+import { SessionDeleteModal } from './session-delete-modal';
+import { SessionDuplicateModal } from './session-duplicate-modal';
+import { SessionFilterBar } from './session-filter-bar';
+import { SessionCloseoutModal } from './session-closeout-modal';
+import { SessionLifecycleService } from '../../services/session-lifecycle.service';
 
 interface SessionsListProps {
+  // onSessionSelect is deprecated - component now uses router navigation
   onSessionSelect?: (sessionId: string) => void;
 }
 
-// Add aurora animation to global styles
+// Add aurora and progress animations to global styles
 const auroraStyles = document.createElement('style');
 auroraStyles.textContent = `
   @keyframes aurora-shift {
@@ -47,37 +62,118 @@ auroraStyles.textContent = `
       opacity: 0.6;
     }
   }
+
+  @keyframes shimmer {
+    0% {
+      opacity: 0.1;
+      transform: translateX(-100%);
+    }
+    50% {
+      opacity: 0.15;
+    }
+    100% {
+      opacity: 0.1;
+      transform: translateX(100%);
+    }
+  }
 `;
 document.head.appendChild(auroraStyles);
 
 export const SessionsList: Component<SessionsListProps> = (props) => {
-  const [sessions, setSessions] = createSignal<Session[]>([]);
-  const [loading, setLoading] = createSignal(true);
-  const [error, setError] = createSignal<string | null>(null);
+  const navigate = useNavigate();
+  const { sessions, allSessions, loading, error, refreshSessions, filterByStatus } = useSessionCrud();
   const [hoveredCard, setHoveredCard] = createSignal<string | null>(null);
-  const storageService = new SessionStorageService();
 
+  // Modal state management
+  const [showCreateModal, setShowCreateModal] = createSignal(false);
+  const [showEditModal, setShowEditModal] = createSignal(false);
+  const [showDeleteModal, setShowDeleteModal] = createSignal(false);
+  const [showDuplicateModal, setShowDuplicateModal] = createSignal(false);
+  const [showCloseoutModal, setShowCloseoutModal] = createSignal(false);
+  const [selectedSession, setSelectedSession] = createSignal<Session | null>(null);
+  const [activeFilter, setActiveFilter] = createSignal<SessionStatus | 'all'>('all');
+
+  // Session lifecycle service
+  const lifecycleService = new SessionLifecycleService();
+
+  // Run auto-transitions on mount
   createEffect(() => {
-    const loadSessions = async () => {
-      try {
-        setLoading(true);
-        setError(null);
-        const allSessions = await storageService.getAllSessions();
-        // Sort by date descending (most recent first)
-        const sorted = allSessions.sort(
-          (a: Session, b: Session) => new Date(b.date).getTime() - new Date(a.date).getTime()
-        );
-        setSessions(sorted);
-      } catch (err) {
-        logger.storage.error('Failed to load sessions:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load sessions');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    loadSessions();
+    lifecycleService.runAutoTransitions().then(() => {
+      refreshSessions();
+    });
   });
+
+  // Session counts for filter bar - use allSessions to show accurate counts regardless of active filter
+  const sessionCounts = createMemo(() => {
+    const all = allSessions();
+    return {
+      all: all.length,
+      planned: all.filter((s) => s.status === 'planned').length,
+      'in-progress': all.filter((s) => s.status === 'in-progress').length,
+      incomplete: all.filter((s) => s.status === 'incomplete').length,
+      completed: all.filter((s) => s.status === 'completed').length,
+      archived: all.filter((s) => s.status === 'archived').length,
+    };
+  });
+
+  // Handlers
+  const handleEdit = (session: Session) => {
+    setSelectedSession(session);
+    setShowEditModal(true);
+  };
+
+  const handleDelete = (session: Session) => {
+    setSelectedSession(session);
+    setShowDeleteModal(true);
+  };
+
+  const handleDuplicate = (session: Session) => {
+    setSelectedSession(session);
+    setShowDuplicateModal(true);
+  };
+
+  const handleCloseout = (session: Session) => {
+    setSelectedSession(session);
+    setShowCloseoutModal(true);
+  };
+
+  const handleCloseoutComplete = () => {
+    setShowCloseoutModal(false);
+    setSelectedSession(null);
+    refreshSessions();
+  };
+
+  const handleModalClose = () => {
+    setSelectedSession(null);
+    setShowEditModal(false);
+    setShowDeleteModal(false);
+    setShowDuplicateModal(false);
+  };
+
+  const handleSessionCreated = () => {
+    setShowCreateModal(false);
+    refreshSessions();
+  };
+
+  const handleSessionUpdated = () => {
+    handleModalClose();
+    refreshSessions();
+  };
+
+  const handleSessionDeleted = () => {
+    handleModalClose();
+    refreshSessions();
+  };
+
+  const handleSessionDuplicated = () => {
+    handleModalClose();
+    refreshSessions();
+  };
+
+  const handleFilterChange = (filter: SessionStatus | 'all') => {
+    setActiveFilter(filter);
+    filterByStatus(filter);
+  };
 
   const getDateLabel = (date: string) => {
     const sessionDate = new Date(date);
@@ -115,6 +211,32 @@ export const SessionsList: Component<SessionsListProps> = (props) => {
       };
     }
 
+    if (session.status === 'incomplete') {
+      return {
+        label: 'Incomplete',
+        icon: Warning,
+        color: '#EF4444',
+        bg: 'rgba(239, 68, 68, 0.15)',
+        border: 'rgba(239, 68, 68, 0.4)',
+        gradient:
+          'linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(239, 68, 68, 0.05) 100%)',
+        auroraColor: 'rgba(239, 68, 68, 0.2)',
+      };
+    }
+
+    if (session.status === 'archived') {
+      return {
+        label: 'Archived',
+        icon: Archive,
+        color: tempoDesign.colors.mutedForeground,
+        bg: `${tempoDesign.colors.muted}`,
+        border: `${tempoDesign.colors.border}`,
+        gradient: `linear-gradient(135deg, ${tempoDesign.colors.muted} 0%, ${tempoDesign.colors.background} 100%)`,
+        auroraColor: 'rgba(112, 112, 128, 0.1)',
+      };
+    }
+
+    // Default: Planned
     return {
       label: 'Planned',
       icon: Calendar,
@@ -197,30 +319,157 @@ export const SessionsList: Component<SessionsListProps> = (props) => {
         }}
       >
         {/* Header */}
-        <div style={{ padding: '0 4px' }}>
-          <h2
+        <div
+          style={{
+            display: 'flex',
+            'justify-content': 'space-between',
+            'align-items': 'flex-start',
+            gap: '20px',
+            padding: '0 4px',
+          }}
+        >
+          <div style={{ flex: 1 }}>
+            <h2
+              style={{
+                'font-size': tempoDesign.typography.sizes['2xl'],
+                'font-weight': tempoDesign.typography.weights.bold,
+                margin: '0 0 8px 0',
+                color: tempoDesign.colors.foreground,
+                'letter-spacing': '-0.02em',
+                'text-shadow': '0 2px 12px rgba(94, 106, 210, 0.3)',
+              }}
+            >
+              Your Sessions
+            </h2>
+            <p
+              style={{
+                'font-size': tempoDesign.typography.sizes.base,
+                color: tempoDesign.colors.mutedForeground,
+                margin: 0,
+                'line-height': tempoDesign.typography.lineHeights.relaxed,
+              }}
+            >
+              Track your productivity journey, one session at a time
+            </p>
+          </div>
+
+          {/* Create Session Button */}
+          <Button
+            onClick={() => setShowCreateModal(true)}
             style={{
-              'font-size': tempoDesign.typography.sizes['2xl'],
-              'font-weight': tempoDesign.typography.weights.bold,
-              margin: '0 0 8px 0',
-              color: tempoDesign.colors.foreground,
-              'letter-spacing': '-0.02em',
-              'text-shadow': '0 2px 12px rgba(94, 106, 210, 0.3)',
-            }}
-          >
-            Your Sessions
-          </h2>
-          <p
-            style={{
+              display: 'flex',
+              'align-items': 'center',
+              gap: '8px',
+              height: '48px',
+              'padding-left': '20px',
+              'padding-right': '20px',
               'font-size': tempoDesign.typography.sizes.base,
-              color: tempoDesign.colors.mutedForeground,
-              margin: 0,
-              'line-height': tempoDesign.typography.lineHeights.relaxed,
+              'font-weight': tempoDesign.typography.weights.semibold,
+              background: `linear-gradient(90deg, ${tempoDesign.colors.primary} 0%, ${tempoDesign.colors.primary}dd 100%)`,
+              color: '#FFFFFF',
+              border: 'none',
+              'border-radius': tempoDesign.radius.md,
+              'box-shadow': `0 4px 16px ${tempoDesign.colors.primary}50, 0 0 24px rgba(94, 106, 210, 0.2)`,
+              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
             }}
           >
-            Track your productivity journey, one session at a time
-          </p>
+            <Plus size={20} weight="bold" />
+            Create Session
+          </Button>
         </div>
+
+        {/* Needs Attention Section */}
+        <Show when={sessionCounts().incomplete > 0}>
+          <div
+            style={{
+              background: 'rgba(239, 68, 68, 0.08)',
+              border: '1px solid rgba(239, 68, 68, 0.2)',
+              'border-radius': tempoDesign.radius.lg,
+              padding: '16px',
+              'margin-bottom': '20px',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                'align-items': 'center',
+                gap: '12px',
+                'margin-bottom': '12px',
+              }}
+            >
+              <Warning size={24} weight="fill" color="#EF4444" />
+              <h3
+                style={{
+                  margin: 0,
+                  'font-size': '16px',
+                  'font-weight': '600',
+                  color: tempoDesign.colors.foreground,
+                }}
+              >
+                Needs Attention ({sessionCounts().incomplete})
+              </h3>
+            </div>
+            <p
+              style={{
+                margin: '0 0 16px 0',
+                'font-size': '14px',
+                color: tempoDesign.colors.mutedForeground,
+              }}
+            >
+              You have incomplete sessions that need to be closed out. Extract unfinished work to
+              your backlog or discard it.
+            </p>
+            <div style={{ display: 'flex', 'flex-direction': 'column', gap: '8px' }}>
+              <For each={sessions().filter((s) => s.status === 'incomplete')}>
+                {(session) => (
+                  <div
+                    style={{
+                      display: 'flex',
+                      'align-items': 'center',
+                      'justify-content': 'space-between',
+                      padding: '12px 16px',
+                      background: tempoDesign.colors.card,
+                      'border-radius': tempoDesign.radius.md,
+                      border: `1px solid ${tempoDesign.colors.border}`,
+                    }}
+                  >
+                    <div>
+                      <span style={{ 'font-weight': '500', color: tempoDesign.colors.foreground }}>
+                        {format(new Date(session.date), 'EEEE, MMM d, yyyy')}
+                      </span>
+                      <span
+                        style={{
+                          'margin-left': '12px',
+                          'font-size': '13px',
+                          color: tempoDesign.colors.mutedForeground,
+                        }}
+                      >
+                        {session.storyBlocks.length} focus blocks
+                      </span>
+                    </div>
+                    <Button
+                      size="sm"
+                      onClick={() => handleCloseout(session)}
+                      style={{
+                        background: '#EF4444',
+                        color: '#FFFFFF',
+                      }}
+                    >
+                      Close Out
+                    </Button>
+                  </div>
+                )}
+              </For>
+            </div>
+          </div>
+        </Show>
+
+        {/* Session Filter Bar */}
+        <SessionFilterBar
+          activeFilter={activeFilter()}
+          sessionCounts={sessionCounts()}
+          onFilterChange={handleFilterChange}
+        />
 
         {/* Loading State */}
         <Show when={loading()}>
@@ -337,7 +586,7 @@ export const SessionsList: Component<SessionsListProps> = (props) => {
                       'line-height': tempoDesign.typography.lineHeights.relaxed,
                     }}
                   >
-                    {error()}
+                    {error()?.message || 'An unknown error occurred'}
                   </p>
                 </div>
               </div>
@@ -398,7 +647,7 @@ export const SessionsList: Component<SessionsListProps> = (props) => {
                     'max-width': '320px',
                   }}
                 >
-                  Create your first session by entering tasks in the Create Tasks tab
+                  Create your first session using the Create Session button above
                 </p>
               </div>
             </CardContent>
@@ -528,30 +777,127 @@ export const SessionsList: Component<SessionsListProps> = (props) => {
                     </Badge>
                   </div>
 
-                  {/* Progress Bar with aurora glow */}
+                  {/* Enhanced Progress Bar */}
                   <div
                     style={{
                       'margin-top': '16px',
-                      height: '6px',
-                      'border-radius': tempoDesign.radius.full,
-                      background: `${tempoDesign.colors.muted}`,
-                      overflow: 'hidden',
-                      position: 'relative',
+                      display: 'flex',
+                      'flex-direction': 'column',
+                      gap: '6px',
                     }}
                   >
+                    {/* Progress Bar Track */}
                     <div
                       style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        height: '100%',
-                        width: `${progress}%`,
-                        background: `linear-gradient(90deg, ${statusConfig.color} 0%, ${statusConfig.color}80 100%)`,
+                        height: '16px',
                         'border-radius': tempoDesign.radius.full,
-                        transition: 'width 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-                        'box-shadow': `0 0 12px ${statusConfig.color}60`,
+                        background: `${tempoDesign.colors.muted}`,
+                        overflow: 'hidden',
+                        position: 'relative',
+                        border: `1.5px solid ${statusConfig.color}25`,
+                        'box-shadow': `inset 0 2px 4px ${tempoDesign.colors.background}80`,
                       }}
-                    />
+                    >
+                      {/* Fill Bar */}
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: 0,
+                          left: 0,
+                          height: '100%',
+                          width: `${progress}%`,
+                          background: `linear-gradient(90deg, ${statusConfig.color} 0%, ${statusConfig.color}95 100%)`,
+                          'border-radius': tempoDesign.radius.full,
+                          transition: 'width 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+                          'box-shadow': `0 0 20px ${statusConfig.color}80, inset 0 1px 3px rgba(255,255,255,0.2)`,
+                          overflow: 'hidden',
+                        }}
+                      >
+                        {/* Subtle shimmer effect - only on filled area */}
+                        <div
+                          style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            height: '100%',
+                            background: `linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)`,
+                            animation: 'shimmer 3s infinite',
+                          }}
+                        />
+                      </div>
+
+                      {/* Milestone markers */}
+                      <For each={[25, 50, 75]}>
+                        {(milestone) => (
+                          <div
+                            style={{
+                              position: 'absolute',
+                              top: 0,
+                              left: `${milestone}%`,
+                              height: '100%',
+                              width: '2px',
+                              background: `${statusConfig.color}${progress >= milestone ? '60' : '25'}`,
+                              'box-shadow':
+                                progress >= milestone ? `0 0 8px ${statusConfig.color}` : 'none',
+                              transition: 'all 0.3s ease',
+                            }}
+                          />
+                        )}
+                      </For>
+                    </div>
+
+                    {/* Progress Milestones Label */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        'justify-content': 'space-between',
+                        'align-items': 'center',
+                        'padding-top': '2px',
+                      }}
+                    >
+                      <span
+                        style={{
+                          'font-size': tempoDesign.typography.sizes.xs,
+                          color: tempoDesign.colors.mutedForeground,
+                          'font-weight': tempoDesign.typography.weights.medium,
+                        }}
+                      >
+                        Started
+                      </span>
+                      <span
+                        style={{
+                          'font-size': tempoDesign.typography.sizes.xs,
+                          color:
+                            progress >= 50
+                              ? statusConfig.color
+                              : tempoDesign.colors.mutedForeground,
+                          'font-weight':
+                            progress >= 50
+                              ? tempoDesign.typography.weights.bold
+                              : tempoDesign.typography.weights.medium,
+                          transition: 'color 0.3s ease',
+                        }}
+                      >
+                        Halfway
+                      </span>
+                      <span
+                        style={{
+                          'font-size': tempoDesign.typography.sizes.xs,
+                          color:
+                            progress >= 100
+                              ? statusConfig.color
+                              : tempoDesign.colors.mutedForeground,
+                          'font-weight':
+                            progress >= 100
+                              ? tempoDesign.typography.weights.bold
+                              : tempoDesign.typography.weights.medium,
+                          transition: 'color 0.3s ease',
+                        }}
+                      >
+                        Complete
+                      </span>
+                    </div>
                   </div>
                 </CardHeader>
 
@@ -701,49 +1047,144 @@ export const SessionsList: Component<SessionsListProps> = (props) => {
                     </div>
                   </div>
 
-                  {/* Open Session Button */}
-                  <Button
-                    onClick={() => {
-                      const dateKey = new Date(session.date).toISOString().split('T')[0];
-                      props.onSessionSelect?.(dateKey);
-                    }}
+                  {/* Action Buttons Row - Fitts's Law Compliant */}
+                  <div
                     style={{
-                      width: '100%',
-                      display: 'flex',
-                      'align-items': 'center',
-                      'justify-content': 'center',
-                      gap: '8px',
-                      height: '48px',
-                      'font-size': tempoDesign.typography.sizes.base,
-                      'font-weight': tempoDesign.typography.weights.semibold,
-                      background: isHovered()
-                        ? `linear-gradient(90deg, ${statusConfig.color} 0%, ${statusConfig.color}dd 100%)`
-                        : `${statusConfig.color}15`,
-                      color: isHovered() ? '#FFFFFF' : statusConfig.color,
-                      border: `1px solid ${statusConfig.border}`,
-                      'border-radius': tempoDesign.radius.md,
-                      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                      'box-shadow': isHovered()
-                        ? `0 4px 16px ${statusConfig.color}50, 0 0 24px ${statusConfig.auroraColor}`
-                        : 'none',
+                      display: 'grid',
+                      'grid-template-columns': '1fr auto auto',
+                      gap: '12px',
                     }}
                   >
-                    Open Session
-                    <ArrowRight
-                      size={16}
-                      weight="bold"
-                      style={{
-                        transition: 'transform 0.2s ease',
-                        transform: isHovered() ? 'translateX(4px)' : 'translateX(0)',
+                    {/* Open Session Button - Main action */}
+                    <Button
+                      onClick={() => {
+                        const dateKey = new Date(session.date).toISOString().split('T')[0];
+                        // Use router navigation instead of callback
+                        navigate(`/tempo/sessions/${dateKey}`);
+                        // Keep backward compatibility if callback is provided
+                        props.onSessionSelect?.(dateKey);
                       }}
-                    />
-                  </Button>
+                      style={{
+                        display: 'flex',
+                        'align-items': 'center',
+                        'justify-content': 'center',
+                        gap: '8px',
+                        height: '48px',
+                        'font-size': tempoDesign.typography.sizes.base,
+                        'font-weight': tempoDesign.typography.weights.semibold,
+                        background: isHovered()
+                          ? `linear-gradient(90deg, ${statusConfig.color} 0%, ${statusConfig.color}dd 100%)`
+                          : `${statusConfig.color}15`,
+                        color: isHovered() ? '#FFFFFF' : statusConfig.color,
+                        border: `1px solid ${statusConfig.border}`,
+                        'border-radius': tempoDesign.radius.md,
+                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                        'box-shadow': isHovered()
+                          ? `0 4px 16px ${statusConfig.color}50, 0 0 24px ${statusConfig.auroraColor}`
+                          : 'none',
+                      }}
+                    >
+                      Open Session
+                      <ArrowRight
+                        size={16}
+                        weight="bold"
+                        style={{
+                          transition: 'transform 0.2s ease',
+                          transform: isHovered() ? 'translateX(4px)' : 'translateX(0)',
+                        }}
+                      />
+                    </Button>
+
+                    {/* Edit Button - 48x48 icon button */}
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEdit(session);
+                      }}
+                      variant="outline"
+                      style={{
+                        height: '48px',
+                        width: '48px',
+                        'min-width': '48px',
+                        display: 'flex',
+                        'align-items': 'center',
+                        'justify-content': 'center',
+                        'border-color': tempoDesign.colors.primary + '40',
+                        color: tempoDesign.colors.primary,
+                        'border-radius': tempoDesign.radius.md,
+                        transition: 'all 0.2s ease',
+                        padding: '0',
+                      }}
+                      title="Edit session"
+                    >
+                      <PencilSimple size={20} weight="bold" />
+                    </Button>
+
+                    {/* Delete Button - 48x48 icon button */}
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(session);
+                      }}
+                      variant="outline"
+                      style={{
+                        height: '48px',
+                        width: '48px',
+                        'min-width': '48px',
+                        display: 'flex',
+                        'align-items': 'center',
+                        'justify-content': 'center',
+                        'border-color': tempoDesign.colors.destructive + '40',
+                        color: tempoDesign.colors.destructive,
+                        'border-radius': tempoDesign.radius.md,
+                        transition: 'all 0.2s ease',
+                        padding: '0',
+                      }}
+                      title="Delete session"
+                    >
+                      <Trash size={20} weight="bold" />
+                    </Button>
+                  </div>
                 </CardContent>
               </Card>
             );
           }}
         </For>
       </div>
+
+      {/* Modals */}
+      <SessionCreateModal
+        isOpen={showCreateModal()}
+        onClose={() => setShowCreateModal(false)}
+        onSessionCreated={handleSessionCreated}
+      />
+      <SessionEditModal
+        isOpen={showEditModal()}
+        session={selectedSession()}
+        onClose={handleModalClose}
+        onSessionUpdated={handleSessionUpdated}
+      />
+      <SessionDeleteModal
+        isOpen={showDeleteModal()}
+        session={selectedSession()}
+        onClose={handleModalClose}
+        onDeleted={handleSessionDeleted}
+      />
+      <SessionDuplicateModal
+        isOpen={showDuplicateModal()}
+        session={selectedSession()}
+        onClose={handleModalClose}
+        onDuplicated={handleSessionDuplicated}
+      />
+      <SessionCloseoutModal
+        isOpen={showCloseoutModal()}
+        session={selectedSession()}
+        onClose={() => {
+          setShowCloseoutModal(false);
+          setSelectedSession(null);
+        }}
+        onCloseout={handleCloseoutComplete}
+      />
     </div>
   );
 };
