@@ -1,46 +1,143 @@
 # Wrangler Configuration for Cloudflare Pages
-# Works for both local development and production deployment
+# Multi-environment setup: Local → Staging/Preview → Production
 
-name = "thoughtful-app-co"
-compatibility_date = "2024-01-01"
+name = "taco"
+compatibility_date = "2025-01-01"
 
 # Pages Functions configuration
 pages_build_output_dir = "dist"
 
-# Shared environment variables
-[vars]
-# Add any non-secret environment variables here
-
 # =============================================================================
-# LOCAL DEVELOPMENT
+# DEFAULT BINDINGS (STAGING - used by preview deployments)
 # =============================================================================
-# Run with: npx wrangler pages dev dist
-# Or use the Vite dev server which proxies to wrangler
+# These are the default bindings used for:
+# - PR preview deployments
+# - Local development (if not using local DBs)
 #
-# For local secrets, create a .dev.vars file (gitignored):
-#   ANTHROPIC_API_KEY=your-key-here
+# IMPORTANT: Default bindings point to STAGING databases to protect production
+
+[[d1_databases]]
+binding = "AUTH_DB"
+database_name = "taco-auth-staging"
+database_id = "ba7fe27f-e3f3-4329-a884-d9ce0586c507"
+
+[[d1_databases]]
+binding = "BILLING_DB"
+database_name = "taco-billing-staging"
+database_id = "82db418e-8563-4086-86c3-22398526a63a"
+
+[[r2_buckets]]
+binding = "BACKUPS"
+bucket_name = "taco-backups-staging"
+
+[[kv_namespaces]]
+binding = "RATE_LIMIT"
+id = "c62ad9f9a1db44139a6daf7be3428f87"
+
+[vars]
+TACO_ENV = "staging"
 
 # =============================================================================
-# PREVIEW ENVIRONMENT (PR previews)
+# PREVIEW ENVIRONMENT (PR deployments)
 # =============================================================================
+# Inherits default staging bindings above
+# Triggered automatically for pull requests
+
 [env.preview]
-# Uses same settings as base config
-# Secrets are configured in Cloudflare Pages dashboard
+[env.preview.vars]
+TACO_ENV = "preview"
 
 # =============================================================================
 # PRODUCTION ENVIRONMENT
 # =============================================================================
+# Only used when deploying to production (main branch)
+# Contains the REAL production database IDs
+
 [env.production]
-# Uses same settings as base config
-# Secrets are configured in Cloudflare Pages dashboard
+
+[[env.production.d1_databases]]
+binding = "AUTH_DB"
+database_name = "taco-auth"
+database_id = "483da8b0-94c7-4f9e-ab1a-68df41e5664d"
+
+[[env.production.d1_databases]]
+binding = "BILLING_DB"
+database_name = "taco-billing"
+database_id = "b8f3b52c-3061-4402-a8b3-794b45dbb2cb"
+
+[[env.production.r2_buckets]]
+binding = "BACKUPS"
+bucket_name = "taco-backups"
+
+[[env.production.kv_namespaces]]
+binding = "RATE_LIMIT"
+id = "d25c638778c14c13b5ce39bf80308b53"
+
+[env.production.vars]
+TACO_ENV = "production"
 
 # =============================================================================
-# NOTES
+# LOCAL DEVELOPMENT
 # =============================================================================
-# - For "Bring Your Own Key" feature, the API key is passed from the frontend
-#   in the X-API-Key header
-# - Production secrets (ANTHROPIC_API_KEY) are set in Cloudflare Pages dashboard
-# - Local secrets are loaded from .dev.vars file
-# - BLS_API_KEY is required for labor market data features (employment stats,
-#   wages, job openings, unemployment, CPI). Register at:
-#   https://data.bls.gov/registrationEngine/
+# Run with: pnpm run dev
+#
+# For local secrets, create a .dev.vars file (gitignored):
+#   ANTHROPIC_API_KEY=your-key-here
+#   JWT_SECRET=your-jwt-secret-here
+#   STRIPE_SECRET_KEY=sk_test_xxx
+#   STRIPE_WEBHOOK_SECRET=whsec_xxx
+#   RESEND_API_KEY=re_xxx
+#
+# For personal local D1 databases (recommended for each developer):
+#   wrangler d1 create taco-auth-dev-yourname
+#   wrangler d1 create taco-billing-dev-yourname
+# Then use --local flag or update the default IDs above temporarily
+
+# =============================================================================
+# SECRETS (Set via Cloudflare Dashboard or wrangler secret put)
+# =============================================================================
+# IMPORTANT: Cloudflare Pages secrets are SHARED between preview and production!
+# SOLUTION: Use TEST/LIVE suffix pattern and select at runtime via TACO_ENV
+#
+# Required Environment-Specific Secrets (set BOTH test and live):
+#   - JWT_SECRET_TEST: Test environment JWT secret (32+ chars)
+#   - JWT_SECRET_PROD: Production environment JWT secret (32+ chars)
+#   - STRIPE_SECRET_KEY_TEST: Test mode Stripe key (sk_test_xxx)
+#   - STRIPE_SECRET_KEY_LIVE: Live mode Stripe key (sk_live_xxx)
+#   - STRIPE_WEBHOOK_SECRET_TEST: Test webhook secret (whsec_test_xxx)
+#   - STRIPE_WEBHOOK_SECRET_LIVE: Live webhook secret (whsec_live_xxx)
+#
+# Required Shared Secrets (same for all environments):
+#   - RESEND_API_KEY: Resend API key for magic link emails (re_xxx)
+#   - RESEND_FROM_EMAIL: Verified sender email
+#   - ONET_API_KEY: O*NET Web Services API key
+#   - ANTHROPIC_API_KEY: For AI features (optional with BYOK)
+#   - BLS_API_KEY: For labor market data (optional)
+#   - GUARDIAN_API_KEY: For Paper Trail news (optional)
+#   - GNEWS_API_KEY: For Paper Trail news (optional)
+#
+# How to set secrets:
+#   wrangler secret put JWT_SECRET_TEST
+#   wrangler secret put JWT_SECRET_PROD
+#   wrangler secret put STRIPE_SECRET_KEY_TEST
+#   wrangler secret put STRIPE_SECRET_KEY_LIVE
+#   wrangler secret put STRIPE_WEBHOOK_SECRET_TEST
+#   wrangler secret put STRIPE_WEBHOOK_SECRET_LIVE
+#   wrangler secret put RESEND_API_KEY
+#   wrangler secret put ONET_API_KEY
+#   # ... and so on
+#
+# Runtime selection (automatic in code):
+#   const jwtSecret = env.TACO_ENV === 'production' 
+#     ? env.JWT_SECRET_PROD 
+#     : env.JWT_SECRET_TEST;
+
+# =============================================================================
+# ENVIRONMENT SUMMARY
+# =============================================================================
+# | Environment | Branch      | Database        | Stripe Keys  |
+# |-------------|-------------|-----------------|--------------|
+# | Local       | any         | Local SQLite    | sk_test_xxx  |
+# | Staging     | PR branches | taco-*-staging  | sk_test_xxx  |
+# | Production  | main        | taco-auth/billing| sk_live_xxx |
+# =============================================================================

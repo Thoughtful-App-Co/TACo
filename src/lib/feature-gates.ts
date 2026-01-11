@@ -35,9 +35,16 @@ export type FeatureName =
   | 'backup'
   | 'sync'
   | 'tempo_ai'
-  | 'cover_letter';
+  | 'cover_letter'
+  | 'echoprax_ai';
 
-export type SubscriptionTier = 'free' | 'tenure_extras' | 'tempo_extras' | 'sync' | 'taco_club';
+export type SubscriptionTier =
+  | 'free'
+  | 'tenure_extras'
+  | 'tempo_extras'
+  | 'echoprax_extras'
+  | 'sync'
+  | 'taco_club';
 
 /**
  * Labor market data feature availability
@@ -261,6 +268,33 @@ export function canUseTempoAI(): FeatureGateResult {
 }
 
 /**
+ * Check if user can use Echoprax AI features
+ */
+export function canUseEchopraxAI(): FeatureGateResult {
+  if (!isAuthenticated()) {
+    return {
+      allowed: false,
+      reason: 'Sign in required',
+      requiresAuth: true,
+      upgradeUrl: '/pricing',
+    };
+  }
+
+  const subs = getCachedSubscriptions();
+
+  if (subs.includes('echoprax_extras') || subs.includes('taco_club')) {
+    return { allowed: true };
+  }
+
+  return {
+    allowed: false,
+    reason: 'Echoprax Extras subscription required',
+    requiresSubscription: 'echoprax_extras',
+    upgradeUrl: '/pricing#echoprax-extras',
+  };
+}
+
+/**
  * Check if user can use Cover Letter generation (part of Tenure Extras)
  */
 export function canUseCoverLetter(): FeatureGateResult {
@@ -287,6 +321,8 @@ export function canAccessFeature(feature: FeatureName): FeatureGateResult {
       return canUseMutation();
     case 'tempo_ai':
       return canUseTempoAI();
+    case 'echoprax_ai':
+      return canUseEchopraxAI();
     case 'backup':
     case 'sync':
       return canUseBackup();
@@ -306,6 +342,7 @@ export function getSubscriptionTier(): SubscriptionTier {
   if (subs.includes('taco_club')) return 'taco_club';
   if (subs.includes('tenure_extras')) return 'tenure_extras';
   if (subs.includes('tempo_extras')) return 'tempo_extras';
+  if (subs.includes('echoprax_extras')) return 'echoprax_extras';
   if (subs.some((s) => s.startsWith('sync_'))) return 'sync';
 
   return 'free';
@@ -420,6 +457,33 @@ export async function canUseTempoAIAsync(): Promise<FeatureGateResult> {
     reason: 'Tempo Extras subscription required',
     requiresSubscription: 'tempo_extras',
     upgradeUrl: '/pricing#tempo-extras',
+  };
+}
+
+/**
+ * Async check for Echoprax AI with fresh subscription data
+ */
+export async function canUseEchopraxAIAsync(): Promise<FeatureGateResult> {
+  if (!isAuthenticated()) {
+    return {
+      allowed: false,
+      reason: 'Sign in required',
+      requiresAuth: true,
+      upgradeUrl: '/pricing',
+    };
+  }
+
+  const subs = await getSubscriptions();
+
+  if (subs.includes('echoprax_extras') || subs.includes('taco_club')) {
+    return { allowed: true };
+  }
+
+  return {
+    allowed: false,
+    reason: 'Echoprax Extras subscription required',
+    requiresSubscription: 'echoprax_extras',
+    upgradeUrl: '/pricing#echoprax-extras',
   };
 }
 

@@ -2,9 +2,9 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [main, develop]
+    branches: [main, staging]
   pull_request:
-    branches: [main, develop]
+    branches: [main, staging]
 
 jobs:
   lint:
@@ -117,4 +117,4 @@ jobs:
 
       - name: Report success
         if: success()
-        run: echo "✅ All checks passed!"
+        run: echo "All checks passed!"
