@@ -35,6 +35,11 @@
     <!-- Theme color (dynamically updated) -->
     <meta name="theme-color" content="#FF6B6B" />
 
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/icons/taco/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/icons/taco/favicon-16x16.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/icons/taco/favicon-32x32.png" />
+
     <!-- iOS PWA Support -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -43,17 +48,118 @@
 
     <!-- MS Tile -->
     <meta name="msapplication-TileColor" content="#0F0F1A" />
-    <meta name="msapplication-TileImage" content="/icons/taco/icon-144.png" />
+    <meta name="msapplication-TileImage" content="/icons/taco/android-chrome-192x192.png" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Dosis:wght@200;300;400;500;600;700;800&family=Gafata&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Dosis:wght@200;300;400;500;600;700;800&family=Gafata&family=Didact+Gothic&family=Meera+Inimai&family=Montserrat+Alternates:wght@700&display=swap"
       rel="stylesheet"
     />
 
     <!-- 100% privacy-first analytics -->
     <script async src="https://scripts.simpleanalyticscdn.com/latest.js"></script>
+
+    <!-- Structured Data (JSON-LD) -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "Organization",
+          "@id": "https://www.thoughtfulappo.co/#organization",
+          "name": "Thoughtful App Co.",
+          "alternateName": "TACo",
+          "url": "https://www.thoughtfulappo.co",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://www.thoughtfulappo.co/icons/taco/android-chrome-512x512.png",
+            "width": 512,
+            "height": 512
+          },
+          "description": "Thoughtful App Co. builds apps for humans, that humans will use, that are good for humans.",
+          "foundingDate": "2024",
+          "sameAs": []
+        },
+        {
+          "@type": "WebSite",
+          "@id": "https://www.thoughtfulappo.co/#website",
+          "url": "https://www.thoughtfulappo.co",
+          "name": "Thoughtful App Co.",
+          "description": "Apps for Humans - Privacy-first productivity and wellness applications",
+          "publisher": {
+            "@id": "https://www.thoughtfulappo.co/#organization"
+          },
+          "potentialAction": {
+            "@type": "SearchAction",
+            "target": "https://www.thoughtfulappo.co/?search={search_term_string}",
+            "query-input": "required name=search_term_string"
+          }
+        },
+        {
+          "@type": "WebPage",
+          "@id": "https://www.thoughtfulappo.co/#webpage",
+          "url": "https://www.thoughtfulappo.co",
+          "name": "Thoughtful App Co. | Apps for Humans",
+          "isPartOf": {
+            "@id": "https://www.thoughtfulappo.co/#website"
+          },
+          "about": {
+            "@id": "https://www.thoughtfulappo.co/#organization"
+          },
+          "description": "Thoughtful App Co. builds apps for humans, that humans will use, that are good for humans. Explore these dope a$$ apps that make you feel better."
+        },
+        {
+          "@type": "SoftwareApplication",
+          "name": "Tempo",
+          "applicationCategory": "ProductivityApplication",
+          "operatingSystem": "Web, iOS, Android",
+          "url": "https://www.thoughtfulappo.co/tempo",
+          "description": "Time-boxing and productivity app with session management, queue-based task organization, and brain dump capture.",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          },
+          "creator": {
+            "@id": "https://www.thoughtfulappo.co/#organization"
+          }
+        },
+        {
+          "@type": "SoftwareApplication",
+          "name": "Tenure",
+          "applicationCategory": "ProductivityApplication",
+          "operatingSystem": "Web, iOS, Android",
+          "url": "https://www.thoughtfulappo.co/tenure",
+          "description": "Job search pipeline management and career toolkit. Track applications, prepare resumes, and manage your job search workflow.",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          },
+          "creator": {
+            "@id": "https://www.thoughtfulappo.co/#organization"
+          }
+        },
+        {
+          "@type": "SoftwareApplication",
+          "name": "Echoprax",
+          "applicationCategory": "HealthApplication",
+          "operatingSystem": "Web, iOS, Android",
+          "url": "https://www.thoughtfulappo.co/echoprax",
+          "description": "Workout session player and exercise tracking. Build custom workouts and track your fitness progress.",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          },
+          "creator": {
+            "@id": "https://www.thoughtfulappo.co/#organization"
+          }
+        }
+      ]
+    }
+    </script>
   </head>
   <body>
     <noscript

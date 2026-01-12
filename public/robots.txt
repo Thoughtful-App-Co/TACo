@@ -1,2 +1,124 @@
+# Thoughtful App Co. (TACo)
+# https://www.thoughtfulappo.co/
+
+# Default: Allow all crawlers
 User-agent: *
 Allow: /
+Disallow: /api/
+Disallow: /_cf/
+Disallow: /*.json$
+
+# Sitemap location
+Sitemap: https://www.thoughtfulappo.co/sitemap.xml
+
+# =============================================================================
+# SEARCH ENGINES
+# =============================================================================
+
+# Google
+User-agent: Googlebot
+User-agent: Googlebot-Image
+User-agent: Googlebot-News
+User-agent: Googlebot-Video
+Allow: /
+
+# Brave Search
+User-agent: BraveSearch
+Allow: /
+
+# Bing
+User-agent: Bingbot
+User-agent: BingPreview
+Allow: /
+
+# DuckDuckGo
+User-agent: DuckDuckBot
+Allow: /
+
+# Yahoo
+User-agent: Slurp
+Allow: /
+
+# Yandex
+User-agent: Yandex
+User-agent: YandexBot
+User-agent: YandexImages
+Allow: /
+
+# Baidu
+User-agent: Baiduspider
+Allow: /
+
+# =============================================================================
+# AI / LLM CRAWLERS - Explicitly welcomed
+# =============================================================================
+
+# OpenAI
+User-agent: GPTBot
+User-agent: ChatGPT-User
+Allow: /
+
+# Anthropic
+User-agent: Claude-Web
+User-agent: ClaudeBot
+User-agent: Anthropic-ai
+User-agent: anthropic-ai
+Allow: /
+
+# Google AI (Gemini training)
+User-agent: Google-Extended
+Allow: /
+
+# Perplexity
+User-agent: PerplexityBot
+Allow: /
+
+# Cohere
+User-agent: Cohere-ai
+User-agent: cohere-ai
+Allow: /
+
+# Meta AI
+User-agent: Meta-ExternalAgent
+User-agent: FacebookBot
+Allow: /
+
+# Common Crawl (used by many AI systems)
+User-agent: CCBot
+Allow: /
+
+# You.com
+User-agent: YouBot
+Allow: /
+
+# Neeva
+User-agent: NeevaBot
+Allow: /
+
+# Apple (Siri, Spotlight)
+User-agent: Applebot
+User-agent: AppleBot-Extended
+Allow: /
+
+# Amazon (Alexa)
+User-agent: Amazonbot
+Allow: /
+
+# =============================================================================
+# SOCIAL MEDIA PREVIEW BOTS
+# =============================================================================
+
+User-agent: Twitterbot
+User-agent: facebookexternalhit
+User-agent: LinkedInBot
+User-agent: Slackbot
+User-agent: Discordbot
+User-agent: TelegramBot
+User-agent: WhatsApp
+Allow: /
+
+# =============================================================================
+# LLM CONTEXT
+# =============================================================================
+# For AI agents seeking structured context about this site:
+# https://www.thoughtfulappo.co/llms.txt
