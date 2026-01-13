@@ -14,7 +14,17 @@
  */
 
 import { Component, createSignal, createMemo, For, Show, JSX } from 'solid-js';
-import * as d3 from 'd3';
+import {
+  scaleTime,
+  scaleLinear,
+  extent,
+  max,
+  area,
+  line,
+  curveMonotoneX,
+  curveLinear,
+  timeFormat,
+} from 'd3';
 import { ChartTooltip, calculateTooltipPosition } from './ChartTooltip';
 import {
   ChartTheme,
@@ -45,7 +55,7 @@ const defaultConfig: Required<LineChartConfig> = {
   curveSmooth: true,
   yAxisLabel: '',
   xAxisLabel: '',
-  formatXTick: (v) => (v instanceof Date ? d3.timeFormat('%b %d')(v) : String(v)),
+  formatXTick: (v) => (v instanceof Date ? timeFormat('%b %d')(v) : String(v)),
   formatYTick: (v) => String(v),
   lineColor: '',
   areaGradientOpacity: [0.4, 0.05],
@@ -69,26 +79,23 @@ export function LineChart<T = unknown>(props: LineChartProps<T>) {
   const xScale = createMemo(() => {
     const data = props.data;
     if (data.length === 0)
-      return d3.scaleTime().domain([new Date(), new Date()]).range([0, chartWidth()]);
+      return scaleTime().domain([new Date(), new Date()]).range([0, chartWidth()]);
 
     const isDate = data[0].x instanceof Date;
     if (isDate) {
-      return d3
-        .scaleTime()
-        .domain(d3.extent(data, (d) => d.x as Date) as [Date, Date])
+      return scaleTime()
+        .domain(extent(data, (d) => d.x as Date) as [Date, Date])
         .range([0, chartWidth()]);
     } else {
-      return d3
-        .scaleLinear()
-        .domain(d3.extent(data, (d) => d.x as number) as [number, number])
+      return scaleLinear()
+        .domain(extent(data, (d) => d.x as number) as [number, number])
         .range([0, chartWidth()]);
     }
   });
 
   const yScale = createMemo(() => {
-    const maxY = d3.max(props.data, (d) => d.y) || 100;
-    return d3
-      .scaleLinear()
+    const maxY = max(props.data, (d) => d.y) || 100;
+    return scaleLinear()
       .domain([0, maxY * 1.1])
       .range([chartHeight(), 0])
       .nice();
@@ -96,9 +103,8 @@ export function LineChart<T = unknown>(props: LineChartProps<T>) {
 
   // Area generator
   const areaGenerator = createMemo(() => {
-    const curve = config().curveSmooth ? d3.curveMonotoneX : d3.curveLinear;
-    return d3
-      .area<LineChartDataPoint>()
+    const curve = config().curveSmooth ? curveMonotoneX : curveLinear;
+    return area<LineChartDataPoint>()
       .x((d) => xScale()(d.x as any))
       .y0(chartHeight())
       .y1((d) => yScale()(d.y))
@@ -107,9 +113,8 @@ export function LineChart<T = unknown>(props: LineChartProps<T>) {
 
   // Line generator (for stroke)
   const lineGenerator = createMemo(() => {
-    const curve = config().curveSmooth ? d3.curveMonotoneX : d3.curveLinear;
-    return d3
-      .line<LineChartDataPoint>()
+    const curve = config().curveSmooth ? curveMonotoneX : curveLinear;
+    return line<LineChartDataPoint>()
       .x((d) => xScale()(d.x as any))
       .y((d) => yScale()(d.y))
       .curve(curve);
@@ -258,11 +263,10 @@ export function LineChart<T = unknown>(props: LineChartProps<T>) {
           <For each={props.overlayLines || []}>
             {(overlay) => {
               const overlayPath = createMemo(() => {
-                const gen = d3
-                  .line<LineChartDataPoint>()
+                const gen = line<LineChartDataPoint>()
                   .x((d) => xScale()(d.x as any))
                   .y((d) => yScale()(d.y))
-                  .curve(config().curveSmooth ? d3.curveMonotoneX : d3.curveLinear);
+                  .curve(config().curveSmooth ? curveMonotoneX : curveLinear);
                 return gen(overlay.data) || '';
               });
 

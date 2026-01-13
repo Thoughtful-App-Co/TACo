@@ -8,7 +8,7 @@
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
-import { Component, Show } from 'solid-js';
+import { Component, Show, For } from 'solid-js';
 import { semanticColors } from '../../theme/semantic-colors';
 
 // ============================================================================
@@ -234,25 +234,27 @@ export const RegionUnavailableMessage: Component<RegionUnavailableMessageProps> 
           <div>
             <div style={sectionTitleStyles}>Currently Supported:</div>
             <ul style={listStyles}>
-              {SUPPORTED_REGIONS.map((region) => (
-                <li style={listItemStyles}>
-                  <span style={bulletStyles} aria-hidden="true">
-                    <svg
-                      width="6"
-                      height="6"
-                      viewBox="0 0 6 6"
-                      fill={semanticColors.info.base}
-                      aria-hidden="true"
-                    >
-                      <circle cx="3" cy="3" r="3" />
-                    </svg>
-                  </span>
-                  <div>
-                    <strong>{region.name}</strong>
-                    <div style={providerStyles}>({region.provider})</div>
-                  </div>
-                </li>
-              ))}
+              <For each={SUPPORTED_REGIONS}>
+                {(region) => (
+                  <li style={listItemStyles}>
+                    <span style={bulletStyles} aria-hidden="true">
+                      <svg
+                        width="6"
+                        height="6"
+                        viewBox="0 0 6 6"
+                        fill={semanticColors.info.base}
+                        aria-hidden="true"
+                      >
+                        <circle cx="3" cy="3" r="3" />
+                      </svg>
+                    </span>
+                    <div>
+                      <strong>{region.name}</strong>
+                      <div style={providerStyles}>({region.provider})</div>
+                    </div>
+                  </li>
+                )}
+              </For>
             </ul>
           </div>
 
@@ -260,26 +262,28 @@ export const RegionUnavailableMessage: Component<RegionUnavailableMessageProps> 
           <div>
             <div style={sectionTitleStyles}>Coming Soon:</div>
             <ul style={listStyles}>
-              {COMING_SOON_REGIONS.map((region) => (
-                <li style={listItemStyles}>
-                  <span style={bulletStyles} aria-hidden="true">
-                    <svg
-                      width="6"
-                      height="6"
-                      viewBox="0 0 6 6"
-                      fill={semanticColors.info.light}
-                      opacity="0.5"
-                      aria-hidden="true"
-                    >
-                      <circle cx="3" cy="3" r="3" />
-                    </svg>
-                  </span>
-                  <div>
-                    <span style={{ opacity: '0.85' }}>{region.name}</span>
-                    <div style={providerStyles}>({region.provider})</div>
-                  </div>
-                </li>
-              ))}
+              <For each={COMING_SOON_REGIONS}>
+                {(region) => (
+                  <li style={listItemStyles}>
+                    <span style={bulletStyles} aria-hidden="true">
+                      <svg
+                        width="6"
+                        height="6"
+                        viewBox="0 0 6 6"
+                        fill={semanticColors.info.light}
+                        opacity="0.5"
+                        aria-hidden="true"
+                      >
+                        <circle cx="3" cy="3" r="3" />
+                      </svg>
+                    </span>
+                    <div>
+                      <span style={{ opacity: '0.85' }}>{region.name}</span>
+                      <div style={providerStyles}>({region.provider})</div>
+                    </div>
+                  </li>
+                )}
+              </For>
             </ul>
           </div>
         </Show>

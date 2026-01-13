@@ -88,7 +88,7 @@ export const PricingPage: Component = () => {
   const extrasCost = createMemo(() => {
     let total = 0;
     if (selectedExtras().includes('tempo')) {
-      total += tempoAnnual() ? 120 : 144;
+      total += tempoAnnual() ? 120 : 12;
     }
     if (selectedExtras().includes('tenure')) total += 30;
     return total;
@@ -906,7 +906,10 @@ export const PricingPage: Component = () => {
                     Tempo Extras {tempoAnnual() ? '(annual)' : '(monthly)'}
                   </span>
                   <span style={{ color: tokens.colors.text, 'font-weight': '600' }}>
-                    {tacoClubTier() !== 'none' ? (
+                    <Show
+                      when={tacoClubTier() !== 'none'}
+                      fallback={`$${tempoAnnual() ? '120' : '12'}`}
+                    >
                       <>
                         <span
                           style={{
@@ -914,13 +917,11 @@ export const PricingPage: Component = () => {
                             color: tokens.colors.textDim,
                           }}
                         >
-                          ${tempoAnnual() ? '120' : '144'}
+                          ${tempoAnnual() ? '120' : '12'}
                         </span>{' '}
-                        ${tempoAnnual() ? '30' : '36'}
+                        ${tempoAnnual() ? '30' : '3'}
                       </>
-                    ) : (
-                      `$${tempoAnnual() ? '120' : '144'}`
-                    )}
+                    </Show>
                   </span>
                 </div>
               </Show>
@@ -934,7 +935,7 @@ export const PricingPage: Component = () => {
                 >
                   <span style={{ color: tokens.colors.textMuted }}>Tenure Extras</span>
                   <span style={{ color: tokens.colors.text, 'font-weight': '600' }}>
-                    {tacoClubTier() !== 'none' ? (
+                    <Show when={tacoClubTier() !== 'none'} fallback={'$30'}>
                       <>
                         <span
                           style={{
@@ -946,9 +947,7 @@ export const PricingPage: Component = () => {
                         </span>{' '}
                         $7.50
                       </>
-                    ) : (
-                      '$30'
-                    )}
+                    </Show>
                   </span>
                 </div>
               </Show>

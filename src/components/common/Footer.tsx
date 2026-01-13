@@ -1,4 +1,4 @@
-import { Component, For } from 'solid-js';
+import { Component, For, Show } from 'solid-js';
 import { A } from '@solidjs/router';
 import { DoodleHeart, DoodleShield, DoodleSparkle, DoodlePeople } from './DoodleIcons';
 
@@ -371,7 +371,7 @@ export const Footer: Component<FooterProps> = (props) => {
                         }}
                       />
                       {app.name}
-                      {app.description && (
+                      <Show when={app.description}>
                         <span
                           style={{
                             'font-size': '11px',
@@ -380,7 +380,7 @@ export const Footer: Component<FooterProps> = (props) => {
                         >
                           — {app.description}
                         </span>
-                      )}
+                      </Show>
                     </A>
                   </li>
                 )}

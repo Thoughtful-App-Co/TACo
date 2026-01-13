@@ -7,7 +7,7 @@
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
-import { Component, createSignal, Show } from 'solid-js';
+import { Component, createSignal, Show, For } from 'solid-js';
 import { useAuth } from '../../lib/auth-context';
 import { logger } from '../../lib/logger';
 import { LoginModal } from './LoginModal';
@@ -416,8 +416,10 @@ export const BackupSync: Component<BackupSyncProps> = (props) => {
                   'text-align': 'left',
                 }}
               >
-                {['Automatic cloud backup', 'Restore on any device', 'Never lose your data'].map(
-                  (feature) => (
+                <For
+                  each={['Automatic cloud backup', 'Restore on any device', 'Never lose your data']}
+                >
+                  {(feature) => (
                     <li
                       style={{
                         display: 'flex',
@@ -440,8 +442,8 @@ export const BackupSync: Component<BackupSyncProps> = (props) => {
                       </svg>
                       {feature}
                     </li>
-                  )
-                )}
+                  )}
+                </For>
               </ul>
 
               <button

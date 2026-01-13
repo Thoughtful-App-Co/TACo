@@ -7,7 +7,7 @@
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
-import { Component, createSignal, Show, createEffect, onCleanup } from 'solid-js';
+import { Component, createSignal, Show, createEffect, onCleanup, For } from 'solid-js';
 import { Portal } from 'solid-js/web';
 import { useAuth } from '../../lib/auth-context';
 import { getAuthHeaders } from '../../lib/auth';
@@ -443,22 +443,24 @@ export const AccountButton: Component<AccountButtonProps> = (props) => {
                         'margin-top': '10px',
                       }}
                     >
-                      {subscriptionBadges().map((badge) => (
-                        <span
-                          style={{
-                            padding: '3px 8px',
-                            background: 'rgba(78, 205, 196, 0.15)',
-                            border: '1px solid rgba(78, 205, 196, 0.3)',
-                            'border-radius': '4px',
-                            'font-family': tokens.typography.fontFamily,
-                            'font-size': '11px',
-                            'font-weight': '500',
-                            color: '#4ECDC4',
-                          }}
-                        >
-                          {badge}
-                        </span>
-                      ))}
+                      <For each={subscriptionBadges()}>
+                        {(badge) => (
+                          <span
+                            style={{
+                              padding: '3px 8px',
+                              background: 'rgba(78, 205, 196, 0.15)',
+                              border: '1px solid rgba(78, 205, 196, 0.3)',
+                              'border-radius': '4px',
+                              'font-family': tokens.typography.fontFamily,
+                              'font-size': '11px',
+                              'font-weight': '500',
+                              color: '#4ECDC4',
+                            }}
+                          >
+                            {badge}
+                          </span>
+                        )}
+                      </For>
                     </div>
                   </Show>
 

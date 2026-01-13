@@ -8,7 +8,7 @@
  * and protected intellectual property. No infringement or unauthorized use is permitted.
  */
 
-import { Component, For, createSignal } from 'solid-js';
+import { Component, For, createSignal, Show } from 'solid-js';
 import { Chore, HouseholdMember } from '../../schemas/lol.schema';
 import { papermorphic, paperElevation, paperChips } from '../../theme/papermorphic';
 import { AppMenuTrigger } from '../common/AppMenuTrigger';
@@ -169,11 +169,11 @@ const ChoreItem: Component<{ chore: Chore }> = (props) => {
             'flex-shrink': 0,
           }}
         >
-          {isChecking() && (
+          <Show when={isChecking()}>
             <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
               <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z" />
             </svg>
-          )}
+          </Show>
         </button>
 
         <div style={{ flex: 1, 'min-width': 0 }}>
@@ -275,7 +275,7 @@ const MemberProgress: Component<{ member: HouseholdMember; isLeader: boolean }> 
         }}
       >
         {props.member.name.charAt(0)}
-        {props.isLeader && (
+        <Show when={props.isLeader}>
           <div
             style={{
               position: 'absolute',
@@ -295,7 +295,7 @@ const MemberProgress: Component<{ member: HouseholdMember; isLeader: boolean }> 
               <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" />
             </svg>
           </div>
-        )}
+        </Show>
       </div>
 
       <div style={{ flex: 1 }}>
@@ -516,7 +516,7 @@ export const LolApp: Component = () => {
           </For>
         </nav>
 
-        {activeTab() === 'chores' && (
+        <Show when={activeTab() === 'chores'}>
           <>
             {/* Quick stats */}
             <div
@@ -598,9 +598,9 @@ export const LolApp: Component = () => {
               </svg>
             </button>
           </>
-        )}
+        </Show>
 
-        {activeTab() === 'leaderboard' && (
+        <Show when={activeTab() === 'leaderboard'}>
           <>
             <PaperCard elevation={2} style={{ padding: '20px', 'margin-bottom': '24px' }}>
               <h2
@@ -665,9 +665,9 @@ export const LolApp: Component = () => {
               </For>
             </PaperCard>
           </>
-        )}
+        </Show>
 
-        {activeTab() === 'rewards' && (
+        <Show when={activeTab() === 'rewards'}>
           <>
             <div
               style={{
@@ -795,7 +795,7 @@ export const LolApp: Component = () => {
               </div>
             </div>
           </>
-        )}
+        </Show>
       </div>
     </div>
   );

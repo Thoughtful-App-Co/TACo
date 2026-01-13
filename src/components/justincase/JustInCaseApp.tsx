@@ -8,7 +8,7 @@
  * and protected intellectual property. No infringement or unauthorized use is permitted.
  */
 
-import { Component, For, createSignal } from 'solid-js';
+import { Component, For, createSignal, Show } from 'solid-js';
 import { Case, Evidence } from '../../schemas/case.schema';
 import { daylight, highlights } from '../../theme/daylight';
 import { AppMenuTrigger } from '../common/AppMenuTrigger';
@@ -176,9 +176,9 @@ const EvidenceItem: Component<{ evidence: Evidence }> = (props) => {
           }}
         >
           {props.evidence.title}
-          {props.evidence.highlighted && (
+          <Show when={props.evidence.highlighted}>
             <span style={{ 'margin-left': '8px', color: daylight.colors.accent }}>*</span>
-          )}
+          </Show>
         </div>
         <div
           style={{
@@ -397,7 +397,7 @@ export const JustInCaseApp: Component = () => {
 
           {/* Content area */}
           <div style={{ padding: '28px 32px' }}>
-            {activeSection() === 'overview' && (
+            <Show when={activeSection() === 'overview'}>
               <div>
                 <h3
                   style={{
@@ -424,7 +424,9 @@ export const JustInCaseApp: Component = () => {
                   {sampleCase.description.split('September 15, 2024').map((part, i, arr) => (
                     <>
                       {part}
-                      {i < arr.length - 1 && <HighlightedText>September 15, 2024</HighlightedText>}
+                      <Show when={i < arr.length - 1}>
+                        <HighlightedText>September 15, 2024</HighlightedText>
+                      </Show>
                     </>
                   ))}
                 </p>
@@ -498,9 +500,9 @@ export const JustInCaseApp: Component = () => {
                   </div>
                 </div>
               </div>
-            )}
+            </Show>
 
-            {activeSection() === 'evidence' && (
+            <Show when={activeSection() === 'evidence'}>
               <div style={{ margin: '-28px -32px' }}>
                 <For each={sampleEvidence}>
                   {(evidence) => <EvidenceItem evidence={evidence} />}
@@ -532,9 +534,9 @@ export const JustInCaseApp: Component = () => {
                   Add Evidence
                 </button>
               </div>
-            )}
+            </Show>
 
-            {activeSection() === 'timeline' && (
+            <Show when={activeSection() === 'timeline'}>
               <div
                 style={{
                   'font-size': '16px',
@@ -545,7 +547,7 @@ export const JustInCaseApp: Component = () => {
               >
                 Timeline view coming soon...
               </div>
-            )}
+            </Show>
           </div>
         </article>
 
