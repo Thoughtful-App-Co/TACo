@@ -18,9 +18,6 @@ import {
   IconCopy,
   IconSettings,
 } from '../ui/Icons';
-import { WarningIcon, ClipboardTextIcon, PackageIcon } from 'solid-phosphor/bold';
-import { downloadEmergencyBackup, getBackupSummary } from '../../../../lib/emergency-export';
-import { exportAndDownload, exportSimpleAndDownload } from '../utils/csv-export';
 
 interface SyncSettingsProps {
   currentTheme: () => Partial<typeof liquidTenure> & typeof liquidTenure;
@@ -154,211 +151,6 @@ export const SyncSettings: Component<SyncSettingsProps> = (props) => {
 
   return (
     <div style={{ 'max-width': '600px' }}>
-      {/* Emergency Backup Section - PRIORITY */}
-      <FluidCard
-        style={{
-          'margin-bottom': '24px',
-          background: 'rgba(245, 158, 11, 0.05)',
-          border: '1px solid rgba(245, 158, 11, 0.3)',
-        }}
-      >
-        <h3
-          style={{
-            margin: '0 0 16px',
-            'font-size': '18px',
-            'font-family': "'Playfair Display', Georgia, serif",
-            'font-weight': '600',
-            color: '#F59E0B',
-            display: 'flex',
-            'align-items': 'center',
-            gap: '10px',
-          }}
-        >
-          <WarningIcon width={16} height={16} /> Emergency Backup
-        </h3>
-        <p
-          style={{
-            margin: '0 0 16px',
-            'font-size': '13px',
-            'font-family': "'Space Grotesk', system-ui, sans-serif",
-            color: theme().colors.textMuted,
-            'line-height': '1.5',
-          }}
-        >
-          <strong>Before any schema changes:</strong> Export all your data now. These backups
-          preserve everything including status timeline, RIASEC scores, and can be used to restore
-          data even if the app's data format changes.
-        </p>
-
-        {/* Backup Summary */}
-        <div
-          style={{
-            display: 'grid',
-            'grid-template-columns': 'repeat(3, 1fr)',
-            gap: '12px',
-            'margin-bottom': '16px',
-          }}
-        >
-          <div
-            style={{
-              padding: '12px',
-              background: theme().colors.surfaceLight,
-              'border-radius': '8px',
-              'text-align': 'center',
-            }}
-          >
-            <div
-              style={{
-                'font-size': '20px',
-                'font-family': "'Playfair Display', Georgia, serif",
-                'font-weight': '700',
-                color: theme().colors.primary,
-              }}
-            >
-              {pipelineStore.state.applications.length}
-            </div>
-            <div
-              style={{
-                'font-size': '10px',
-                'font-family': "'Space Grotesk', system-ui, sans-serif",
-                'text-transform': 'uppercase',
-                'letter-spacing': '0.05em',
-                color: theme().colors.textMuted,
-                'margin-top': '2px',
-              }}
-            >
-              Jobs
-            </div>
-          </div>
-          <div
-            style={{
-              padding: '12px',
-              background: theme().colors.surfaceLight,
-              'border-radius': '8px',
-              'text-align': 'center',
-            }}
-          >
-            <div style={{ 'margin-bottom': '2px' }}>
-              {pipelineStore.state.profile ? (
-                <IconCheck size={18} color="#10B981" />
-              ) : (
-                <IconX size={18} color="#6B7280" />
-              )}
-            </div>
-            <div
-              style={{
-                'font-size': '10px',
-                'font-family': "'Space Grotesk', system-ui, sans-serif",
-                'text-transform': 'uppercase',
-                'letter-spacing': '0.05em',
-                color: theme().colors.textMuted,
-              }}
-            >
-              Profile
-            </div>
-          </div>
-          <div
-            style={{
-              padding: '12px',
-              background: theme().colors.surfaceLight,
-              'border-radius': '8px',
-              'text-align': 'center',
-            }}
-          >
-            <div style={{ 'margin-bottom': '2px' }}>
-              {localStorage.getItem('augment_answers') ? (
-                <IconCheck size={18} color="#10B981" />
-              ) : (
-                <IconX size={18} color="#6B7280" />
-              )}
-            </div>
-            <div
-              style={{
-                'font-size': '10px',
-                'font-family': "'Space Grotesk', system-ui, sans-serif",
-                'text-transform': 'uppercase',
-                'letter-spacing': '0.05em',
-                color: theme().colors.textMuted,
-              }}
-            >
-              RIASEC
-            </div>
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', gap: '12px', 'flex-wrap': 'wrap' }}>
-          <button
-            class="pipeline-btn"
-            onClick={() => downloadEmergencyBackup()}
-            style={{
-              flex: 1,
-              'min-width': '140px',
-              padding: '12px',
-              background: '#F59E0B',
-              border: 'none',
-              'border-radius': '10px',
-              color: '#000000',
-              'font-family': "'Space Grotesk', system-ui, sans-serif",
-              cursor: 'pointer',
-              'font-weight': '600',
-              display: 'flex',
-              'align-items': 'center',
-              'justify-content': 'center',
-              gap: '8px',
-            }}
-          >
-            <PackageIcon width={18} height={18} />
-            Full Backup (JSON)
-          </button>
-          <button
-            class="pipeline-btn"
-            onClick={() => exportAndDownload(pipelineStore.state.applications)}
-            style={{
-              flex: 1,
-              'min-width': '140px',
-              padding: '12px',
-              background: '#0A0A0A',
-              border: '2px solid #F59E0B',
-              'border-radius': '10px',
-              color: '#F59E0B',
-              'font-family': "'Space Grotesk', system-ui, sans-serif",
-              cursor: 'pointer',
-              'font-weight': '600',
-              display: 'flex',
-              'align-items': 'center',
-              'justify-content': 'center',
-              gap: '6px',
-            }}
-          >
-            <ClipboardTextIcon width={16} height={16} />
-            Jobs CSV (Full)
-          </button>
-          <button
-            class="pipeline-btn"
-            onClick={() => exportSimpleAndDownload(pipelineStore.state.applications)}
-            style={{
-              flex: 1,
-              'min-width': '140px',
-              padding: '12px',
-              background: '#0A0A0A',
-              border: '1px solid rgba(255, 255, 255, 0.3)',
-              'border-radius': '10px',
-              color: '#FFFFFF',
-              'font-family': "'Space Grotesk', system-ui, sans-serif",
-              cursor: 'pointer',
-              'font-weight': '500',
-              display: 'flex',
-              'align-items': 'center',
-              'justify-content': 'center',
-              gap: '6px',
-            }}
-          >
-            <ClipboardTextIcon width={16} height={16} />
-            Jobs CSV (Simple)
-          </button>
-        </div>
-      </FluidCard>
-
       {/* Sync Status */}
       <FluidCard style={{ 'margin-bottom': '24px' }}>
         <h3
@@ -421,11 +213,9 @@ export const SyncSettings: Component<SyncSettingsProps> = (props) => {
             }}
           >
             <div style={{ 'margin-bottom': '4px' }}>
-              {stats().hasProfile ? (
+              <Show when={stats().hasProfile} fallback={<IconX size={22} color="#EF4444" />}>
                 <IconCheck size={22} color="#10B981" />
-              ) : (
-                <IconX size={22} color="#EF4444" />
-              )}
+              </Show>
             </div>
             <div
               style={{
@@ -573,15 +363,18 @@ export const SyncSettings: Component<SyncSettingsProps> = (props) => {
                   'font-size': '12px',
                 }}
               >
-                {copySuccess() ? (
+                <Show
+                  when={copySuccess()}
+                  fallback={
+                    <>
+                      <IconCopy size={12} /> Copy
+                    </>
+                  }
+                >
                   <>
                     <IconCheck size={12} /> Copied
                   </>
-                ) : (
-                  <>
-                    <IconCopy size={12} /> Copy
-                  </>
-                )}
+                </Show>
               </button>
             </div>
           </div>

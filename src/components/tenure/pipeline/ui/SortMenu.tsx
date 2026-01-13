@@ -4,7 +4,7 @@
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
-import { Component, createSignal, Show, onCleanup, createEffect } from 'solid-js';
+import { Component, createSignal, Show, onCleanup, createEffect, For } from 'solid-js';
 import { liquidTenure, pipelineAnimations } from '../theme/liquid-tenure';
 import { IconSortAsc, IconSortDesc } from './Icons';
 
@@ -118,11 +118,9 @@ export const SortMenu: Component<SortMenuProps> = (props) => {
           }}
           title={props.currentSort.direction === 'asc' ? 'Ascending' : 'Descending'}
         >
-          {props.currentSort.direction === 'asc' ? (
+          <Show when={props.currentSort.direction === 'asc'} fallback={<IconSortDesc size={14} />}>
             <IconSortAsc size={14} />
-          ) : (
-            <IconSortDesc size={14} />
-          )}
+          </Show>
         </div>
       </div>
 
@@ -144,50 +142,53 @@ export const SortMenu: Component<SortMenuProps> = (props) => {
             animation: 'dropdown-fade-in 0.15s ease-out',
           }}
         >
-          {SORT_OPTIONS.map((option) => {
-            const isActive = props.currentSort.field === option.field;
-            return (
-              <div
-                onClick={() => handleSortSelect(option.field)}
-                style={{
-                  display: 'flex',
-                  'align-items': 'center',
-                  'justify-content': 'space-between',
-                  width: '100%',
-                  padding: '12px 16px',
-                  background: isActive ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
-                  color: isActive ? theme().colors.primary : theme().colors.text,
-                  'font-size': '13px',
-                  'font-family': "'Space Grotesk', system-ui, sans-serif",
-                  'font-weight': isActive ? '600' : '400',
-                  cursor: 'pointer',
-                  transition: `all ${pipelineAnimations.fast}`,
-                  'text-align': 'left',
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive) {
-                    e.currentTarget.style.background = 'transparent';
-                  }
-                }}
-              >
-                <span>{option.label}</span>
-                <Show when={isActive}>
-                  <div style={{ display: 'flex', 'align-items': 'center', gap: '6px' }}>
-                    {props.currentSort.direction === 'asc' ? (
-                      <IconSortAsc size={14} color={theme().colors.primary} />
-                    ) : (
-                      <IconSortDesc size={14} color={theme().colors.primary} />
-                    )}
-                  </div>
-                </Show>
-              </div>
-            );
-          })}
+          <For each={SORT_OPTIONS}>
+            {(option) => {
+              const isActive = props.currentSort.field === option.field;
+              return (
+                <div
+                  onClick={() => handleSortSelect(option.field)}
+                  style={{
+                    display: 'flex',
+                    'align-items': 'center',
+                    'justify-content': 'space-between',
+                    width: '100%',
+                    padding: '12px 16px',
+                    background: isActive ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
+                    color: isActive ? theme().colors.primary : theme().colors.text,
+                    'font-size': '13px',
+                    'font-family': "'Space Grotesk', system-ui, sans-serif",
+                    'font-weight': isActive ? '600' : '400',
+                    cursor: 'pointer',
+                    transition: `all ${pipelineAnimations.fast}`,
+                    'text-align': 'left',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isActive) {
+                      e.currentTarget.style.background = 'transparent';
+                    }
+                  }}
+                >
+                  <span>{option.label}</span>
+                  <Show when={isActive}>
+                    <div style={{ display: 'flex', 'align-items': 'center', gap: '6px' }}>
+                      <Show
+                        when={props.currentSort.direction === 'asc'}
+                        fallback={<IconSortDesc size={14} color={theme().colors.primary} />}
+                      >
+                        <IconSortAsc size={14} color={theme().colors.primary} />
+                      </Show>
+                    </div>
+                  </Show>
+                </div>
+              );
+            }}
+          </For>
         </div>
       </Show>
 

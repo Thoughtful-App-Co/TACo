@@ -327,11 +327,12 @@ export const ApplicationVelocityChart: Component<ApplicationVelocityChartProps> 
                     'font-weight': '700',
                   }}
                 >
-                  {props.velocityMetrics.trend === 'up' ? (
+                  <Show
+                    when={props.velocityMetrics.trend === 'up'}
+                    fallback={<TrendDownIcon width={14} height={14} />}
+                  >
                     <TrendUpIcon width={14} height={14} />
-                  ) : (
-                    <TrendDownIcon width={14} height={14} />
-                  )}
+                  </Show>
                   {props.velocityMetrics.trend === 'up' ? 'Up' : 'Down'}
                 </div>
               </foreignObject>

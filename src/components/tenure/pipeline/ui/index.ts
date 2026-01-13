@@ -4,7 +4,8 @@
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
-export { FluidCard } from './FluidCard';
+// Re-export FluidCard from shared tenure UI
+export { FluidCard } from '../../ui';
 export { Checkbox } from './Checkbox';
 export { StatusBadge } from './StatusBadge';
 export { AgingIndicator } from './AgingIndicator';

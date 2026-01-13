@@ -4,7 +4,7 @@
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
-import { Component, JSX } from 'solid-js';
+import { Component, JSX, Show } from 'solid-js';
 import { ApplicationStatus, STATUS_LABELS } from '../../../../schemas/pipeline.schema';
 import { statusColors, pipelineAnimations } from '../theme/liquid-tenure';
 import {
@@ -85,7 +85,9 @@ export const StatusBadge: Component<StatusBadgeProps> = (props) => {
   return (
     <span style={style()}>
       <StatusIcon status={props.status} size={sizeStyles[size].iconSize} color={colors.text} />
-      {props.showLabel !== false && <span>{STATUS_LABELS[props.status]}</span>}
+      <Show when={props.showLabel !== false}>
+        <span>{STATUS_LABELS[props.status]}</span>
+      </Show>
     </span>
   );
 };

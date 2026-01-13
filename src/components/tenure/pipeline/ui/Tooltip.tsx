@@ -5,7 +5,7 @@
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
-import { Component, JSX, createSignal, Show, onCleanup } from 'solid-js';
+import { Component, JSX, createSignal, Show, onCleanup, For } from 'solid-js';
 import { Portal } from 'solid-js/web';
 
 export interface TooltipProps {
@@ -208,65 +208,67 @@ export const StatTooltipContent: Component<StatTooltipContentProps> = (props) =>
 
     {/* Metrics list */}
     <div style={{ display: 'flex', 'flex-direction': 'column', gap: '8px' }}>
-      {props.metrics.map((metric) => (
-        <div
-          style={{
-            display: 'flex',
-            'justify-content': 'space-between',
-            'align-items': 'flex-start',
-            gap: '12px',
-          }}
-        >
-          <span
+      <For each={props.metrics}>
+        {(metric) => (
+          <div
             style={{
-              color: 'rgba(255, 255, 255, 0.65)',
-              'font-size': '13px',
-              flex: '0 0 auto',
-            }}
-          >
-            {metric.label}
-          </span>
-          <span
-            style={{
-              'font-weight': '600',
-              'font-size': '14px',
-              color: metric.color || '#FFFFFF',
               display: 'flex',
-              'align-items': 'center',
-              gap: '4px',
-              'text-align': 'right',
-              flex: '1 1 auto',
-              'word-break': 'break-word',
+              'justify-content': 'space-between',
+              'align-items': 'flex-start',
+              gap: '12px',
             }}
           >
-            {metric.trend === 'up' && (
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="#10B981"
-                stroke-width="2"
-              >
-                <path d="M18 15l-6-6-6 6" />
-              </svg>
-            )}
-            {metric.trend === 'down' && (
-              <svg
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="#EF4444"
-                stroke-width="2"
-              >
-                <path d="M6 9l6 6 6-6" />
-              </svg>
-            )}
-            {metric.value}
-          </span>
-        </div>
-      ))}
+            <span
+              style={{
+                color: 'rgba(255, 255, 255, 0.65)',
+                'font-size': '13px',
+                flex: '0 0 auto',
+              }}
+            >
+              {metric.label}
+            </span>
+            <span
+              style={{
+                'font-weight': '600',
+                'font-size': '14px',
+                color: metric.color || '#FFFFFF',
+                display: 'flex',
+                'align-items': 'center',
+                gap: '4px',
+                'text-align': 'right',
+                flex: '1 1 auto',
+                'word-break': 'break-word',
+              }}
+            >
+              <Show when={metric.trend === 'up'}>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#10B981"
+                  stroke-width="2"
+                >
+                  <path d="M18 15l-6-6-6 6" />
+                </svg>
+              </Show>
+              <Show when={metric.trend === 'down'}>
+                <svg
+                  width="14"
+                  height="14"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#EF4444"
+                  stroke-width="2"
+                >
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              </Show>
+              {metric.value}
+            </span>
+          </div>
+        )}
+      </For>
     </div>
 
     {/* Insight */}

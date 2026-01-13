@@ -4,7 +4,7 @@
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
-import { Component, JSX, createMemo } from 'solid-js';
+import { Component, JSX, createMemo, Show } from 'solid-js';
 import { daysSince, getAgingStatus } from '../../../../schemas/pipeline.schema';
 import { agingColors, pipelineAnimations } from '../theme/liquid-tenure';
 import { pipelineStore } from '../store';
@@ -67,7 +67,9 @@ export const AgingIndicator: Component<AgingIndicatorProps> = (props) => {
   return (
     <span class={`aging-indicator ${aging()}`} style={style()}>
       <span style={dotStyle()} />
-      {props.showLabel !== false && <span>{formatDays(days())}</span>}
+      <Show when={props.showLabel !== false}>
+        <span>{formatDays(days())}</span>
+      </Show>
     </span>
   );
 };

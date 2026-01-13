@@ -4,7 +4,7 @@
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
-import { Component, createMemo, For } from 'solid-js';
+import { Component, createMemo, For, Show } from 'solid-js';
 import { Portal } from 'solid-js/web';
 import { liquidTenure, statusColors } from '../theme/liquid-tenure';
 import {
@@ -238,7 +238,7 @@ export const SankeyTooltip: Component<SankeyTooltipProps> = (props) => {
                   </For>
 
                   {/* Overflow for this domain */}
-                  {apps.length > 3 && (
+                  <Show when={apps.length > 3}>
                     <div
                       style={{
                         'font-size': '10px',
@@ -250,7 +250,7 @@ export const SankeyTooltip: Component<SankeyTooltipProps> = (props) => {
                     >
                       +{apps.length - 3} more
                     </div>
-                  )}
+                  </Show>
                 </div>
               </div>
             )}

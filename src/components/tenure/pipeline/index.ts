@@ -20,9 +20,4 @@ export type { SidebarView } from './components';
 export { FluidCard, StatusBadge, AgingIndicator, ScoreBadge } from './ui';
 
 // Theme
-export {
-  liquidTenure,
-  pipelineKeyframes,
-  statusColors,
-  agingColors,
-} from './theme/liquid-tenure';
+export { liquidTenure, pipelineKeyframes, statusColors, agingColors } from './theme/liquid-tenure';

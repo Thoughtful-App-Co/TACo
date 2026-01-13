@@ -4,7 +4,7 @@
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
-import { Component, JSX, createMemo } from 'solid-js';
+import { Component, JSX, createMemo, Show } from 'solid-js';
 import { getScoreColor, pipelineAnimations } from '../theme/liquid-tenure';
 
 interface ScoreBadgeProps {
@@ -42,7 +42,9 @@ export const ScoreBadge: Component<ScoreBadgeProps> = (props) => {
   return (
     <span style={style()}>
       <span style={{ 'font-weight': '700' }}>{Math.round(props.score)}%</span>
-      {props.showLabel && <span>{scoreInfo().label}</span>}
+      <Show when={props.showLabel}>
+        <span>{scoreInfo().label}</span>
+      </Show>
     </span>
   );
 };

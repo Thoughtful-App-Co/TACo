@@ -5,7 +5,7 @@
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
-import { Component, JSX } from 'solid-js';
+import { Component, JSX, Show } from 'solid-js';
 import { daysSince, getAgingStatus } from '../../../../schemas/pipeline.schema';
 import { PipelineSettings } from '../../../../schemas/pipeline.schema';
 
@@ -223,13 +223,17 @@ export const AgingCardWrapper: Component<AgingCardWrapperProps> = (props) => {
       }}
     >
       {/* Paper texture overlay */}
-      {props.showTexture !== false && <PaperTexture level={level()} />}
+      <Show when={props.showTexture !== false}>
+        <PaperTexture level={level()} />
+      </Show>
 
       {/* Peel effect */}
       <PeelEffect level={level()} size={props.peelSize || 'medium'} />
 
       {/* Coffee stain */}
-      {props.showCoffeeStain && <CoffeeStain level={level()} position="bottom-right" />}
+      <Show when={props.showCoffeeStain}>
+        <CoffeeStain level={level()} position="bottom-right" />
+      </Show>
 
       {/* Child content */}
       {props.children}

@@ -4,7 +4,7 @@
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
-import { Component, For } from 'solid-js';
+import { Component, For, Show } from 'solid-js';
 import { useTenureTheme } from '../../../TenureThemeProvider';
 import { getSeasonalScoreColor } from '../../../../../theme/semantic-colors';
 import { FluidCard } from '../../ui';
@@ -336,7 +336,7 @@ export const SeasonalInsightsModal: Component<SeasonalInsightsModalProps> = (pro
                         >
                           {month.name}
                         </div>
-                        {isCurrent && (
+                        <Show when={isCurrent}>
                           <div
                             style={{
                               'font-size': '10px',
@@ -347,7 +347,7 @@ export const SeasonalInsightsModal: Component<SeasonalInsightsModalProps> = (pro
                           >
                             Current month
                           </div>
-                        )}
+                        </Show>
                       </div>
 
                       {/* Score bar */}

@@ -12,7 +12,6 @@
 
 import { JobApplication, StatusChange } from '../../../../schemas/pipeline.schema';
 import { formatSalary } from './salary';
-import { SCHEMA_VERSIONS } from '../../../../lib/emergency-export';
 
 /**
  * Escape CSV field (handle quotes, commas, newlines)
@@ -85,7 +84,7 @@ export function exportApplicationsToCSV(applications: JobApplication[]): string 
   // CSV Header comments with schema version (parsers ignore lines starting with #)
   const headerComments = [
     `# TACo Tenure - Job Applications Export`,
-    `# Schema Version: ${SCHEMA_VERSIONS.pipeline}`,
+    `# Schema Version: 1`,
     `# Exported: ${new Date().toISOString()}`,
     `# Application Count: ${applications.length}`,
     `# `,

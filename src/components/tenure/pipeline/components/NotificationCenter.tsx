@@ -342,9 +342,9 @@ export const NotificationCenter: Component<NotificationCenterProps> = (props) =>
                   }
                 }}
               >
-                {pipelineStore.state.settings.holidayModeEnabled && (
+                <Show when={pipelineStore.state.settings.holidayModeEnabled}>
                   <CheckIcon width={14} height={14} style={{ 'margin-right': '4px' }} />
-                )}
+                </Show>
                 Holiday Mode
               </button>
               <span style={{ 'font-size': '12px', color: theme().colors.textMuted }}>

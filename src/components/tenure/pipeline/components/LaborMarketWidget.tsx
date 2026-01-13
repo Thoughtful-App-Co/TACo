@@ -480,9 +480,15 @@ const TrendArrow: Component<{ trend: 'up' | 'down' | 'neutral'; value?: number }
         'font-size': '13px',
       }}
     >
-      {props.trend === 'up' && <TrendUpIcon width={14} height={14} />}
-      {props.trend === 'down' && <TrendDownIcon width={14} height={14} />}
-      {props.trend === 'neutral' && <ArrowRightIcon width={14} height={14} />}
+      <Show when={props.trend === 'up'}>
+        <TrendUpIcon width={14} height={14} />
+      </Show>
+      <Show when={props.trend === 'down'}>
+        <TrendDownIcon width={14} height={14} />
+      </Show>
+      <Show when={props.trend === 'neutral'}>
+        <ArrowRightIcon width={14} height={14} />
+      </Show>
       <Show when={props.value !== undefined}>
         <span>{props.value}%</span>
       </Show>

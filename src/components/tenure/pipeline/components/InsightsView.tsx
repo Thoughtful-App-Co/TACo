@@ -1269,10 +1269,12 @@ import { TrendsHeroChart } from '../trends/components/TrendsHeroChart';
 import { PredictiveInsights } from '../trends/components/PredictiveInsights';
 import { useTrendsData } from '../trends/hooks/useTrendsData';
 import type { TimeRange } from '../trends/trends-data';
+import { isSeasonalInsightsEnabled } from '../../../../lib/feature-gates';
 
 const TrendsTab: Component<TabProps> = (props) => {
   const theme = () => props.theme();
   const [selectedRange, setSelectedRange] = createSignal<TimeRange>('30d');
+  const useV2Layout = isSeasonalInsightsEnabled();
 
   // Get reactive trends data
   const trendsData = useTrendsData(() => pipelineStore.state.applications, selectedRange);
@@ -1348,6 +1350,8 @@ const TrendsTab: Component<TabProps> = (props) => {
       />
 
       {/* Predictive Insights */}
+      {/* TODO: When useV2Layout is true, render PredictiveInsightsV2 with 2/3 + 1/3 grid layout */}
+      {/* For now, always render v1 layout - v2 layout gated behind seasonalInsights feature flag */}
       <PredictiveInsights
         applications={pipelineStore.state.applications}
         applicationsPerWeek={trendsData().velocityMetrics.applicationsPerWeek}
