@@ -8,6 +8,7 @@
 import { Component, createSignal, createMemo, For, Show } from 'solid-js';
 import { pipelineStore } from '../store';
 import { liquidTenure, statusColors, pipelineAnimations } from '../theme/liquid-tenure';
+import { useMobile } from '../../lib/use-mobile';
 import { getCurrentDuotone, getStatusDuotone, type DuotoneColors } from '../theme/riasec-colors';
 import {
   FluidCard,
@@ -65,6 +66,7 @@ interface PipelineDashboardProps {
 }
 
 export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
+  const isMobile = useMobile();
   const [viewMode, setViewMode] = createSignal<'kanban' | 'list'>('kanban');
   const [showArchive, setShowArchive] = createSignal(false);
   const [sortConfig, setSortConfig] = createSignal<SortConfig>({
@@ -72,6 +74,8 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
     direction: 'desc',
   });
   const [searchQuery, setSearchQuery] = createSignal('');
+  // Mobile: track which status column is currently active
+  const [activeStatusTab, setActiveStatusTab] = createSignal<ApplicationStatus>('saved');
   const theme = () => props.currentTheme();
 
   // Drag and drop state
@@ -374,10 +378,11 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
       <div
         style={{
           display: 'flex',
+          'flex-direction': isMobile() ? 'column' : 'row',
           'justify-content': 'space-between',
-          'align-items': 'center',
-          'margin-bottom': '24px',
-          gap: '16px',
+          'align-items': isMobile() ? 'stretch' : 'center',
+          'margin-bottom': isMobile() ? '16px' : '24px',
+          gap: isMobile() ? '12px' : '16px',
           'flex-wrap': 'wrap',
         }}
       >
@@ -464,7 +469,8 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
             'align-items': 'center',
             gap: '12px',
             flex: '1',
-            'max-width': '500px',
+            'max-width': isMobile() ? '100%' : '500px',
+            width: isMobile() ? '100%' : 'auto',
           }}
         >
           {/* Search Input */}
@@ -714,60 +720,158 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
 
       {/* Kanban View */}
       <Show when={applications().length > 0 && viewMode() === 'kanban'}>
-        <div
-          style={{
-            display: 'grid',
-            'grid-template-columns': `repeat(${displayedStatuses().length}, 280px)`,
-            gap: '16px',
-            'overflow-x': 'auto',
-            'overflow-y': 'visible',
-            'padding-bottom': '16px',
-          }}
-        >
-          <For each={displayedStatuses()}>
-            {(status) => (
-              <PipelineColumn
-                status={status}
-                applications={applicationsByStatus()[status]}
-                theme={theme}
-                onSelectJob={props.onSelectJob}
-                onStatusChange={handleStatusChange}
-                avgDays={avgDaysInStatus()[status]}
-                conversionRate={
-                  status === 'applied'
-                    ? conversionRates().toInterview
-                    : status === 'interviewing'
-                      ? conversionRates().toOffer
-                      : null
-                }
-                oldestDays={oldestInStatus()[status]}
-                draggedAppId={draggedAppId()}
-                isDragOver={dragOverStatus() === status}
-                onDragOver={() => setDragOverStatus(status)}
-                onDragLeave={() => setDragOverStatus(null)}
-                onDrop={(appId) => {
-                  handleStatusChange(appId, status);
-                  setDraggedAppId(null);
-                  setDragOverStatus(null);
+        {/* Mobile: Status Tab Bar + Single Column */}
+        <Show when={isMobile()}>
+          {/* Status Tab Bar - horizontally scrollable */}
+          <div
+            style={{
+              display: 'flex',
+              'overflow-x': 'auto',
+              gap: '8px',
+              'padding-bottom': '12px',
+              'margin-bottom': '16px',
+              '-webkit-overflow-scrolling': 'touch',
+              'scrollbar-width': 'none',
+            }}
+          >
+            <For each={displayedStatuses()}>
+              {(status) => {
+                const colors = statusColors[status];
+                const count = applicationsByStatus()[status].length;
+                const isActive = activeStatusTab() === status;
+                return (
+                  <button
+                    onClick={() => setActiveStatusTab(status)}
+                    style={{
+                      display: 'flex',
+                      'align-items': 'center',
+                      gap: '6px',
+                      padding: '10px 14px',
+                      'min-height': '44px',
+                      'white-space': 'nowrap',
+                      background: isActive
+                        ? `linear-gradient(135deg, ${colors.bg}, ${colors.bg.replace('0.15', '0.25')})`
+                        : 'rgba(30, 30, 35, 0.6)',
+                      border: isActive
+                        ? `1px solid ${colors.border}`
+                        : '1px solid rgba(255, 255, 255, 0.1)',
+                      'border-radius': '12px',
+                      color: isActive ? colors.text : theme().colors.textMuted,
+                      'font-size': '13px',
+                      'font-family': "'Space Grotesk', system-ui, sans-serif",
+                      'font-weight': isActive ? '600' : '500',
+                      cursor: 'pointer',
+                      transition: `all ${pipelineAnimations.fast}`,
+                      'flex-shrink': '0',
+                    }}
+                  >
+                    {STATUS_LABELS[status]}
+                    <span
+                      style={{
+                        padding: '2px 8px',
+                        background: isActive ? `${colors.text}25` : 'rgba(255, 255, 255, 0.1)',
+                        'border-radius': '8px',
+                        'font-size': '12px',
+                        'font-weight': '700',
+                      }}
+                    >
+                      {count}
+                    </span>
+                  </button>
+                );
+              }}
+            </For>
+          </div>
+
+          {/* Single Column Cards for Active Status */}
+          <div style={{ display: 'flex', 'flex-direction': 'column', gap: '12px' }}>
+            <For each={applicationsByStatus()[activeStatusTab()]}>
+              {(app) => (
+                <MobileApplicationCard
+                  application={app}
+                  theme={theme}
+                  onClick={() => props.onSelectJob(app)}
+                  statusColor={statusColors[activeStatusTab()].text}
+                  onStatusChange={(newStatus) => handleStatusChange(app.id, newStatus)}
+                  isSelected={pipelineStore.isSelected(app.id)}
+                  onCheckboxChange={handleCheckboxChange}
+                  availableStatuses={displayedStatuses()}
+                />
+              )}
+            </For>
+            <Show when={applicationsByStatus()[activeStatusTab()].length === 0}>
+              <div
+                style={{
+                  padding: '40px 20px',
+                  'text-align': 'center',
+                  color: theme().colors.textMuted,
+                  'font-size': '14px',
+                  'font-family': "'Space Grotesk', system-ui, sans-serif",
                 }}
-                onCardDragStart={setDraggedAppId}
-                onCardDragEnd={() => setDraggedAppId(null)}
-                isSelected={(appId) => pipelineStore.isSelected(appId)}
-                onCheckboxChange={handleCheckboxChange}
-                onSelectAllInColumn={() => {
-                  const ids = applicationsByStatus()[status].map((app) => app.id);
-                  pipelineStore.toggleAllSelection(ids);
-                }}
-                areAllSelectedInColumn={pipelineStore.areAllSelected(
-                  applicationsByStatus()[status].map((app) => app.id)
-                )}
-                areSomeSelectedInColumn={pipelineStore.areSomeSelected(
-                  applicationsByStatus()[status].map((app) => app.id)
-                )}
-              />
-            )}
-          </For>
-        </div>
+              >
+                No jobs in {STATUS_LABELS[activeStatusTab()]}
+              </div>
+            </Show>
+          </div>
+        </Show>
+
+        {/* Desktop: Full Kanban Grid */}
+        <Show when={!isMobile()}>
+          <div
+            style={{
+              display: 'grid',
+              'grid-template-columns': `repeat(${displayedStatuses().length}, 280px)`,
+              gap: '16px',
+              'overflow-x': 'auto',
+              'overflow-y': 'visible',
+              'padding-bottom': '16px',
+            }}
+          >
+            <For each={displayedStatuses()}>
+              {(status) => (
+                <PipelineColumn
+                  status={status}
+                  applications={applicationsByStatus()[status]}
+                  theme={theme}
+                  onSelectJob={props.onSelectJob}
+                  onStatusChange={handleStatusChange}
+                  avgDays={avgDaysInStatus()[status]}
+                  conversionRate={
+                    status === 'applied'
+                      ? conversionRates().toInterview
+                      : status === 'interviewing'
+                        ? conversionRates().toOffer
+                        : null
+                  }
+                  oldestDays={oldestInStatus()[status]}
+                  draggedAppId={draggedAppId()}
+                  isDragOver={dragOverStatus() === status}
+                  onDragOver={() => setDragOverStatus(status)}
+                  onDragLeave={() => setDragOverStatus(null)}
+                  onDrop={(appId) => {
+                    handleStatusChange(appId, status);
+                    setDraggedAppId(null);
+                    setDragOverStatus(null);
+                  }}
+                  onCardDragStart={setDraggedAppId}
+                  onCardDragEnd={() => setDraggedAppId(null)}
+                  isSelected={(appId) => pipelineStore.isSelected(appId)}
+                  onCheckboxChange={handleCheckboxChange}
+                  onSelectAllInColumn={() => {
+                    const ids = applicationsByStatus()[status].map((app) => app.id);
+                    pipelineStore.toggleAllSelection(ids);
+                  }}
+                  areAllSelectedInColumn={pipelineStore.areAllSelected(
+                    applicationsByStatus()[status].map((app) => app.id)
+                  )}
+                  areSomeSelectedInColumn={pipelineStore.areSomeSelected(
+                    applicationsByStatus()[status].map((app) => app.id)
+                  )}
+                />
+              )}
+            </For>
+          </div>
+        </Show>
       </Show>
 
       {/* List View - with or without aggregation */}
@@ -844,7 +948,7 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
                               color: colors.text,
                             }}
                           >
-                            {status === 'saved' && (
+                            <Show when={status === 'saved'}>
                               <svg
                                 width="16"
                                 height="16"
@@ -857,8 +961,8 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
                               >
                                 <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
                               </svg>
-                            )}
-                            {status === 'applied' && (
+                            </Show>
+                            <Show when={status === 'applied'}>
                               <svg
                                 width="16"
                                 height="16"
@@ -872,8 +976,8 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
                                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                                 <polyline points="22 4 12 14.01 9 11.01" />
                               </svg>
-                            )}
-                            {status === 'screening' && (
+                            </Show>
+                            <Show when={status === 'screening'}>
                               <svg
                                 width="16"
                                 height="16"
@@ -887,8 +991,8 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
                                 <circle cx="11" cy="11" r="8" />
                                 <path d="m21 21-4.35-4.35" />
                               </svg>
-                            )}
-                            {status === 'interviewing' && (
+                            </Show>
+                            <Show when={status === 'interviewing'}>
                               <svg
                                 width="16"
                                 height="16"
@@ -904,8 +1008,8 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
                                 <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
                                 <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                               </svg>
-                            )}
-                            {status === 'offered' && (
+                            </Show>
+                            <Show when={status === 'offered'}>
                               <svg
                                 width="16"
                                 height="16"
@@ -918,8 +1022,8 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
                               >
                                 <polyline points="20 6 9 17 4 12" />
                               </svg>
-                            )}
-                            {status === 'accepted' && (
+                            </Show>
+                            <Show when={status === 'accepted'}>
                               <svg
                                 width="16"
                                 height="16"
@@ -932,8 +1036,8 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
                               >
                                 <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
                               </svg>
-                            )}
-                            {(status === 'rejected' || status === 'withdrawn') && (
+                            </Show>
+                            <Show when={status === 'rejected' || status === 'withdrawn'}>
                               <svg
                                 width="16"
                                 height="16"
@@ -948,7 +1052,7 @@ export const PipelineDashboard: Component<PipelineDashboardProps> = (props) => {
                                 <line x1="15" y1="9" x2="9" y2="15" />
                                 <line x1="9" y1="9" x2="15" y2="15" />
                               </svg>
-                            )}
+                            </Show>
                           </div>
 
                           {/* Status Label */}
@@ -1341,7 +1445,7 @@ const PipelineColumn: Component<PipelineColumnProps> = (props) => {
                 color: colors().text,
               }}
             >
-              {props.status === 'saved' && (
+              <Show when={props.status === 'saved'}>
                 <svg
                   width="16"
                   height="16"
@@ -1354,8 +1458,8 @@ const PipelineColumn: Component<PipelineColumnProps> = (props) => {
                 >
                   <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z" />
                 </svg>
-              )}
-              {props.status === 'applied' && (
+              </Show>
+              <Show when={props.status === 'applied'}>
                 <svg
                   width="16"
                   height="16"
@@ -1369,8 +1473,8 @@ const PipelineColumn: Component<PipelineColumnProps> = (props) => {
                   <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
                   <polyline points="22 4 12 14.01 9 11.01" />
                 </svg>
-              )}
-              {props.status === 'screening' && (
+              </Show>
+              <Show when={props.status === 'screening'}>
                 <svg
                   width="16"
                   height="16"
@@ -1384,8 +1488,8 @@ const PipelineColumn: Component<PipelineColumnProps> = (props) => {
                   <circle cx="11" cy="11" r="8" />
                   <path d="m21 21-4.35-4.35" />
                 </svg>
-              )}
-              {props.status === 'interviewing' && (
+              </Show>
+              <Show when={props.status === 'interviewing'}>
                 <svg
                   width="16"
                   height="16"
@@ -1401,8 +1505,8 @@ const PipelineColumn: Component<PipelineColumnProps> = (props) => {
                   <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
                   <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                 </svg>
-              )}
-              {props.status === 'offered' && (
+              </Show>
+              <Show when={props.status === 'offered'}>
                 <svg
                   width="16"
                   height="16"
@@ -1415,8 +1519,8 @@ const PipelineColumn: Component<PipelineColumnProps> = (props) => {
                 >
                   <polyline points="20 6 9 17 4 12" />
                 </svg>
-              )}
-              {props.status === 'accepted' && (
+              </Show>
+              <Show when={props.status === 'accepted'}>
                 <svg
                   width="16"
                   height="16"
@@ -1429,8 +1533,8 @@ const PipelineColumn: Component<PipelineColumnProps> = (props) => {
                 >
                   <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
                 </svg>
-              )}
-              {(props.status === 'rejected' || props.status === 'withdrawn') && (
+              </Show>
+              <Show when={props.status === 'rejected' || props.status === 'withdrawn'}>
                 <svg
                   width="16"
                   height="16"
@@ -1445,7 +1549,7 @@ const PipelineColumn: Component<PipelineColumnProps> = (props) => {
                   <line x1="15" y1="9" x2="9" y2="15" />
                   <line x1="9" y1="9" x2="15" y2="15" />
                 </svg>
-              )}
+              </Show>
             </div>
 
             {/* Status Label */}
@@ -2011,6 +2115,230 @@ const StageDefinitionTooltip: Component<StageDefinitionTooltipProps> = (props) =
         {info().definition}
       </div>
     </div>
+  );
+};
+
+// ============================================================================
+// MOBILE APPLICATION CARD - Touch-friendly card with status dropdown
+// ============================================================================
+
+interface MobileApplicationCardProps {
+  application: JobApplication;
+  theme: () => typeof liquidTenure;
+  onClick: () => void;
+  statusColor?: string;
+  onStatusChange: (newStatus: ApplicationStatus) => void;
+  isSelected?: boolean;
+  onCheckboxChange?: (id: string, checked: boolean) => void;
+  availableStatuses: ApplicationStatus[];
+}
+
+const MobileApplicationCard: Component<MobileApplicationCardProps> = (props) => {
+  const app = () => props.application;
+  const accentColor = () => props.statusColor || props.theme().colors.primary;
+  const daysInStatus = () => daysSince(app().lastActivityAt);
+  const [showStatusMenu, setShowStatusMenu] = createSignal(false);
+
+  return (
+    <AgingCardWrapper
+      lastActivityAt={app().lastActivityAt}
+      settings={pipelineStore.state.settings}
+      peelSize="medium"
+      showTexture={true}
+      showCoffeeStain={false}
+    >
+      <FluidCard
+        hoverable
+        glowColor={accentColor()}
+        style={{
+          padding: '16px',
+          cursor: 'pointer',
+          position: 'relative',
+          background: 'linear-gradient(135deg, rgba(35, 35, 40, 0.95), rgba(25, 25, 30, 0.98))',
+          border: `1px solid rgba(255, 255, 255, 0.08)`,
+        }}
+      >
+        {/* Main content - tappable to open details */}
+        <div onClick={props.onClick}>
+          <div
+            style={{
+              display: 'flex',
+              'align-items': 'flex-start',
+              'justify-content': 'space-between',
+              gap: '12px',
+            }}
+          >
+            <div style={{ flex: '1', 'min-width': '0' }}>
+              <div
+                style={{
+                  'font-size': '16px',
+                  'font-family': "'Space Grotesk', system-ui, sans-serif",
+                  'font-weight': '700',
+                  color: props.theme().colors.text,
+                  'margin-bottom': '4px',
+                  'line-height': '1.4',
+                }}
+              >
+                {app().roleName}
+              </div>
+              <div
+                style={{
+                  'font-size': '14px',
+                  'font-family': "'Space Grotesk', system-ui, sans-serif",
+                  color: props.theme().colors.textMuted,
+                  'margin-bottom': '8px',
+                }}
+              >
+                {app().companyName}
+              </div>
+
+              {/* Location */}
+              <Show when={app().location || app().locationType}>
+                <div
+                  style={{
+                    display: 'flex',
+                    'align-items': 'center',
+                    gap: '6px',
+                    'font-size': '12px',
+                    color: props.theme().colors.textMuted,
+                  }}
+                >
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                    <circle cx="12" cy="10" r="3" />
+                  </svg>
+                  <span>{app().location || app().locationType}</span>
+                </div>
+              </Show>
+            </div>
+
+            {/* Aging indicator */}
+            <AgingIndicator lastActivityAt={app().lastActivityAt} size="sm" />
+          </div>
+        </div>
+
+        {/* Status Change Button - separate from main tap area */}
+        <div
+          style={{
+            'margin-top': '12px',
+            'padding-top': '12px',
+            'border-top': '1px solid rgba(255, 255, 255, 0.08)',
+            position: 'relative',
+          }}
+        >
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowStatusMenu(!showStatusMenu());
+            }}
+            style={{
+              display: 'flex',
+              'align-items': 'center',
+              'justify-content': 'space-between',
+              width: '100%',
+              padding: '10px 14px',
+              'min-height': '44px',
+              background: `${accentColor()}15`,
+              border: `1px solid ${accentColor()}30`,
+              'border-radius': '10px',
+              color: accentColor(),
+              'font-size': '13px',
+              'font-family': "'Space Grotesk', system-ui, sans-serif",
+              'font-weight': '600',
+              cursor: 'pointer',
+            }}
+          >
+            <span>Move to...</span>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              style={{
+                transform: showStatusMenu() ? 'rotate(180deg)' : 'rotate(0deg)',
+                transition: 'transform 0.2s ease',
+              }}
+            >
+              <polyline points="6 9 12 15 18 9" />
+            </svg>
+          </button>
+
+          {/* Status Dropdown */}
+          <Show when={showStatusMenu()}>
+            <div
+              style={{
+                position: 'absolute',
+                bottom: '100%',
+                left: '0',
+                right: '0',
+                'margin-bottom': '8px',
+                background: 'rgba(30, 30, 35, 0.98)',
+                border: '1px solid rgba(255, 255, 255, 0.15)',
+                'border-radius': '12px',
+                padding: '8px',
+                'z-index': '100',
+                'box-shadow': '0 -4px 20px rgba(0, 0, 0, 0.4)',
+              }}
+            >
+              <For each={props.availableStatuses.filter((s) => s !== app().status)}>
+                {(status) => {
+                  const colors = statusColors[status];
+                  return (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        props.onStatusChange(status);
+                        setShowStatusMenu(false);
+                      }}
+                      style={{
+                        display: 'flex',
+                        'align-items': 'center',
+                        gap: '10px',
+                        width: '100%',
+                        padding: '12px 14px',
+                        'min-height': '44px',
+                        background: 'transparent',
+                        border: 'none',
+                        'border-radius': '8px',
+                        color: colors.text,
+                        'font-size': '14px',
+                        'font-family': "'Space Grotesk', system-ui, sans-serif",
+                        'font-weight': '500',
+                        cursor: 'pointer',
+                        'text-align': 'left',
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: '8px',
+                          height: '8px',
+                          'border-radius': '50%',
+                          background: colors.text,
+                        }}
+                      />
+                      {STATUS_LABELS[status]}
+                    </button>
+                  );
+                }}
+              </For>
+            </div>
+          </Show>
+        </div>
+      </FluidCard>
+    </AgingCardWrapper>
   );
 };
 

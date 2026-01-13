@@ -9,6 +9,7 @@ import { useLocation, useNavigate } from '@solidjs/router';
 import { pipelineStore } from '../store';
 import { liquidTenure, pipelineKeyframes } from '../theme/liquid-tenure';
 import { ProspectSidebar, type ProspectSection } from './ProspectSidebar';
+import { useMobile } from '../../lib/use-mobile';
 import { DashboardView } from './DashboardView';
 import { PipelineDashboard } from './PipelineDashboard';
 import { InsightsView } from './InsightsView';
@@ -26,6 +27,10 @@ interface PipelineViewProps {
 export const PipelineView: Component<PipelineViewProps> = (props) => {
   const location = useLocation();
   const navigate = useNavigate();
+  const isMobile = useMobile();
+
+  // Mobile menu state
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = createSignal(false);
 
   // Determine active section from URL path
   const activeSection = createMemo((): ProspectSection => {
@@ -106,6 +111,8 @@ export const PipelineView: Component<PipelineViewProps> = (props) => {
         activeSection={activeSection()}
         onSectionChange={(section) => navigate(`/tenure/prospect/${section}`)}
         currentTheme={theme}
+        isMobileMenuOpen={isMobileMenuOpen()}
+        onMobileMenuClose={() => setIsMobileMenuOpen(false)}
       />
 
       {/* Main Content Area */}
@@ -135,9 +142,11 @@ export const PipelineView: Component<PipelineViewProps> = (props) => {
               style={{
                 position: 'relative',
                 display: 'flex',
-                'align-items': 'center',
+                'flex-direction': isMobile() ? 'column' : 'row',
+                'align-items': isMobile() ? 'stretch' : 'center',
                 'justify-content': 'space-between',
-                padding: '24px 32px',
+                padding: isMobile() ? '16px' : '24px 32px',
+                gap: isMobile() ? '16px' : '0',
                 'border-bottom': `1px solid ${theme().colors.border}`,
                 background: `linear-gradient(135deg, ${theme().colors.surface} 0%, ${theme().colors.primary}08 100%)`,
                 overflow: 'hidden',
@@ -167,10 +176,46 @@ export const PipelineView: Component<PipelineViewProps> = (props) => {
                     'margin-bottom': '12px',
                   }}
                 >
+                  {/* Mobile: Hamburger Menu Button */}
+                  <Show when={isMobile()}>
+                    <button
+                      onClick={() => setIsMobileMenuOpen(true)}
+                      aria-label="Open navigation menu"
+                      style={{
+                        display: 'flex',
+                        'align-items': 'center',
+                        'justify-content': 'center',
+                        width: '44px',
+                        height: '44px',
+                        padding: '0',
+                        background: 'rgba(255, 255, 255, 0.08)',
+                        border: `1px solid ${theme().colors.border}`,
+                        'border-radius': '10px',
+                        color: theme().colors.text,
+                        cursor: 'pointer',
+                        'flex-shrink': '0',
+                      }}
+                    >
+                      <svg
+                        width="22"
+                        height="22"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      >
+                        <line x1="3" y1="6" x2="21" y2="6" />
+                        <line x1="3" y1="12" x2="21" y2="12" />
+                        <line x1="3" y1="18" x2="21" y2="18" />
+                      </svg>
+                    </button>
+                  </Show>
                   <h1
                     style={{
                       margin: 0,
-                      'font-size': '32px',
+                      'font-size': isMobile() ? '24px' : '32px',
                       'font-family': theme().fonts.heading,
                       'font-weight': '700',
                       color: theme().colors.text,
@@ -357,85 +402,98 @@ export const PipelineView: Component<PipelineViewProps> = (props) => {
               </div>
 
               {/* Action Buttons */}
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <button
-                  class="pipeline-btn"
-                  onClick={() => setIsImportModalOpen(true)}
-                  style={{
-                    display: 'flex',
-                    'align-items': 'center',
-                    gap: '8px',
-                    padding: '10px 18px',
-                    background: 'transparent',
-                    border: `1px solid ${theme().colors.border}`,
-                    'border-radius': '10px',
-                    color: theme().colors.text,
-                    'font-size': '14px',
-                    'font-family': "'Space Grotesk', system-ui, sans-serif",
-                    'font-weight': '500',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                  }}
-                >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '10px',
+                  'flex-wrap': isMobile() ? 'wrap' : 'nowrap',
+                  width: isMobile() ? '100%' : 'auto',
+                }}
+              >
+                {/* On mobile: show Import/Export in a collapsed state, prioritize Add Job */}
+                <Show when={!isMobile()}>
+                  <button
+                    class="pipeline-btn"
+                    onClick={() => setIsImportModalOpen(true)}
+                    style={{
+                      display: 'flex',
+                      'align-items': 'center',
+                      gap: '8px',
+                      padding: '10px 18px',
+                      background: 'transparent',
+                      border: `1px solid ${theme().colors.border}`,
+                      'border-radius': '10px',
+                      color: theme().colors.text,
+                      'font-size': '14px',
+                      'font-family': "'Space Grotesk', system-ui, sans-serif",
+                      'font-weight': '500',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
                   >
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="17 8 12 3 7 8" />
-                    <line x1="12" y1="3" x2="12" y2="15" />
-                  </svg>
-                  Import CSV
-                </button>
-                <button
-                  class="pipeline-btn"
-                  onClick={handleExportCSV}
-                  style={{
-                    display: 'flex',
-                    'align-items': 'center',
-                    gap: '8px',
-                    padding: '10px 18px',
-                    background: 'transparent',
-                    border: `1px solid ${theme().colors.border}`,
-                    'border-radius': '10px',
-                    color: theme().colors.text,
-                    'font-size': '14px',
-                    'font-family': "'Space Grotesk', system-ui, sans-serif",
-                    'font-weight': '500',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                  }}
-                >
-                  <svg
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="17 8 12 3 7 8" />
+                      <line x1="12" y1="3" x2="12" y2="15" />
+                    </svg>
+                    Import CSV
+                  </button>
+                  <button
+                    class="pipeline-btn"
+                    onClick={handleExportCSV}
+                    style={{
+                      display: 'flex',
+                      'align-items': 'center',
+                      gap: '8px',
+                      padding: '10px 18px',
+                      background: 'transparent',
+                      border: `1px solid ${theme().colors.border}`,
+                      'border-radius': '10px',
+                      color: theme().colors.text,
+                      'font-size': '14px',
+                      'font-family': "'Space Grotesk', system-ui, sans-serif",
+                      'font-weight': '500',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                    }}
                   >
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                    <polyline points="7 10 12 15 17 10" />
-                    <line x1="12" y1="15" x2="12" y2="3" />
-                  </svg>
-                  Export CSV
-                </button>
+                    <svg
+                      width="16"
+                      height="16"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="7 10 12 15 17 10" />
+                      <line x1="12" y1="15" x2="12" y2="3" />
+                    </svg>
+                    Export CSV
+                  </button>
+                </Show>
                 <button
                   class="pipeline-btn"
                   onClick={() => setIsAddJobModalOpen(true)}
                   style={{
                     display: 'flex',
                     'align-items': 'center',
+                    'justify-content': 'center',
                     gap: '8px',
-                    padding: '10px 18px',
+                    padding: isMobile() ? '14px 20px' : '10px 18px',
+                    'min-height': isMobile() ? '48px' : 'auto',
+                    flex: isMobile() ? '1' : 'initial',
                     background: theme().colors.primary,
                     border: 'none',
                     'border-radius': '10px',
@@ -466,7 +524,7 @@ export const PipelineView: Component<PipelineViewProps> = (props) => {
             </div>
 
             {/* Pipeline Content */}
-            <div style={{ padding: '12px 16px' }}>
+            <div style={{ padding: isMobile() ? '12px' : '12px 16px' }}>
               <PipelineDashboard
                 currentTheme={theme}
                 onSelectJob={setSelectedJob}

@@ -4,9 +4,10 @@
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
-import { Component, Show, createSignal, createEffect, onCleanup } from 'solid-js';
+import { Component, Show, createSignal, createEffect, onCleanup, For } from 'solid-js';
 import { pipelineStore } from '../store';
 import { liquidTenure, statusColors, pipelineAnimations } from '../theme/liquid-tenure';
+import { useMobile } from '../../lib/use-mobile';
 import {
   JobApplication,
   ApplicationStatus,
@@ -47,6 +48,7 @@ interface JobDetailSidebarProps {
 
 export const JobDetailSidebar: Component<JobDetailSidebarProps> = (props) => {
   const theme = () => props.currentTheme();
+  const isMobile = useMobile();
 
   // Editing state
   const [isEditing, setIsEditing] = createSignal(false);
@@ -326,11 +328,11 @@ export const JobDetailSidebar: Component<JobDetailSidebarProps> = (props) => {
           top: 0,
           right: 0,
           bottom: 0,
-          width: `${width()}px`,
+          width: isMobile() ? '100vw' : `${width()}px`,
           'max-width': '100vw',
           background: theme().colors.surface,
-          'border-left': `1px solid ${theme().colors.border}`,
-          'box-shadow': '-8px 0 32px rgba(0, 0, 0, 0.3)',
+          'border-left': isMobile() ? 'none' : `1px solid ${theme().colors.border}`,
+          'box-shadow': isMobile() ? 'none' : '-8px 0 32px rgba(0, 0, 0, 0.3)',
           'z-index': 1000,
           display: 'flex',
           'flex-direction': 'column',
@@ -338,50 +340,52 @@ export const JobDetailSidebar: Component<JobDetailSidebarProps> = (props) => {
           'user-select': isDragging() ? 'none' : 'auto',
         }}
       >
-        {/* Resize Handle */}
-        <div
-          onMouseDown={handleMouseDown}
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            bottom: 0,
-            width: '12px',
-            cursor: 'ew-resize',
-            'z-index': 10,
-            display: 'flex',
-            'align-items': 'center',
-            'justify-content': 'center',
-          }}
-          onMouseEnter={(e) => {
-            const handle = e.currentTarget.querySelector('.resize-handle-bar') as HTMLElement;
-            if (handle) {
-              handle.style.opacity = '1';
-              handle.style.background = theme().colors.primary;
-            }
-          }}
-          onMouseLeave={(e) => {
-            if (!isDragging()) {
+        {/* Resize Handle - Desktop only */}
+        <Show when={!isMobile()}>
+          <div
+            onMouseDown={handleMouseDown}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              bottom: 0,
+              width: '12px',
+              cursor: 'ew-resize',
+              'z-index': 10,
+              display: 'flex',
+              'align-items': 'center',
+              'justify-content': 'center',
+            }}
+            onMouseEnter={(e) => {
               const handle = e.currentTarget.querySelector('.resize-handle-bar') as HTMLElement;
               if (handle) {
-                handle.style.opacity = '0.5';
-                handle.style.background = theme().colors.border;
+                handle.style.opacity = '1';
+                handle.style.background = theme().colors.primary;
               }
-            }
-          }}
-        >
-          <div
-            class="resize-handle-bar"
-            style={{
-              width: '4px',
-              height: '48px',
-              'border-radius': '2px',
-              background: isDragging() ? theme().colors.primary : theme().colors.border,
-              opacity: isDragging() ? '1' : '0.5',
-              transition: 'all 0.15s ease',
             }}
-          />
-        </div>
+            onMouseLeave={(e) => {
+              if (!isDragging()) {
+                const handle = e.currentTarget.querySelector('.resize-handle-bar') as HTMLElement;
+                if (handle) {
+                  handle.style.opacity = '0.5';
+                  handle.style.background = theme().colors.border;
+                }
+              }
+            }}
+          >
+            <div
+              class="resize-handle-bar"
+              style={{
+                width: '4px',
+                height: '48px',
+                'border-radius': '2px',
+                background: isDragging() ? theme().colors.primary : theme().colors.border,
+                opacity: isDragging() ? '1' : '0.5',
+                transition: 'all 0.15s ease',
+              }}
+            />
+          </div>
+        </Show>
 
         {/* Header */}
         <div
@@ -389,31 +393,68 @@ export const JobDetailSidebar: Component<JobDetailSidebarProps> = (props) => {
             display: 'flex',
             'align-items': 'center',
             'justify-content': 'space-between',
-            padding: '20px 24px 20px 28px',
+            padding: isMobile() ? '16px' : '20px 24px 20px 28px',
             'border-bottom': `1px solid ${theme().colors.border}`,
             'flex-shrink': 0,
           }}
         >
           <div style={{ display: 'flex', 'align-items': 'center', gap: '12px' }}>
-            <div
-              style={{
-                display: 'flex',
-                'align-items': 'center',
-                'justify-content': 'center',
-                width: '36px',
-                height: '36px',
-                'border-radius': '10px',
-                background: `${statusColors[props.job!.status].bg}`,
-                color: statusColors[props.job!.status].text,
-              }}
-            >
-              <IconBriefcase size={20} />
-            </div>
+            {/* Mobile: Back Button */}
+            <Show when={isMobile()}>
+              <button
+                onClick={props.onClose}
+                aria-label="Go back"
+                style={{
+                  display: 'flex',
+                  'align-items': 'center',
+                  'justify-content': 'center',
+                  width: '44px',
+                  height: '44px',
+                  padding: '0',
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  border: `1px solid ${theme().colors.border}`,
+                  'border-radius': '10px',
+                  color: theme().colors.text,
+                  cursor: 'pointer',
+                  'flex-shrink': '0',
+                }}
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M19 12H5" />
+                  <path d="M12 19l-7-7 7-7" />
+                </svg>
+              </button>
+            </Show>
+            <Show when={!isMobile()}>
+              <div
+                style={{
+                  display: 'flex',
+                  'align-items': 'center',
+                  'justify-content': 'center',
+                  width: '36px',
+                  height: '36px',
+                  'border-radius': '10px',
+                  background: `${statusColors[props.job!.status].bg}`,
+                  color: statusColors[props.job!.status].text,
+                }}
+              >
+                <IconBriefcase size={20} />
+              </div>
+            </Show>
             <div>
               <h2
                 style={{
                   margin: 0,
-                  'font-size': '18px',
+                  'font-size': isMobile() ? '16px' : '18px',
                   'font-family': "'Playfair Display', Georgia, serif",
                   'font-weight': '600',
                   color: theme().colors.text,
@@ -589,9 +630,9 @@ export const JobDetailSidebar: Component<JobDetailSidebarProps> = (props) => {
                       e.currentTarget.style.borderColor = theme().colors.border;
                     }}
                   >
-                    {STATUS_ORDER.map((status) => (
-                      <option value={status}>{STATUS_LABELS[status]}</option>
-                    ))}
+                    <For each={STATUS_ORDER}>
+                      {(status) => <option value={status}>{STATUS_LABELS[status]}</option>}
+                    </For>
                   </select>
                   {/* Status indicator badge */}
                   <div
@@ -694,7 +735,7 @@ export const JobDetailSidebar: Component<JobDetailSidebarProps> = (props) => {
                   >
                     {props.job!.location}
                     {props.job!.location && props.job!.locationType && ' • '}
-                    {props.job!.locationType && (
+                    <Show when={props.job!.locationType}>
                       <span
                         style={{
                           'text-transform': 'capitalize',
@@ -703,7 +744,7 @@ export const JobDetailSidebar: Component<JobDetailSidebarProps> = (props) => {
                       >
                         {props.job!.locationType}
                       </span>
-                    )}
+                    </Show>
                   </p>
                 </div>
               </Show>

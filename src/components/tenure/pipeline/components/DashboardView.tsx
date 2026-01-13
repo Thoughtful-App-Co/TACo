@@ -7,6 +7,7 @@
 import { Component, createMemo, For, Show } from 'solid-js';
 import { pipelineStore } from '../store';
 import { liquidTenure, statusColors, pipelineAnimations } from '../theme/liquid-tenure';
+import { useMobile } from '../../lib/use-mobile';
 import { getCurrentDuotone, getStatusDuotone } from '../theme/riasec-colors';
 import { FluidCard, StatTooltipContent, Tooltip, AgingIndicator, StatusBadge } from '../ui';
 import {
@@ -55,6 +56,7 @@ interface ActivityItem {
 
 export const DashboardView: Component<DashboardViewProps> = (props) => {
   const theme = () => props.currentTheme();
+  const isMobile = useMobile();
   const applications = () => pipelineStore.state.applications;
   const duotoneColors = createMemo(() => getCurrentDuotone());
 
@@ -694,8 +696,8 @@ export const DashboardView: Component<DashboardViewProps> = (props) => {
       <div
         style={{
           display: 'grid',
-          'grid-template-columns': '1fr 380px',
-          gap: '24px',
+          'grid-template-columns': isMobile() ? '1fr' : '1fr 380px',
+          gap: isMobile() ? '16px' : '24px',
         }}
       >
         {/* Recent Activity */}

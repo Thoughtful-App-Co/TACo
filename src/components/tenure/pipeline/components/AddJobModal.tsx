@@ -7,6 +7,7 @@
 import { Component, createSignal, Show, For, Switch, Match } from 'solid-js';
 import { pipelineStore } from '../store';
 import { liquidTenure, pipelineAnimations } from '../theme/liquid-tenure';
+import { useMobile } from '../../lib/use-mobile';
 import {
   IconX,
   IconLink,
@@ -58,6 +59,7 @@ const getCurrentTime = (): string => {
 
 export const AddJobModal: Component<AddJobModalProps> = (props) => {
   const theme = () => props.currentTheme();
+  const isMobile = useMobile();
 
   const [view, setView] = createSignal<ModalView>('initial');
   const [jobUrl, setJobUrl] = createSignal('');
@@ -386,10 +388,10 @@ export const AddJobModal: Component<AddJobModalProps> = (props) => {
           background: 'rgba(0, 0, 0, 0.8)',
           'backdrop-filter': 'blur(8px)',
           display: 'flex',
-          'align-items': 'center',
+          'align-items': isMobile() ? 'stretch' : 'center',
           'justify-content': 'center',
           'z-index': 1000,
-          padding: '20px',
+          padding: isMobile() ? '0' : '20px',
         }}
         onClick={(e) => {
           if (e.target === e.currentTarget) handleClose();
@@ -398,13 +400,15 @@ export const AddJobModal: Component<AddJobModalProps> = (props) => {
         <div
           style={{
             background: theme().colors.surface,
-            'border-radius': '16px',
-            'max-width': '560px',
-            width: '100%',
-            'max-height': '90vh',
+            'border-radius': isMobile() ? '0' : '16px',
+            'max-width': isMobile() ? '100vw' : '560px',
+            width: isMobile() ? '100vw' : '100%',
+            height: isMobile() ? '100vh' : 'auto',
+            'max-height': isMobile() ? '100vh' : '90vh',
             overflow: 'auto',
-            border: `1px solid ${theme().colors.border}`,
-            'box-shadow': '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+            '-webkit-overflow-scrolling': 'touch',
+            border: isMobile() ? 'none' : `1px solid ${theme().colors.border}`,
+            'box-shadow': isMobile() ? 'none' : '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
           }}
         >
           {/* Header */}

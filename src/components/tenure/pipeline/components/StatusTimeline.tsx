@@ -4,7 +4,7 @@
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
-import { Component, For } from 'solid-js';
+import { Component, For, Show } from 'solid-js';
 import { liquidTenure, statusColors } from '../theme/liquid-tenure';
 import { StatusChange } from '../../../../schemas/pipeline.schema';
 import { formatDistanceToNow } from 'date-fns';
@@ -48,7 +48,9 @@ export const StatusTimeline: Component<StatusTimelineProps> = (props) => {
 
       <For each={sortedHistory()}>
         {(change, index) => {
-          const isFirst = index() === 0;
+          // Use reactive getter to ensure CURRENT tag updates when list changes
+          const isCurrent = () => index() === 0 && change.status === props.currentStatus;
+          const isFirst = () => index() === 0;
           const statusColor = statusColors[change.status] || statusColors.saved;
           const timestamp = new Date(change.timestamp);
 
@@ -72,9 +74,9 @@ export const StatusTimeline: Component<StatusTimelineProps> = (props) => {
                   width: '26px',
                   height: '26px',
                   'border-radius': '50%',
-                  background: isFirst ? statusColor.bg : 'rgba(255, 255, 255, 0.05)',
+                  background: isFirst() ? statusColor.bg : 'rgba(255, 255, 255, 0.05)',
                   border: `2px solid ${statusColor.border}`,
-                  'box-shadow': isFirst ? `0 0 12px ${statusColor.text}40` : 'none',
+                  'box-shadow': isFirst() ? `0 0 12px ${statusColor.text}40` : 'none',
                   'flex-shrink': '0',
                 }}
               >
@@ -102,13 +104,13 @@ export const StatusTimeline: Component<StatusTimelineProps> = (props) => {
                     style={{
                       'font-size': '14px',
                       'font-family': theme().fonts.body,
-                      'font-weight': isFirst ? '600' : '500',
-                      color: isFirst ? statusColor.text : theme().colors.text,
+                      'font-weight': isFirst() ? '600' : '500',
+                      color: isFirst() ? statusColor.text : theme().colors.text,
                     }}
                   >
                     {change.status.charAt(0).toUpperCase() + change.status.slice(1)}
                   </span>
-                  {isFirst && (
+                  <Show when={isCurrent()}>
                     <span
                       style={{
                         'font-size': '11px',
@@ -123,7 +125,7 @@ export const StatusTimeline: Component<StatusTimelineProps> = (props) => {
                     >
                       CURRENT
                     </span>
-                  )}
+                  </Show>
                 </div>
 
                 <div
@@ -145,7 +147,7 @@ export const StatusTimeline: Component<StatusTimelineProps> = (props) => {
                   {formatDistanceToNow(timestamp, { addSuffix: true })}
                 </div>
 
-                {change.note && (
+                <Show when={change.note}>
                   <div
                     style={{
                       'font-size': '13px',
@@ -161,7 +163,7 @@ export const StatusTimeline: Component<StatusTimelineProps> = (props) => {
                   >
                     "{change.note}"
                   </div>
-                )}
+                </Show>
               </div>
             </div>
           );

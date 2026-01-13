@@ -6,6 +6,7 @@
 
 import { Component, Show, JSX } from 'solid-js';
 import { IconX } from '../../pipeline/ui/Icons';
+import { useMobile } from '../../lib/use-mobile';
 
 /**
  * Theme type for Modal component styling
@@ -60,6 +61,7 @@ const modalKeyframes = `
 
 export const Modal: Component<ModalProps> = (props) => {
   const theme = () => props.currentTheme();
+  const isMobile = useMobile();
   const maxWidth = () => props.maxWidth || '560px';
 
   const handleBackdropClick = (e: MouseEvent) => {
@@ -77,23 +79,24 @@ export const Modal: Component<ModalProps> = (props) => {
     background: 'rgba(0, 0, 0, 0.8)',
     'backdrop-filter': 'blur(8px)',
     display: 'flex',
-    'align-items': 'center',
+    'align-items': isMobile() ? 'stretch' : 'center',
     'justify-content': 'center',
     'z-index': 1000,
-    padding: '20px',
+    padding: isMobile() ? '0' : '20px',
     animation: 'modal-backdrop-fade 0.2s ease-out forwards',
   });
 
   const modalContainerStyle = (): JSX.CSSProperties => ({
     background: theme().colors.surface,
-    'border-radius': '16px',
-    'max-width': maxWidth(),
-    width: '100%',
-    'max-height': '90vh',
+    'border-radius': isMobile() ? '0' : '16px',
+    'max-width': isMobile() ? '100vw' : maxWidth(),
+    width: isMobile() ? '100vw' : '100%',
+    height: isMobile() ? '100vh' : 'auto',
+    'max-height': isMobile() ? '100vh' : '90vh',
     display: 'flex',
     'flex-direction': 'column',
-    border: `1px solid ${theme().colors.border}`,
-    'box-shadow': '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+    border: isMobile() ? 'none' : `1px solid ${theme().colors.border}`,
+    'box-shadow': isMobile() ? 'none' : '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
     animation: 'modal-fade-in 0.25s ease-out forwards',
   });
 
@@ -115,21 +118,24 @@ export const Modal: Component<ModalProps> = (props) => {
   });
 
   const closeButtonStyle = (): JSX.CSSProperties => ({
-    background: 'transparent',
-    border: 'none',
+    background: isMobile() ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
+    border: isMobile() ? `1px solid ${theme().colors.border}` : 'none',
     cursor: 'pointer',
-    padding: '4px',
+    padding: isMobile() ? '10px' : '4px',
+    'min-width': isMobile() ? '44px' : 'auto',
+    'min-height': isMobile() ? '44px' : 'auto',
     display: 'flex',
     'align-items': 'center',
     'justify-content': 'center',
     color: theme().colors.textMuted,
     transition: 'color 0.15s ease',
-    'border-radius': '6px',
+    'border-radius': isMobile() ? '10px' : '6px',
   });
 
   const contentStyle = (): JSX.CSSProperties => ({
-    padding: '24px',
+    padding: isMobile() ? '16px' : '24px',
     overflow: 'auto',
+    '-webkit-overflow-scrolling': 'touch',
     flex: 1,
   });
 

@@ -209,17 +209,22 @@ export const pipelineStore = {
   },
 
   updateStatus: (id: string, newStatus: ApplicationStatus, note?: string) => {
-    const now = new Date();
-    const statusChange: StatusChange = {
-      status: newStatus,
-      timestamp: now,
-      note,
-    };
-
     setState(
       'applications',
       (app) => app.id === id,
       (app) => {
+        // Don't create a new status entry if the status hasn't changed
+        if (app.status === newStatus) {
+          return app;
+        }
+
+        const now = new Date();
+        const statusChange: StatusChange = {
+          status: newStatus,
+          timestamp: now,
+          note,
+        };
+
         const updates: Partial<JobApplication> = {
           status: newStatus,
           statusHistory: [...app.statusHistory, statusChange],

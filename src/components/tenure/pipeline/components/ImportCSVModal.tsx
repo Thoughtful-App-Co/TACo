@@ -19,6 +19,7 @@
 import { Component, createSignal, createMemo, For, Show } from 'solid-js';
 import { pipelineStore } from '../store';
 import { liquidTenure, pipelineAnimations } from '../theme/liquid-tenure';
+import { useMobile } from '../../lib/use-mobile';
 import { IconX, IconUpload, IconCheck, IconAlert } from '../ui/Icons';
 import {
   JobApplication,
@@ -131,6 +132,7 @@ const STATUS_MAPPINGS: Record<string, ApplicationStatus> = {
 
 export const ImportCSVModal: Component<ImportCSVModalProps> = (props) => {
   const theme = () => props.currentTheme();
+  const isMobile = useMobile();
 
   const [step, setStep] = createSignal<'upload' | 'preview' | 'complete'>('upload');
   const [csvContent, setCsvContent] = createSignal<string>('');
@@ -641,10 +643,10 @@ export const ImportCSVModal: Component<ImportCSVModalProps> = (props) => {
           background: 'rgba(0, 0, 0, 0.8)',
           'backdrop-filter': 'blur(8px)',
           display: 'flex',
-          'align-items': 'center',
+          'align-items': isMobile() ? 'stretch' : 'center',
           'justify-content': 'center',
           'z-index': 1000,
-          padding: '20px',
+          padding: isMobile() ? '0' : '20px',
         }}
         onClick={(e) => {
           if (e.target === e.currentTarget) handleClose();
@@ -653,13 +655,15 @@ export const ImportCSVModal: Component<ImportCSVModalProps> = (props) => {
         <div
           style={{
             background: theme().colors.surface,
-            'border-radius': '16px',
-            'max-width': '640px',
-            width: '100%',
-            'max-height': '90vh',
+            'border-radius': isMobile() ? '0' : '16px',
+            'max-width': isMobile() ? '100vw' : '640px',
+            width: isMobile() ? '100vw' : '100%',
+            height: isMobile() ? '100vh' : 'auto',
+            'max-height': isMobile() ? '100vh' : '90vh',
             overflow: 'auto',
-            border: `1px solid ${theme().colors.border}`,
-            'box-shadow': '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+            '-webkit-overflow-scrolling': 'touch',
+            border: isMobile() ? 'none' : `1px solid ${theme().colors.border}`,
+            'box-shadow': isMobile() ? 'none' : '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
           }}
         >
           {/* Header */}
@@ -838,36 +842,40 @@ export const ImportCSVModal: Component<ImportCSVModalProps> = (props) => {
                       gap: '8px',
                     }}
                   >
-                    {[
-                      'Company *',
-                      'Role *',
-                      'Status',
-                      'URL',
-                      'Location',
-                      'Location Type',
-                      'Department',
-                      'Salary',
-                      'Notes',
-                      'Applied Date',
-                    ].map((col) => (
-                      <span
-                        style={{
-                          padding: '4px 10px',
-                          background: col.includes('*')
-                            ? `${theme().colors.primary}20`
-                            : 'rgba(255,255,255,0.05)',
-                          'border-radius': '6px',
-                          'font-size': '12px',
-                          'font-family': "'Space Grotesk', system-ui, sans-serif",
-                          color: col.includes('*')
-                            ? theme().colors.primary
-                            : theme().colors.textMuted,
-                          'font-weight': col.includes('*') ? '600' : '400',
-                        }}
-                      >
-                        {col}
-                      </span>
-                    ))}
+                    <For
+                      each={[
+                        'Company *',
+                        'Role *',
+                        'Status',
+                        'URL',
+                        'Location',
+                        'Location Type',
+                        'Department',
+                        'Salary',
+                        'Notes',
+                        'Applied Date',
+                      ]}
+                    >
+                      {(col) => (
+                        <span
+                          style={{
+                            padding: '4px 10px',
+                            background: col.includes('*')
+                              ? `${theme().colors.primary}20`
+                              : 'rgba(255,255,255,0.05)',
+                            'border-radius': '6px',
+                            'font-size': '12px',
+                            'font-family': "'Space Grotesk', system-ui, sans-serif",
+                            color: col.includes('*')
+                              ? theme().colors.primary
+                              : theme().colors.textMuted,
+                            'font-weight': col.includes('*') ? '600' : '400',
+                          }}
+                        >
+                          {col}
+                        </span>
+                      )}
+                    </For>
                   </div>
                   <p
                     style={{
@@ -1115,11 +1123,12 @@ export const ImportCSVModal: Component<ImportCSVModalProps> = (props) => {
                                 'border-bottom': `1px solid ${theme().colors.border}`,
                               }}
                             >
-                              {row.isValid ? (
+                              <Show
+                                when={row.isValid}
+                                fallback={<IconAlert size={16} color="#F59E0B" />}
+                              >
                                 <IconCheck size={16} color="#10B981" />
-                              ) : (
-                                <IconAlert size={16} color="#F59E0B" />
-                              )}
+                              </Show>
                             </td>
                           </tr>
                         )}
