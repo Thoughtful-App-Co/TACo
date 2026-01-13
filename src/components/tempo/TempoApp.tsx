@@ -22,6 +22,7 @@ import { SessionsList } from './session-manager/components/sessions-list';
 import { SessionView } from './session-manager/components/session-view';
 import { ApiConfigService } from './services/api-config.service';
 import { AppMenuTrigger } from '../common/AppMenuTrigger';
+import { AuthStatusIndicator } from '../common/AuthStatusIndicator';
 import { TempoNotificationService, type NotificationState } from './services/notification.service';
 
 interface Stats {
@@ -216,9 +217,12 @@ export const TempoApp: Component = () => {
           'justify-content': 'space-between',
         }}
       >
-        <AppMenuTrigger>
-          <TempoLogo size={48} />
-        </AppMenuTrigger>
+        <div style={{ display: 'flex', 'align-items': 'center', gap: '12px' }}>
+          <AppMenuTrigger>
+            <TempoLogo size={48} />
+          </AppMenuTrigger>
+          <AuthStatusIndicator size="sm" />
+        </div>
         <Button
           variant="ghost"
           size="icon"
@@ -325,7 +329,10 @@ export const TempoApp: Component = () => {
                 'margin-top': '24px',
               }}
             >
-              <BrainDump onTasksProcessed={handleTasksProcessed} />
+              <BrainDump
+                    onTasksProcessed={handleTasksProcessed}
+                    onOpenSettings={() => setShowSettings(true)}
+                  />
 
               <Show when={stats().totalTasks > 0}>
                 <div

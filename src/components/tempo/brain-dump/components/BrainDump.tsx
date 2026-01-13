@@ -14,9 +14,11 @@ import { useTempoAIAccess } from '../../hooks/useTempoAIAccess';
 import { Paywall } from '../../../common/Paywall';
 import { QueuePickerModal } from '../../queue/components/QueuePickerModal';
 import type { QueueTask } from '../../queue/types';
+import { BrainDumpLockOverlay } from './BrainDumpLockOverlay';
 
 interface BrainDumpProps {
   onTasksProcessed?: (stories: ProcessedStory[]) => void;
+  onOpenSettings?: () => void;
 }
 
 /**
@@ -45,7 +47,7 @@ export const BrainDump = (props: BrainDumpProps) => {
   } = useBrainDump(props.onTasksProcessed);
 
   // AI access control - checks both API key AND subscription
-  const { requireAccess, showPaywall, setShowPaywall } = useTempoAIAccess();
+  const { canUseAI, requireAccess, showPaywall, setShowPaywall } = useTempoAIAccess();
 
   // Queue picker state
   const [showQueuePicker, setShowQueuePicker] = createSignal(false);
@@ -67,10 +69,23 @@ export const BrainDump = (props: BrainDumpProps) => {
 
   return (
     <>
-      <Card>
-        <CardContent
-          style={{ display: 'flex', 'flex-direction': 'column', gap: '16px', padding: '16px' }}
+      <div style={{ position: 'relative' }}>
+        {/* Lock overlay when user has no API key and no subscription */}
+        <Show when={!canUseAI()}>
+          <BrainDumpLockOverlay onOpenSettings={() => props.onOpenSettings?.()} />
+        </Show>
+
+        <Card
+          style={{
+            filter: !canUseAI() ? 'blur(3px)' : 'none',
+            opacity: !canUseAI() ? 0.6 : 1,
+            'pointer-events': !canUseAI() ? 'none' : 'auto',
+            transition: 'filter 0.2s ease-out, opacity 0.2s ease-out',
+          }}
         >
+          <CardContent
+            style={{ display: 'flex', 'flex-direction': 'column', gap: '16px', padding: '16px' }}
+          >
           <div style={{ position: 'relative' }}>
             <Textarea
               placeholder={`task .init
@@ -258,7 +273,8 @@ Finalize product specs - EOD`}
             </div>
           </Show>
         </CardContent>
-      </Card>
+        </Card>
+      </div>
       {/* Paywall modal - rendered outside Card to avoid z-index issues */}
       <Paywall
         isOpen={showPaywall()}
