@@ -1,5 +1,5 @@
 import { Component, createSignal, Show, For, createMemo, onCleanup, createEffect } from 'solid-js';
-import { A, useNavigate, useParams } from '@solidjs/router';
+import { A, useNavigate, useParams, useLocation } from '@solidjs/router';
 import { NurtureApp } from './components/nurture/NurtureApp';
 import { JustInCaseApp } from './components/justincase/JustInCaseApp';
 import { TempoApp } from './components/tempo/TempoApp';
@@ -9,6 +9,7 @@ import { TenureApp } from './components/tenure/TenureApp';
 import { LolApp } from './components/lol/LolApp';
 import { PricingPage } from './components/PricingPage';
 import { PaperTrailApp } from './components/papertrail/PaperTrailApp';
+import { EchopraxApp } from './components/echoprax/EchopraxApp';
 import { useManifestSwitcher } from './lib/pwa/manifest-switcher';
 import { useIOSMetaUpdater } from './lib/pwa/ios-meta';
 import { OfflineIndicator } from './components/common/OfflineIndicator';
@@ -32,7 +33,8 @@ type AppTab =
   | 'manifest'
   | 'tenure'
   | 'lol'
-  | 'papertrail';
+  | 'papertrail'
+  | 'echoprax';
 type Timeline = 'now' | 'next' | 'later';
 
 interface AppInfo {
@@ -62,6 +64,18 @@ const apps: AppInfo[] = [
     releaseDate: 'December 2025',
     status: 'active',
     logo: '/tempo/tempo_logo.png',
+  },
+  {
+    id: 'echoprax',
+    name: 'Echoprax',
+    description: 'Portable Boutique Fitness',
+    elevatorPitch:
+      'Boutique fitness classes cost $30-50 per session and most workout apps lock features behind subscriptions. Echoprax is about bringing that premium experience home for free—timer-driven voice coaching guides you through workouts hands-free, works completely offline on wall-mounted tablets, and suggests BPM-matched playlists to keep you in the zone.',
+    designSystem: 'Aurora + Glass',
+    color: '#FF6B6B',
+    timeline: 'next',
+    releaseDate: 'Q3 2026',
+    status: 'alpha',
   },
   {
     id: 'nurture',
@@ -1019,11 +1033,14 @@ const navTokens = {
   },
 };
 
-const TabNavigation: Component<{
-  activeTimeline: Timeline;
-  activeTab: AppTab;
-}> = (props) => {
-  const [menuTimeline, setMenuTimeline] = createSignal<Timeline>(props.activeTimeline);
+// =============================================================================
+// APP MENU - Full-screen overlay for app navigation
+// =============================================================================
+// Extracted from TabNavigation to be rendered at root level so it's accessible
+// from all routes including dedicated Tempo routes (/tempo/create, /tempo/sessions)
+
+const AppMenu: Component = () => {
+  const [menuTimeline, setMenuTimeline] = createSignal<Timeline>('now');
 
   // Mobile detection
   const [isMobile, setIsMobile] = createSignal(window.innerWidth <= 768);
@@ -1037,13 +1054,18 @@ const TabNavigation: Component<{
 
   const navigate = useNavigate();
 
-  // Filtered apps for Hamburger Menu
+  // Filtered apps for menu
   const filteredApps = () => apps.filter((app) => app.timeline === menuTimeline());
 
-  // Sync menu timeline with active timeline when menu opens
+  // Detect current app from URL to set initial timeline
   createEffect(() => {
     if (appMenuStore.isOpen()) {
-      setMenuTimeline(props.activeTimeline);
+      const path = window.location.pathname;
+      const appId = path.split('/')[1] as AppTab;
+      const app = apps.find((a) => a.id === appId);
+      if (app) {
+        setMenuTimeline(app.timeline);
+      }
     }
   });
 
@@ -1076,511 +1098,502 @@ const TabNavigation: Component<{
   });
 
   return (
-    <>
-      {/* Full Screen Immersive Menu - No floating button, triggered by app logos */}
-      <Show when={appMenuStore.isOpen()}>
-        <div
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: '#0F0F1A',
-            'z-index': 2001,
-            display: 'flex',
-            'flex-direction': isMobile() ? 'column' : 'row',
-            animation: 'fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-          }}
-        >
-          {/* Left Column - Triangle (hidden on mobile, replaced with top bar) */}
-          <Show when={!isMobile()}>
-            <div
-              onClick={() => appMenuStore.close()}
-              role="button"
-              tabIndex={0}
-              aria-label="Close menu"
-              style={{
-                position: 'relative',
-                width: '40%',
-                height: '100%',
-                background: 'linear-gradient(135deg, #2D3748 0%, #1A202C 50%, #171923 100%)',
-                'clip-path': 'polygon(0 0, 100% 0, 60% 100%, 0 100%)',
-                cursor: 'pointer',
-                display: 'flex',
-                'align-items': 'center',
-                'justify-content': 'center',
-                'z-index': 2,
-                transition: 'filter 0.3s ease',
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.filter = 'brightness(1.1)')}
-              onMouseLeave={(e) => (e.currentTarget.style.filter = 'brightness(1)')}
-            >
-              <div
-                style={{
-                  'font-size': 'clamp(80px, 15vw, 200px)',
-                  color: 'rgba(255,255,255,0.08)',
-                  'font-weight': '900',
-                  transform: 'rotate(-90deg)',
-                  'white-space': 'nowrap',
-                  'pointer-events': 'none',
-                  'user-select': 'none',
-                  'letter-spacing': '20px',
-                }}
-              >
-                CLOSE
-              </div>
-            </div>
-          </Show>
-
-          {/* Mobile Top Bar - Subdued dark gradient with close hint */}
-          <Show when={isMobile()}>
-            <div
-              onClick={() => appMenuStore.close()}
-              role="button"
-              tabIndex={0}
-              aria-label="Close menu"
-              style={{
-                width: '100%',
-                height: '56px',
-                background: 'linear-gradient(135deg, #2D3748 0%, #1A202C 100%)',
-                display: 'flex',
-                'align-items': 'center',
-                'justify-content': 'center',
-                'flex-shrink': 0,
-                cursor: 'pointer',
-                position: 'relative',
-              }}
-            >
-              {/* Swipe indicator pill */}
-              <div
-                style={{
-                  width: '40px',
-                  height: '5px',
-                  'border-radius': '3px',
-                  background: 'rgba(255,255,255,0.3)',
-                  position: 'absolute',
-                  bottom: '12px',
-                }}
-              />
-              <span
-                style={{
-                  color: 'rgba(255,255,255,0.6)',
-                  'font-size': '12px',
-                  'font-weight': '600',
-                  'text-transform': 'uppercase',
-                  'letter-spacing': '2px',
-                }}
-              >
-                Tap to close
-              </span>
-            </div>
-          </Show>
-
-          {/* Right Column - Content */}
+    <Show when={appMenuStore.isOpen()}>
+      <div
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: '#0F0F1A',
+          'z-index': 2001,
+          display: 'flex',
+          'flex-direction': isMobile() ? 'column' : 'row',
+          animation: 'fadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+        }}
+      >
+        {/* Left Column - Triangle (hidden on mobile, replaced with top bar) */}
+        <Show when={!isMobile()}>
           <div
+            onClick={() => appMenuStore.close()}
+            role="button"
+            tabIndex={0}
+            aria-label="Close menu"
             style={{
-              flex: 1,
+              position: 'relative',
+              width: '40%',
+              height: '100%',
+              background: 'linear-gradient(135deg, #2D3748 0%, #1A202C 50%, #171923 100%)',
+              'clip-path': 'polygon(0 0, 100% 0, 60% 100%, 0 100%)',
+              cursor: 'pointer',
               display: 'flex',
-              'flex-direction': 'column',
-              padding: isMobile() ? '24px 20px' : '40px 60px',
-              'justify-content': isMobile() ? 'flex-start' : 'center',
-              'overflow-y': 'auto',
+              'align-items': 'center',
+              'justify-content': 'center',
+              'z-index': 2,
+              transition: 'filter 0.3s ease',
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.filter = 'brightness(1.1)')}
+            onMouseLeave={(e) => (e.currentTarget.style.filter = 'brightness(1)')}
+          >
+            <div
+              style={{
+                'font-size': 'clamp(80px, 15vw, 200px)',
+                color: 'rgba(255,255,255,0.08)',
+                'font-weight': '900',
+                transform: 'rotate(-90deg)',
+                'white-space': 'nowrap',
+                'pointer-events': 'none',
+                'user-select': 'none',
+                'letter-spacing': '20px',
+              }}
+            >
+              CLOSE
+            </div>
+          </div>
+        </Show>
+
+        {/* Mobile Top Bar - Subdued dark gradient with close hint */}
+        <Show when={isMobile()}>
+          <div
+            onClick={() => appMenuStore.close()}
+            role="button"
+            tabIndex={0}
+            aria-label="Close menu"
+            style={{
+              width: '100%',
+              height: '56px',
+              background: 'linear-gradient(135deg, #2D3748 0%, #1A202C 100%)',
+              display: 'flex',
+              'align-items': 'center',
+              'justify-content': 'center',
+              'flex-shrink': 0,
+              cursor: 'pointer',
+              position: 'relative',
             }}
           >
-            {/* Header */}
+            {/* Swipe indicator pill */}
             <div
               style={{
-                'margin-bottom': isMobile() ? '24px' : '48px',
-                animation: 'slideDown 0.4s ease forwards',
-                display: 'flex',
-                'align-items': 'center',
-                'justify-content': 'space-between',
-                'flex-wrap': isMobile() ? 'wrap' : 'nowrap',
-                gap: isMobile() ? '12px' : '0',
+                width: '40px',
+                height: '5px',
+                'border-radius': '3px',
+                background: 'rgba(255,255,255,0.3)',
+                position: 'absolute',
+                bottom: '12px',
+              }}
+            />
+            <span
+              style={{
+                color: 'rgba(255,255,255,0.6)',
+                'font-size': '12px',
+                'font-weight': '600',
+                'text-transform': 'uppercase',
+                'letter-spacing': '2px',
               }}
             >
-              {/* Logo and Company Name - Clickable Home Button */}
-              <A
-                href="/"
-                onClick={() => appMenuStore.close()}
+              Tap to close
+            </span>
+          </div>
+        </Show>
+
+        {/* Right Column - Content */}
+        <div
+          style={{
+            flex: 1,
+            display: 'flex',
+            'flex-direction': 'column',
+            padding: isMobile() ? '24px 20px' : '40px 60px',
+            'justify-content': isMobile() ? 'flex-start' : 'center',
+            'overflow-y': 'auto',
+          }}
+        >
+          {/* Header */}
+          <div
+            style={{
+              'margin-bottom': isMobile() ? '24px' : '48px',
+              animation: 'slideDown 0.4s ease forwards',
+              display: 'flex',
+              'align-items': 'center',
+              'justify-content': 'space-between',
+              'flex-wrap': isMobile() ? 'wrap' : 'nowrap',
+              gap: isMobile() ? '12px' : '0',
+            }}
+          >
+            {/* Logo and Company Name - Clickable Home Button */}
+            <A
+              href="/"
+              onClick={() => appMenuStore.close()}
+              style={{
+                display: 'flex',
+                'align-items': 'center',
+                gap: isMobile() ? '12px' : '16px',
+                'text-decoration': 'none',
+                transition: 'all 0.3s ease',
+                flex: isMobile() ? '1' : 'auto',
+                'min-width': 0,
+              }}
+              onMouseEnter={(e) => {
+                if (!isMobile()) {
+                  e.currentTarget.style.transform = 'translateX(4px)';
+                  e.currentTarget.style.opacity = '0.8';
+                }
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateX(0)';
+                e.currentTarget.style.opacity = '1';
+              }}
+            >
+              {/* Logo */}
+              <div style={{ 'flex-shrink': 0 }}>
+                <svg
+                  width={isMobile() ? '44' : '56'}
+                  height={isMobile() ? '44' : '56'}
+                  viewBox="0 0 512 512"
+                >
+                  <defs>
+                    <linearGradient id="tacoGradientAppMenu" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" style={{ 'stop-color': '#FF6B6B', 'stop-opacity': 1 }} />
+                      <stop offset="50%" style={{ 'stop-color': '#FFE66D', 'stop-opacity': 1 }} />
+                      <stop offset="100%" style={{ 'stop-color': '#4ECDC4', 'stop-opacity': 1 }} />
+                    </linearGradient>
+                  </defs>
+                  <path
+                    fill="url(#tacoGradientAppMenu)"
+                    d="M281.08,186.92c-2.49-3.58-2.78-9.02-3.34-12.78-.4-2.1-.71-4.04-.73-6.32.04-4.88.97-9.8-.27-14.61-.38-2.47-.9-3.84-3.51-4.22-23.13-2.51-46.07-.01-69.24.63-2.13-.12-4.21-.55-6.35-.43-2.84.09-4.2,2.08-4.02,4.91-.05,4.75.98,9.26,1.75,13.97.42,4.9,1.04,10.12.49,14.99-.38,5.57,1.25,11.46.8,16.97-.52,5.46.25,11.06-.16,16.51-.24,3.6-.68,7.23-.16,10.95.27,1.68-.15,3.62.03,5.14,1.17,2.37,4.32,1.93,6.82,2.17,2.37.07,6.55.16,8.98.22,12.23.66,26.28.02,38.37.06,11.01.54,20.73.16,31.72.45,4.5.03,12.36-3.32,9.89,4.64-.74,2.25-2.95,3.62-4.83,4.98-3.55,2.46-7.39,5.56-10.7,8.23-6.89,5.02-13.67,9.47-20.35,14.75-4.97,3.71-9.59,6.52-13.89,10.75-5.18,4.13-9.56,9.49-14.14,14.39-1.71,1.74-3,2.37-4.68,3.93-2.23,2.11-4.34,4.5-6.68,6.46-5.78,5.44-12.34,9.93-18.3,15.19-7.16,5.53-5.59-5.85-6.09-9.89-.49-5.72-1.14-11.08-1.4-16.87-.14-12.73.64-25.55,1.61-38.19.35-3.95-.45-7.95-.91-11.89-.24-1.77.14-3.46-1.45-3.99-7.59-.76-15.85-.95-23.66-.5-10.93.5-28.36-.42-40.41,1.3-5.77,1.03-11.78-.2-17.65.62-5.24.56-10.33-1.97-4.82-7,1.92-1.91,5.07-2.81,7.10-4.76,10.5-12,21.17-23.83,31.51-35.96,5.84-7.21,13.29-13.01,20.17-19.38,4.81-5.13,9.87-10.19,14.76-15.10,1.92-1.65,3.91-3.07,5.48-4.78,1.78-1.86,3.61-4.31,4.43-6.87.54-1.6,1.25-3.25,2.28-4.58,10.65-11.33,21.83-22.46,31.78-34.37,10.87-10.87,22-21.64,32.81-32.56,5.04-5.08,8.84-10.55,13.92-15.56,3.42-2.77,5.59-7.78,9.68-9.44,5.5-.75,3.59,6.83,3.78,10.18-.43,12.27-.44,24.9-2.75,37.03l-.37,6.69c.03,10,1.77,20.59,2.8,30.49.64,2.86.16,5.83.48,8.73.41,2.05,2.41,2.75,4.38,2.91,11.06-.57,21.58,1.57,32.64,1.81,7.67-.11,16.11-.21,23.94-.46,4.94-.47,9.37-1.4,14.36-2.11,2.64-.35,7.09-1.59,7.81,1.91.76,5.45.23,10.4,0,16.03-.26,3.66.69,6.98.67,10.59-.02,3.58-.04,6.8-.44,10.36-1.78,13.18-2.69,26.41-1.64,39.79.38,5.57,4.47,11.28-4.61,9.99-4.55-.3-8.22-.73-12.39-.48-5.55.2-11.4,1.63-17.07,1.27-3.96-.23-9.41.42-13.77.15-4.94-.37-10.62-.44-15.38-.34-6.94-.87-14.35-1.13-21.16-1.18-2.42-.82-.34-4.3.59-5.79,1.78-2.64,2.2-4.58,1.96-7.4-.06-2.78.08-5.65.11-8.4..."
+                  />
+                  <path
+                    fill="url(#tacoGradientAppMenu)"
+                    d="M331.48,449.84c-13.69.21-27.51,2.18-41.32,1.21-4.64-.25-9.85.73-14.19-1.23-3.04-1.59-4.57-4.73-6.88-7.26-7.94-7.85-14.8-16.88-22.56-24.95-7.81-7.44-14.47-15.98-21.75-23.85-9.81-10.08-19.99-19.82-29.98-29.55-8.56-8.43,4.67-8.54,10.47-8.18,6.3.14,12.39-.38,18.65-.15,3.72.05,7.54.39,11.23-.12,7.32-.93,10.38-8.65,15.22-13.26,6.2-6.61,13.17-13.10,19.62-19.49,3.65-3.73,12.84-14.15,15.32-4.17.96,45.85-11.81,34.08,36.97,36.39,10.42-.02,20.84-.12,31.22.86,7.47.29,13.46,1.4,13.4,10.36.92,8.92,1.74,18.14,2.31,27.18,1.02,9.68,2.54,19.16,2.02,28.77-.17,4.69-.74,9.4-.64,14.09.53,7.78,1.06,12.15-8.35,11.44-4.74-.21-9.47.86-14.22,1.27-5.43.41-10.92.22-16.25.63h-.28ZM258.31,356.18c6.35-.36,14.03,1.04,19.72-2.47,2.15-1.76,2.28-5.29,2.6-8.45.57-5.34.69-10.75,1.07-16.03.42-5.79-1.61-7.67-6-3.12-8.27,7.63-16.78,15.16-24.6,23.27-8.11,8.58-.14,6.78,6.93,6.8h.28ZM294.56,420.76c5.1-5.55,10.94-10.69,15.89-16.48,7.3-8.32,15.78-15.82,23.68-23.50,6.26-5.7,13.74-10.04,20.08-15.64,1.03-.84,2.48-2.55,1.54-3.38-1.4-1.33-4.65-1.30-6.68-1.45-8.76-.59-17.77-.63-26.73-.56-10.74-.51-21.82-.36-32.57-.29-5.19-.23-8.1,2.02-8.23,7.38-.62,9.05-.75,17.75-.92,26.85-.01,9.69.79,19.41.59,29.09,0,2.85-.78,6.55-.05,9.31.92,2.11,3.04-.78,3.96-1.63,2.95-3.32,6.29-6.32,9.25-9.49l.20-.21ZM245.4,408.87c3.4,3.47,6.94,7.11,10.24,10.73,6.1,6.47,11.41,14.08,18.4,19.52,3.71,2.04,2.92-4.68,3.35-6.88.3-4.03.62-8.11.76-12.15.19-7.13-.63-14.43-.46-21.68.41-8.5-.26-16.97.39-25.47.06-4.32,2.4-12.54-4.07-12.75-11.94.25-24.04-.07-35.92,1.04-9.09-.46-19.06-.66-28.04-.02-2.08.25-5.42-.09-6.84,1.26-.35.47-.17,1.16.45,2.03,2.19,2.7,4.88,5.22,7.30,7.78,6.66,6.63,14.46,14.01,20.95,21.15,4.65,4.82,8.65,10.46,13.30,15.22l.19.19ZM325.02,444.35c12.32-.14,24.52.21,36.41-2.75,3.06-1.14,3.65-4.36,3.78-7.33.33-7.14.93-14.38.42-21.56-.11-4-.94-7.97-1.49-11.86-.31-4.39-.48-8.98-1.09-13.41-.51-5.31-.54-10.13-1.34-15.17-.57-4.19-2.56-5.94-6.18-3.01-4.75,3.91-10.02,7.12-14.92,10.82-3.39,2.92-6.55,6.33-9.98,9.27-6.67,5.98-11.84,12.80...."
+                  />
+                  <path
+                    fill="url(#tacoGradientAppMenu)"
+                    d="M204.95,353.96c-10.93-3.6-10.3-15.43-3.77-23.03,8.59-10.56,18.41-20.09,28.31-29.42,12.53-11.93,24.27-24.61,38.04-35.16,6.87-5.99,14.74-19.27,25.18-12.39,12.52,8.75,3.86,22.67-3.77,31.72-4.35,5.48-9.27,10.72-14.08,15.90-6.25,6.89-13.15,12.14-19.61,18.12-7.11,6.86-13.85,14.24-20.93,21.12-7.53,7.33-17.9,16.36-29.11,13.20l-.25-.07ZM210.49,349.13c13.21-.96,31.36-24.75,41.34-33.93,8.87-7.84,17.91-15.82,25.69-25.02,5.11-6.46,22.85-23.39,13.70-31.07-4.51-2.54-9.65,2.56-12.95,5.53-3.31,3.05-6.84,5.69-10.39,8.34-9.34,6.67-16.98,15.18-25.18,23.15-5.01,4.80-10.34,9.61-15.23,14.59-7.81,8.13-16.19,16.06-22.72,25.48-3.89,5.76-2.30,12.94,5.51,12.93h.24Z"
+                  />
+                  <path
+                    fill="url(#tacoGradientAppMenu)"
+                    d="M246.6,232.55c-26.61,6.76-49.96-17.81-46.66-44.07,4.37-38.58,54.95-51.23,72.93-15.01,11.11,22.28-1.39,52.99-26.02,59.01l-.26.07ZM242.03,227.66c18.21-2.11,31.41-21.94,28.76-39.88-6.08-40.34-59.27-38.39-65.01,1.05-3.04,20.76,14.55,41.84,35.99,38.86l.27-.04Z"
+                  />
+                </svg>
+              </div>
+              <div style={{ 'min-width': 0 }}>
+                <h2
+                  style={{
+                    'white-space': 'nowrap',
+                    overflow: 'hidden',
+                    'text-overflow': 'ellipsis',
+                    'font-size': 'clamp(24px, 4vw, 36px)',
+                    'font-weight': '400',
+                    color: 'white',
+                    margin: 0,
+                    'line-height': 1.2,
+                    'font-family': navTokens.typography.brandFamily,
+                  }}
+                >
+                  Thoughtful App Co.
+                </h2>
+                <div
+                  style={{
+                    'font-size': isMobile() ? '12px' : '14px',
+                    color: 'rgba(255,255,255,0.5)',
+                    'margin-top': '2px',
+                  }}
+                >
+                  Apps that care
+                </div>
+              </div>
+            </A>
+
+            {/* Account & Settings */}
+            <div
+              style={{
+                display: 'flex',
+                'align-items': 'center',
+                gap: isMobile() ? '8px' : '12px',
+                'flex-shrink': 0,
+              }}
+            >
+              <AccountButton variant={isMobile() ? 'header' : 'menu'} />
+              <button
+                onClick={() => {
+                  appMenuStore.close();
+                  navigate('/settings');
+                }}
+                aria-label="Settings"
                 style={{
+                  width: isMobile() ? '40px' : '48px',
+                  height: isMobile() ? '40px' : '48px',
+                  'border-radius': '50%',
+                  background: 'rgba(255,255,255,0.05)',
+                  border: '1px solid rgba(255,255,255,0.1)',
                   display: 'flex',
                   'align-items': 'center',
-                  gap: isMobile() ? '12px' : '16px',
-                  'text-decoration': 'none',
+                  'justify-content': 'center',
+                  cursor: 'pointer',
                   transition: 'all 0.3s ease',
-                  flex: isMobile() ? '1' : 'auto',
-                  'min-width': 0,
+                  color: 'rgba(255,255,255,0.7)',
+                  'flex-shrink': 0,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
+                  e.currentTarget.style.color = 'white';
+                  e.currentTarget.style.transform = 'rotate(45deg)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
+                  e.currentTarget.style.color = 'rgba(255,255,255,0.7)';
+                  e.currentTarget.style.transform = 'rotate(0deg)';
+                }}
+              >
+                <svg
+                  width={isMobile() ? '20' : '24'}
+                  height={isMobile() ? '20' : '24'}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <circle cx="12" cy="12" r="3" />
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          {/* Timeline Tabs */}
+          <div
+            style={{
+              display: 'flex',
+              gap: isMobile() ? '0' : '40px',
+              'margin-bottom': isMobile() ? '24px' : '48px',
+              'border-bottom': '1px solid rgba(255,255,255,0.1)',
+              'padding-bottom': isMobile() ? '12px' : '16px',
+              animation: 'slideDown 0.5s ease forwards',
+              'justify-content': isMobile() ? 'space-between' : 'flex-start',
+            }}
+          >
+            <For each={['now', 'next', 'later'] as Timeline[]}>
+              {(timeline) => (
+                <button
+                  onClick={() => handleTimelineChange(timeline)}
+                  style={{
+                    background:
+                      isMobile() && menuTimeline() === timeline
+                        ? `${navTokens.timelineColors[timeline].primary}20`
+                        : 'transparent',
+                    border: 'none',
+                    color: menuTimeline() === timeline ? 'white' : 'rgba(255,255,255,0.4)',
+                    'font-size': isMobile() ? '14px' : '20px',
+                    'font-weight': menuTimeline() === timeline ? '600' : '400',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                    position: 'relative',
+                    padding: isMobile() ? '10px 16px' : '8px 0',
+                    'font-family': navTokens.typography.fontFamily,
+                    'border-radius': isMobile() ? '20px' : '0',
+                    flex: isMobile() ? '1' : 'auto',
+                    'max-width': isMobile() ? '100px' : 'none',
+                  }}
+                  onMouseEnter={(e) => (e.currentTarget.style.color = 'white')}
+                  onMouseLeave={(e) => {
+                    if (menuTimeline() !== timeline)
+                      e.currentTarget.style.color = 'rgba(255,255,255,0.4)';
+                  }}
+                >
+                  {timelineConfig[timeline].label}
+                  <Show when={menuTimeline() === timeline && !isMobile()}>
+                    <div
+                      style={{
+                        position: 'absolute',
+                        bottom: '-17px',
+                        left: 0,
+                        width: '100%',
+                        height: '3px',
+                        background: navTokens.timelineColors[timeline].primary,
+                        'box-shadow': `0 0 10px ${navTokens.timelineColors[timeline].glow}`,
+                        'border-radius': '2px',
+                        transition: 'all 0.3s ease',
+                      }}
+                    />
+                  </Show>
+                </button>
+              )}
+            </For>
+          </div>
+
+          {/* App Grid */}
+          <div
+            style={{
+              display: 'grid',
+              'grid-template-columns': isMobile()
+                ? 'repeat(auto-fill, minmax(140px, 1fr))'
+                : 'repeat(auto-fill, minmax(240px, 1fr))',
+              gap: isMobile() ? '12px' : '24px',
+              width: '100%',
+              animation: 'slideDown 0.6s ease forwards',
+              'padding-bottom': isMobile() ? '24px' : '0',
+            }}
+          >
+            {filteredApps().map((app, index) => (
+              <button
+                onClick={() => handleAppClick(app.id)}
+                style={{
+                  padding: isMobile() ? '16px' : '32px',
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  'border-radius': isMobile() ? '16px' : '24px',
+                  display: 'flex',
+                  'flex-direction': 'column',
+                  'align-items': isMobile() ? 'center' : 'flex-start',
+                  gap: isMobile() ? '12px' : '16px',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  'animation-delay': `${0.1 * index}s`,
+                  cursor: 'pointer',
+                  'text-align': isMobile() ? 'center' : 'left',
+                  position: 'relative',
+                  overflow: 'hidden',
                 }}
                 onMouseEnter={(e) => {
                   if (!isMobile()) {
-                    e.currentTarget.style.transform = 'translateX(4px)';
-                    e.currentTarget.style.opacity = '0.8';
+                    e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)';
+                    e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
+                    e.currentTarget.style.borderColor = app.color;
+                    e.currentTarget.style.boxShadow = `0 12px 32px -8px ${app.color}30`;
+                    const arrow = e.currentTarget.querySelector('.arrow-icon') as HTMLElement;
+                    if (arrow) {
+                      arrow.style.opacity = '1';
+                      arrow.style.transform = 'translateX(0)';
+                    }
                   }
                 }}
                 onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateX(0)';
-                  e.currentTarget.style.opacity = '1';
+                  e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
+                  e.currentTarget.style.boxShadow = 'none';
+                  const arrow = e.currentTarget.querySelector('.arrow-icon') as HTMLElement;
+                  if (arrow) {
+                    arrow.style.opacity = '0';
+                    arrow.style.transform = 'translateX(-10px)';
+                  }
+                }}
+                onTouchStart={(e) => {
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
+                  e.currentTarget.style.borderColor = app.color;
+                }}
+                onTouchEnd={(e) => {
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+                  e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
                 }}
               >
-                {/* Logo */}
                 <div
                   style={{
-                    'flex-shrink': 0,
-                  }}
-                >
-                  <svg
-                    width={isMobile() ? '44' : '56'}
-                    height={isMobile() ? '44' : '56'}
-                    viewBox="0 0 512 512"
-                  >
-                    <defs>
-                      <linearGradient id="tacoGradientMenu" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" style={{ 'stop-color': '#FF6B6B', 'stop-opacity': 1 }} />
-                        <stop offset="50%" style={{ 'stop-color': '#FFE66D', 'stop-opacity': 1 }} />
-                        <stop
-                          offset="100%"
-                          style={{ 'stop-color': '#4ECDC4', 'stop-opacity': 1 }}
-                        />
-                      </linearGradient>
-                    </defs>
-                    <path
-                      fill="url(#tacoGradientMenu)"
-                      d="M281.08,186.92c-2.49-3.58-2.78-9.02-3.34-12.78-.4-2.1-.71-4.04-.73-6.32.04-4.88.97-9.8-.27-14.61-.38-2.47-.9-3.84-3.51-4.22-23.13-2.51-46.07-.01-69.24.63-2.13-.12-4.21-.55-6.35-.43-2.84.09-4.2,2.08-4.02,4.91-.05,4.75.98,9.26,1.75,13.97.42,4.9,1.04,10.12.49,14.99-.38,5.57,1.25,11.46.8,16.97-.52,5.46.25,11.06-.16,16.51-.24,3.6-.68,7.23-.16,10.95.27,1.68-.15,3.62.03,5.14,1.17,2.37,4.32,1.93,6.82,2.17,2.37.07,6.55.16,8.98.22,12.23.66,26.28.02,38.37.06,11.01.54,20.73.16,31.72.45,4.5.03,12.36-3.32,9.89,4.64-.74,2.25-2.95,3.62-4.83,4.98-3.55,2.46-7.39,5.56-10.7,8.23-6.89,5.02-13.67,9.47-20.35,14.75-4.97,3.71-9.59,6.52-13.89,10.75-5.18,4.13-9.56,9.49-14.14,14.39-1.71,1.74-3,2.37-4.68,3.93-2.23,2.11-4.34,4.5-6.68,6.46-5.78,5.44-12.34,9.93-18.3,15.19-7.16,5.53-5.59-5.85-6.09-9.89-.49-5.72-1.14-11.08-1.4-16.87-.14-12.73.64-25.55,1.61-38.19.35-3.95-.45-7.95-.91-11.89-.24-1.77.14-3.46-1.45-3.99-7.59-.76-15.85-.95-23.66-.5-10.93.5-28.36-.42-40.41,1.3-5.77,1.03-11.78-.2-17.65.62-5.24.56-10.33-1.97-4.82-7,1.92-1.91,5.07-2.81,7.10-4.76,10.5-12,21.17-23.83,31.51-35.96,5.84-7.21,13.29-13.01,20.17-19.38,4.81-5.13,9.87-10.19,14.76-15.10,1.92-1.65,3.91-3.07,5.48-4.78,1.78-1.86,3.61-4.31,4.43-6.87.54-1.6,1.25-3.25,2.28-4.58,10.65-11.33,21.83-22.46,31.78-34.37,10.87-10.87,22-21.64,32.81-32.56,5.04-5.08,8.84-10.55,13.92-15.56,3.42-2.77,5.59-7.78,9.68-9.44,5.5-.75,3.59,6.83,3.78,10.18-.43,12.27-.44,24.9-2.75,37.03l-.37,6.69c.03,10,1.77,20.59,2.8,30.49.64,2.86.16,5.83.48,8.73.41,2.05,2.41,2.75,4.38,2.91,11.06-.57,21.58,1.57,32.64,1.81,7.67-.11,16.11-.21,23.94-.46,4.94-.47,9.37-1.4,14.36-2.11,2.64-.35,7.09-1.59,7.81,1.91.76,5.45.23,10.4,0,16.03-.26,3.66.69,6.98.67,10.59-.02,3.58-.04,6.8-.44,10.36-1.78,13.18-2.69,26.41-1.64,39.79.38,5.57,4.47,11.28-4.61,9.99-4.55-.3-8.22-.73-12.39-.48-5.55.2-11.4,1.63-17.07,1.27-3.96-.23-9.41.42-13.77.15-4.94-.37-10.62-.44-15.38-.34-6.94-.87-14.35-1.13-21.16-1.18-2.42-.82-.34-4.3.59-5.79,1.78-2.64,2.2-4.58,1.96-7.4-.06-2.78.08-5.65.11-8.4..."
-                    />
-                    <path
-                      fill="url(#tacoGradientMenu)"
-                      d="M331.48,449.84c-13.69.21-27.51,2.18-41.32,1.21-4.64-.25-9.85.73-14.19-1.23-3.04-1.59-4.57-4.73-6.88-7.26-7.94-7.85-14.8-16.88-22.56-24.95-7.81-7.44-14.47-15.98-21.75-23.85-9.81-10.08-19.99-19.82-29.98-29.55-8.56-8.43,4.67-8.54,10.47-8.18,6.3.14,12.39-.38,18.65-.15,3.72.05,7.54.39,11.23-.12,7.32-.93,10.38-8.65,15.22-13.26,6.2-6.61,13.17-13.10,19.62-19.49,3.65-3.73,12.84-14.15,15.32-4.17.96,45.85-11.81,34.08,36.97,36.39,10.42-.02,20.84-.12,31.22.86,7.47.29,13.46,1.4,13.4,10.36.92,8.92,1.74,18.14,2.31,27.18,1.02,9.68,2.54,19.16,2.02,28.77-.17,4.69-.74,9.4-.64,14.09.53,7.78,1.06,12.15-8.35,11.44-4.74-.21-9.47.86-14.22,1.27-5.43.41-10.92.22-16.25.63h-.28ZM258.31,356.18c6.35-.36,14.03,1.04,19.72-2.47,2.15-1.76,2.28-5.29,2.6-8.45.57-5.34.69-10.75,1.07-16.03.42-5.79-1.61-7.67-6-3.12-8.27,7.63-16.78,15.16-24.6,23.27-8.11,8.58-.14,6.78,6.93,6.8h.28ZM294.56,420.76c5.1-5.55,10.94-10.69,15.89-16.48,7.3-8.32,15.78-15.82,23.68-23.50,6.26-5.7,13.74-10.04,20.08-15.64,1.03-.84,2.48-2.55,1.54-3.38-1.4-1.33-4.65-1.30-6.68-1.45-8.76-.59-17.77-.63-26.73-.56-10.74-.51-21.82-.36-32.57-.29-5.19-.23-8.1,2.02-8.23,7.38-.62,9.05-.75,17.75-.92,26.85-.01,9.69.79,19.41.59,29.09,0,2.85-.78,6.55-.05,9.31.92,2.11,3.04-.78,3.96-1.63,2.95-3.32,6.29-6.32,9.25-9.49l.20-.21ZM245.4,408.87c3.4,3.47,6.94,7.11,10.24,10.73,6.1,6.47,11.41,14.08,18.4,19.52,3.71,2.04,2.92-4.68,3.35-6.88.3-4.03.62-8.11.76-12.15.19-7.13-.63-14.43-.46-21.68.41-8.5-.26-16.97.39-25.47.06-4.32,2.4-12.54-4.07-12.75-11.94.25-24.04-.07-35.92,1.04-9.09-.46-19.06-.66-28.04-.02-2.08.25-5.42-.09-6.84,1.26-.35.47-.17,1.16.45,2.03,2.19,2.7,4.88,5.22,7.30,7.78,6.66,6.63,14.46,14.01,20.95,21.15,4.65,4.82,8.65,10.46,13.30,15.22l.19.19ZM325.02,444.35c12.32-.14,24.52.21,36.41-2.75,3.06-1.14,3.65-4.36,3.78-7.33.33-7.14.93-14.38.42-21.56-.11-4-.94-7.97-1.49-11.86-.31-4.39-.48-8.98-1.09-13.41-.51-5.31-.54-10.13-1.34-15.17-.57-4.19-2.56-5.94-6.18-3.01-4.75,3.91-10.02,7.12-14.92,10.82-3.39,2.92-6.55,6.33-9.98,9.27-6.67,5.98-11.84,12.80..."
-                    />
-                    <path
-                      fill="url(#tacoGradientMenu)"
-                      d="M204.95,353.96c-10.93-3.6-10.3-15.43-3.77-23.03,8.59-10.56,18.41-20.09,28.31-29.42,12.53-11.93,24.27-24.61,38.04-35.16,6.87-5.99,14.74-19.27,25.18-12.39,12.52,8.75,3.86,22.67-3.77,31.72-4.35,5.48-9.27,10.72-14.08,15.90-6.25,6.89-13.15,12.14-19.61,18.12-7.11,6.86-13.85,14.24-20.93,21.12-7.53,7.33-17.9,16.36-29.11,13.20l-.25-.07ZM210.49,349.13c13.21-.96,31.36-24.75,41.34-33.93,8.87-7.84,17.91-15.82,25.69-25.02,5.11-6.46,22.85-23.39,13.70-31.07-4.51-2.54-9.65,2.56-12.95,5.53-3.31,3.05-6.84,5.69-10.39,8.34-9.34,6.67-16.98,15.18-25.18,23.15-5.01,4.80-10.34,9.61-15.23,14.59-7.81,8.13-16.19,16.06-22.72,25.48-3.89,5.76-2.30,12.94,5.51,12.93h.24Z"
-                    />
-                    <path
-                      fill="url(#tacoGradientMenu)"
-                      d="M246.6,232.55c-26.61,6.76-49.96-17.81-46.66-44.07,4.37-38.58,54.95-51.23,72.93-15.01,11.11,22.28-1.39,52.99-26.02,59.01l-.26.07ZM242.03,227.66c18.21-2.11,31.41-21.94,28.76-39.88-6.08-40.34-59.27-38.39-65.01,1.05-3.04,20.76,14.55,41.84,35.99,38.86l.27-.04Z"
-                    />
-                  </svg>
-                </div>
-                <div style={{ 'min-width': 0 }}>
-                  <h2
-                    style={{
-                      'white-space': 'nowrap',
-                      overflow: 'hidden',
-                      'text-overflow': 'ellipsis',
-                      'font-size': 'clamp(24px, 4vw, 36px)',
-                      'font-weight': '400',
-                      color: 'white',
-                      margin: 0,
-                      'line-height': 1.2,
-                      'font-family': navTokens.typography.brandFamily,
-                    }}
-                  >
-                    {isMobile() ? 'Thoughtful App Co.' : 'Thoughtful App Co.'}
-                  </h2>
-                  <div
-                    style={{
-                      'font-size': isMobile() ? '12px' : '14px',
-                      color: 'rgba(255,255,255,0.5)',
-                      'margin-top': '2px',
-                    }}
-                  >
-                    Apps that care
-                  </div>
-                </div>
-              </A>
-
-              {/* Account & Settings */}
-              <div
-                style={{
-                  display: 'flex',
-                  'align-items': 'center',
-                  gap: isMobile() ? '8px' : '12px',
-                  'flex-shrink': 0,
-                }}
-              >
-                {/* Account Button */}
-                <AccountButton variant={isMobile() ? 'header' : 'menu'} />
-
-                {/* Settings Button */}
-                <button
-                  onClick={() => {
-                    appMenuStore.close();
-                    navigate('/settings');
-                  }}
-                  aria-label="Settings"
-                  style={{
-                    width: isMobile() ? '40px' : '48px',
-                    height: isMobile() ? '40px' : '48px',
-                    'border-radius': '50%',
-                    background: 'rgba(255,255,255,0.05)',
-                    border: '1px solid rgba(255,255,255,0.1)',
                     display: 'flex',
                     'align-items': 'center',
-                    'justify-content': 'center',
-                    cursor: 'pointer',
-                    transition: 'all 0.3s ease',
-                    color: 'rgba(255,255,255,0.7)',
-                    'flex-shrink': 0,
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.background = 'rgba(255,255,255,0.1)';
-                    e.currentTarget.style.color = 'white';
-                    e.currentTarget.style.transform = 'rotate(45deg)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.background = 'rgba(255,255,255,0.05)';
-                    e.currentTarget.style.color = 'rgba(255,255,255,0.7)';
-                    e.currentTarget.style.transform = 'rotate(0deg)';
+                    'justify-content': isMobile() ? 'center' : 'space-between',
+                    width: '100%',
                   }}
                 >
-                  <svg
-                    width={isMobile() ? '20' : '24'}
-                    height={isMobile() ? '20' : '24'}
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  >
-                    <circle cx="12" cy="12" r="3" />
-                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-
-            {/* Timeline Tabs */}
-            <div
-              style={{
-                display: 'flex',
-                gap: isMobile() ? '0' : '40px',
-                'margin-bottom': isMobile() ? '24px' : '48px',
-                'border-bottom': '1px solid rgba(255,255,255,0.1)',
-                'padding-bottom': isMobile() ? '12px' : '16px',
-                animation: 'slideDown 0.5s ease forwards',
-                'justify-content': isMobile() ? 'space-between' : 'flex-start',
-              }}
-            >
-              <For each={['now', 'next', 'later'] as Timeline[]}>
-                {(timeline) => (
-                  <button
-                    onClick={() => handleTimelineChange(timeline)}
+                  <div
                     style={{
-                      background:
-                        isMobile() && menuTimeline() === timeline
-                          ? `${navTokens.timelineColors[timeline].primary}20`
-                          : 'transparent',
-                      border: 'none',
-                      color: menuTimeline() === timeline ? 'white' : 'rgba(255,255,255,0.4)',
-                      'font-size': isMobile() ? '14px' : '20px',
-                      'font-weight': menuTimeline() === timeline ? '600' : '400',
-                      cursor: 'pointer',
-                      transition: 'all 0.3s ease',
-                      position: 'relative',
-                      padding: isMobile() ? '10px 16px' : '8px 0',
-                      'font-family': navTokens.typography.fontFamily,
-                      'border-radius': isMobile() ? '20px' : '0',
-                      flex: isMobile() ? '1' : 'auto',
-                      'max-width': isMobile() ? '100px' : 'none',
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.color = 'white')}
-                    onMouseLeave={(e) => {
-                      if (menuTimeline() !== timeline)
-                        e.currentTarget.style.color = 'rgba(255,255,255,0.4)';
+                      width: isMobile() ? '44px' : '48px',
+                      height: isMobile() ? '44px' : '48px',
+                      'border-radius': isMobile() ? '12px' : '14px',
+                      background: app.color,
+                      display: 'flex',
+                      'align-items': 'center',
+                      'justify-content': 'center',
+                      'font-size': isMobile() ? '18px' : '20px',
+                      'font-weight': '700',
+                      color: 'white',
+                      'box-shadow': `0 8px 24px ${app.color}40`,
+                      padding: app.logo ? '4px' : '0',
+                      'text-shadow':
+                        '0 0 2px rgba(0,0,0,0.8), 0 0 4px rgba(0,0,0,0.5), 1px 1px 0 rgba(0,0,0,0.3)',
                     }}
                   >
-                    {timelineConfig[timeline].label}
-                    <Show when={menuTimeline() === timeline && !isMobile()}>
-                      <div
+                    <Show when={app.logo} fallback={app.name.charAt(0)}>
+                      <img
+                        src={app.logo}
+                        alt={`${app.name} Logo`}
                         style={{
-                          position: 'absolute',
-                          bottom: '-17px',
-                          left: 0,
-                          width: '100%',
-                          height: '3px',
-                          background: navTokens.timelineColors[timeline].primary,
-                          'box-shadow': `0 0 10px ${navTokens.timelineColors[timeline].glow}`,
-                          'border-radius': '2px',
-                          transition: 'all 0.3s ease',
+                          height: isMobile() ? '26px' : '32px',
+                          width: isMobile() ? '26px' : '32px',
+                          'object-fit': 'contain',
                         }}
                       />
                     </Show>
-                  </button>
-                )}
-              </For>
-            </div>
-
-            {/* App Grid */}
-            <div
-              style={{
-                display: 'grid',
-                'grid-template-columns': isMobile()
-                  ? 'repeat(auto-fill, minmax(140px, 1fr))'
-                  : 'repeat(auto-fill, minmax(240px, 1fr))',
-                gap: isMobile() ? '12px' : '24px',
-                width: '100%',
-                animation: 'slideDown 0.6s ease forwards',
-                'padding-bottom': isMobile() ? '24px' : '0',
-              }}
-            >
-              {filteredApps().map((app, index) => (
-                <button
-                  onClick={() => handleAppClick(app.id)}
-                  style={{
-                    padding: isMobile() ? '16px' : '32px',
-                    background: 'rgba(255,255,255,0.03)',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                    'border-radius': isMobile() ? '16px' : '24px',
-                    display: 'flex',
-                    'flex-direction': 'column',
-                    'align-items': isMobile() ? 'center' : 'flex-start',
-                    gap: isMobile() ? '12px' : '16px',
-                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                    'animation-delay': `${0.1 * index}s`,
-                    cursor: 'pointer',
-                    'text-align': isMobile() ? 'center' : 'left',
-                    position: 'relative',
-                    overflow: 'hidden',
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isMobile()) {
-                      e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)';
-                      e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
-                      e.currentTarget.style.borderColor = app.color;
-                      e.currentTarget.style.boxShadow = `0 12px 32px -8px ${app.color}30`;
-                      const arrow = e.currentTarget.querySelector('.arrow-icon') as HTMLElement;
-                      if (arrow) {
-                        arrow.style.opacity = '1';
-                        arrow.style.transform = 'translateX(0)';
-                      }
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.transform = 'translateY(0) scale(1)';
-                    e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
-                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
-                    e.currentTarget.style.boxShadow = 'none';
-                    const arrow = e.currentTarget.querySelector('.arrow-icon') as HTMLElement;
-                    if (arrow) {
-                      arrow.style.opacity = '0';
-                      arrow.style.transform = 'translateX(-10px)';
-                    }
-                  }}
-                  // Add active state for touch feedback
-                  onTouchStart={(e) => {
-                    e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
-                    e.currentTarget.style.borderColor = app.color;
-                  }}
-                  onTouchEnd={(e) => {
-                    e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
-                    e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
-                  }}
-                >
-                  {/* Mobile: Centered layout, Desktop: Spread layout */}
-                  <div
-                    style={{
-                      display: 'flex',
-                      'align-items': 'center',
-                      'justify-content': isMobile() ? 'center' : 'space-between',
-                      width: '100%',
-                    }}
-                  >
+                  </div>
+                  <Show when={!isMobile()}>
                     <div
+                      class="arrow-icon"
                       style={{
-                        width: isMobile() ? '44px' : '48px',
-                        height: isMobile() ? '44px' : '48px',
-                        'border-radius': isMobile() ? '12px' : '14px',
-                        background: app.color,
-                        display: 'flex',
-                        'align-items': 'center',
-                        'justify-content': 'center',
-                        'font-size': isMobile() ? '18px' : '20px',
-                        'font-weight': '700',
+                        opacity: 0,
+                        transform: 'translateX(-10px)',
+                        transition: 'all 0.3s ease',
                         color: 'white',
-                        'box-shadow': `0 8px 24px ${app.color}40`,
-                        padding: app.logo ? '4px' : '0',
-                        'text-shadow':
-                          '0 0 2px rgba(0,0,0,0.8), 0 0 4px rgba(0,0,0,0.5), 1px 1px 0 rgba(0,0,0,0.3)',
                       }}
                     >
-                      <Show when={app.logo} fallback={app.name.charAt(0)}>
-                        <img
-                          src={app.logo}
-                          alt={`${app.name} Logo`}
-                          style={{
-                            height: isMobile() ? '26px' : '32px',
-                            width: isMobile() ? '26px' : '32px',
-                            'object-fit': 'contain',
-                          }}
-                        />
-                      </Show>
-                    </div>
-
-                    {/* Arrow icon - hidden on mobile */}
-                    <Show when={!isMobile()}>
-                      <div
-                        class="arrow-icon"
-                        style={{
-                          opacity: 0,
-                          transform: 'translateX(-10px)',
-                          transition: 'all 0.3s ease',
-                          color: 'white',
-                        }}
+                      <svg
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
                       >
-                        <svg
-                          width="24"
-                          height="24"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                        >
-                          <line x1="5" y1="12" x2="19" y2="12" />
-                          <polyline points="12 5 19 12 12 19" />
-                        </svg>
-                      </div>
-                    </Show>
+                        <line x1="5" y1="12" x2="19" y2="12" />
+                        <polyline points="12 5 19 12 12 19" />
+                      </svg>
+                    </div>
+                  </Show>
+                </div>
+                <div>
+                  <div
+                    style={{
+                      'font-size': isMobile() ? '14px' : '20px',
+                      'font-weight': '600',
+                      color: 'white',
+                      'margin-bottom': isMobile() ? '4px' : '6px',
+                      'font-family': navTokens.typography.fontFamily,
+                    }}
+                  >
+                    {app.name}
                   </div>
-
-                  <div>
+                  <Show when={!isMobile()}>
                     <div
                       style={{
-                        'font-size': isMobile() ? '14px' : '20px',
-                        'font-weight': '600',
-                        color: 'white',
-                        'margin-bottom': isMobile() ? '4px' : '6px',
+                        'font-size': '14px',
+                        color: 'rgba(255,255,255,0.5)',
+                        'line-height': '1.5',
                         'font-family': navTokens.typography.fontFamily,
                       }}
                     >
-                      {app.name}
+                      {app.description}
                     </div>
-                    {/* Description - hidden on mobile for compact view */}
-                    <Show when={!isMobile()}>
-                      <div
-                        style={{
-                          'font-size': '14px',
-                          color: 'rgba(255,255,255,0.5)',
-                          'line-height': '1.5',
-                          'font-family': navTokens.typography.fontFamily,
-                        }}
-                      >
-                        {app.description}
-                      </div>
-                    </Show>
-                  </div>
-                </button>
-              ))}
-            </div>
+                  </Show>
+                </div>
+              </button>
+            ))}
           </div>
         </div>
-      </Show>
-    </>
+      </div>
+    </Show>
   );
+};
+
+// TabNavigation is now a no-op since the app menu was extracted to AppMenu component
+// Kept for backwards compatibility with AppPage which still references it
+const TabNavigation: Component<{
+  activeTimeline: Timeline;
+  activeTab: AppTab;
+}> = (_props) => {
+  // App menu UI has been moved to AppMenu component (rendered in root App)
+  return null;
 };
 
 // Get timeline from app id
@@ -1592,7 +1605,15 @@ const getTimelineFromApp = (appId: AppTab): Timeline => {
 // App page wrapper component - receives appId from route params
 export const AppPage: Component = () => {
   const params = useParams<{ appId: string }>();
-  const appId = () => params.appId as AppTab;
+  const location = useLocation();
+
+  // Get appId from params, or extract from pathname for nested routes like /echoprax/*
+  const appId = () => {
+    if (params.appId) return params.appId as AppTab;
+    // Extract app from pathname for routes like /echoprax, /echoprax/settings, etc.
+    const pathSegment = location.pathname.split('/')[1];
+    return pathSegment as AppTab;
+  };
   const activeTimeline = createMemo(() => getTimelineFromApp(appId()));
 
   // Map of app components
@@ -1605,6 +1626,7 @@ export const AppPage: Component = () => {
     tenure: TenureApp,
     lol: LolApp,
     papertrail: PaperTrailApp,
+    echoprax: EchopraxApp,
   };
 
   return (
@@ -1636,6 +1658,9 @@ export const AppPage: Component = () => {
       <Show when={appId() === 'papertrail'}>
         <PaperTrailApp />
       </Show>
+      <Show when={appId() === 'echoprax'}>
+        <EchopraxApp />
+      </Show>
     </>
   );
 };
@@ -1653,6 +1678,7 @@ export const App: Component<{ children?: any }> = (props) => {
       <OfflineIndicator />
       <InstallBanner />
       <UpdateModal />
+      <AppMenu />
       {props.children}
     </div>
   );

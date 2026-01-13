@@ -1,12 +1,13 @@
 /* @refresh reload */
 import { render } from 'solid-js/web';
-import { Router, Route } from '@solidjs/router';
+import { Router, Route, Navigate } from '@solidjs/router';
 import { App, LandingPage, AppPage } from './App';
 import { PricingPage } from './components/PricingPage';
 import { InvestorsPage } from './components/InvestorsPage';
 import { PrivacyPolicyPage } from './components/PrivacyPolicyPage';
 import { TermsOfServicePage } from './components/TermsOfServicePage';
 import { AuthProvider } from './lib/auth-context';
+import { TempoApp } from './components/tempo/TempoApp';
 
 // Initialize PWA service worker
 import { initPWA } from './lib/pwa/register';
@@ -192,7 +193,28 @@ if (root) {
           <Route path="/investors" component={InvestorsPage} />
           <Route path="/privacy" component={PrivacyPolicyPage} />
           <Route path="/terms" component={TermsOfServicePage} />
-          {/* All app routes - :appId handles base path, /* captures any sub-paths */}
+
+          {/* Tempo app with nested routes */}
+          <Route path="/tempo">
+            <Route path="/" component={() => <Navigate href="/tempo/create" />} />
+            <Route path="/create" component={TempoApp} />
+            <Route path="/sessions" component={TempoApp} />
+            <Route path="/sessions/:date" component={TempoApp} />
+          </Route>
+
+          {/* Echoprax app with nested routes */}
+          <Route path="/echoprax">
+            <Route path="/" component={AppPage} />
+            <Route path="/workout/:workoutId" component={AppPage} />
+            <Route path="/builder" component={AppPage} />
+            <Route path="/builder/:workoutId" component={AppPage} />
+            <Route path="/generator" component={AppPage} />
+            <Route path="/areas" component={AppPage} />
+            <Route path="/areas/:areaId" component={AppPage} />
+            <Route path="/settings" component={AppPage} />
+          </Route>
+
+          {/* All other app routes - :appId handles base path, /* captures any sub-paths */}
           <Route path="/:appId/*" component={AppPage} />
         </Router>
       </AuthProvider>
