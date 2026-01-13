@@ -11,42 +11,26 @@
   "categories": ["productivity", "utilities", "lifestyle"],
   "icons": [
     {
-      "src": "/icons/taco/icon-48.png",
-      "sizes": "48x48",
+      "src": "/icons/taco/favicon-16x16.png",
+      "sizes": "16x16",
       "type": "image/png"
     },
     {
-      "src": "/icons/taco/icon-72.png",
-      "sizes": "72x72",
+      "src": "/icons/taco/favicon-32x32.png",
+      "sizes": "32x32",
       "type": "image/png"
     },
     {
-      "src": "/icons/taco/icon-96.png",
-      "sizes": "96x96",
-      "type": "image/png"
-    },
-    {
-      "src": "/icons/taco/icon-144.png",
-      "sizes": "144x144",
-      "type": "image/png"
-    },
-    {
-      "src": "/icons/taco/icon-192.png",
+      "src": "/icons/taco/android-chrome-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icons/taco/icon-512.png",
+      "src": "/icons/taco/android-chrome-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icons/taco/icon-maskable-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     }
   ],
   "screenshots": [
