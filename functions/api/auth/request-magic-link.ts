@@ -116,33 +116,86 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
         <head>
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <!--[if mso]>
+          <style type="text/css">
+            .button { background-color: #FF6B6B !important; }
+          </style>
+          <![endif]-->
         </head>
-        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px;">
-          <div style="text-align: center; margin-bottom: 32px;">
-            <div style="width: 56px; height: 56px; background: linear-gradient(135deg, #FF6B6B 0%, #FFE66D 50%, #4ECDC4 100%); border-radius: 14px; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
-              <span style="font-size: 24px;">🌮</span>
-            </div>
-            <h1 style="color: #1F2937; font-size: 24px; margin: 0;">Thoughtful App Co</h1>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background-color: #ffffff;">
+          <!-- Preheader (hidden preview text) -->
+          <div style="display: none; max-height: 0; overflow: hidden;">
+            Your secure login link for Thoughtful App Co - expires in 15 minutes
           </div>
           
-          <p style="color: #374151; font-size: 16px; line-height: 1.6;">
-            Click the button below to sign in to your account. This link will expire in 15 minutes.
+          <!-- Logo Section -->
+          <div style="text-align: center; margin-bottom: 32px;">
+            <img 
+              src="${baseUrl}/icons/taco/apple-touch-icon.png" 
+              alt="Thoughtful App Co Logo" 
+              width="56" 
+              height="56" 
+              style="display: block; margin: 0 auto 16px; border-radius: 14px;"
+            />
+            <h1 style="color: #1F2937; font-size: 24px; font-weight: 700; margin: 0; letter-spacing: -0.025em;">
+              Thoughtful App Co
+            </h1>
+          </div>
+          
+          <!-- Main Message -->
+          <p style="color: #374151; font-size: 16px; line-height: 1.6; text-align: center; margin: 0 0 32px 0;">
+            Click the button below to sign in to your account.<br>
+            This link will expire in <strong>15 minutes</strong>.
           </p>
           
+          <!-- CTA Button -->
           <div style="text-align: center; margin: 32px 0;">
-            <a href="${magicLink}" style="display: inline-block; background: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%); color: white; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
+            <!--[if mso]>
+            <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="${magicLink}" style="height:48px;v-text-anchor:middle;width:200px;" arcsize="17%" strokecolor="#FF6B6B" fillcolor="#FF6B6B">
+              <w:anchorlock/>
+              <center style="color:#ffffff;font-family:sans-serif;font-size:16px;font-weight:bold;">Sign In</center>
+            </v:roundrect>
+            <![endif]-->
+            <!--[if !mso]><!-->
+            <a href="${magicLink}" 
+               class="button"
+               style="display: inline-block; 
+                      background-color: #FF6B6B;
+                      background-image: linear-gradient(135deg, #FF6B6B 0%, #4ECDC4 100%); 
+                      color: #ffffff; 
+                      text-decoration: none; 
+                      padding: 14px 40px; 
+                      border-radius: 8px; 
+                      font-weight: 600; 
+                      font-size: 16px;
+                      box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
               Sign In
             </a>
+            <!--<![endif]-->
           </div>
           
-          <p style="color: #6B7280; font-size: 14px; line-height: 1.6;">
+          <!-- Security Notice -->
+          <p style="color: #6B7280; font-size: 14px; line-height: 1.6; text-align: center; margin: 0;">
             If you didn't request this email, you can safely ignore it.
           </p>
           
-          <p style="color: #9CA3AF; font-size: 12px; margin-top: 32px; padding-top: 16px; border-top: 1px solid #E5E7EB;">
-            Or copy and paste this URL into your browser:<br>
-            <span style="word-break: break-all;">${magicLink}</span>
-          </p>
+          <!-- Divider & Fallback URL -->
+          <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #E5E7EB;">
+            <p style="color: #9CA3AF; font-size: 12px; line-height: 1.6; text-align: center; margin: 0;">
+              Or copy and paste this URL into your browser:
+            </p>
+            <p style="color: #6B7280; font-size: 12px; line-height: 1.6; text-align: center; margin: 8px 0 0 0; word-break: break-all;">
+              ${magicLink}
+            </p>
+          </div>
+          
+          <!-- Footer -->
+          <div style="margin-top: 40px; text-align: center;">
+            <p style="color: #9CA3AF; font-size: 11px; line-height: 1.5; margin: 0;">
+              © ${new Date().getFullYear()} Thoughtful App Co<br>
+              <a href="${baseUrl}/privacy-policy" style="color: #9CA3AF; text-decoration: underline;">Privacy Policy</a>
+            </p>
+          </div>
         </body>
         </html>
       `,

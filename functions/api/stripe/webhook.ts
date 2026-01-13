@@ -12,6 +12,20 @@ import Stripe from 'stripe';
 import { grantTokens } from '../../lib/auth-middleware';
 import { billingLog } from '../../lib/logger';
 
+// Price ID constants for use in checkout
+export const STRIPE_PRICES = {
+  TACO_CLUB_MONTHLY: 'price_1Sm564CPMZ8sEjvKCGmRtoZb',
+  TACO_CLUB_LIFETIME: 'price_1Sm564CPMZ8sEjvKRuiDExbY',
+  SYNC_ALL_MONTHLY: 'price_1Sm4s7CPMZ8sEjvK94OxRR1O',
+  SYNC_ALL_YEARLY: 'price_1Sm4sTCPMZ8sEjvKAWdgAz3V',
+  SYNC_APP_MONTHLY: 'price_1Sm5JsCPMZ8sEjvK66l5S7yG',
+  SYNC_APP_YEARLY: 'price_1Sm5JYCPMZ8sEjvKoGh2rbWj',
+  TEMPO_EXTRAS_MONTHLY: 'price_1Sm4nYCPMZ8sEjvKbUqYoog4',
+  TEMPO_EXTRAS_YEARLY: 'price_1Sm4oRCPMZ8sEjvK35pjZ6v5',
+  TENURE_EXTRAS_MONTHLY: 'price_1Sm4nCCPMZ8sEjvKm7zIFJ3K',
+  TENURE_EXTRAS_YEARLY: 'price_1Sm4nCCPMZ8sEjvKYLvfcZmb',
+} as const;
+
 interface Env {
   AUTH_DB: any; // D1Database from Cloudflare runtime
   BILLING_DB: any; // D1Database from Cloudflare runtime
@@ -105,8 +119,11 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, env: En
     const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
     const priceId = lineItems.data[0]?.price?.id;
 
-    // Map price ID to product (you'll need to configure this)
+    // Map price ID to product
     const product = mapPriceToProduct(priceId);
+
+    // Check if this is TACo Club lifetime purchase
+    const isLifetime = priceId === STRIPE_PRICES.TACO_CLUB_LIFETIME;
 
     if (product) {
       await env.BILLING_DB.prepare(
@@ -115,8 +132,9 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, env: En
           id, user_id, product, status, 
           stripe_customer_id, stripe_subscription_id, stripe_price_id,
           current_period_start, current_period_end,
+          lifetime_access, total_paid_cents,
           created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `
       )
         .bind(
@@ -129,10 +147,16 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, env: En
           priceId,
           Date.now(),
           null, // Lifetime = no end date
+          isLifetime ? 1 : 0, // lifetime_access
+          isLifetime ? 50000 : 0, // $500 in cents
           Date.now(),
           Date.now()
         )
         .run();
+
+      if (isLifetime) {
+        billingLog.info(`TaCo Club lifetime access granted to user ${userId}`);
+      }
 
       // Grant tokens for tenure_extras one-time purchases
       if (product === 'tenure_extras') {
@@ -206,6 +230,58 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription, env: 
     )
     .run();
 
+  // Set up 24-month subscription schedule for TACo Club monthly
+  // This auto-cancels after 24 payments, then user keeps lifetime access
+  if (
+    isNewSubscription &&
+    priceId === STRIPE_PRICES.TACO_CLUB_MONTHLY &&
+    subscription.status === 'active'
+  ) {
+    try {
+      // Create a subscription schedule from the existing subscription
+      // It will run for 24 iterations then cancel
+      const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
+        apiVersion: '2024-12-18.acacia',
+      });
+
+      // Get the current subscription to migrate it to a schedule
+      const schedule = await stripe.subscriptionSchedules.create({
+        from_subscription: subscription.id,
+      });
+
+      // Update the schedule to have exactly 24 phases then cancel
+      await stripe.subscriptionSchedules.update(schedule.id, {
+        end_behavior: 'cancel',
+        phases: [
+          {
+            items: [{ price: priceId, quantity: 1 }],
+            iterations: 24, // Run for exactly 24 billing cycles
+            metadata: {
+              userId,
+              reason: 'TACo Club 24-month subscription',
+            },
+          },
+        ],
+      });
+
+      // Update our DB to note this has a schedule
+      await env.BILLING_DB.prepare(
+        `UPDATE subscriptions SET 
+          total_payments = 0,
+          max_payments = 24,
+          updated_at = ?
+        WHERE stripe_subscription_id = ?`
+      )
+        .bind(Date.now(), subscription.id)
+        .run();
+
+      billingLog.info(`Created 24-month subscription schedule for TACo Club user ${userId}`);
+    } catch (scheduleError) {
+      billingLog.error('Failed to create subscription schedule:', scheduleError);
+      // Don't fail the whole webhook - the subscription is still valid
+    }
+  }
+
   // Grant 10 tokens for tenure_extras purchases/renewals
   if (product === 'tenure_extras' && subscription.status === 'active') {
     const reason = isNewSubscription
@@ -235,37 +311,70 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription, env:
 }
 
 async function handlePaymentSucceeded(invoice: Stripe.Invoice, env: Env) {
-  // Update subscription period if this is a renewal
   const subscriptionId = (invoice as any).subscription;
-  if (subscriptionId) {
+  if (!subscriptionId) return;
+
+  // Get subscription from our database
+  const subscription = await env.BILLING_DB.prepare(
+    'SELECT user_id, product, total_payments, max_payments FROM subscriptions WHERE stripe_subscription_id = ?'
+  )
+    .bind(subscriptionId)
+    .first();
+
+  if (!subscription) return;
+
+  const userId = subscription.user_id as string;
+  const product = subscription.product as string;
+  const totalPayments = (subscription.total_payments as number) || 0;
+  const maxPayments = subscription.max_payments as number | null;
+
+  // Increment payment count and update status
+  const newPaymentCount = totalPayments + 1;
+  const amountPaidCents = invoice.amount_paid || 0;
+
+  await env.BILLING_DB.prepare(
+    `UPDATE subscriptions 
+     SET status = 'active', 
+         total_payments = ?,
+         total_paid_cents = total_paid_cents + ?,
+         updated_at = ?
+     WHERE stripe_subscription_id = ?`
+  )
+    .bind(newPaymentCount, amountPaidCents, Date.now(), subscriptionId)
+    .run();
+
+  billingLog.info(
+    `Payment ${newPaymentCount}/${maxPayments || '∞'} succeeded for ${product} (user: ${userId})`
+  );
+
+  // Check if TaCo Club has reached 24 payments - grant lifetime access
+  if (product === 'taco_club' && maxPayments && newPaymentCount >= maxPayments) {
+    // Grant lifetime access - subscription will auto-cancel via schedule
     await env.BILLING_DB.prepare(
-      `
-      UPDATE subscriptions 
-      SET status = 'active', updated_at = ?
-      WHERE stripe_subscription_id = ?
-    `
+      `UPDATE subscriptions 
+       SET lifetime_access = 1, updated_at = ?
+       WHERE stripe_subscription_id = ?`
     )
       .bind(Date.now(), subscriptionId)
       .run();
 
-    // Check if this is a tenure_extras renewal and grant tokens
-    const subscription = await env.BILLING_DB.prepare(
-      'SELECT user_id, product FROM subscriptions WHERE stripe_subscription_id = ?'
-    )
-      .bind(subscriptionId)
-      .first();
+    billingLog.info(
+      `TaCo Club lifetime access earned! User ${userId} completed ${newPaymentCount} payments.`
+    );
 
-    if (subscription && subscription.product === 'tenure_extras') {
-      const userId = subscription.user_id as string;
-      await grantTokens(
-        userId,
-        10,
-        'Tenure Extras renewal payment - 10 tokens granted',
-        env,
-        (invoice as any).payment_intent
-      );
-      billingLog.info(`Granted 10 tokens to user ${userId} for tenure_extras renewal payment`);
-    }
+    // TODO: Send congratulations email
+  }
+
+  // Grant tokens for tenure_extras renewals
+  if (product === 'tenure_extras') {
+    await grantTokens(
+      userId,
+      10,
+      'Tenure Extras renewal payment - 10 tokens granted',
+      env,
+      (invoice as any).payment_intent
+    );
+    billingLog.info(`Granted 10 tokens to user ${userId} for tenure_extras renewal payment`);
   }
 }
 
@@ -292,31 +401,37 @@ async function handlePaymentFailed(invoice: Stripe.Invoice, env: Env) {
 
 /**
  * Map Stripe price ID to product name
- * You'll need to update these with your actual Stripe price IDs
+ *
+ * Price IDs from Stripe Dashboard (Test Mode):
+ * - TACo Club: $25/month (24 months) or $500 lifetime
+ * - Sync All Apps: $3.50/month or $35/year
+ * - Sync One App: $2/month or $20/year (need app context)
+ * - Tempo Extras: $12/month or $120/year
+ * - Tenure Extras: $5/month or $30/year
  */
 function mapPriceToProduct(priceId: string | undefined): string | null {
   if (!priceId) return null;
 
-  // TODO: Replace with your actual Stripe price IDs
   const priceMap: Record<string, string> = {
-    // Sync products
-    price_sync_all_monthly: 'sync_all',
-    price_sync_all_yearly: 'sync_all',
-    price_sync_tempo_monthly: 'sync_tempo',
-    price_sync_tempo_yearly: 'sync_tempo',
-    price_sync_tenure_monthly: 'sync_tenure',
-    price_sync_tenure_yearly: 'sync_tenure',
-    price_sync_nurture_monthly: 'sync_nurture',
-    price_sync_nurture_yearly: 'sync_nurture',
-
-    // Extras
-    price_tempo_extras_monthly: 'tempo_extras',
-    price_tempo_extras_yearly: 'tempo_extras',
-    price_tenure_extras_monthly: 'tenure_extras',
-
     // TACo Club
-    price_taco_club_monthly: 'taco_club',
-    price_taco_club_lifetime: 'taco_club',
+    price_1Sm564CPMZ8sEjvKCGmRtoZb: 'taco_club', // Monthly ($25/mo for 24 months)
+    price_1Sm564CPMZ8sEjvKRuiDExbY: 'taco_club', // Lifetime ($500 one-time)
+
+    // Sync All Apps
+    price_1Sm4s7CPMZ8sEjvK94OxRR1O: 'sync_all', // Monthly ($3.50/mo)
+    price_1Sm4sTCPMZ8sEjvKAWdgAz3V: 'sync_all', // Yearly ($35/year)
+
+    // Sync One App (generic - app selected at checkout via metadata)
+    price_1Sm5JsCPMZ8sEjvK66l5S7yG: 'sync_app', // Monthly ($2/mo)
+    price_1Sm5JYCPMZ8sEjvKoGh2rbWj: 'sync_app', // Yearly ($20/year)
+
+    // Tempo Extras
+    price_1Sm4nYCPMZ8sEjvKbUqYoog4: 'tempo_extras', // Monthly ($12/mo)
+    price_1Sm4oRCPMZ8sEjvK35pjZ6v5: 'tempo_extras', // Yearly ($120/year)
+
+    // Tenure Extras
+    price_1Sm4nCCPMZ8sEjvKm7zIFJ3K: 'tenure_extras', // Monthly ($5/mo)
+    price_1Sm4nCCPMZ8sEjvKYLvfcZmb: 'tenure_extras', // Yearly ($30/year)
   };
 
   return priceMap[priceId] || null;

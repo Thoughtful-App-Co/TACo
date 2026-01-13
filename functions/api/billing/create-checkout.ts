@@ -14,6 +14,9 @@ import Stripe from 'stripe';
 import { jwtVerify } from 'jose';
 import { billingLog } from '../../lib/logger';
 
+// TACo Club monthly price ID - needs 24-month subscription schedule
+const TACO_CLUB_MONTHLY_PRICE = 'price_1Sm564CPMZ8sEjvKCGmRtoZb';
+
 interface Env {
   AUTH_DB: D1Database;
   BILLING_DB: D1Database;
@@ -111,7 +114,7 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     const mode = price.type === 'recurring' ? 'subscription' : 'payment';
 
     // Create checkout session
-    const session = await stripe.checkout.sessions.create({
+    const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       customer: customerId,
       mode,
       payment_method_types: ['card'],
@@ -126,16 +129,26 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
       metadata: {
         userId,
       },
-      subscription_data:
-        mode === 'subscription'
-          ? {
-              metadata: {
-                userId,
-              },
-            }
-          : undefined,
       allow_promotion_codes: true,
-    });
+    };
+
+    // Add subscription-specific data
+    if (mode === 'subscription') {
+      sessionConfig.subscription_data = {
+        metadata: {
+          userId,
+        },
+      };
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionConfig);
+
+    // For TACo Club monthly, create a subscription schedule to auto-cancel after 24 months
+    // This runs AFTER the checkout is complete (handled in webhook)
+    // We just add metadata here to signal the webhook to set up the schedule
+    if (priceId === TACO_CLUB_MONTHLY_PRICE && session.subscription) {
+      billingLog.info(`TACo Club monthly checkout created. Schedule will be set up after payment.`);
+    }
 
     return new Response(
       JSON.stringify({
