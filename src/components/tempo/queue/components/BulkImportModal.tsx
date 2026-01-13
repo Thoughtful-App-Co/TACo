@@ -4,7 +4,7 @@
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
-import { Component, createSignal, Show } from 'solid-js';
+import { Component, createSignal, Show, For } from 'solid-js';
 import { X, Upload, Lightning } from 'phosphor-solid';
 import { tempoDesign } from '../../theme/tempo-design';
 import type { TaskPriority } from '../../lib/types';
@@ -259,9 +259,9 @@ Fix login bug`}
                     outline: 'none',
                   }}
                 >
-                  {PRIORITY_ORDER.map((p) => (
-                    <option value={p}>{PRIORITY_CONFIG[p].label}</option>
-                  ))}
+                  <For each={PRIORITY_ORDER}>
+                    {(p) => <option value={p}>{PRIORITY_CONFIG[p].label}</option>}
+                  </For>
                 </select>
               </div>
 

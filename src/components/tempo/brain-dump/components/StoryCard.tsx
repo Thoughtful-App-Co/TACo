@@ -138,8 +138,7 @@ export const StoryCard = (props: StoryCardProps) => {
                                 height: '20px',
                               }}
                             >
-                              <span style={{ 'margin-right': '4px' }}>🐸</span>
-                              HIGH PRIORITY
+                              FROG
                             </Badge>
                           </Show>
                           <Badge

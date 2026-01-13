@@ -1,4 +1,4 @@
-import { Component, mergeProps } from 'solid-js';
+import { Component, mergeProps, Show } from 'solid-js';
 import { tempoDesign } from '../theme/tempo-design';
 
 interface LogoProps {
@@ -21,7 +21,7 @@ export const TempoLogo: Component<LogoProps> = (props) => {
           'object-fit': 'contain',
         }}
       />
-      {merged.withText && (
+      <Show when={merged.withText}>
         <div style={{ display: 'flex', 'flex-direction': 'column' }}>
           <span
             style={{
@@ -35,20 +35,8 @@ export const TempoLogo: Component<LogoProps> = (props) => {
           >
             Tempo
           </span>
-          <span
-            style={{
-              'font-family': tempoDesign.typography.fontFamily,
-              'font-size': `${merged.size * 0.35}px`,
-              'font-weight': tempoDesign.typography.weights.medium,
-              color: tempoDesign.colors.mutedForeground,
-              'letter-spacing': '0.05em',
-              'text-transform': 'uppercase',
-            }}
-          >
-            Rhythm for Work
-          </span>
         </div>
-      )}
+      </Show>
     </div>
   );
 };

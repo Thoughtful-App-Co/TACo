@@ -346,7 +346,7 @@ export const SettingsSidebar: Component<SettingsSidebarProps> = (props) => {
                     'margin-top': '2px',
                   }}
                 >
-                  {apiKeyMode() === 'bring-your-own' && (
+                  <Show when={apiKeyMode() === 'bring-your-own'}>
                     <div
                       style={{
                         width: '8px',
@@ -355,7 +355,7 @@ export const SettingsSidebar: Component<SettingsSidebarProps> = (props) => {
                         background: tempoDesign.colors.primary,
                       }}
                     />
-                  )}
+                  </Show>
                 </div>
                 <div style={{ flex: 1 }}>
                   <div
@@ -448,7 +448,7 @@ export const SettingsSidebar: Component<SettingsSidebarProps> = (props) => {
                 setError(null);
               }}
             >
-              {hasTempoExtras() && (
+              <Show when={hasTempoExtras()}>
                 <div
                   style={{
                     position: 'absolute',
@@ -465,7 +465,7 @@ export const SettingsSidebar: Component<SettingsSidebarProps> = (props) => {
                   <Check size={14} />
                   <span>Active</span>
                 </div>
-              )}
+              </Show>
               <div
                 style={{
                   display: 'flex',
@@ -486,7 +486,7 @@ export const SettingsSidebar: Component<SettingsSidebarProps> = (props) => {
                     'margin-top': '2px',
                   }}
                 >
-                  {apiKeyMode() === 'managed' && (
+                  <Show when={apiKeyMode() === 'managed'}>
                     <div
                       style={{
                         width: '8px',
@@ -495,7 +495,7 @@ export const SettingsSidebar: Component<SettingsSidebarProps> = (props) => {
                         background: tempoDesign.colors.primary,
                       }}
                     />
-                  )}
+                  </Show>
                 </div>
                 <div style={{ flex: 1 }}>
                   <div
