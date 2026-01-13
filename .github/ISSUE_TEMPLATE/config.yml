@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or Discussion
+    url: https://github.com/shupp-dev/TACo/discussions
+    about: Ask questions or start a discussion about TACo
+  - name: Contributing Guide
+    url: https://github.com/shupp-dev/TACo/blob/main/CONTRIBUTING.md
+    about: Learn how to contribute to TACo
+  - name: Developer Setup
+    url: https://github.com/shupp-dev/TACo/blob/main/DEVELOPER_SETUP.md
+    about: Get started with local development

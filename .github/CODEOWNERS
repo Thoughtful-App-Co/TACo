@@ -1,0 +1,63 @@
+# CODEOWNERS
+#
+# This file defines who owns different parts of the codebase.
+# Code owners are automatically requested for review when someone opens a pull request
+# that modifies code that they own.
+#
+# Lines starting with '#' are comments.
+# Each line is a file pattern followed by one or more owners.
+# The pattern format follows the same rules as .gitignore files.
+# The last matching pattern takes the most precedence.
+#
+# More information:
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default ownership for everything in the repo
+# This ensures all PRs get reviewed by the repo owner
+*       @shupp-dev
+
+# Critical infrastructure and configuration
+# These files affect deployment, security, and core functionality
+/wrangler.toml              @shupp-dev
+/.github/                   @shupp-dev
+/migrations/                @shupp-dev
+
+# Authentication and Security
+# Changes to auth must be carefully reviewed for security implications
+/functions/api/auth/        @shupp-dev
+/src/lib/auth.ts            @shupp-dev
+/src/lib/auth-context.tsx   @shupp-dev
+
+# Billing and Payments
+# Stripe integration and payment processing require careful review
+/functions/api/billing/     @shupp-dev
+/functions/api/stripe/      @shupp-dev
+/docs/core/billing/         @shupp-dev
+
+# Future team structure placeholders
+# Uncomment and assign when team grows
+
+# Tenure (Job Search App) Specialists
+# /src/components/tenure/     @tenure-team
+# /src/schemas/tenure/        @tenure-team
+# /docs/tenure/               @tenure-team
+
+# Tempo (Brain Dump App) Specialists
+# /src/components/tempo/      @tempo-team
+# /src/schemas/tempo.schema.ts @tempo-team
+# /docs/tempo/                @tempo-team
+
+# Paper Trail (News App) Specialists
+# /src/components/papertrail/ @papertrail-team
+# /src/schemas/papertrail.schema.ts @papertrail-team
+
+# Nurture (Relationship App) Specialists
+# /src/components/nurture/    @nurture-team
+# /src/schemas/nurture.schema.ts @nurture-team
+
+# DevOps and CI/CD
+# /.github/workflows/         @devops-team
+
+# Design and Theming
+# /src/theme/                 @design-team
+# /docs/context_engineering/design/ @design-team
