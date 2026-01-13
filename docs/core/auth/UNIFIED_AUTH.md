@@ -179,7 +179,9 @@ import { SignJWT } from 'jose';
 interface Env {
   DB: D1Database;
   RESEND_API_KEY: string;
-  JWT_SECRET: string;
+  JWT_SECRET_TEST: string;
+  JWT_SECRET_PROD: string;
+  TACO_ENV: string;
 }
 
 export async function onRequestPost(context: { request: Request; env: Env }) {
@@ -206,7 +208,12 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
   }
 
   // 3. Generate magic link token (15 minute expiry)
-  const secret = new TextEncoder().encode(context.env.JWT_SECRET);
+  // Select the correct JWT secret based on environment
+  const jwtSecret =
+    context.env.TACO_ENV === 'production'
+      ? context.env.JWT_SECRET_PROD
+      : context.env.JWT_SECRET_TEST;
+  const secret = new TextEncoder().encode(jwtSecret);
   const token = await new SignJWT({ userId: user.id, email })
     .setProtectedHeader({ alg: 'HS256' })
     .setExpirationTime('15m')
@@ -252,7 +259,12 @@ export async function onRequestGet(context: { request: Request; env: Env }) {
 
   try {
     // 1. Verify magic link token
-    const secret = new TextEncoder().encode(context.env.JWT_SECRET);
+    // Select the correct JWT secret based on environment
+    const jwtSecret =
+      context.env.TACO_ENV === 'production'
+        ? context.env.JWT_SECRET_PROD
+        : context.env.JWT_SECRET_TEST;
+    const secret = new TextEncoder().encode(jwtSecret);
     const { payload } = await jwtVerify(token, secret);
 
     const userId = payload.userId as string;
@@ -303,7 +315,12 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
   const token = authHeader.replace('Bearer ', '');
 
   try {
-    const secret = new TextEncoder().encode(context.env.JWT_SECRET);
+    // Select the correct JWT secret based on environment
+    const jwtSecret =
+      context.env.TACO_ENV === 'production'
+        ? context.env.JWT_SECRET_PROD
+        : context.env.JWT_SECRET_TEST;
+    const secret = new TextEncoder().encode(jwtSecret);
     const { payload } = await jwtVerify(token, secret);
 
     return new Response(
@@ -534,11 +551,42 @@ const ThoughtfulAppCoAuthProvider = {
 
 ## Security Considerations
 
-1. **JWT Secret:** Use strong random key, store in Cloudflare secrets
+1. **JWT Secrets:** Use TWO strong random keys (TEST and PROD), store in Cloudflare secrets
+   - Generate with: `openssl rand -base64 32`
+   - **Never use the same secret for test and production!**
+   - Set both `JWT_SECRET_TEST` and `JWT_SECRET_PROD` in Cloudflare dashboard
+   - Code selects the correct secret based on `TACO_ENV` variable
 2. **Email Validation:** Prevent spam by rate limiting (10 requests/hour per email)
 3. **Token Expiry:** Magic links expire in 15 minutes, sessions in 30 days
 4. **HTTPS Only:** All auth endpoints require HTTPS
 5. **CORS:** Restrict to thoughtfulappco.com domain
+
+### Secret Naming Pattern
+
+**Why TEST/LIVE suffix?** Cloudflare Pages secrets are shared between preview and production deployments. We use environment-specific suffixes and select at runtime:
+
+```typescript
+// This pattern is used throughout the codebase
+const jwtSecret =
+  context.env.TACO_ENV === 'production' ? context.env.JWT_SECRET_PROD : context.env.JWT_SECRET_TEST;
+```
+
+**Environment-Specific Secrets:**
+
+- `JWT_SECRET_TEST` - For local and preview environments
+- `JWT_SECRET_PROD` - For production only
+
+**Setting Secrets:**
+
+```bash
+# Set both secrets in Cloudflare dashboard
+wrangler secret put JWT_SECRET_TEST
+wrangler secret put JWT_SECRET_PROD
+
+# Local development (.dev.vars)
+JWT_SECRET_TEST=your-test-secret-here
+JWT_SECRET_PROD=your-production-secret-here
+```
 
 ---
 

@@ -152,8 +152,8 @@ export const tenureDb = TenureDatabase;
 ### 1. Install Evolu
 
 ```bash
-npm install @evolu/react
-npm install effect  # Evolu dependency
+pnpm install @evolu/react
+pnpm install effect  # Evolu dependency
 ```
 
 ### 2. Initialize Evolu

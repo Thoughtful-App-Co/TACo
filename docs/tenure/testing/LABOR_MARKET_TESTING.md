@@ -62,7 +62,7 @@ pnpm dev
 Or if you need to start wrangler directly:
 
 ```bash
-npx wrangler pages dev dist --compatibility-date=2024-01-01
+pnpm exec wrangler pages dev dist --compatibility-date=2024-01-01
 ```
 
 > **Note**: The server must be restarted after any changes to `.dev.vars`.

@@ -145,36 +145,6 @@ Intentionally subtle to maintain paper-like flatness:
 
 ---
 
-## Shared Patterns
-
-### Fitt's Law Optimizations
-
-1. **Touch targets**: Minimum 44px, primary actions 64px
-2. **FAB positioning**: Bottom-right corner (thumb zone on mobile)
-3. **Full-width buttons**: On mobile breakpoints
-4. **Tab navigation**: Large hit areas with generous padding
-
-### Responsive Breakpoints
-
-```css
---bp-sm: 640px;
---bp-md: 768px;
---bp-lg: 1024px;
---bp-xl: 1280px;
-```
-
-### Animation Timing
-
-```css
---ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
---ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
---duration-fast: 150ms;
---duration-normal: 300ms;
---duration-slow: 500ms;
-```
-
----
-
 ## 3. TEMPO - Premium Dark Time-Management System
 
 ### Design Philosophy
@@ -352,6 +322,340 @@ style={{ background: tempoDesign.colors.primary }}
 
 ---
 
+## 4. ECHOPRAX - Memphis x Retro-Futurism Workout System
+
+### Design Philosophy
+
+_"Controlled chaos. Energetic precision."_
+
+A bold, kinetic design system for timer-driven workout sessions. Combines Memphis Group (1980s Italian design movement) geometric chaos with retro-futurism neon aesthetics.
+
+### Core Principles
+
+1. **Memphis Aesthetic**: Bold geometric patterns, clash colors, controlled visual chaos
+2. **Retro-Futurism**: Saturated neons on dark backgrounds, 80s cyberpunk vibes
+3. **Glassomorphism**: Reserved ONLY for interactive buttons (not surfaces)
+4. **Kinetic Motion**: Bouncy animations with personality, respects reduced-motion
+5. **NO EMOJIS**: Use custom doodle SVG icons only
+
+### Typography Scale
+
+| Level      | Size     | Weight | Line Height | Letter Spacing | Usage                    |
+| ---------- | -------- | ------ | ----------- | -------------- | ------------------------ |
+| Display    | 8rem     | 800    | 1.0         | -0.02em        | Large timer display      |
+| Display SM | 6rem     | 800    | 1.0         | -0.02em        | Timer with GIF           |
+| Heading XL | 2.5rem   | 800    | 1.2         | -0.03em        | Hero headlines           |
+| Heading LG | 2rem     | 800    | 1.2         | -0.02em        | Section headlines        |
+| Heading MD | 1.5rem   | 800    | 1.3         | -0.02em        | Card titles              |
+| Heading SM | 1.25rem  | 700    | 1.4         | 0              | Subheadings              |
+| Body LG    | 1.125rem | 400    | 1.5         | 0              | Lead paragraphs          |
+| Body       | 1rem     | 400    | 1.5         | 0              | Default body text        |
+| Body SM    | 0.875rem | 400    | 1.5         | 0              | Secondary body text      |
+| Caption    | 0.75rem  | 400    | 1.4         | 0              | Metadata, timestamps     |
+| Label      | 0.75rem  | 700    | 1.2         | 0.15em         | Section labels, ALL CAPS |
+| State      | 1.25rem  | 800    | 1.0         | 0.25em         | Session state labels     |
+
+**Font Stack**: `'Inter', -apple-system, BlinkMacSystemFont, sans-serif`
+
+**Rationale**: Inter provides excellent legibility at all sizes with a geometric character that complements the Memphis aesthetic.
+
+### Color Palette - Memphis Clash
+
+| Token         | Hex                      | RGB           | Contrast vs BG | Usage                         |
+| ------------- | ------------------------ | ------------- | -------------- | ----------------------------- |
+| Hot Pink      | `#FF6B9D`                | 255, 107, 157 | 6.2:1 ✓ AAA    | Primary accent, active states |
+| Electric Blue | `#00D4FF`                | 0, 212, 255   | 8.9:1 ✓ AAA    | Secondary accent, rest states |
+| Acid Yellow   | `#FFEA00`                | 255, 234, 0   | 14.8:1 ✓ AAA   | Attention, countdown, labels  |
+| Mint Green    | `#7FFFD4`                | 127, 255, 212 | 12.4:1 ✓ AAA   | Success, completion states    |
+| Coral         | `#FF6F61`                | 255, 111, 97  | 5.4:1 ✓ AA     | Intensity indicator, stop     |
+| Lavender      | `#E6B8FF`                | 230, 184, 255 | 8.2:1 ✓ AAA    | Paused state, strength        |
+| Deep Black    | `#0D0D0D`                | 13, 13, 13    | -              | Background                    |
+| Dark Surface  | `#1A1A1F`                | 26, 26, 31    | -              | Card backgrounds              |
+| White         | `#FFFFFF`                | 255, 255, 255 | 19.8:1 ✓ AAA   | Primary text                  |
+| Muted Gray    | `#B8B8C8`                | 184, 184, 200 | 9.2:1 ✓ AAA    | Secondary text (improved)     |
+| Border        | `rgba(255,255,255,0.12)` | -             | -              | Subtle dividers               |
+
+### Session State Colors
+
+| State     | Color     | Semantic Meaning     |
+| --------- | --------- | -------------------- |
+| Idle      | `#B8B8C8` | Neutral, waiting     |
+| Countdown | `#FFEA00` | Attention! Get ready |
+| Active    | `#FF6B9D` | High energy, GO!     |
+| Rest      | `#00D4FF` | Recovery, breathe    |
+| Completed | `#7FFFD4` | Victory, success     |
+| Paused    | `#E6B8FF` | Suspended, calm      |
+
+### Spacing Scale (4px Base Unit)
+
+| Token | Value | Rem     | Usage                       |
+| ----- | ----- | ------- | --------------------------- |
+| xs    | 4px   | 0.25rem | Tight gaps, inline elements |
+| sm    | 8px   | 0.5rem  | Small gaps, compact lists   |
+| md    | 16px  | 1rem    | Default spacing, gutters    |
+| lg    | 24px  | 1.5rem  | Section spacing             |
+| xl    | 32px  | 2rem    | Large gaps, card padding    |
+| xxl   | 48px  | 3rem    | Hero sections, major breaks |
+
+### Border Radius
+
+| Token   | Value | Usage                   |
+| ------- | ----- | ----------------------- |
+| sm      | 8px   | Small buttons, badges   |
+| md      | 12px  | Medium elements, inputs |
+| lg      | 16px  | Cards, panels           |
+| organic | 24px  | Large buttons, pills    |
+| full    | 50%   | Circular elements       |
+
+### Shadows (Dark Theme Optimized)
+
+| Token | Value                            | Usage                   |
+| ----- | -------------------------------- | ----------------------- |
+| sm    | `0 2px 8px rgba(0, 0, 0, 0.4)`   | Subtle lift             |
+| md    | `0 8px 24px rgba(0, 0, 0, 0.5)`  | Hover states, cards     |
+| lg    | `0 16px 48px rgba(0, 0, 0, 0.6)` | Modals, completion icon |
+
+### Colored Shadows (Glow Effect)
+
+```css
+/* Hot Pink Glow */
+box-shadow: 0 4px 20px rgba(255, 107, 157, 0.4);
+box-shadow: 0 8px 32px rgba(255, 107, 157, 0.5); /* Emphasis */
+
+/* Electric Blue Glow */
+box-shadow: 0 4px 20px rgba(0, 212, 255, 0.4);
+
+/* Mint Green Glow */
+box-shadow: 0 8px 40px rgba(127, 255, 212, 0.5); /* Completion */
+
+/* Acid Yellow Glow */
+box-shadow: 0 0 20px rgba(255, 234, 0, 0.6); /* State label glow */
+```
+
+### Glass Button Styles
+
+Glass morphism is ONLY for interactive buttons, never for content surfaces.
+
+```css
+/* Default Glass */
+.echoprax-glass-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* Hover State */
+.echoprax-glass-btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-2px) scale(1.02);
+}
+
+/* Active/Pressed */
+.echoprax-glass-btn:active {
+  background: rgba(255, 255, 255, 0.18);
+  transform: translateY(0) scale(0.98);
+}
+
+/* Primary Glass (Hot Pink tinted) */
+.echoprax-glass-btn--primary {
+  background: rgba(255, 107, 157, 0.15);
+  border: 1px solid rgba(255, 107, 157, 0.3);
+}
+
+/* Focus State (Accessibility) */
+.echoprax-glass-btn:focus-visible {
+  outline: 2px solid #ffea00;
+  outline-offset: 2px;
+}
+```
+
+### Solid Surfaces (Memphis Style)
+
+Cards and content containers use solid colors, NOT glass.
+
+```css
+/* Card Surface */
+.echoprax-card {
+  background: #1a1a1f;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+}
+
+/* Elevated Surface */
+.echoprax-elevated {
+  background: rgba(30, 30, 40, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+```
+
+### Kinetic Animations
+
+All animations respect `prefers-reduced-motion`.
+
+```css
+/* Easing Functions */
+--echoprax-easing-bouncy: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+--echoprax-easing-bouncy-out: cubic-bezier(0.34, 1.56, 0.64, 1);
+--echoprax-easing-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+
+/* State Change Transition */
+.echoprax-state-change {
+  transition: all 300ms var(--echoprax-easing-bouncy);
+}
+
+/* Countdown Pulse */
+@keyframes memphis-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.08);
+  }
+}
+.echoprax-countdown {
+  animation: memphis-pulse 800ms ease-in-out infinite;
+}
+
+/* Hover Bounce */
+.echoprax-hover-bounce:hover {
+  transform: translateY(-4px) scale(1.02);
+}
+
+/* Floating Shapes */
+@keyframes memphis-float {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+/* Geometric Spin (decorative) */
+@keyframes memphis-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+```
+
+### Memphis Decorative Patterns
+
+```css
+/* Terrazzo Confetti Background */
+background-image:
+  radial-gradient(circle at 20% 30%, #ff6b9d15 2px, transparent 2px),
+  radial-gradient(circle at 60% 70%, #00d4ff15 3px, transparent 3px),
+  radial-gradient(circle at 80% 20%, #ffea0015 2px, transparent 2px),
+  radial-gradient(circle at 40% 80%, #7fffd415 2px, transparent 2px),
+  radial-gradient(circle at 10% 60%, #ff6f6115 3px, transparent 3px),
+  radial-gradient(circle at 90% 50%, #e6b8ff15 2px, transparent 2px);
+background-size: 200px 200px;
+
+/* Grid Lines */
+background-image:
+  linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+  linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+background-size: 40px 40px;
+```
+
+### Component Specifications
+
+#### Exercise Card
+
+- Min-height: 400px
+- Padding: 32px (xl)
+- Grid layout: 1fr 1fr when GIF present, single column otherwise
+- Progress bar: 4px height at top
+- Corner accents: 24px geometric shapes at 40% opacity
+
+#### Progress Timeline
+
+- Padding: 16px (md)
+- Block segments: flex-1, 8px height, 4px gap
+- Active segment: shimmer animation overlay
+- Label: 12px uppercase with 0.1em letter-spacing
+
+#### Control Buttons
+
+| Button     | Size | Border Radius | Color         |
+| ---------- | ---- | ------------- | ------------- |
+| Mute       | 48px | 50% (circle)  | Electric Blue |
+| Stop       | 48px | 50%           | Coral         |
+| Play/Pause | 64px | 50%           | Hot Pink      |
+| Skip       | 48px | 50%           | Acid Yellow   |
+
+#### Workout Card (Home)
+
+- Padding: 24px (lg)
+- Border-radius: 16px (lg)
+- Accent square: 64px
+- Gap between elements: 24px (lg)
+- Metadata font-size: 12px (caption)
+
+### Accessibility Requirements
+
+| Requirement            | Implementation                                   |
+| ---------------------- | ------------------------------------------------ |
+| Color contrast (text)  | All text: minimum 4.5:1, achieved 5.4:1+ on all  |
+| Color contrast (large) | Large text: minimum 3:1, all exceed              |
+| Focus indicators       | 2px solid #FFEA00, 2px offset                    |
+| Touch targets          | Minimum 44px, primary actions 64px               |
+| Motion safety          | All animations in `prefers-reduced-motion` query |
+| Screen reader labels   | All buttons have title attributes                |
+| State announcements    | Voice cues announce all state changes            |
+
+### Focus State Specification
+
+```css
+/* Visible Focus Ring */
+:focus-visible {
+  outline: 2px solid #ffea00;
+  outline-offset: 2px;
+}
+
+/* Remove default focus for mouse users */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+```
+
+### Implementation Files
+
+| File                                                          | Purpose                       |
+| ------------------------------------------------------------- | ----------------------------- |
+| `src/theme/echoprax.ts`                                       | Design tokens, CSS variables  |
+| `src/components/echoprax/EchopraxApp.tsx`                     | Main app container, home view |
+| `src/components/echoprax/session-player/SessionPlayer.tsx`    | Workout session logic         |
+| `src/components/echoprax/session-player/ExerciseCard.tsx`     | Current exercise display      |
+| `src/components/echoprax/session-player/ProgressTimeline.tsx` | Phase progress                |
+
+### Design Token Export
+
+```typescript
+import {
+  echoprax, // Theme object
+  memphisColors, // Color palette
+  sessionStateColors, // State-specific colors
+  glassButton, // Glass button styles
+  memphisSurfaces, // Solid surface styles
+  kineticAnimations, // Animation definitions
+  memphisPatterns, // Background patterns
+  echopraxCSS, // Injected CSS string
+} from '@/theme/echoprax';
+```
+
+---
+
 ## Theme TypeScript Interface
 
 ```typescript
@@ -391,4 +695,34 @@ interface Theme {
     lg: string;
   };
 }
+```
+
+---
+
+## Shared Patterns
+
+### Fitt's Law Optimizations
+
+1. **Touch targets**: Minimum 44px, primary actions 64px
+2. **FAB positioning**: Bottom-right corner (thumb zone on mobile)
+3. **Full-width buttons**: On mobile breakpoints
+4. **Tab navigation**: Large hit areas with generous padding
+
+### Responsive Breakpoints
+
+```css
+--bp-sm: 640px;
+--bp-md: 768px;
+--bp-lg: 1024px;
+--bp-xl: 1280px;
+```
+
+### Animation Timing
+
+```css
+--ease-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+--ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+--duration-fast: 150ms;
+--duration-normal: 300ms;
+--duration-slow: 500ms;
 ```

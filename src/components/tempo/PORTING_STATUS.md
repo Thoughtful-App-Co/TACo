@@ -9,7 +9,7 @@
 - Only fix TypeScript **errors** that prevent builds - ignore hints/warnings
 - Linting/cleanup happens in Phase 8 (Polish) after everything works
 
-**Run builds, not lints**: Use `npm run build` to verify code compiles.
+**Run builds, not lints**: Use `pnpm run build` to verify code compiles.
 
 ---
 
@@ -56,7 +56,7 @@
 ## Next Steps
 
 1. ✅ **~~Port `lib/sessionStorage.ts`~~** - COMPLETE (Replicache intact, TypeScript errors fixed)
-2. ✅ **~~Verify builds pass~~** - COMPLETE (`npm run build` passes)
+2. ✅ **~~Verify builds pass~~** - COMPLETE (`pnpm run build` passes)
 3. **Phase 3: Port API Routes** - Convert Next.js API routes to SolidStart
    - `/api/ai` - Claude integration endpoint
    - `/api/tasks/process` - AI task processing

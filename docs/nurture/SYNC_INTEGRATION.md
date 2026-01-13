@@ -107,7 +107,7 @@ export class NurtureSettings extends CoMap {
 ### 1. Install Jazz
 
 ```bash
-npm install jazz-tools jazz-browser
+pnpm install jazz-tools jazz-browser
 ```
 
 ### 2. Initialize Jazz Client

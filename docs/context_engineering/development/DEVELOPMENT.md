@@ -14,26 +14,26 @@ Guidelines and best practices for developing Tempo.
 
 ```bash
 # Start dev server
-npm run dev
+pnpm run dev
 
 # In another terminal, watch for linting issues
-npm run lint:fix
+pnpm run lint:fix
 
 # Format code
-npm run format
+pnpm run format
 ```
 
 ### Before Committing
 
 ```bash
 # Run all checks
-npm run validate
+pnpm run validate
 
 # This runs:
-# - npm run type-check (TypeScript)
-# - npm run lint (ESLint)
-# - npm run format:check (Prettier)
-# - npm run build (Vite build)
+# - pnpm run type-check (TypeScript)
+# - pnpm run lint (ESLint)
+# - pnpm run format:check (Prettier)
+# - pnpm run build (Vite build)
 ```
 
 ### Creating a Feature
@@ -48,7 +48,7 @@ npm run validate
 3. Run validation:
 
    ```bash
-   npm run validate
+   pnpm run validate
    ```
 
 4. Commit with meaningful message:
@@ -153,8 +153,8 @@ Prettier and ESLint handle this automatically on commit.
 Currently, the project uses manual testing. For future automated testing:
 
 ```bash
-npm install --save-dev vitest
-npm run test
+pnpm install --save-dev vitest
+pnpm run test
 ```
 
 ## Debugging
@@ -178,7 +178,7 @@ console.error('Error:', error); // Allowed
 1. **Use `createMemo`** for expensive computations
 2. **Lazy load components** with dynamic imports
 3. **Avoid unnecessary re-renders** with Solid's reactivity
-4. **Monitor bundle size** with `npm run build`
+4. **Monitor bundle size** with `pnpm run build`
 
 ## Commits & PRs
 
@@ -233,15 +233,15 @@ See [Architecture](./ARCHITECTURE.md) for detailed structure.
 ## Useful Commands
 
 ```bash
-npm run dev              # Start dev server
-npm run build           # Production build
-npm run preview         # Preview production build locally
-npm run lint            # Check code with ESLint
-npm run lint:fix        # Auto-fix ESLint issues
-npm run format          # Format code with Prettier
-npm run format:check    # Check formatting
-npm run type-check      # TypeScript type checking
-npm run validate        # Run all checks + build
+pnpm run dev              # Start dev server
+pnpm run build           # Production build
+pnpm run preview         # Preview production build locally
+pnpm run lint            # Check code with ESLint
+pnpm run lint:fix        # Auto-fix ESLint issues
+pnpm run format          # Format code with Prettier
+pnpm run format:check    # Check formatting
+pnpm run type-check      # TypeScript type checking
+pnpm run validate        # Run all checks + build
 ```
 
 ## Troubleshooting
@@ -264,7 +264,7 @@ npm run validate        # Run all checks + build
 rm -rf dist .vite node_modules/.vite
 
 # Rebuild
-npm run build
+pnpm run build
 ```
 
 ### Issue: Type errors in editor but build succeeds

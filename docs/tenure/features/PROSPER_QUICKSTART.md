@@ -37,7 +37,7 @@ The app uses this route pattern: `/:appId`
 ```bash
 # Start dev server (if not running)
 cd /home/shupp-dev/daemon/dev/TACo
-npm run dev
+pnpm run dev
 
 # Open browser to:
 http://localhost:3002/prosper
@@ -112,7 +112,7 @@ The app should be registered in the apps array. If it's not showing:
 
 **Check:**
 
-1. Is dev server running? (`npm run dev`)
+1. Is dev server running? (`pnpm run dev`)
 2. Check browser console for import errors
 3. Try: `http://localhost:5173/tempo` - if Tempo works, it's a Prosper-specific issue
 

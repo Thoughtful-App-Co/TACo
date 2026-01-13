@@ -102,9 +102,9 @@
 
 **What to Run Instead**:
 
-- ✅ TypeScript compiler (`tsc` or `npm run build`) - Catches real type errors
-- ✅ Build process (`npm run build`) - Ensures code compiles
-- ❌ ESLint (`npm run lint`) - **DO NOT RUN**
+- ✅ TypeScript compiler (`tsc` or `pnpm run build`) - Catches real type errors
+- ✅ Build process (`pnpm run build`) - Ensures code compiles
+- ❌ ESLint (`pnpm run lint`) - **DO NOT RUN**
 - ❌ Prettier format checks - **DO NOT RUN**
 
 **When to Enable Linting**:
@@ -456,9 +456,7 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
 **Deployment Configuration**:
 
 ```bash
-# In Cloudflare Pages dashboard:
-# Settings > Environment Variables
-ANTHROPIC_API_KEY=sk-ant-api03-xxxx...
+pnpm run build  # Generates optimized dist/
 ```
 
 ---

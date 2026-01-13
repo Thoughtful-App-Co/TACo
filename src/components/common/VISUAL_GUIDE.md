@@ -28,6 +28,7 @@ This document shows the visual appearance of the `RegionUnavailableMessage` comp
 ```
 
 **Styling:**
+
 - Background: Light blue tint (rgba(59, 130, 246, 0.15))
 - Border: Blue (rgba(59, 130, 246, 0.3))
 - Text color: Dark blue (#2563EB)
@@ -46,6 +47,7 @@ This document shows the visual appearance of the `RegionUnavailableMessage` comp
 ```
 
 **Styling:**
+
 - Background: Light blue tint (rgba(59, 130, 246, 0.15))
 - Border: Blue (rgba(59, 130, 246, 0.3))
 - Text color: Dark blue (#2563EB)
@@ -61,12 +63,12 @@ The component uses the semantic color system from `/theme/semantic-colors.ts`:
 
 ```typescript
 semanticColors.info = {
-  base: '#3B82F6',      // Blue 500 - main text
-  light: '#60A5FA',     // Blue 400 - coming soon items
-  dark: '#2563EB',      // Blue 600 - primary text
-  bg: 'rgba(59, 130, 246, 0.15)',    // light background
+  base: '#3B82F6', // Blue 500 - main text
+  light: '#60A5FA', // Blue 400 - coming soon items
+  dark: '#2563EB', // Blue 600 - primary text
+  bg: 'rgba(59, 130, 246, 0.15)', // light background
   border: 'rgba(59, 130, 246, 0.3)', // border
-}
+};
 ```
 
 ---
@@ -106,6 +108,7 @@ semanticColors.info = {
 ## Responsive Behavior
 
 The component is **fluid-width** by default:
+
 - Adapts to container width
 - Minimum effective width: ~300px
 - Maximum recommended width: ~600px
@@ -116,9 +119,11 @@ The component is **fluid-width** by default:
 ## Use Cases
 
 ### 1. Feature Gating
+
 Hide premium labor market features for unsupported regions:
+
 ```tsx
-<Show 
+<Show
   when={isLaborMarketAvailable(userCountry)}
   fallback={<RegionUnavailableMessage {...regionProps} />}
 >
@@ -127,7 +132,9 @@ Hide premium labor market features for unsupported regions:
 ```
 
 ### 2. Inline Notice
+
 Small notice within a larger component:
+
 ```tsx
 <div class="salary-section">
   <h4>Salary Insights</h4>
@@ -136,9 +143,11 @@ Small notice within a larger component:
 ```
 
 ### 3. Dedicated Info Page
+
 Full explanation on a dedicated page or modal:
+
 ```tsx
-<RegionUnavailableMessage 
+<RegionUnavailableMessage
   countryCode={country}
   countryName={countryName}
   showSupportedRegions={true}

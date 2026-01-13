@@ -596,6 +596,7 @@ We share information with third-party service providers **only** to deliver our 
 
 | Service                              | Purpose                       | Data Shared                                                             |
 | ------------------------------------ | ----------------------------- | ----------------------------------------------------------------------- |
+| **Resend**                           | Email delivery                | Email address (for verification emails and account notifications)       |
 | **Anthropic (Claude API)**           | AI processing (Tempo, Tenure) | Task text, resume content, job postings (only when you use AI features) |
 | **O\*NET API (U.S. Dept. of Labor)** | Career matching (Tenure)      | RIASEC scores (anonymous career interest data)                          |
 | **Stripe**                           | Payment processing            | Email, payment information, billing address                             |
@@ -603,7 +604,27 @@ We share information with third-party service providers **only** to deliver our 
 
 **No Advertising Partners:** We do not use Google Analytics, Facebook Pixel, or any other advertising/tracking services.
 
-### 6.3 Anthropic Claude API
+### 6.3 Resend (Email Delivery Service)
+
+We use **Resend** to send transactional emails, including:
+
+- Magic link verification emails (passwordless authentication)
+- Payment receipts and billing notifications
+- Important account and security updates
+
+**What data does Resend process?**
+
+- Your email address (to deliver messages)
+- Email metadata (timestamps, delivery status)
+
+**What Resend does NOT receive:**
+
+- We do not share your app data, sync data, or any personal information beyond your email address
+- Resend does not have access to your TACo account details, subscription information, or app usage
+
+Resend is a transactional email service provider and does not use your email address for marketing purposes. Their privacy policy: https://resend.com/legal/privacy-policy
+
+### 6.4 Anthropic Claude API
 
 When you use AI features in Tempo or Tenure:
 
@@ -612,7 +633,7 @@ When you use AI features in Tempo or Tenure:
 - We **do not log or store** the content sent to Claude or the responses received.
 - Anthropic's privacy policy governs how they handle data sent to their API. See: https://www.anthropic.com/legal/privacy
 
-### 6.4 O\*NET API
+### 6.5 O\*NET API
 
 Tenure uses the **O\*NET API** (U.S. Department of Labor) to match your RIASEC career interest scores with suitable careers and provide job outlook data.
 
@@ -620,7 +641,7 @@ Tenure uses the **O\*NET API** (U.S. Department of Labor) to match your RIASEC c
 - This is **anonymous data**—no personal identifiers are sent.
 - O\*NET is a public government database with no data retention or privacy concerns.
 
-### 6.5 Payment Processors
+### 6.6 Payment Processors
 
 We use **Stripe** (and optionally PayPal) to process payments. When you purchase a subscription or join Loco TACo Club:
 

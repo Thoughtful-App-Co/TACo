@@ -261,7 +261,7 @@ Browser LocalStorage for persistence:
 ### Vite Build
 
 ```bash
-npm run build  # Generates optimized dist/
+pnpm run build  # Generates optimized dist/
 ```
 
 **Output**:

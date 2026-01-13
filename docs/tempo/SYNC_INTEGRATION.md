@@ -100,7 +100,7 @@ export const tempoSchema = createZeroSchema({
 ### 1. Install Zero
 
 ```bash
-npm install @rocicorp/zero
+pnpm install @rocicorp/zero
 ```
 
 ### 2. Initialize Zero Client

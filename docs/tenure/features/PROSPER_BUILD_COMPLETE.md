@@ -98,7 +98,7 @@ http://localhost:3002/prosper
 # Restart dev server
 cd /home/shupp-dev/daemon/dev/TACo
 pkill -f vite  # Kill existing vite
-npm run dev    # Restart
+pnpm run dev    # Restart
 ```
 
 Then navigate to the port shown in terminal + `/prosper`

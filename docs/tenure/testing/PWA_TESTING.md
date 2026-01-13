@@ -131,7 +131,7 @@ public/
 1. Generate VAPID keys:
 
    ```bash
-   npx web-push generate-vapid-keys
+   pnpm exec web-push generate-vapid-keys
    ```
 
 2. Add to `.dev.vars`:

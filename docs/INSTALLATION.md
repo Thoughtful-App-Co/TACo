@@ -17,7 +17,7 @@ Ensure you have Node.js 18+:
 
 ```bash
 node --version  # Should be v18.0.0 or higher
-npm --version   # Should be 9.0.0 or higher
+pnpm --version  # Should be 9.0.0 or higher
 ```
 
 If not installed, download from [nodejs.org](https://nodejs.org/)
@@ -25,7 +25,7 @@ If not installed, download from [nodejs.org](https://nodejs.org/)
 ### 3. Install Dependencies
 
 ```bash
-npm install
+pnpm install
 ```
 
 This installs all packages including:
@@ -39,7 +39,7 @@ This installs all packages including:
 ### 4. Setup Git Hooks
 
 ```bash
-npx husky install
+pnpm exec husky install
 ```
 
 This enables pre-commit hooks that automatically:
@@ -51,7 +51,7 @@ This enables pre-commit hooks that automatically:
 ### 5. Start Development Server
 
 ```bash
-npm run dev
+pnpm run dev
 ```
 
 Visit `http://localhost:5173` to see the app running.
@@ -97,7 +97,7 @@ For deployment to Cloudflare Pages, see [Environment Variables](../deployment/EN
 Run the following to verify everything is set up correctly:
 
 ```bash
-npm run validate
+pnpm run validate
 ```
 
 This runs:
@@ -111,19 +111,19 @@ All should pass without errors.
 
 ## Common Issues & Troubleshooting
 
-### Issue: `npm install` fails
+### Issue: `pnpm install` fails
 
 **Solution:**
 
 ```bash
-# Clear npm cache
-npm cache clean --force
+# Clear pnpm cache
+pnpm store prune
 
 # Delete node_modules and lock file
-rm -rf node_modules package-lock.json
+rm -rf node_modules pnpm-lock.yaml
 
 # Reinstall
-npm install
+pnpm install
 ```
 
 ### Issue: Port 5173 is already in use
@@ -132,7 +132,7 @@ npm install
 
 ```bash
 # Use a different port
-npm run dev -- --port 3000
+pnpm run dev -- --port 3000
 ```
 
 ### Issue: Git hooks not working
@@ -141,8 +141,8 @@ npm run dev -- --port 3000
 
 ```bash
 # Reinstall Husky
-npx husky uninstall
-npx husky install
+pnpm exec husky uninstall
+pnpm exec husky install
 ```
 
 ### Issue: ESLint or Prettier not working in editor
@@ -175,4 +175,4 @@ npx husky install
 
 ---
 
-**Ready to code?** Start with `npm run dev` and navigate to `http://localhost:5173`!
+**Ready to code?** Start with `pnpm run dev` and navigate to `http://localhost:5173`!

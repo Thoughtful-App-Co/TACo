@@ -110,12 +110,20 @@ https://thoughtfulappco.com/api/stripe/webhook
 import Stripe from 'stripe';
 
 interface Env {
-  STRIPE_SECRET_KEY: string;
+  STRIPE_SECRET_KEY_TEST: string;
+  STRIPE_SECRET_KEY_LIVE: string;
+  TACO_ENV: string;
   DB: D1Database;
 }
 
 export async function onRequestPost(context: { request: Request; env: Env }) {
-  const stripe = new Stripe(context.env.STRIPE_SECRET_KEY, {
+  // Select the correct Stripe key based on environment
+  const stripeKey =
+    context.env.TACO_ENV === 'production'
+      ? context.env.STRIPE_SECRET_KEY_LIVE
+      : context.env.STRIPE_SECRET_KEY_TEST;
+
+  const stripe = new Stripe(stripeKey, {
     apiVersion: '2023-10-16',
   });
 
@@ -177,17 +185,28 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
 // functions/api/stripe/webhook.ts
 
 export async function onRequestPost(context: { request: Request; env: Env }) {
-  const stripe = new Stripe(context.env.STRIPE_SECRET_KEY, {
+  // Select the correct Stripe key based on environment
+  const stripeKey =
+    context.env.TACO_ENV === 'production'
+      ? context.env.STRIPE_SECRET_KEY_LIVE
+      : context.env.STRIPE_SECRET_KEY_TEST;
+
+  const stripe = new Stripe(stripeKey, {
     apiVersion: '2023-10-16',
   });
 
-  // Verify webhook signature
+  // Verify webhook signature - also environment-specific
+  const webhookSecret =
+    context.env.TACO_ENV === 'production'
+      ? context.env.STRIPE_WEBHOOK_SECRET_LIVE
+      : context.env.STRIPE_WEBHOOK_SECRET_TEST;
+
   const sig = context.request.headers.get('stripe-signature')!;
   const body = await context.request.text();
 
   let event: Stripe.Event;
   try {
-    event = stripe.webhooks.constructEvent(body, sig, context.env.STRIPE_WEBHOOK_SECRET);
+    event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
   } catch (err) {
     return new Response(`Webhook Error: ${err.message}`, { status: 400 });
   }
@@ -302,7 +321,11 @@ export async function recordMutationUsage(userId: string, costCents: number, env
 
   if (!subscription) return;
 
-  const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
+  // Select the correct Stripe key based on environment
+  const stripeKey =
+    env.TACO_ENV === 'production' ? env.STRIPE_SECRET_KEY_LIVE : env.STRIPE_SECRET_KEY_TEST;
+
+  const stripe = new Stripe(stripeKey, {
     apiVersion: '2023-10-16',
   });
 
@@ -371,7 +394,13 @@ export async function checkMutationQuota(
 // functions/api/billing/portal.ts
 
 export async function onRequestPost(context: { request: Request; env: Env }) {
-  const stripe = new Stripe(context.env.STRIPE_SECRET_KEY, {
+  // Select the correct Stripe key based on environment
+  const stripeKey =
+    context.env.TACO_ENV === 'production'
+      ? context.env.STRIPE_SECRET_KEY_LIVE
+      : context.env.STRIPE_SECRET_KEY_TEST;
+
+  const stripe = new Stripe(stripeKey, {
     apiVersion: '2023-10-16',
   });
 
@@ -556,14 +585,82 @@ describe('Billing', () => {
 
 ## Security Checklist
 
-- [ ] Webhook signature verification
-- [ ] API key stored in Cloudflare secrets
+- [ ] Webhook signature verification (using correct LIVE/TEST secret)
+- [ ] API keys stored in Cloudflare secrets (both TEST and LIVE)
 - [ ] HTTPS only for all endpoints
 - [ ] User authentication before checkout
 - [ ] Validate subscription ownership before granting access
 - [ ] Rate limit checkout endpoints
 - [ ] Log all billing events
 - [ ] Monitor for fraudulent activity
+- [ ] Verify correct environment selection (TACO_ENV)
+- [ ] Never mix test and live keys in the same environment
+
+## Secret Management
+
+### Stripe Secret Naming Pattern
+
+**Why TEST/LIVE suffix?** Cloudflare Pages secrets are shared between preview and production deployments. We use environment-specific suffixes and select at runtime:
+
+```typescript
+// This pattern is used throughout all billing code
+const stripeKey =
+  context.env.TACO_ENV === 'production'
+    ? context.env.STRIPE_SECRET_KEY_LIVE
+    : context.env.STRIPE_SECRET_KEY_TEST;
+
+const webhookSecret =
+  context.env.TACO_ENV === 'production'
+    ? context.env.STRIPE_WEBHOOK_SECRET_LIVE
+    : context.env.STRIPE_WEBHOOK_SECRET_TEST;
+```
+
+### Required Secrets
+
+**Environment-Specific Secrets (set ALL of these):**
+
+- `STRIPE_SECRET_KEY_TEST` - Test mode secret key (sk_test_xxx)
+- `STRIPE_SECRET_KEY_LIVE` - Live mode secret key (sk_live_xxx)
+- `STRIPE_WEBHOOK_SECRET_TEST` - Test webhook signing secret (whsec_test_xxx)
+- `STRIPE_WEBHOOK_SECRET_LIVE` - Live webhook signing secret (whsec_live_xxx)
+
+**Client-Side Keys (set in environment variables):**
+
+- `VITE_STRIPE_PUBLISHABLE_KEY` - For Stripe.js (pk_test_xxx or pk_live_xxx)
+
+### Setting Secrets
+
+```bash
+# Cloudflare Dashboard or wrangler CLI
+wrangler secret put STRIPE_SECRET_KEY_TEST
+wrangler secret put STRIPE_SECRET_KEY_LIVE
+wrangler secret put STRIPE_WEBHOOK_SECRET_TEST
+wrangler secret put STRIPE_WEBHOOK_SECRET_LIVE
+
+# Local development (.dev.vars)
+STRIPE_SECRET_KEY_TEST=sk_test_xxx
+STRIPE_SECRET_KEY_LIVE=sk_live_xxx
+STRIPE_WEBHOOK_SECRET_TEST=whsec_test_xxx
+STRIPE_WEBHOOK_SECRET_LIVE=whsec_live_xxx
+```
+
+### Webhook Endpoints
+
+You need TWO separate webhook endpoints in Stripe:
+
+**Test Mode Webhook:**
+
+- URL: `https://thoughtfulappco.com/api/stripe/webhook`
+- Secret: `whsec_test_xxx` → Store as `STRIPE_WEBHOOK_SECRET_TEST`
+- Used for: Preview deployments (`TACO_ENV=preview` or `staging`)
+
+**Live Mode Webhook:**
+
+- URL: `https://thoughtfulappco.com/api/stripe/webhook` (same URL!)
+- Secret: `whsec_live_xxx` → Store as `STRIPE_WEBHOOK_SECRET_LIVE`
+- Used for: Production deployment (`TACO_ENV=production`)
+
+The same endpoint handles both, but selects the correct secret based on `TACO_ENV`.
 
 ---
 

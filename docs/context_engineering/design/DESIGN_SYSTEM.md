@@ -193,6 +193,96 @@ import { Portal } from 'solid-js/web';
 --duration-slow: 500ms;
 ```
 
+### Icon System
+
+**Company-Level Icon Standard: Doodle Icons**
+
+For **all Thoughtful App Co. company-level features** (admin, user management, billing, auth, marketing pages, investors page, footer, etc.), use the **Doodle Icons** system.
+
+**Implementation:** `src/components/common/DoodleIcons.tsx`
+
+**Design Philosophy:**
+
+- Hand-drawn, sketchy aesthetic that reflects TACo's human-first, artistic approach
+- Consistent stroke width (1.5px) with organic, imperfect lines
+- Subtle accent strokes for authenticity
+- Inspired by [Khushmeen's Doodle Icons](https://khushmeen.com/icons.html)
+
+**Available Icons:**
+
+| Icon              | Use Case                                  | Typical Color      |
+| ----------------- | ----------------------------------------- | ------------------ |
+| `DoodleHeart`     | Human Good, Community, Love               | `#FF6B6B` (Coral)  |
+| `DoodleShield`    | Local-First, Privacy, Security            | `#4ECDC4` (Teal)   |
+| `DoodleSparkle`   | Anti-Dark Patterns, Good Design, Magic    | `#FFE66D` (Yellow) |
+| `DoodlePeople`    | Open Contribution, Community, Team        | `#9333EA` (Purple) |
+| `DoodleLightbulb` | Ideas, Innovation, Learning               | `#4ECDC4` (Teal)   |
+| `DoodleRocket`    | Launch, Progress, Growth                  | `#FFE66D` (Yellow) |
+| `DoodlePhone`     | Phone as Server, Mobile-First             | `#4ECDC4` (Teal)   |
+| `DoodlePalette`   | Design, Artistic, Creativity              | `#FF6B6B` (Coral)  |
+| `DoodleCompass`   | Blue Ocean, Direction, Strategy           | `#4ECDC4` (Teal)   |
+| `DoodleHandshake` | Partnership, Sponsors, Collaboration      | `#FF6B6B` (Coral)  |
+| `DoodleCode`      | Open Source, Development                  | `#9333EA` (Purple) |
+| `DoodleLeaf`      | Growth, Natural Lifecycle, Sustainability | `#10B981` (Green)  |
+
+**Usage:**
+
+```tsx
+import { DoodleHeart, DoodleShield } from '@/components/common/DoodleIcons';
+
+// Standard usage
+<DoodleHeart size={24} color="#FF6B6B" />
+
+// With custom props
+<DoodleShield
+  size={32}
+  color="#4ECDC4"
+  style={{ opacity: 0.8 }}
+  class="custom-class"
+/>
+```
+
+**Props Interface:**
+
+- `size?: number` - Icon dimensions (default: 24)
+- `color?: string` - Stroke color (default: currentColor)
+- `style?: JSX.CSSProperties` - Custom inline styles
+- `class?: string` - CSS class name
+
+**Where to Use:**
+
+- ✅ Homepage footer (Philosophy section)
+- ✅ Investors page (Key Initiatives)
+- ✅ Pricing page (company features)
+- ✅ Auth flows (login, signup, verification)
+  - `LoginModal`: DoodleShield for security, DoodleSparkle for "magic link" success
+  - `Paywall`: DoodleRocket for upgrades, DoodleShield for backup/sync
+- ✅ User account/billing pages
+- ✅ Admin panels
+- ✅ Marketing/landing pages
+- ✅ Documentation headers
+
+**Where NOT to Use:**
+
+- ❌ Individual app interfaces (Tempo, Tenure, Nurture, etc. have their own icon systems)
+- ❌ App-specific features (use app's design system icons)
+
+**Color Palette:**
+
+Match TACo brand colors:
+
+- **Coral** `#FF6B6B` - Warm, human, community
+- **Teal** `#4ECDC4` - Trust, security, technology
+- **Yellow** `#FFE66D` - Innovation, energy, creativity
+- **Purple** `#9333EA` - Premium, collaboration, open source
+- **Green** `#10B981` - Growth, sustainability, success
+
+**Accessibility:**
+
+- Minimum size: 18px for UI elements, 24px for prominent features
+- Always provide meaningful context (aria-label or visible text)
+- Ensure sufficient color contrast (4.5:1 minimum)
+
 ---
 
 ## 3. TEMPO - Premium Dark Time-Management System

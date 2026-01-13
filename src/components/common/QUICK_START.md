@@ -1,9 +1,11 @@
 # RegionUnavailableMessage - Quick Start
 
 ## Installation
+
 No installation needed - component is already in your codebase!
 
 ## Import
+
 ```tsx
 import { RegionUnavailableMessage } from '@/components/common';
 ```
@@ -11,38 +13,29 @@ import { RegionUnavailableMessage } from '@/components/common';
 ## Basic Usage
 
 ### Full Display
+
 ```tsx
-<RegionUnavailableMessage 
-  countryCode="CA" 
-  countryName="Canada" 
-/>
+<RegionUnavailableMessage countryCode="CA" countryName="Canada" />
 ```
 
 ### Compact Display
+
 ```tsx
-<RegionUnavailableMessage 
-  countryCode="GB" 
-  countryName="United Kingdom" 
-  compact 
-/>
+<RegionUnavailableMessage countryCode="GB" countryName="United Kingdom" compact />
 ```
 
 ## Common Patterns
 
 ### 1. Feature Gate
+
 ```tsx
 import { isLaborMarketAvailable, RegionUnavailableMessage } from '@/components/common';
 
 function LaborMarketFeature({ userCountry, countryName }) {
   return (
-    <Show 
+    <Show
       when={isLaborMarketAvailable(userCountry)}
-      fallback={
-        <RegionUnavailableMessage 
-          countryCode={userCountry}
-          countryName={countryName}
-        />
-      }
+      fallback={<RegionUnavailableMessage countryCode={userCountry} countryName={countryName} />}
     >
       <LaborMarketWidget />
     </Show>
@@ -51,17 +44,14 @@ function LaborMarketFeature({ userCountry, countryName }) {
 ```
 
 ### 2. Inline Notice
+
 ```tsx
 function SalarySection({ region }) {
   return (
     <div>
       <h4>Salary Insights</h4>
       <Show when={!isLaborMarketAvailable(region.code)}>
-        <RegionUnavailableMessage 
-          countryCode={region.code}
-          countryName={region.name}
-          compact
-        />
+        <RegionUnavailableMessage countryCode={region.code} countryName={region.name} compact />
       </Show>
       {/* ... */}
     </div>
@@ -70,8 +60,9 @@ function SalarySection({ region }) {
 ```
 
 ### 3. Custom Message
+
 ```tsx
-<RegionUnavailableMessage 
+<RegionUnavailableMessage
   countryCode="DE"
   countryName="Germany"
   customMessage="Market insights coming to Europe in Q2 2026!"
@@ -81,14 +72,14 @@ function SalarySection({ region }) {
 
 ## Props Reference
 
-| Prop | Type | Required | Default |
-|------|------|----------|---------|
-| `countryCode` | string | ✅ | - |
-| `countryName` | string | ✅ | - |
-| `compact` | boolean | ❌ | `false` |
-| `customMessage` | string | ❌ | - |
-| `showSupportedRegions` | boolean | ❌ | `true` |
-| `class` | string | ❌ | - |
+| Prop                   | Type    | Required | Default |
+| ---------------------- | ------- | -------- | ------- |
+| `countryCode`          | string  | ✅       | -       |
+| `countryName`          | string  | ✅       | -       |
+| `compact`              | boolean | ❌       | `false` |
+| `customMessage`        | string  | ❌       | -       |
+| `showSupportedRegions` | boolean | ❌       | `true`  |
+| `class`                | string  | ❌       | -       |
 
 ## Utility Functions
 

@@ -20,7 +20,7 @@ Instructions for deploying Tempo to Cloudflare Pages.
 5. Choose "tempo" repository
 6. Configure build settings:
    - **Framework preset**: None (custom)
-   - **Build command**: `npm run build`
+   - **Build command**: `pnpm run build`
    - **Build output directory**: `dist`
 
 ### 2. Configure GitHub Secrets
@@ -50,10 +50,10 @@ If needed, deploy manually:
 
 ```bash
 # Build the project
-npm run build
+pnpm run build
 
 # Install Wrangler
-npm install -g @cloudflare/wrangler
+pnpm add -g @cloudflare/wrangler
 
 # Deploy
 wrangler pages deploy dist \
@@ -103,7 +103,7 @@ If deployment has issues:
 ### Build Fails
 
 1. Check GitHub Actions logs for errors
-2. Run `npm run validate` locally
+2. Run `pnpm run validate` locally
 3. Fix issues and push again
 
 ### Site Not Loading
@@ -116,9 +116,9 @@ If deployment has issues:
 ### TypeScript Errors in CI
 
 ```bash
-npm run type-check
-npm run lint
-npm run build
+pnpm run type-check
+pnpm run lint
+pnpm run build
 ```
 
 ## Performance

@@ -17,7 +17,7 @@ The Tempo app uses Cloudflare Pages Functions for API endpoints. To develop thes
 Before starting the dev servers, build the site once:
 
 ```bash
-npm run build
+pnpm run build
 ```
 
 This creates the `dist/` folder with your static site and copies the `functions/` directory.
@@ -27,7 +27,7 @@ This creates the `dist/` folder with your static site and copies the `functions/
 Run both servers with a single command:
 
 ```bash
-npm run dev
+pnpm run dev
 ```
 
 This starts:
@@ -107,10 +107,10 @@ ANTHROPIC_API_KEY=sk-ant-your-key-here
 ### Making Changes to Functions
 
 1. Edit files in `functions/`
-2. Run `npm run build` to copy changes to `dist/functions/`
+2. Run `pnpm run build` to copy changes to `dist/functions/`
 3. Wrangler will automatically reload
 
-**Tip:** You may need to restart `npm run dev` after major function changes.
+**Tip:** You may need to restart `pnpm run dev` after major function changes.
 
 ### Making Changes to Frontend
 
@@ -146,14 +146,14 @@ If port 3000 or 8787 is in use:
 lsof -ti:3000 | xargs kill -9
 
 # Or specify different port
-npm run dev:vite -- --port 3001
+pnpm run dev:vite -- --port 3001
 ```
 
 ### Functions Not Found (404)
 
-1. Ensure you ran `npm run build` first
+1. Ensure you ran `pnpm run build` first
 2. Check that `dist/functions/` exists
-3. Restart `npm run dev`
+3. Restart `pnpm run dev`
 
 ### API Key Not Working
 
@@ -168,7 +168,7 @@ npm run dev:vite -- --port 3001
 rm -rf .wrangler/
 
 # Reinstall Wrangler
-npm install -D wrangler
+pnpm install -D wrangler
 ```
 
 ### CORS Errors
@@ -184,10 +184,10 @@ If you prefer separate terminals:
 
 ```bash
 # Terminal 1 - Frontend
-npm run dev:vite
+pnpm run dev:vite
 
 # Terminal 2 - API Functions
-npm run dev:wrangler
+pnpm run dev:wrangler
 ```
 
 ## Environment Variables
@@ -248,4 +248,4 @@ If you encounter issues:
 
 ---
 
-**Ready to code?** Run `npm run dev` and start building! 🚀
+**Ready to code?** Run `pnpm run dev` and start building! 🚀

@@ -16,7 +16,7 @@ This project uses a comprehensive linting and continuous integration/continuous 
 ### Prerequisites
 
 - Node.js 18+ installed
-- npm or yarn package manager
+- pnpm package manager
 - Git configured with proper credentials
 
 ### Installation
@@ -24,13 +24,13 @@ This project uses a comprehensive linting and continuous integration/continuous 
 1. **Install dependencies:**
 
    ```bash
-   npm install
+   pnpm install
    ```
 
 2. **Initialize Git hooks:**
 
    ```bash
-   npx husky install
+   pnpm exec husky install
    ```
 
    This sets up pre-commit hooks that automatically lint and format code before commits.
@@ -42,13 +42,13 @@ This project uses a comprehensive linting and continuous integration/continuous 
 **Run ESLint to check for code quality issues:**
 
 ```bash
-npm run lint
+pnpm run lint
 ```
 
 **Automatically fix linting issues:**
 
 ```bash
-npm run lint:fix
+pnpm run lint:fix
 ```
 
 ### Code Formatting
@@ -56,13 +56,13 @@ npm run lint:fix
 **Format code with Prettier:**
 
 ```bash
-npm run format
+pnpm run format
 ```
 
 **Check if code is properly formatted (without modifying):**
 
 ```bash
-npm run format:check
+pnpm run format:check
 ```
 
 ### Type Checking
@@ -70,7 +70,7 @@ npm run format:check
 **Run TypeScript type checker:**
 
 ```bash
-npm run type-check
+pnpm run type-check
 ```
 
 ### Full Validation
@@ -78,7 +78,7 @@ npm run type-check
 **Run all checks (type-check, lint, format-check, and build):**
 
 ```bash
-npm run validate
+pnpm run validate
 ```
 
 This is the recommended command to run before pushing code.
@@ -229,19 +229,19 @@ Check workflow status in the GitHub Actions tab:
 1. **Run local validation:**
 
    ```bash
-   npm run validate
+   pnpm run validate
    ```
 
 2. **Fix any issues:**
 
    ```bash
-   npm run lint:fix
-   npm run format
+   pnpm run lint:fix
+   pnpm run format
    ```
 
 3. **Verify type safety:**
    ```bash
-   npm run type-check
+   pnpm run type-check
    ```
 
 ### Commit Messages
@@ -286,8 +286,8 @@ Closes #123
 **Solution:**
 
 ```bash
-npm install
-npm run lint:fix
+pnpm install
+pnpm run lint:fix
 ```
 
 **Problem:** ESLint rules are too strict
@@ -305,8 +305,8 @@ npm run lint:fix
 **Solution:** This is already handled by `eslint-config-prettier`. If issues persist:
 
 ```bash
-npm run format
-npm run lint:fix
+pnpm run format
+pnpm run lint:fix
 ```
 
 ### Pre-Commit Hook Issues
@@ -316,8 +316,8 @@ npm run lint:fix
 **Solution:** Fix the issues first, then commit:
 
 ```bash
-npm run lint:fix
-npm run format
+pnpm run lint:fix
+pnpm run format
 git add .
 git commit -m "message"
 ```
@@ -329,7 +329,7 @@ git commit -m "message"
 **Solution:**
 
 1. Check the workflow logs in GitHub Actions tab
-2. Run `npm run validate` locally to reproduce
+2. Run `pnpm run validate` locally to reproduce
 3. Fix issues locally
 4. Push changes to trigger workflow again
 
@@ -340,12 +340,12 @@ git commit -m "message"
 For faster linting during development, lint only changed files:
 
 ```bash
-npm run lint -- --fix src/components/tempo/TempoApp.tsx
+pnpm run lint -- --fix src/components/tempo/TempoApp.tsx
 ```
 
 ### Caching
 
-GitHub Actions automatically caches npm dependencies. To clear cache:
+GitHub Actions automatically caches pnpm dependencies. To clear cache:
 
 1. Go to Actions tab
 2. Click "Clear all caches"
@@ -390,7 +390,7 @@ Configure `.vscode/settings.json`:
 Keep linting tools updated:
 
 ```bash
-npm update eslint prettier @typescript-eslint/eslint-plugin @typescript-eslint/parser eslint-plugin-solid
+pnpm update eslint prettier @typescript-eslint/eslint-plugin @typescript-eslint/parser eslint-plugin-solid
 ```
 
 ### Adding New Rules
@@ -398,7 +398,7 @@ npm update eslint prettier @typescript-eslint/eslint-plugin @typescript-eslint/p
 To add new ESLint rules:
 
 1. Update `.eslintrc.json`
-2. Run `npm run lint:fix` to apply to existing code
+2. Run `pnpm run lint:fix` to apply to existing code
 3. Commit changes
 4. Document the change in this file
 
@@ -417,5 +417,5 @@ For issues or questions:
 
 1. Check this documentation
 2. Review GitHub Actions logs
-3. Run `npm run validate` locally
+3. Run `pnpm run validate` locally
 4. Consult team members or project maintainers
