@@ -14,6 +14,26 @@ const log = logger.create('SessionStorage');
 
 const SESSION_PREFIX = 'session-';
 
+/**
+ * Input type for creating a new session
+ */
+export interface CreateSessionInput {
+  date: string;
+  storyBlocks: Omit<StoryBlock, 'id' | 'progress'>[];
+  totalDuration?: number;
+  status?: SessionStatus;
+}
+
+/**
+ * Input type for updating session metadata
+ */
+export interface UpdateSessionInput {
+  date?: string;
+  storyBlocks?: StoryBlock[];
+  totalDuration?: number;
+  status?: SessionStatus;
+}
+
 export class SessionStorageService {
   /**
    * Get a session by date
@@ -584,6 +604,316 @@ export class SessionStorageService {
       log.error(`Error unarchiving session for date: ${date}:`, error);
       return false;
     }
+  }
+
+  // ============================================================================
+  // NEW CRUD METHODS
+  // ============================================================================
+
+  /**
+   * Create a new session manually
+   *
+   * @param sessionData The input data for creating the session
+   * @returns The created session
+   * @throws Error if a session already exists for the given date
+   */
+  async createSession(sessionData: CreateSessionInput): Promise<Session> {
+    const formattedDate = this.formatDate(sessionData.date);
+    log.debug(`Creating new session for date: ${formattedDate}`);
+
+    // Validate that no session exists for the given date
+    const existingSession = await this.getSession(formattedDate);
+    if (existingSession) {
+      const errorMsg = `Session already exists for date: ${formattedDate}`;
+      log.error(errorMsg);
+      throw new Error(errorMsg);
+    }
+
+    // Generate IDs for story blocks if not provided and set default progress
+    const storyBlocks: StoryBlock[] = sessionData.storyBlocks.map((block, index) => ({
+      ...block,
+      id: this.generateStoryBlockId(index),
+      progress: 0,
+    }));
+
+    // Calculate total duration if not provided
+    const totalDuration =
+      sessionData.totalDuration ??
+      storyBlocks.reduce((sum, block) => sum + (block.totalDuration || 0), 0);
+
+    const newSession: Session = {
+      date: formattedDate,
+      storyBlocks,
+      status: sessionData.status ?? 'planned',
+      totalDuration,
+      lastUpdated: new Date().toISOString(),
+    };
+
+    await this.saveSession(formattedDate, newSession);
+    log.info(`Successfully created session for date: ${formattedDate}`);
+
+    return newSession;
+  }
+
+  /**
+   * Update session metadata and structure
+   *
+   * @param date The date of the session to update
+   * @param updates The updates to apply
+   * @returns The updated session or null if not found
+   */
+  async updateSessionMetadata(date: string, updates: UpdateSessionInput): Promise<Session | null> {
+    const formattedDate = this.formatDate(date);
+    log.debug(`Updating session metadata for date: ${formattedDate}`);
+
+    const existingSession = await this.getSession(formattedDate);
+    if (!existingSession) {
+      log.error(`No session found for date: ${formattedDate}`);
+      return null;
+    }
+
+    // Check if date is being changed
+    if (updates.date && updates.date !== formattedDate) {
+      const newFormattedDate = this.formatDate(updates.date);
+      log.debug(`Date change requested: ${formattedDate} -> ${newFormattedDate}`);
+
+      // Check for conflict with target date
+      const conflictSession = await this.getSession(newFormattedDate);
+      if (conflictSession) {
+        const errorMsg = `Cannot move session: target date ${newFormattedDate} already has a session`;
+        log.error(errorMsg);
+        throw new Error(errorMsg);
+      }
+
+      // Create updated session with new date
+      const updatedSession: Session = {
+        ...existingSession,
+        date: newFormattedDate,
+        storyBlocks: updates.storyBlocks ?? existingSession.storyBlocks,
+        totalDuration: updates.totalDuration ?? existingSession.totalDuration,
+        status: updates.status ?? existingSession.status,
+        lastUpdated: new Date().toISOString(),
+      };
+
+      // Delete old session and save new one
+      await this.permanentlyDeleteSession(formattedDate);
+      await this.saveSession(newFormattedDate, updatedSession);
+
+      log.info(`Successfully moved session from ${formattedDate} to ${newFormattedDate}`);
+      return updatedSession;
+    }
+
+    // Update without date change
+    const updatedSession: Session = {
+      ...existingSession,
+      storyBlocks: updates.storyBlocks ?? existingSession.storyBlocks,
+      totalDuration: updates.totalDuration ?? existingSession.totalDuration,
+      status: updates.status ?? existingSession.status,
+      lastUpdated: new Date().toISOString(),
+    };
+
+    await this.saveSession(formattedDate, updatedSession);
+    log.info(`Successfully updated session metadata for date: ${formattedDate}`);
+
+    return updatedSession;
+  }
+
+  /**
+   * Clone a session to a new date
+   *
+   * @param sourceDate The date of the session to clone
+   * @param targetDate The target date for the cloned session
+   * @param resetProgress If true, resets all statuses to 'todo' and progress to 0
+   * @returns The duplicated session or null if source not found
+   */
+  async duplicateSession(
+    sourceDate: string,
+    targetDate: string,
+    resetProgress: boolean = false
+  ): Promise<Session | null> {
+    const formattedSourceDate = this.formatDate(sourceDate);
+    const formattedTargetDate = this.formatDate(targetDate);
+    log.debug(
+      `Duplicating session from ${formattedSourceDate} to ${formattedTargetDate}, resetProgress: ${resetProgress}`
+    );
+
+    // Get source session
+    const sourceSession = await this.getSession(formattedSourceDate);
+    if (!sourceSession) {
+      log.error(`No source session found for date: ${formattedSourceDate}`);
+      return null;
+    }
+
+    // Check for conflict with target date
+    const existingTarget = await this.getSession(formattedTargetDate);
+    if (existingTarget) {
+      const errorMsg = `Cannot duplicate: target date ${formattedTargetDate} already has a session`;
+      log.error(errorMsg);
+      throw new Error(errorMsg);
+    }
+
+    // Clone story blocks with new IDs
+    const clonedStoryBlocks: StoryBlock[] = sourceSession.storyBlocks.map((block, index) => {
+      const clonedBlock: StoryBlock = {
+        ...block,
+        id: this.generateStoryBlockId(index),
+        timeBoxes: block.timeBoxes.map((timeBox) => ({
+          ...timeBox,
+          tasks: timeBox.tasks?.map((task) => ({ ...task })),
+        })),
+        taskIds: [...block.taskIds],
+      };
+
+      // Reset progress if requested
+      if (resetProgress) {
+        clonedBlock.progress = 0;
+        clonedBlock.timeBoxes = clonedBlock.timeBoxes.map((timeBox) => ({
+          ...timeBox,
+          status: 'todo' as TimeBoxStatus,
+          actualDuration: undefined,
+          startTime: undefined,
+          tasks: timeBox.tasks?.map((task) => ({
+            ...task,
+            status: 'todo' as TimeBoxStatus,
+          })),
+        }));
+      }
+
+      return clonedBlock;
+    });
+
+    const duplicatedSession: Session = {
+      date: formattedTargetDate,
+      storyBlocks: clonedStoryBlocks,
+      status: resetProgress ? 'planned' : sourceSession.status,
+      totalDuration: sourceSession.totalDuration,
+      lastUpdated: new Date().toISOString(),
+    };
+
+    await this.saveSession(formattedTargetDate, duplicatedSession);
+    log.info(
+      `Successfully duplicated session from ${formattedSourceDate} to ${formattedTargetDate}`
+    );
+
+    return duplicatedSession;
+  }
+
+  /**
+   * Permanently delete a session from localStorage
+   * This is a hard delete that removes the session completely, unlike archiveSession which keeps the data
+   *
+   * @param date The date of the session to delete
+   * @returns True if deletion was successful, false otherwise
+   */
+  async permanentlyDeleteSession(date: string): Promise<boolean> {
+    try {
+      const formattedDate = this.formatDate(date);
+      log.debug(`Permanently deleting session for date: ${formattedDate}`);
+
+      // Check if session exists
+      const existingSession = await this.getSession(formattedDate);
+      if (!existingSession) {
+        log.warn(`No session found for date: ${formattedDate}, nothing to delete`);
+        return false;
+      }
+
+      // Remove from localStorage
+      const key = this.getKey(formattedDate);
+      localStorage.removeItem(key);
+
+      // Also try to delete via sessionStorage API to ensure consistency
+      await this.deleteSession(formattedDate);
+
+      // Verify deletion
+      const verifySession = await sessionStorage.getSession(formattedDate);
+      if (verifySession) {
+        log.error(`Failed to verify session deletion for date: ${formattedDate}`);
+        return false;
+      }
+
+      log.info(`Successfully permanently deleted session for date: ${formattedDate}`);
+      return true;
+    } catch (error) {
+      log.error(`Error permanently deleting session for date: ${date}:`, error);
+      return false;
+    }
+  }
+
+  /**
+   * Get all sessions filtered by status
+   *
+   * @param status The status to filter by
+   * @returns Array of sessions with the specified status
+   */
+  async getSessionsByStatus(status: SessionStatus): Promise<Session[]> {
+    log.debug(`Getting sessions with status: ${status}`);
+
+    const allSessions = await this.getAllSessions();
+    const filteredSessions = allSessions.filter((session) => session.status === status);
+
+    log.debug(`Found ${filteredSessions.length} sessions with status: ${status}`);
+    return filteredSessions;
+  }
+
+  /**
+   * Get all sessions within a date range (inclusive)
+   *
+   * @param startDate The start date of the range (YYYY-MM-DD)
+   * @param endDate The end date of the range (YYYY-MM-DD)
+   * @returns Array of sessions within the date range, sorted by date
+   */
+  async getSessionsByDateRange(startDate: string, endDate: string): Promise<Session[]> {
+    const formattedStartDate = this.formatDate(startDate);
+    const formattedEndDate = this.formatDate(endDate);
+    log.debug(`Getting sessions from ${formattedStartDate} to ${formattedEndDate}`);
+
+    const allSessions = await this.getAllSessions();
+    const filteredSessions = allSessions.filter((session) => {
+      const sessionDate = session.date;
+      return sessionDate >= formattedStartDate && sessionDate <= formattedEndDate;
+    });
+
+    // Sort by date ascending
+    filteredSessions.sort((a, b) => a.date.localeCompare(b.date));
+
+    log.debug(
+      `Found ${filteredSessions.length} sessions between ${formattedStartDate} and ${formattedEndDate}`
+    );
+    return filteredSessions;
+  }
+
+  /**
+   * Check if a session exists for a specific date
+   *
+   * @param date The date to check
+   * @returns True if a session exists for the date, false otherwise
+   */
+  async sessionExistsForDate(date: string): Promise<boolean> {
+    const formattedDate = this.formatDate(date);
+    log.debug(`Checking if session exists for date: ${formattedDate}`);
+
+    try {
+      const session = await sessionStorage.getSession(formattedDate);
+      const exists = session !== null;
+      log.debug(`Session exists for ${formattedDate}: ${exists}`);
+      return exists;
+    } catch (error) {
+      log.error(`Error checking session existence for date: ${formattedDate}`, error);
+      return false;
+    }
+  }
+
+  // ============================================================================
+  // PRIVATE HELPER METHODS
+  // ============================================================================
+
+  /**
+   * Generate a unique ID for a story block
+   */
+  private generateStoryBlockId(index: number): string {
+    const timestamp = Date.now();
+    const random = Math.random().toString(36).substring(2, 9);
+    return `story-${timestamp}-${index}-${random}`;
   }
 
   /**

@@ -1,21 +1,11 @@
 import { Component, createSignal, For, Show, createEffect, createMemo } from 'solid-js';
 import { Portal } from 'solid-js/web';
-import {
-  X,
-  Plus,
-  Trash,
-  ArrowUp,
-  ArrowDown,
-  Clock,
-  CaretDown,
-  Warning,
-  Check,
-  DotsSixVertical,
-} from 'phosphor-solid';
+import { X, Plus, Trash, Clock, CaretDown, Warning, Check, XCircle } from 'phosphor-solid';
 import { format } from 'date-fns';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import { Card, CardContent } from '../../ui/card';
+import { ReorderButtons } from '../../ui/reorder-buttons';
 import { tempoDesign } from '../../theme/tempo-design';
 import { useSessionCrud } from '../hooks/useSessionCrud';
 import type { Session, StoryBlock, TimeBox, SessionStatus, TimeBoxType } from '../../lib/types';
@@ -36,25 +26,20 @@ const FOCUS_BLOCK_COLORS = [
   { accent: '#EC4899', bg: 'rgba(236, 72, 153, 0.08)', border: 'rgba(236, 72, 153, 0.2)' }, // Pink
 ];
 
-// Timebox type configuration
-const TIMEBOX_TYPE_CONFIG: Record<
-  TimeBoxType,
-  { color: string; bg: string; label: string; icon: string }
-> = {
-  work: { color: '#5E6AD2', bg: 'rgba(94, 106, 210, 0.15)', label: 'Work', icon: '🎯' },
+// Timebox type configuration (icons removed per AGENTS.md guidelines)
+const TIMEBOX_TYPE_CONFIG: Record<TimeBoxType, { color: string; bg: string; label: string }> = {
+  work: { color: '#5E6AD2', bg: 'rgba(94, 106, 210, 0.15)', label: 'Work' },
   'short-break': {
     color: '#F59E0B',
     bg: 'rgba(245, 158, 11, 0.15)',
     label: 'Short Break',
-    icon: '☕',
   },
   'long-break': {
     color: '#10B981',
     bg: 'rgba(16, 185, 129, 0.15)',
     label: 'Long Break',
-    icon: '🌿',
   },
-  debrief: { color: '#3B82F6', bg: 'rgba(59, 130, 246, 0.15)', label: 'Debrief', icon: '📝' },
+  debrief: { color: '#3B82F6', bg: 'rgba(59, 130, 246, 0.15)', label: 'Debrief' },
 };
 
 const SESSION_STATUSES: { value: SessionStatus; label: string; color: string }[] = [
@@ -699,7 +684,6 @@ export const SessionEditModal: Component<SessionEditModalProps> = (props) => {
                   gap: '8px',
                 }}
               >
-                <span style={{ 'font-size': '18px' }}>📦</span>
                 <h3
                   style={{
                     margin: 0,
@@ -798,36 +782,15 @@ export const SessionEditModal: Component<SessionEditModalProps> = (props) => {
 
                           {/* Action Buttons */}
                           <div style={{ display: 'flex', 'align-items': 'center', gap: '4px' }}>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => moveFocusBlock(block.id, 'up')}
-                              disabled={isLoading() || blockIndex() === 0}
-                              aria-label="Move focus block up"
-                              style={{
-                                height: '28px',
-                                width: '28px',
-                                padding: '4px',
-                                opacity: blockIndex() === 0 ? 0.3 : 1,
-                              }}
-                            >
-                              <ArrowUp size={14} />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => moveFocusBlock(block.id, 'down')}
-                              disabled={isLoading() || blockIndex() === focusBlocks().length - 1}
-                              aria-label="Move focus block down"
-                              style={{
-                                height: '28px',
-                                width: '28px',
-                                padding: '4px',
-                                opacity: blockIndex() === focusBlocks().length - 1 ? 0.3 : 1,
-                              }}
-                            >
-                              <ArrowDown size={14} />
-                            </Button>
+                            <ReorderButtons
+                              onMoveUp={() => moveFocusBlock(block.id, 'up')}
+                              onMoveDown={() => moveFocusBlock(block.id, 'down')}
+                              isFirst={blockIndex() === 0}
+                              isLast={blockIndex() === focusBlocks().length - 1}
+                              disabled={isLoading()}
+                              size="md"
+                              itemLabel="focus block"
+                            />
                             <Show when={focusBlocks().length > 1}>
                               <Button
                                 variant="ghost"
@@ -937,53 +900,16 @@ export const SessionEditModal: Component<SessionEditModalProps> = (props) => {
                                       'align-items': 'center',
                                     }}
                                   >
-                                    {/* Drag Handle / Reorder */}
-                                    <div
-                                      style={{
-                                        display: 'flex',
-                                        'flex-direction': 'column',
-                                        gap: '2px',
-                                      }}
-                                    >
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => moveTimebox(block.id, timebox.id, 'up')}
-                                        disabled={isLoading() || tbIndex() === 0}
-                                        aria-label="Move timebox up"
-                                        style={{
-                                          height: '18px',
-                                          width: '24px',
-                                          padding: '2px',
-                                          opacity: tbIndex() === 0 ? 0.3 : 1,
-                                        }}
-                                      >
-                                        <ArrowUp size={10} />
-                                      </Button>
-                                      <DotsSixVertical
-                                        size={14}
-                                        color={tempoDesign.colors.mutedForeground}
-                                        style={{ margin: '0 auto' }}
-                                      />
-                                      <Button
-                                        variant="ghost"
-                                        size="icon"
-                                        onClick={() => moveTimebox(block.id, timebox.id, 'down')}
-                                        disabled={
-                                          isLoading() || tbIndex() === block.timeboxes.length - 1
-                                        }
-                                        aria-label="Move timebox down"
-                                        style={{
-                                          height: '18px',
-                                          width: '24px',
-                                          padding: '2px',
-                                          opacity:
-                                            tbIndex() === block.timeboxes.length - 1 ? 0.3 : 1,
-                                        }}
-                                      >
-                                        <ArrowDown size={10} />
-                                      </Button>
-                                    </div>
+                                    {/* Reorder Controls */}
+                                    <ReorderButtons
+                                      onMoveUp={() => moveTimebox(block.id, timebox.id, 'up')}
+                                      onMoveDown={() => moveTimebox(block.id, timebox.id, 'down')}
+                                      isFirst={tbIndex() === 0}
+                                      isLast={tbIndex() === block.timeboxes.length - 1}
+                                      disabled={isLoading()}
+                                      size="sm"
+                                      itemLabel="timebox"
+                                    />
 
                                     {/* Type Select */}
                                     <div style={{ position: 'relative' }}>
@@ -997,7 +923,7 @@ export const SessionEditModal: Component<SessionEditModalProps> = (props) => {
                                         disabled={isLoading()}
                                         style={{
                                           width: '100%',
-                                          padding: '8px 36px 8px 32px',
+                                          padding: '8px 36px 8px 12px',
                                           'border-radius': tempoDesign.radius.md,
                                           border: `1px solid ${tempoDesign.colors.input}`,
                                           background: typeConfig.bg,
@@ -1009,23 +935,11 @@ export const SessionEditModal: Component<SessionEditModalProps> = (props) => {
                                           appearance: 'none',
                                         }}
                                       >
-                                        <option value="work">🎯 Work</option>
-                                        <option value="short-break">☕ Short Break</option>
-                                        <option value="long-break">🌿 Long Break</option>
-                                        <option value="debrief">📝 Debrief</option>
+                                        <option value="work">Work</option>
+                                        <option value="short-break">Short Break</option>
+                                        <option value="long-break">Long Break</option>
+                                        <option value="debrief">Debrief</option>
                                       </select>
-                                      <span
-                                        style={{
-                                          position: 'absolute',
-                                          left: '10px',
-                                          top: '50%',
-                                          transform: 'translateY(-50%)',
-                                          'font-size': '14px',
-                                          'pointer-events': 'none',
-                                        }}
-                                      >
-                                        {typeConfig.icon}
-                                      </span>
                                       <CaretDown
                                         size={12}
                                         style={{
@@ -1085,18 +999,30 @@ export const SessionEditModal: Component<SessionEditModalProps> = (props) => {
                                           background:
                                             timebox.status === 'completed'
                                               ? `${tempoDesign.colors.frog}20`
-                                              : `${tempoDesign.colors.amber[600]}20`,
+                                              : timebox.status === 'cancelled'
+                                                ? 'rgba(249, 115, 22, 0.2)'
+                                                : `${tempoDesign.colors.amber[600]}20`,
                                           color:
                                             timebox.status === 'completed'
                                               ? tempoDesign.colors.frog
-                                              : tempoDesign.colors.amber[600],
+                                              : timebox.status === 'cancelled'
+                                                ? '#F97316'
+                                                : tempoDesign.colors.amber[600],
                                           'font-size': '12px',
                                           'font-weight': tempoDesign.typography.weights.medium,
                                           'white-space': 'nowrap',
                                         }}
                                       >
-                                        <Check size={12} weight="bold" />
-                                        {timebox.status === 'completed' ? 'Done' : 'Active'}
+                                        {timebox.status === 'cancelled' ? (
+                                          <XCircle size={12} weight="bold" />
+                                        ) : (
+                                          <Check size={12} weight="bold" />
+                                        )}
+                                        {timebox.status === 'completed'
+                                          ? 'Done'
+                                          : timebox.status === 'cancelled'
+                                            ? 'Cancelled'
+                                            : 'Active'}
                                       </div>
                                     </Show>
                                     <Show when={!timebox.status || timebox.status === 'todo'}>

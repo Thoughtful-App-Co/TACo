@@ -17,12 +17,19 @@ tooltipStyles.textContent = `
 `;
 document.head.appendChild(tooltipStyles);
 
+export interface TabBadge {
+  count?: number;
+  dot?: boolean;
+  variant?: 'default' | 'warning' | 'urgent';
+}
+
 export interface Tab {
   id: string;
   label: string;
   icon?: Component;
   disabled?: boolean;
   tooltip?: string;
+  badge?: TabBadge;
 }
 
 interface TabsProps {
@@ -95,8 +102,60 @@ export const Tabs: Component<TabsProps> = (props) => {
                 setHoveredTab(null);
               }}
             >
-              <Show when={tab.icon}>{tab.icon && <tab.icon />}</Show>
+              <Show when={tab.icon}>
+                <Show when={tab.icon}>
+                  <tab.icon />
+                </Show>
+              </Show>
               {tab.label}
+              {/* Badge rendering */}
+              <Show when={tab.badge && (tab.badge.count !== undefined || tab.badge.dot)}>
+                <Show
+                  when={tab.badge?.count !== undefined && tab.badge.count > 0}
+                  fallback={
+                    <Show when={tab.badge?.dot}>
+                      <span
+                        style={{
+                          width: '8px',
+                          height: '8px',
+                          'border-radius': '50%',
+                          background:
+                            tab.badge?.variant === 'urgent'
+                              ? '#EF4444'
+                              : tab.badge?.variant === 'warning'
+                                ? '#F59E0B'
+                                : tempoDesign.colors.primary,
+                          'flex-shrink': 0,
+                        }}
+                      />
+                    </Show>
+                  }
+                >
+                  <span
+                    style={{
+                      'min-width': '18px',
+                      height: '18px',
+                      padding: '0 5px',
+                      'border-radius': '9999px',
+                      background:
+                        tab.badge?.variant === 'urgent'
+                          ? '#EF4444'
+                          : tab.badge?.variant === 'warning'
+                            ? '#F59E0B'
+                            : tempoDesign.colors.primary,
+                      color: '#FFFFFF',
+                      'font-size': '10px',
+                      'font-weight': '600',
+                      display: 'inline-flex',
+                      'align-items': 'center',
+                      'justify-content': 'center',
+                      'flex-shrink': 0,
+                    }}
+                  >
+                    {tab.badge!.count! > 99 ? '99+' : tab.badge!.count}
+                  </span>
+                </Show>
+              </Show>
             </button>
             <Show when={tab.tooltip && hoveredTab() === tab.id}>
               <div

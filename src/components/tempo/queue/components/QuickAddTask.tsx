@@ -4,9 +4,12 @@
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
-import { Component, createSignal, Show } from 'solid-js';
+import { Component, createSignal, Show, For, onCleanup } from 'solid-js';
+import { Portal } from 'solid-js/web';
 import { Plus, Clock, CalendarBlank, CaretDown } from 'phosphor-solid';
 import { tempoDesign } from '../../theme/tempo-design';
+import { NeoCheckbox } from '../../ui/neo-checkbox';
+import { NeoNumberInput } from '../../ui/neo-number-input';
 import type { TaskPriority } from '../../lib/types';
 import { PRIORITY_CONFIG, PRIORITY_ORDER } from '../types';
 
@@ -30,6 +33,34 @@ export const QuickAddTask: Component<QuickAddTaskProps> = (props) => {
   const [dueDate, setDueDate] = createSignal('');
   const [isSubmitting, setIsSubmitting] = createSignal(false);
   const [showPriorityDropdown, setShowPriorityDropdown] = createSignal(false);
+  const [dropdownPos, setDropdownPos] = createSignal({ x: 0, y: 0 });
+  let priorityButtonRef: HTMLButtonElement | undefined;
+
+  // Close dropdown on outside click
+  const handleClickOutside = (e: MouseEvent) => {
+    if (
+      showPriorityDropdown() &&
+      priorityButtonRef &&
+      !priorityButtonRef.contains(e.target as Node)
+    ) {
+      setShowPriorityDropdown(false);
+    }
+  };
+
+  // Attach/detach click listener
+  const setupClickOutside = () => {
+    document.addEventListener('click', handleClickOutside);
+    onCleanup(() => document.removeEventListener('click', handleClickOutside));
+  };
+  setupClickOutside();
+
+  const openPriorityDropdown = () => {
+    if (priorityButtonRef) {
+      const rect = priorityButtonRef.getBoundingClientRect();
+      setDropdownPos({ x: rect.left, y: rect.bottom + 4 });
+    }
+    setShowPriorityDropdown(true);
+  };
 
   const resetForm = () => {
     setTitle('');
@@ -157,41 +188,24 @@ export const QuickAddTask: Component<QuickAddTaskProps> = (props) => {
               }}
             >
               <Clock size={14} color={tempoDesign.colors.mutedForeground} />
-              <input
-                type="number"
-                min="1"
-                max="480"
+              <NeoNumberInput
                 value={duration()}
-                onInput={(e) => setDuration(parseInt(e.currentTarget.value) || 25)}
+                onChange={setDuration}
+                min={1}
+                max={480}
                 disabled={isSubmitting()}
-                style={{
-                  width: '60px',
-                  padding: '6px 8px',
-                  'border-radius': tempoDesign.radius.sm,
-                  border: `1px solid ${tempoDesign.colors.input}`,
-                  background: tempoDesign.colors.background,
-                  color: tempoDesign.colors.foreground,
-                  'font-size': tempoDesign.typography.sizes.xs,
-                  'font-family': tempoDesign.typography.fontFamily,
-                  outline: 'none',
-                  'text-align': 'center',
-                }}
+                width="50px"
+                suffix="min"
+                aria-label="Duration in minutes"
               />
-              <span
-                style={{
-                  'font-size': tempoDesign.typography.sizes.xs,
-                  color: tempoDesign.colors.mutedForeground,
-                }}
-              >
-                min
-              </span>
             </div>
 
             {/* Priority dropdown */}
-            <div style={{ position: 'relative' }}>
+            <div>
               <button
+                ref={priorityButtonRef}
                 type="button"
-                onClick={() => setShowPriorityDropdown(!showPriorityDropdown())}
+                onClick={openPriorityDropdown}
                 disabled={isSubmitting()}
                 style={{
                   display: 'flex',
@@ -212,62 +226,66 @@ export const QuickAddTask: Component<QuickAddTaskProps> = (props) => {
               </button>
 
               <Show when={showPriorityDropdown()}>
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: 0,
-                    'margin-top': '4px',
-                    background: tempoDesign.colors.card,
-                    border: `1px solid ${tempoDesign.colors.border}`,
-                    'border-radius': tempoDesign.radius.md,
-                    'box-shadow': tempoDesign.shadows.lg,
-                    'z-index': 10,
-                    'min-width': '100px',
-                    overflow: 'hidden',
-                  }}
-                >
-                  {PRIORITY_ORDER.map((p) => (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPriority(p);
-                        setShowPriorityDropdown(false);
-                      }}
-                      style={{
-                        display: 'flex',
-                        'align-items': 'center',
-                        gap: '8px',
-                        width: '100%',
-                        padding: '8px 12px',
-                        background: priority() === p ? tempoDesign.colors.secondary : 'transparent',
-                        border: 'none',
-                        color: PRIORITY_CONFIG[p].color,
-                        'font-size': tempoDesign.typography.sizes.xs,
-                        'font-weight': '500',
-                        cursor: 'pointer',
-                        'text-align': 'left',
-                      }}
-                      onMouseEnter={(e) =>
-                        (e.currentTarget.style.background = tempoDesign.colors.secondary)
-                      }
-                      onMouseLeave={(e) =>
-                        (e.currentTarget.style.background =
-                          priority() === p ? tempoDesign.colors.secondary : 'transparent')
-                      }
-                    >
-                      <div
-                        style={{
-                          width: '8px',
-                          height: '8px',
-                          'border-radius': '50%',
-                          background: PRIORITY_CONFIG[p].color,
-                        }}
-                      />
-                      {PRIORITY_CONFIG[p].label}
-                    </button>
-                  ))}
-                </div>
+                <Portal>
+                  <div
+                    style={{
+                      position: 'fixed',
+                      top: `${dropdownPos().y}px`,
+                      left: `${dropdownPos().x}px`,
+                      background: tempoDesign.colors.card,
+                      border: `1px solid ${tempoDesign.colors.border}`,
+                      'border-radius': tempoDesign.radius.md,
+                      'box-shadow': tempoDesign.shadows.lg,
+                      'z-index': '10000',
+                      'min-width': '100px',
+                      overflow: 'hidden',
+                    }}
+                  >
+                    <For each={PRIORITY_ORDER}>
+                      {(p) => (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setPriority(p);
+                            setShowPriorityDropdown(false);
+                          }}
+                          style={{
+                            display: 'flex',
+                            'align-items': 'center',
+                            gap: '8px',
+                            width: '100%',
+                            padding: '8px 12px',
+                            background:
+                              priority() === p ? tempoDesign.colors.secondary : 'transparent',
+                            border: 'none',
+                            color: PRIORITY_CONFIG[p].color,
+                            'font-size': tempoDesign.typography.sizes.xs,
+                            'font-weight': '500',
+                            cursor: 'pointer',
+                            'text-align': 'left',
+                          }}
+                          onMouseEnter={(e) =>
+                            (e.currentTarget.style.background = tempoDesign.colors.secondary)
+                          }
+                          onMouseLeave={(e) =>
+                            (e.currentTarget.style.background =
+                              priority() === p ? tempoDesign.colors.secondary : 'transparent')
+                          }
+                        >
+                          <div
+                            style={{
+                              width: '8px',
+                              height: '8px',
+                              'border-radius': '50%',
+                              background: PRIORITY_CONFIG[p].color,
+                            }}
+                          />
+                          {PRIORITY_CONFIG[p].label}
+                        </button>
+                      )}
+                    </For>
+                  </div>
+                </Portal>
               </Show>
             </div>
 
@@ -301,31 +319,35 @@ export const QuickAddTask: Component<QuickAddTaskProps> = (props) => {
             </div>
 
             {/* Frog toggle */}
-            <label
+            <div
               style={{
                 display: 'flex',
                 'align-items': 'center',
-                gap: '6px',
-                cursor: 'pointer',
-                'font-size': tempoDesign.typography.sizes.xs,
-                color: isFrog() ? tempoDesign.colors.frog : tempoDesign.colors.mutedForeground,
-                'font-weight': isFrog() ? '600' : '400',
+                gap: '8px',
+                cursor: isSubmitting() ? 'not-allowed' : 'pointer',
               }}
+              onClick={() => !isSubmitting() && setIsFrog(!isFrog())}
             >
-              <input
-                type="checkbox"
+              <NeoCheckbox
                 checked={isFrog()}
-                onChange={(e) => setIsFrog(e.currentTarget.checked)}
+                onChange={setIsFrog}
                 disabled={isSubmitting()}
-                style={{
-                  width: '14px',
-                  height: '14px',
-                  cursor: 'pointer',
-                  'accent-color': tempoDesign.colors.frog,
-                }}
+                size="sm"
+                variant="frog"
+                aria-label="Mark as frog task"
               />
-              Frog
-            </label>
+              <span
+                style={{
+                  'font-size': tempoDesign.typography.sizes.sm,
+                  color: isFrog() ? tempoDesign.colors.frog : tempoDesign.colors.secondaryForeground,
+                  'font-weight': isFrog() ? '600' : '500',
+                  'user-select': 'none',
+                  'letter-spacing': '0.02em',
+                }}
+              >
+                Frog
+              </span>
+            </div>
           </div>
 
           {/* Action buttons */}

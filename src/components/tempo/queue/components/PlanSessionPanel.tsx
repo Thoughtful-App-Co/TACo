@@ -5,9 +5,10 @@
  */
 
 import { Component, createSignal, createEffect, createMemo, For, Show, onMount } from 'solid-js';
-import { X, Clock, CalendarBlank, Lightning, Plus, Minus, Check, CaretDown } from 'phosphor-solid';
+import { X, Clock, CalendarBlank, Lightning, CaretDown } from 'phosphor-solid';
 import { useNavigate } from '@solidjs/router';
 import { tempoDesign } from '../../theme/tempo-design';
+import { NeoCheckbox } from '../../ui/neo-checkbox';
 import { logger } from '../../../../lib/logger';
 import {
   type QueueTask,
@@ -70,6 +71,10 @@ export const PlanSessionPanel: Component<PlanSessionPanelProps> = (props) => {
   const [isLoading, setIsLoading] = createSignal(false);
   const [isCreating, setIsCreating] = createSignal(false);
 
+  // Custom time popout state
+  const [showCustomTimePopout, setShowCustomTimePopout] = createSignal(false);
+  const [tempCustomMinutes, setTempCustomMinutes] = createSignal('');
+
   // Check if user has set strategy preference
   const [needsStrategyPrompt, setNeedsStrategyPrompt] = createSignal(false);
 
@@ -125,6 +130,25 @@ export const PlanSessionPanel: Component<PlanSessionPanelProps> = (props) => {
     if (!isNaN(parsed) && parsed > 0) {
       setAvailableMinutes(parsed);
     }
+  };
+
+  const openCustomTimePopout = () => {
+    setTempCustomMinutes(customMinutes() || String(availableMinutes()));
+    setShowCustomTimePopout(true);
+  };
+
+  const saveCustomTime = () => {
+    const parsed = parseInt(tempCustomMinutes());
+    if (!isNaN(parsed) && parsed > 0) {
+      setCustomMinutes(String(parsed));
+      setAvailableMinutes(parsed);
+    }
+    setShowCustomTimePopout(false);
+  };
+
+  const cancelCustomTime = () => {
+    setShowCustomTimePopout(false);
+    setTempCustomMinutes('');
   };
 
   const handleDatePreset = (getValue: () => string) => {
@@ -420,23 +444,138 @@ export const PlanSessionPanel: Component<PlanSessionPanelProps> = (props) => {
                   </button>
                 )}
               </For>
-              <input
-                type="number"
-                placeholder="Custom"
-                value={customMinutes()}
-                onInput={(e) => handleCustomMinutes(e.currentTarget.value)}
-                style={{
-                  width: '80px',
-                  padding: '8px 12px',
-                  'border-radius': tempoDesign.radius.md,
-                  border: `1px solid ${customMinutes() ? tempoDesign.colors.primary : tempoDesign.colors.border}`,
-                  background: customMinutes() ? `${tempoDesign.colors.primary}15` : 'transparent',
-                  color: tempoDesign.colors.foreground,
-                  'font-size': tempoDesign.typography.sizes.sm,
-                  'text-align': 'center',
-                  outline: 'none',
-                }}
-              />
+              {/* Custom time button with popout */}
+              <div style={{ position: 'relative' }}>
+                <button
+                  type="button"
+                  onClick={openCustomTimePopout}
+                  style={{
+                    padding: '8px 14px',
+                    'border-radius': tempoDesign.radius.md,
+                    border: `1px solid ${customMinutes() ? tempoDesign.colors.primary : tempoDesign.colors.border}`,
+                    background: customMinutes() ? `${tempoDesign.colors.primary}15` : 'transparent',
+                    color: customMinutes() ? tempoDesign.colors.primary : tempoDesign.colors.foreground,
+                    'font-size': tempoDesign.typography.sizes.sm,
+                    'font-weight': '500',
+                    cursor: 'pointer',
+                  }}
+                >
+                  {customMinutes() ? `${customMinutes()}m` : 'Custom'}
+                </button>
+
+                {/* Custom time popout */}
+                <Show when={showCustomTimePopout()}>
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      'margin-top': '8px',
+                      padding: '16px',
+                      'border-radius': tempoDesign.radius.lg,
+                      background: tempoDesign.colors.card,
+                      border: `1px solid ${tempoDesign.colors.border}`,
+                      'box-shadow': tempoDesign.shadows.lg,
+                      'z-index': 100,
+                      'min-width': '200px',
+                    }}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div
+                      style={{
+                        display: 'flex',
+                        'align-items': 'center',
+                        'justify-content': 'space-between',
+                        'margin-bottom': '12px',
+                      }}
+                    >
+                      <span
+                        style={{
+                          'font-size': tempoDesign.typography.sizes.sm,
+                          'font-weight': '600',
+                          color: tempoDesign.colors.foreground,
+                        }}
+                      >
+                        Custom Time
+                      </span>
+                      <button
+                        type="button"
+                        onClick={cancelCustomTime}
+                        style={{
+                          display: 'flex',
+                          'align-items': 'center',
+                          'justify-content': 'center',
+                          width: '24px',
+                          height: '24px',
+                          'border-radius': tempoDesign.radius.full,
+                          border: 'none',
+                          background: 'transparent',
+                          color: tempoDesign.colors.mutedForeground,
+                          cursor: 'pointer',
+                        }}
+                        aria-label="Close"
+                      >
+                        <X size={14} />
+                      </button>
+                    </div>
+
+                    <div style={{ 'margin-bottom': '16px' }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          'align-items': 'center',
+                          gap: '8px',
+                        }}
+                      >
+                        <input
+                          type="number"
+                          value={tempCustomMinutes()}
+                          onInput={(e) => setTempCustomMinutes(e.currentTarget.value)}
+                          placeholder="Enter minutes"
+                          style={{
+                            flex: 1,
+                            padding: '10px 12px',
+                            'border-radius': tempoDesign.radius.md,
+                            border: `1px solid ${tempoDesign.colors.border}`,
+                            background: tempoDesign.colors.background,
+                            color: tempoDesign.colors.foreground,
+                            'font-size': tempoDesign.typography.sizes.base,
+                            outline: 'none',
+                          }}
+                          min="1"
+                        />
+                        <span
+                          style={{
+                            'font-size': tempoDesign.typography.sizes.sm,
+                            color: tempoDesign.colors.mutedForeground,
+                          }}
+                        >
+                          min
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={saveCustomTime}
+                      style={{
+                        width: '100%',
+                        padding: '8px 16px',
+                        'border-radius': tempoDesign.radius.md,
+                        border: 'none',
+                        background: tempoDesign.colors.primary,
+                        color: tempoDesign.colors.primaryForeground,
+                        'font-size': tempoDesign.typography.sizes.sm,
+                        'font-weight': '600',
+                        cursor: 'pointer',
+                      }}
+                    >
+                      Set Time
+                    </button>
+                  </div>
+                </Show>
+              </div>
             </div>
           </div>
 
@@ -584,29 +723,12 @@ export const PlanSessionPanel: Component<PlanSessionPanelProps> = (props) => {
                       }}
                     >
                       {/* Checkbox */}
-                      <div
-                        style={{
-                          width: '20px',
-                          height: '20px',
-                          'border-radius': tempoDesign.radius.sm,
-                          border: `2px solid ${
-                            selectedTaskIds().has(task.id)
-                              ? tempoDesign.colors.primary
-                              : tempoDesign.colors.border
-                          }`,
-                          background: selectedTaskIds().has(task.id)
-                            ? tempoDesign.colors.primary
-                            : 'transparent',
-                          display: 'flex',
-                          'align-items': 'center',
-                          'justify-content': 'center',
-                          'flex-shrink': 0,
-                        }}
-                      >
-                        <Show when={selectedTaskIds().has(task.id)}>
-                          <Check size={12} color="white" weight="bold" />
-                        </Show>
-                      </div>
+                      <NeoCheckbox
+                        checked={selectedTaskIds().has(task.id)}
+                        onChange={() => {}} // Row click handles toggle
+                        size="md"
+                        variant="primary"
+                      />
 
                       {/* Content */}
                       <div style={{ flex: 1, 'min-width': 0 }}>

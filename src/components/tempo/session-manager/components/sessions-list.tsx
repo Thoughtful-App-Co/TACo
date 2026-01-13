@@ -15,6 +15,7 @@ import {
   Copy,
   Warning,
   Archive,
+  CalendarX,
 } from 'phosphor-solid';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../ui/card';
 import { Button } from '../../ui/button';
@@ -116,6 +117,17 @@ export const SessionsList: Component<SessionsListProps> = (props) => {
     };
   });
 
+  // Overdue planned sessions (planned but date is in the past)
+  const overduePlannedSessions = createMemo(() => {
+    const today = new Date().toISOString().split('T')[0];
+    return allSessions().filter((s) => s.status === 'planned' && s.date < today);
+  });
+
+  // Total sessions needing attention
+  const needsAttentionCount = createMemo(() => {
+    return sessionCounts().incomplete + overduePlannedSessions().length;
+  });
+
   // Handlers
   const handleEdit = (session: Session) => {
     setSelectedSession(session);
@@ -141,6 +153,32 @@ export const SessionsList: Component<SessionsListProps> = (props) => {
     setShowCloseoutModal(false);
     setSelectedSession(null);
     refreshSessions();
+  };
+
+  const handleRescheduleToToday = async (session: Session) => {
+    const today = new Date().toISOString().split('T')[0];
+
+    // Check if today already has a session
+    const todaySession = allSessions().find((s) => s.date === today);
+    if (todaySession) {
+      // TODO: Could show a modal to merge or cancel
+      alert('A session already exists for today. Please close out or delete it first.');
+      return;
+    }
+
+    try {
+      // Use the SessionStorageService to update the session date
+      const { SessionStorageService } = await import('../../services/session-storage.service');
+      const storageService = new SessionStorageService();
+
+      await storageService.updateSessionMetadata(session.date, {
+        date: today,
+      });
+
+      refreshSessions();
+    } catch (error) {
+      logger.error('Failed to reschedule session:', error);
+    }
   };
 
   const handleModalClose = () => {
@@ -379,7 +417,7 @@ export const SessionsList: Component<SessionsListProps> = (props) => {
         </div>
 
         {/* Needs Attention Section */}
-        <Show when={sessionCounts().incomplete > 0}>
+        <Show when={needsAttentionCount() > 0}>
           <div
             style={{
               background: 'rgba(239, 68, 68, 0.08)',
@@ -406,7 +444,7 @@ export const SessionsList: Component<SessionsListProps> = (props) => {
                   color: tempoDesign.colors.foreground,
                 }}
               >
-                Needs Attention ({sessionCounts().incomplete})
+                Needs Attention ({needsAttentionCount()})
               </h3>
             </div>
             <p
@@ -416,10 +454,14 @@ export const SessionsList: Component<SessionsListProps> = (props) => {
                 color: tempoDesign.colors.mutedForeground,
               }}
             >
-              You have incomplete sessions that need to be closed out. Extract unfinished work to
-              your backlog or discard it.
+              {sessionCounts().incomplete > 0 && overduePlannedSessions().length > 0
+                ? 'You have incomplete sessions to close out and overdue planned sessions to reschedule.'
+                : sessionCounts().incomplete > 0
+                  ? 'You have incomplete sessions that need to be closed out. Extract unfinished work to your backlog or discard it.'
+                  : 'You have overdue planned sessions that need to be rescheduled or closed out.'}
             </p>
             <div style={{ display: 'flex', 'flex-direction': 'column', gap: '8px' }}>
+              {/* Incomplete sessions */}
               <For each={sessions().filter((s) => s.status === 'incomplete')}>
                 {(session) => (
                   <div
@@ -433,19 +475,22 @@ export const SessionsList: Component<SessionsListProps> = (props) => {
                       border: `1px solid ${tempoDesign.colors.border}`,
                     }}
                   >
-                    <div>
-                      <span style={{ 'font-weight': '500', color: tempoDesign.colors.foreground }}>
-                        {format(new Date(session.date), 'EEEE, MMM d, yyyy')}
-                      </span>
-                      <span
-                        style={{
-                          'margin-left': '12px',
-                          'font-size': '13px',
-                          color: tempoDesign.colors.mutedForeground,
-                        }}
-                      >
-                        {session.storyBlocks.length} focus blocks
-                      </span>
+                    <div style={{ display: 'flex', 'align-items': 'center', gap: '8px' }}>
+                      <Warning size={16} weight="fill" color="#EF4444" />
+                      <div>
+                        <span style={{ 'font-weight': '500', color: tempoDesign.colors.foreground }}>
+                          {format(new Date(session.date), 'EEEE, MMM d, yyyy')}
+                        </span>
+                        <span
+                          style={{
+                            'margin-left': '12px',
+                            'font-size': '13px',
+                            color: tempoDesign.colors.mutedForeground,
+                          }}
+                        >
+                          Incomplete - {session.storyBlocks.length} focus blocks
+                        </span>
+                      </div>
                     </div>
                     <Button
                       size="sm"
@@ -457,6 +502,64 @@ export const SessionsList: Component<SessionsListProps> = (props) => {
                     >
                       Close Out
                     </Button>
+                  </div>
+                )}
+              </For>
+
+              {/* Overdue planned sessions */}
+              <For each={overduePlannedSessions()}>
+                {(session) => (
+                  <div
+                    style={{
+                      display: 'flex',
+                      'align-items': 'center',
+                      'justify-content': 'space-between',
+                      padding: '12px 16px',
+                      background: tempoDesign.colors.card,
+                      'border-radius': tempoDesign.radius.md,
+                      border: `1px solid ${tempoDesign.colors.amber[600]}40`,
+                    }}
+                  >
+                    <div style={{ display: 'flex', 'align-items': 'center', gap: '8px' }}>
+                      <CalendarX size={16} weight="fill" color={tempoDesign.colors.amber[600]} />
+                      <div>
+                        <span style={{ 'font-weight': '500', color: tempoDesign.colors.foreground }}>
+                          {format(new Date(session.date), 'EEEE, MMM d, yyyy')}
+                        </span>
+                        <span
+                          style={{
+                            'margin-left': '12px',
+                            'font-size': '13px',
+                            color: tempoDesign.colors.amber[600],
+                          }}
+                        >
+                          Overdue - {session.storyBlocks.length} focus blocks
+                        </span>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleCloseout(session)}
+                        style={{
+                          'border-color': '#EF444440',
+                          color: '#EF4444',
+                        }}
+                      >
+                        Close Out
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() => handleRescheduleToToday(session)}
+                        style={{
+                          background: tempoDesign.colors.amber[600],
+                          color: '#FFFFFF',
+                        }}
+                      >
+                        Reschedule to Today
+                      </Button>
+                    </div>
                   </div>
                 )}
               </For>

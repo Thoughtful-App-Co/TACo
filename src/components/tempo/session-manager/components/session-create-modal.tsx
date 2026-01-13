@@ -1,12 +1,25 @@
-import { Component, createSignal, For, Show, createEffect } from 'solid-js';
+import { Component, createSignal, For, Show, createEffect, onCleanup } from 'solid-js';
 import { Portal } from 'solid-js/web';
-import { X, Plus, Trash, Clock, ListBullets, Tray, CaretDown } from 'phosphor-solid';
+import {
+  X,
+  Plus,
+  Trash,
+  Clock,
+  ListBullets,
+  Tray,
+  CaretDown,
+  CalendarCheck,
+  ArrowCounterClockwise,
+  Warning,
+} from 'phosphor-solid';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../ui/card';
 import { tempoDesign } from '../../theme/tempo-design';
 import { useSessionCrud } from '../hooks/useSessionCrud';
 import { TaskPersistenceService } from '../../services/task-persistence.service';
+import { QueueService } from '../../queue/services/queue.service';
+import type { QueueTask } from '../../queue/types';
 import type { Session, StoryBlock, TimeBox, TimeBoxTask, TimeBoxType, Task } from '../../lib/types';
 import { logger } from '../../../../lib/logger';
 
@@ -80,11 +93,32 @@ export const SessionCreateModal: Component<SessionCreateModalProps> = (props) =>
   const [selectedBacklogTasks, setSelectedBacklogTasks] = createSignal<Set<string>>(new Set());
   const [showBacklogSection, setShowBacklogSection] = createSignal(true);
 
+  // Scheduled tasks from Queue (tasks scheduled for the selected date)
+  const [scheduledTasks, setScheduledTasks] = createSignal<QueueTask[]>([]);
+  const [showScheduledSection, setShowScheduledSection] = createSignal(true);
+
   // UI state
   const [isLoading, setIsLoading] = createSignal(false);
   const [error, setError] = createSignal<string | null>(null);
   const [success, setSuccess] = createSignal(false);
   const [dateError, setDateError] = createSignal<string | null>(null);
+
+  // Undo state for scheduled tasks addition
+  const [undoState, setUndoState] = createSignal<{
+    previousBlocks: FormFocusBlock[];
+    addedTaskIds: string[];
+    timeoutId?: ReturnType<typeof setTimeout>;
+  } | null>(null);
+
+  // Confirmation modal state
+  const [confirmModal, setConfirmModal] = createSignal<{
+    isOpen: boolean;
+    title: string;
+    message: string;
+    onConfirm: () => void;
+    confirmLabel?: string;
+    variant?: 'destructive' | 'warning';
+  } | null>(null);
 
   // Reset form when modal closes
   createEffect(() => {
@@ -104,17 +138,35 @@ export const SessionCreateModal: Component<SessionCreateModalProps> = (props) =>
   });
 
   const resetForm = () => {
+    // Clear any pending undo timeout
+    const undo = undoState();
+    if (undo?.timeoutId) {
+      clearTimeout(undo.timeoutId);
+    }
+
     setSessionDate(formatDateForInput(new Date()));
     setSessionTitle('');
     setFocusBlocks([createEmptyFocusBlock()]);
     setBacklogTasks([]);
     setSelectedBacklogTasks(new Set<string>());
     setShowBacklogSection(true);
+    setScheduledTasks([]);
+    setShowScheduledSection(true);
     setError(null);
     setSuccess(false);
     setDateError(null);
     setIsLoading(false);
+    setUndoState(null);
+    setConfirmModal(null);
   };
+
+  // Cleanup undo timeout on unmount
+  onCleanup(() => {
+    const undo = undoState();
+    if (undo?.timeoutId) {
+      clearTimeout(undo.timeoutId);
+    }
+  });
 
   // Check date availability when date changes
   const handleDateChange = async (newDate: string) => {
@@ -126,8 +178,26 @@ export const SessionCreateModal: Component<SessionCreateModalProps> = (props) =>
       if (exists) {
         setDateError('A session already exists for this date');
       }
+
+      // Load scheduled tasks for this date from the Queue
+      const scheduled = await QueueService.getScheduledTasksForDate(newDate);
+      setScheduledTasks(scheduled);
+      log.debug(`Loaded ${scheduled.length} scheduled tasks for ${newDate}`);
+    } else {
+      setScheduledTasks([]);
     }
   };
+
+  // Load scheduled tasks for today when modal opens
+  createEffect(() => {
+    if (props.isOpen) {
+      const today = sessionDate();
+      QueueService.getScheduledTasksForDate(today).then((tasks) => {
+        setScheduledTasks(tasks);
+        log.debug(`Loaded ${tasks.length} scheduled tasks for ${today}`);
+      });
+    }
+  });
 
   // Backlog task selection
   const toggleBacklogTask = (taskId: string) => {
@@ -165,17 +235,124 @@ export const SessionCreateModal: Component<SessionCreateModalProps> = (props) =>
     log.info(`Added ${newBlocks.length} focus blocks from backlog`);
   };
 
+  // Add all scheduled tasks as focus blocks
+  const addScheduledTasksAsFocusBlocks = () => {
+    const tasks = scheduledTasks();
+    if (tasks.length === 0) return;
+
+    // Clear any existing undo timeout
+    const existingUndo = undoState();
+    if (existingUndo?.timeoutId) {
+      clearTimeout(existingUndo.timeoutId);
+    }
+
+    // Save current state for undo
+    const previousBlocks = [...focusBlocks()];
+    const addedTaskIds = tasks.map((t) => t.id);
+
+    const newBlocks = tasks.map((task) => ({
+      id: generateId(),
+      title: task.title,
+      totalDuration: task.duration,
+      timeboxes: [
+        {
+          id: generateId(),
+          type: 'work' as TimeBoxType,
+          duration: task.duration,
+          tasks: [],
+        },
+      ],
+      sourceTaskId: task.id, // Track source for updating scheduledSessionId
+    }));
+
+    // Replace empty initial block or add to existing
+    const currentBlocks = focusBlocks();
+    if (currentBlocks.length === 1 && !currentBlocks[0].title) {
+      setFocusBlocks(newBlocks);
+    } else {
+      setFocusBlocks([...currentBlocks, ...newBlocks]);
+    }
+
+    // Set undo state with 10 second timeout
+    const timeoutId = setTimeout(() => {
+      setUndoState(null);
+    }, 10000);
+
+    setUndoState({
+      previousBlocks,
+      addedTaskIds,
+      timeoutId,
+    });
+
+    log.info(`Added ${newBlocks.length} focus blocks from scheduled tasks`);
+  };
+
+  // Undo the last scheduled tasks addition
+  const undoAddScheduledTasks = () => {
+    const undo = undoState();
+    if (!undo) return;
+
+    // Clear the timeout
+    if (undo.timeoutId) {
+      clearTimeout(undo.timeoutId);
+    }
+
+    // Restore previous state
+    setFocusBlocks(undo.previousBlocks);
+    setUndoState(null);
+
+    log.info('Undid scheduled tasks addition');
+  };
+
+  // Return a focus block back to the queue (for blocks that came from scheduled tasks)
+  const returnFocusBlockToQueue = (blockId: string) => {
+    const block = focusBlocks().find((b) => b.id === blockId);
+    if (!block) return;
+
+    setConfirmModal({
+      isOpen: true,
+      title: 'Return to Queue',
+      message: `Remove "${block.title || 'Untitled'}" from this session? The task will remain in your queue.`,
+      confirmLabel: 'Remove from Session',
+      variant: 'warning',
+      onConfirm: () => {
+        // Remove the focus block
+        if (focusBlocks().length > 1) {
+          setFocusBlocks(focusBlocks().filter((b) => b.id !== blockId));
+          log.info(`Returned focus block ${blockId} to queue`);
+        } else {
+          // If it's the last block, replace with empty
+          setFocusBlocks([createEmptyFocusBlock()]);
+          log.info(`Returned last focus block ${blockId} to queue, created empty block`);
+        }
+        setConfirmModal(null);
+      },
+    });
+  };
+
+  // Confirm deletion of a focus block
+  const confirmRemoveFocusBlock = (blockId: string) => {
+    const block = focusBlocks().find((b) => b.id === blockId);
+    if (!block || focusBlocks().length <= 1) return;
+
+    setConfirmModal({
+      isOpen: true,
+      title: 'Delete Focus Block',
+      message: `Are you sure you want to delete "${block.title || 'Untitled'}"? This cannot be undone.`,
+      confirmLabel: 'Delete',
+      variant: 'destructive',
+      onConfirm: () => {
+        setFocusBlocks(focusBlocks().filter((s) => s.id !== blockId));
+        setConfirmModal(null);
+        log.debug(`Removed focus block: ${blockId}`);
+      },
+    });
+  };
+
   // Focus block management
   const addFocusBlock = () => {
     setFocusBlocks([...focusBlocks(), createEmptyFocusBlock()]);
     log.debug('Added new focus block');
-  };
-
-  const removeFocusBlock = (blockId: string) => {
-    if (focusBlocks().length > 1) {
-      setFocusBlocks(focusBlocks().filter((s) => s.id !== blockId));
-      log.debug(`Removed focus block: ${blockId}`);
-    }
   };
 
   const updateFocusBlock = (blockId: string, updates: Partial<FormFocusBlock>) => {
@@ -576,6 +753,180 @@ export const SessionCreateModal: Component<SessionCreateModalProps> = (props) =>
                 </div>
               </div>
 
+              {/* Scheduled Tasks Section - Tasks already scheduled for this date */}
+              <Show when={scheduledTasks().length > 0}>
+                <div
+                  style={{
+                    background: `${tempoDesign.colors.frog}08`,
+                    border: `1px solid ${tempoDesign.colors.frog}30`,
+                    'border-radius': tempoDesign.radius.lg,
+                    padding: '16px',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      'align-items': 'center',
+                      'justify-content': 'space-between',
+                      'margin-bottom': showScheduledSection() ? '12px' : '0',
+                      cursor: 'pointer',
+                    }}
+                    onClick={() => setShowScheduledSection(!showScheduledSection())}
+                  >
+                    <div style={{ display: 'flex', 'align-items': 'center', gap: '8px' }}>
+                      <CalendarCheck size={20} color={tempoDesign.colors.frog} />
+                      <span
+                        style={{
+                          'font-size': '15px',
+                          'font-weight': '600',
+                          color: tempoDesign.colors.foreground,
+                        }}
+                      >
+                        Scheduled for this Date
+                      </span>
+                      <span
+                        style={{
+                          padding: '2px 8px',
+                          'border-radius': tempoDesign.radius.full,
+                          background: tempoDesign.colors.frog,
+                          color: '#FFFFFF',
+                          'font-size': '12px',
+                          'font-weight': '600',
+                        }}
+                      >
+                        {scheduledTasks().length}
+                      </span>
+                    </div>
+                    <CaretDown
+                      size={16}
+                      style={{
+                        transform: showScheduledSection() ? 'rotate(180deg)' : 'rotate(0deg)',
+                        transition: 'transform 0.2s ease',
+                        color: tempoDesign.colors.mutedForeground,
+                      }}
+                    />
+                  </div>
+
+                  <Show when={showScheduledSection()}>
+                    <p
+                      style={{
+                        margin: '0 0 12px 0',
+                        'font-size': '13px',
+                        color: tempoDesign.colors.mutedForeground,
+                      }}
+                    >
+                      These tasks were scheduled from The Queue for this date
+                    </p>
+
+                    <div
+                      style={{
+                        display: 'flex',
+                        'flex-direction': 'column',
+                        gap: '8px',
+                        'margin-bottom': '12px',
+                      }}
+                    >
+                      <For each={scheduledTasks()}>
+                        {(task) => (
+                          <div
+                            style={{
+                              display: 'flex',
+                              'align-items': 'center',
+                              gap: '12px',
+                              padding: '12px',
+                              background: tempoDesign.colors.background,
+                              border: `1px solid ${tempoDesign.colors.frog}30`,
+                              'border-radius': tempoDesign.radius.md,
+                            }}
+                          >
+                            {/* Checkmark icon */}
+                            <div
+                              style={{
+                                width: '20px',
+                                height: '20px',
+                                'border-radius': tempoDesign.radius.sm,
+                                background: `${tempoDesign.colors.frog}20`,
+                                display: 'flex',
+                                'align-items': 'center',
+                                'justify-content': 'center',
+                                'flex-shrink': 0,
+                              }}
+                            >
+                              <CalendarCheck size={12} color={tempoDesign.colors.frog} />
+                            </div>
+
+                            {/* Task info */}
+                            <div style={{ flex: 1, 'min-width': 0 }}>
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  'align-items': 'center',
+                                  gap: '8px',
+                                }}
+                              >
+                                <span
+                                  style={{
+                                    'font-weight': '500',
+                                    color: tempoDesign.colors.foreground,
+                                    overflow: 'hidden',
+                                    'text-overflow': 'ellipsis',
+                                    'white-space': 'nowrap',
+                                  }}
+                                >
+                                  {task.title}
+                                </span>
+                                <Show when={task.isFrog}>
+                                  <span
+                                    style={{
+                                      padding: '2px 6px',
+                                      'border-radius': tempoDesign.radius.sm,
+                                      background: `${tempoDesign.colors.frog}20`,
+                                      'font-size': '10px',
+                                      'font-weight': '600',
+                                      color: tempoDesign.colors.frog,
+                                    }}
+                                  >
+                                    FROG
+                                  </span>
+                                </Show>
+                              </div>
+                            </div>
+
+                            {/* Duration */}
+                            <span
+                              style={{
+                                padding: '4px 8px',
+                                'border-radius': tempoDesign.radius.sm,
+                                background: tempoDesign.colors.muted,
+                                'font-size': '12px',
+                                'font-weight': '500',
+                                color: tempoDesign.colors.mutedForeground,
+                                'flex-shrink': 0,
+                              }}
+                            >
+                              {task.duration} min
+                            </span>
+                          </div>
+                        )}
+                      </For>
+                    </div>
+
+                    <Button
+                      onClick={addScheduledTasksAsFocusBlocks}
+                      style={{
+                        width: '100%',
+                        height: '40px',
+                        background: tempoDesign.colors.frog,
+                        color: '#FFFFFF',
+                      }}
+                    >
+                      Add {scheduledTasks().length} Scheduled Task
+                      {scheduledTasks().length > 1 ? 's' : ''} as Focus Blocks
+                    </Button>
+                  </Show>
+                </div>
+              </Show>
+
               {/* Pull from Backlog Section */}
               <Show when={backlogTasks().length > 0}>
                 <div
@@ -717,7 +1068,18 @@ export const SessionCreateModal: Component<SessionCreateModalProps> = (props) =>
                                   {task.title}
                                 </span>
                                 <Show when={task.isFrog}>
-                                  <span>🐸</span>
+                                  <span
+                                    style={{
+                                      padding: '2px 6px',
+                                      'border-radius': tempoDesign.radius.sm,
+                                      background: `${tempoDesign.colors.frog}20`,
+                                      'font-size': '10px',
+                                      'font-weight': '600',
+                                      color: tempoDesign.colors.frog,
+                                    }}
+                                  >
+                                    FROG
+                                  </span>
                                 </Show>
                               </div>
                               <Show when={task.source?.focusBlockTitle}>
@@ -842,20 +1204,44 @@ export const SessionCreateModal: Component<SessionCreateModalProps> = (props) =>
                             style={{ width: '100%' }}
                           />
                         </div>
-                        <Show when={focusBlocks().length > 1}>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => removeFocusBlock(block.id)}
-                            disabled={isLoading()}
-                            style={{
-                              color: tempoDesign.colors.destructive,
-                              'margin-top': '20px',
-                            }}
-                          >
-                            <Trash size={16} />
-                          </Button>
-                        </Show>
+                        <div
+                          style={{
+                            display: 'flex',
+                            gap: '4px',
+                            'margin-top': '20px',
+                          }}
+                        >
+                          {/* Return to Queue button (for blocks from scheduled tasks) */}
+                          <Show when={block.sourceTaskId}>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => returnFocusBlockToQueue(block.id)}
+                              disabled={isLoading()}
+                              title="Return to queue"
+                              style={{
+                                color: tempoDesign.colors.primary,
+                              }}
+                            >
+                              <ArrowCounterClockwise size={16} />
+                            </Button>
+                          </Show>
+                          {/* Delete button */}
+                          <Show when={focusBlocks().length > 1 || block.sourceTaskId}>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => confirmRemoveFocusBlock(block.id)}
+                              disabled={isLoading()}
+                              title="Delete focus block"
+                              style={{
+                                color: tempoDesign.colors.destructive,
+                              }}
+                            >
+                              <Trash size={16} />
+                            </Button>
+                          </Show>
+                        </div>
                       </div>
 
                       {/* Timeboxes */}
@@ -1200,6 +1586,51 @@ export const SessionCreateModal: Component<SessionCreateModalProps> = (props) =>
           </Card>
         </div>
 
+        {/* Undo Toast */}
+        <Show when={undoState()}>
+          <div
+            style={{
+              position: 'fixed',
+              bottom: '24px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              display: 'flex',
+              'align-items': 'center',
+              gap: '12px',
+              padding: '12px 16px',
+              background: tempoDesign.colors.card,
+              border: `1px solid ${tempoDesign.colors.primary}`,
+              'border-radius': tempoDesign.radius.lg,
+              'box-shadow': tempoDesign.shadows.lg,
+              'z-index': 10001,
+              animation: 'slideUp 0.2s ease-out',
+            }}
+          >
+            <span
+              style={{
+                color: tempoDesign.colors.foreground,
+                'font-size': tempoDesign.typography.sizes.sm,
+              }}
+            >
+              Added {undoState()?.addedTaskIds.length} scheduled task
+              {(undoState()?.addedTaskIds.length || 0) > 1 ? 's' : ''} as focus blocks
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={undoAddScheduledTasks}
+              style={{
+                gap: '6px',
+                padding: '6px 12px',
+                height: '32px',
+              }}
+            >
+              <ArrowCounterClockwise size={14} />
+              Undo
+            </Button>
+          </div>
+        </Show>
+
         {/* Keyframe animations */}
         <style>{`
         @keyframes fadeIn {
@@ -1216,8 +1647,134 @@ export const SessionCreateModal: Component<SessionCreateModalProps> = (props) =>
             transform: translate(-50%, -50%) scale(1);
           }
         }
+        @keyframes slideUp {
+          from {
+            opacity: 0;
+            transform: translateX(-50%) translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+          }
+        }
       `}</style>
       </Portal>
+
+      {/* Confirmation Modal */}
+      <Show when={confirmModal()?.isOpen}>
+        <Portal>
+          {/* Backdrop */}
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0, 0, 0, 0.6)',
+              'z-index': 10002,
+              animation: 'fadeIn 0.15s ease-out',
+            }}
+            onClick={() => setConfirmModal(null)}
+          />
+          {/* Modal */}
+          <div
+            style={{
+              position: 'fixed',
+              top: '50%',
+              left: '50%',
+              transform: 'translate(-50%, -50%)',
+              width: '100%',
+              'max-width': '400px',
+              background: tempoDesign.colors.card,
+              border: `1px solid ${tempoDesign.colors.cardBorder}`,
+              'border-radius': tempoDesign.radius.xl,
+              'box-shadow': tempoDesign.shadows.lg,
+              padding: '24px',
+              'z-index': 10003,
+              animation: 'modalSlideIn 0.2s ease-out',
+            }}
+          >
+            {/* Header */}
+            <div
+              style={{
+                display: 'flex',
+                'align-items': 'center',
+                gap: '12px',
+                'margin-bottom': '16px',
+              }}
+            >
+              <div
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  'border-radius': '50%',
+                  background:
+                    confirmModal()?.variant === 'destructive'
+                      ? `${tempoDesign.colors.destructive}20`
+                      : `${tempoDesign.colors.amber[600]}20`,
+                  display: 'flex',
+                  'align-items': 'center',
+                  'justify-content': 'center',
+                }}
+              >
+                <Warning
+                  size={20}
+                  color={
+                    confirmModal()?.variant === 'destructive'
+                      ? tempoDesign.colors.destructive
+                      : tempoDesign.colors.amber[600]
+                  }
+                />
+              </div>
+              <h3
+                style={{
+                  margin: 0,
+                  'font-size': tempoDesign.typography.sizes.lg,
+                  'font-weight': tempoDesign.typography.weights.semibold,
+                  color: tempoDesign.colors.foreground,
+                }}
+              >
+                {confirmModal()?.title}
+              </h3>
+            </div>
+
+            {/* Message */}
+            <p
+              style={{
+                margin: '0 0 24px 0',
+                'font-size': tempoDesign.typography.sizes.sm,
+                color: tempoDesign.colors.mutedForeground,
+                'line-height': '1.5',
+              }}
+            >
+              {confirmModal()?.message}
+            </p>
+
+            {/* Actions */}
+            <div
+              style={{
+                display: 'flex',
+                'justify-content': 'flex-end',
+                gap: '12px',
+              }}
+            >
+              <Button variant="ghost" onClick={() => setConfirmModal(null)}>
+                Cancel
+              </Button>
+              <Button
+                onClick={() => confirmModal()?.onConfirm()}
+                style={{
+                  background:
+                    confirmModal()?.variant === 'destructive'
+                      ? tempoDesign.colors.destructive
+                      : tempoDesign.colors.amber[600],
+                  color: '#FFFFFF',
+                }}
+              >
+                {confirmModal()?.confirmLabel || 'Confirm'}
+              </Button>
+            </div>
+          </div>
+        </Portal>
+      </Show>
     </Show>
   );
 };

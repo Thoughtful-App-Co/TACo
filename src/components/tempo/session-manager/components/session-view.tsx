@@ -1,5 +1,5 @@
 import { createSignal, createEffect, createMemo, onCleanup, Show, JSX } from 'solid-js';
-import { useNavigate } from '@solidjs/router';
+import { useNavigate, useParams } from '@solidjs/router';
 import {
   Card,
   CardContent,
@@ -30,7 +30,7 @@ import {
   Hourglass,
   ChartBar,
 } from 'phosphor-solid';
-import { useSession } from '../hooks/useSession';
+import { useSessionReducer as useSession } from '../hooks/useSessionReducer';
 import { SessionStorageService } from '../../services/session-storage.service';
 import { format } from 'date-fns';
 import { VerticalTimeline } from './vertical-timeline';
@@ -495,8 +495,10 @@ const FloatingTimerWrapper = (props: {
 };
 
 export const SessionView = (props: SessionViewProps) => {
-  // Use date as id if provided (for backward compatibility)
-  const sessionId = props.id || props.date;
+  const params = useParams<{ date?: string }>();
+
+  // Use route param first, then fall back to props for backward compatibility
+  const sessionId = params.date || props.id || props.date;
 
   // Refs for timer section to detect when it's out of viewport
   let timerCardRef: HTMLDivElement | undefined;
@@ -925,6 +927,22 @@ export const SessionView = (props: SessionViewProps) => {
             style={{ display: 'flex', 'flex-direction': 'column', gap: '24px' }}
             ref={containerRef}
           >
+            {/* Back to Sessions Button */}
+            <Button
+              variant="ghost"
+              onClick={() => navigate('/tempo/sessions')}
+              style={{
+                'align-self': 'flex-start',
+                display: 'flex',
+                'align-items': 'center',
+                gap: '8px',
+                'margin-bottom': '8px',
+              }}
+            >
+              <CaretLeft size={16} />
+              Back to Sessions
+            </Button>
+
             {/* Floating Timer - Separated into stable container and content */}
             <FloatingTimerContainer isVisible={stableFloatingVisible()}>
               <FloatingTimerWrapper
@@ -1051,7 +1069,15 @@ export const SessionView = (props: SessionViewProps) => {
                           'margin-bottom': '4px',
                         }}
                       >
-                        <span style={{ 'font-size': '20px' }}>🐸</span>
+                        <span
+                          style={{
+                            'font-size': '12px',
+                            'font-weight': tempoDesign.typography.weights.bold,
+                            color: tempoDesign.colors.primary,
+                          }}
+                        >
+                          FROG
+                        </span>
                       </div>
                       <span
                         style={{
@@ -1708,8 +1734,7 @@ export const SessionView = (props: SessionViewProps) => {
                       if (!timeBox) return;
 
                       if (isCurrentTimeBox(timeBox)) {
-                        // If already current, show details instead
-                        console.log('Show details for current timebox:', timeBox);
+                        // Current timebox clicked - no action needed
                       }
                     }}
                     onStartTimeBox={startTimeBox}
@@ -1727,9 +1752,6 @@ export const SessionView = (props: SessionViewProps) => {
                       // In a real implementation, we could add this to the storyBlocks,
                       // but for simplicity we'll just run the timer
                       startTimeBox(debriefId, 0, duration);
-
-                      // TODO: Add toast notification
-                      console.log(`Debrief started: ${duration} minutes`);
                     }}
                     isCompactView={false}
                   />

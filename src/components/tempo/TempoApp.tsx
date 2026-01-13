@@ -8,7 +8,7 @@
  * and protected intellectual property. No infringement or unauthorized use is permitted.
  */
 
-import { Component, createSignal, Show, createMemo } from 'solid-js';
+import { Component, createSignal, Show, createMemo, onMount, createEffect } from 'solid-js';
 import { useNavigate, useLocation, useParams } from '@solidjs/router';
 import { BrainDump } from './brain-dump';
 import { CaretRight, Gear } from 'phosphor-solid';
@@ -22,6 +22,7 @@ import { SessionsList } from './session-manager/components/sessions-list';
 import { SessionView } from './session-manager/components/session-view';
 import { ApiConfigService } from './services/api-config.service';
 import { AppMenuTrigger } from '../common/AppMenuTrigger';
+import { TempoNotificationService, type NotificationState } from './services/notification.service';
 
 interface Stats {
   totalTasks: number;
@@ -83,6 +84,28 @@ export const TempoApp: Component = () => {
   // Check if API key is configured
   const [hasApiKey, setHasApiKey] = createSignal(ApiConfigService.hasApiKey());
 
+  // Notification state for tab badges
+  const [notifications, setNotifications] = createSignal<NotificationState>({
+    sessions: { count: 0, hasUrgent: false, scheduledForToday: 0, overdueSessions: 0 },
+    queue: { count: 0, hasOverdue: false, overdueCount: 0 },
+  });
+
+  // Load notification state
+  const refreshNotifications = async () => {
+    const state = await TempoNotificationService.getNotificationState();
+    setNotifications(state);
+  };
+
+  // Load notifications on mount and when route changes
+  onMount(refreshNotifications);
+
+  // Refresh notifications when tab changes
+  createEffect(() => {
+    // Track activeTab to trigger refresh on tab change
+    const _tab = activeTab();
+    refreshNotifications();
+  });
+
   // Determine active tab from current route
   const activeTab = createMemo(() => {
     const path = location.pathname;
@@ -135,19 +158,35 @@ export const TempoApp: Component = () => {
     }
   };
 
-  const tabs: Tab[] = [
-    { id: 'tasks', label: 'Create Tasks' },
-    {
-      id: 'sessions',
-      label: 'Your Sessions',
-      tooltip: 'Sessions are your daily to-do lists. Here is your repository of those sessions.',
-    },
-    {
-      id: 'backlog',
-      label: 'The Queue',
-      tooltip: 'Your backlog of unfinished tasks waiting to be scheduled into future sessions.',
-    },
-  ];
+  // Build tabs with dynamic badge data
+  const tabs = createMemo((): Tab[] => {
+    const notifs = notifications();
+    return [
+      { id: 'tasks', label: 'Create Tasks' },
+      {
+        id: 'sessions',
+        label: 'Your Sessions',
+        badge:
+          notifs.sessions.count > 0
+            ? {
+                count: notifs.sessions.count,
+                variant: notifs.sessions.hasUrgent ? 'urgent' : 'default',
+              }
+            : undefined,
+      },
+      {
+        id: 'backlog',
+        label: 'The Queue',
+        badge:
+          notifs.queue.count > 0
+            ? {
+                count: notifs.queue.count,
+                variant: notifs.queue.hasOverdue ? 'warning' : 'default',
+              }
+            : undefined,
+      },
+    ];
+  });
 
   return (
     <main
@@ -240,7 +279,7 @@ export const TempoApp: Component = () => {
 
       {/* Tab Navigation - Only show when not viewing a session */}
       <Show when={!isViewingSession()}>
-        <Tabs tabs={tabs} defaultTab={activeTab()} onChange={handleTabChange} />
+        <Tabs tabs={tabs()} defaultTab={activeTab()} onChange={handleTabChange} />
       </Show>
 
       {/* Content Area */}

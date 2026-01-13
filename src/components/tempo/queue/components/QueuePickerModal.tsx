@@ -5,8 +5,9 @@
  */
 
 import { Component, createSignal, createEffect, createMemo, For, Show, onMount } from 'solid-js';
-import { X, Check, Clock, Tray } from 'phosphor-solid';
+import { X, Clock, Tray } from 'phosphor-solid';
 import { tempoDesign } from '../../theme/tempo-design';
+import { NeoCheckbox } from '../../ui/neo-checkbox';
 import { logger } from '../../../../lib/logger';
 import { type QueueTask, PRIORITY_CONFIG, formatDuration } from '../types';
 import { QueueService } from '../services/queue.service';
@@ -405,25 +406,12 @@ const TaskRow: Component<TaskRowProps> = (props) => {
       }}
     >
       {/* Checkbox */}
-      <div
-        style={{
-          width: '18px',
-          height: '18px',
-          'border-radius': tempoDesign.radius.sm,
-          border: `2px solid ${
-            props.isSelected ? tempoDesign.colors.primary : tempoDesign.colors.border
-          }`,
-          background: props.isSelected ? tempoDesign.colors.primary : 'transparent',
-          display: 'flex',
-          'align-items': 'center',
-          'justify-content': 'center',
-          'flex-shrink': 0,
-        }}
-      >
-        <Show when={props.isSelected}>
-          <Check size={12} color="white" weight="bold" />
-        </Show>
-      </div>
+      <NeoCheckbox
+        checked={props.isSelected}
+        onChange={() => {}} // Row click handles toggle
+        size="md"
+        variant="primary"
+      />
 
       {/* Priority indicator */}
       <div

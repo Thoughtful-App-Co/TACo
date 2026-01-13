@@ -351,6 +351,38 @@ export class SessionLifecycleService {
         log.info(`Extracted ${extractedTaskIds.length} tasks from session ${sessionDate}`);
       }
 
+      // Mark all incomplete timeboxes and their tasks as 'cancelled'
+      // This preserves the session history showing what was done vs what was cancelled
+      const updatedStoryBlocks = session.storyBlocks.map((block) => ({
+        ...block,
+        timeBoxes: block.timeBoxes.map((tb) => {
+          // Only work timeboxes need to be marked - breaks don't have a status that matters
+          if (tb.type !== 'work') return tb;
+
+          // If already completed, leave as is
+          if (tb.status === 'completed') return tb;
+
+          // Mark incomplete timeboxes as cancelled
+          return {
+            ...tb,
+            status: 'cancelled' as const,
+            // Also mark all tasks within the timebox as cancelled
+            tasks: tb.tasks?.map((task) => ({
+              ...task,
+              status: task.status === 'completed' ? task.status : ('cancelled' as const),
+            })),
+          };
+        }),
+      }));
+
+      // Save the updated session with cancelled timeboxes
+      const updatedSession = {
+        ...session,
+        storyBlocks: updatedStoryBlocks,
+        lastUpdated: new Date().toISOString(),
+      };
+      await this.sessionStorage.saveSession(sessionDate, updatedSession);
+
       // Update session status to completed
       await this.updateSessionStatus(sessionDate, 'completed');
 

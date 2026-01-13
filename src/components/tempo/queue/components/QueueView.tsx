@@ -590,11 +590,79 @@ export const QueueView: Component = () => {
       <div
         style={{
           display: 'grid',
-          'grid-template-columns': 'repeat(4, 1fr)',
+          'grid-template-columns': 'repeat(5, 1fr)',
           gap: '16px',
           'min-height': '400px',
         }}
       >
+        {/* The Pond - Frogs column */}
+        <div
+          style={{
+            display: 'flex',
+            'flex-direction': 'column',
+            background: `${tempoDesign.colors.frog}10`,
+            'border-radius': tempoDesign.radius.lg,
+            padding: '12px',
+            'min-height': '300px',
+            border: `1px solid ${tempoDesign.colors.frog}30`,
+          }}
+        >
+          {/* Column header */}
+          <div
+            style={{
+              display: 'flex',
+              'align-items': 'center',
+              gap: '8px',
+              'padding-bottom': '12px',
+              'margin-bottom': '12px',
+              'border-bottom': `1px solid ${tempoDesign.colors.frog}30`,
+            }}
+          >
+            <span style={{ 'font-size': '14px' }}>🐸</span>
+            <span
+              style={{
+                flex: 1,
+                'font-size': tempoDesign.typography.sizes.sm,
+                'font-weight': tempoDesign.typography.weights.semibold,
+                color: tempoDesign.colors.frog,
+              }}
+            >
+              The Pond
+            </span>
+            <span
+              style={{
+                'font-size': tempoDesign.typography.sizes.xs,
+                color: tempoDesign.colors.frog,
+                padding: '2px 8px',
+                'border-radius': tempoDesign.radius.full,
+                background: `${tempoDesign.colors.frog}20`,
+              }}
+            >
+              {frogTasks().length}
+            </span>
+          </div>
+
+          {/* Frog Tasks */}
+          <div style={{ display: 'flex', 'flex-direction': 'column', gap: '8px', flex: 1 }}>
+            <For each={frogTasks()}>
+              {(task) => (
+                <FrogTaskCard
+                  task={task}
+                  onSchedule={handleScheduleTask}
+                  onDiscard={handleDiscardTask}
+                  onEdit={handleEditTask}
+                  onPriorityChange={handlePriorityChange}
+                  onToggleFrog={handleToggleFrog}
+                  isDragging={draggedTaskId() === task.id}
+                  onDragStart={() => setDraggedTaskId(task.id)}
+                  onDragEnd={() => setDraggedTaskId(null)}
+                />
+              )}
+            </For>
+          </div>
+        </div>
+
+        {/* Priority columns */}
         <For each={PRIORITY_ORDER}>
           {(priority) => (
             <div
@@ -652,8 +720,23 @@ export const QueueView: Component = () => {
               {/* Tasks */}
               <div style={{ display: 'flex', 'flex-direction': 'column', gap: '8px', flex: 1 }}>
                 <For each={tasksByPriority()[priority]}>
-                  {(task) =>
-                    task.isFrog ? (
+                  {(task) => (
+                    <Show
+                      when={task.isFrog}
+                      fallback={
+                        <QueueTaskCard
+                          task={task}
+                          onSchedule={handleScheduleTask}
+                          onDiscard={handleDiscardTask}
+                          onEdit={handleEditTask}
+                          onPriorityChange={handlePriorityChange}
+                          onToggleFrog={handleToggleFrog}
+                          isDragging={draggedTaskId() === task.id}
+                          onDragStart={() => setDraggedTaskId(task.id)}
+                          onDragEnd={() => setDraggedTaskId(null)}
+                        />
+                      }
+                    >
                       <FrogTaskCard
                         task={task}
                         onSchedule={handleScheduleTask}
@@ -665,20 +748,8 @@ export const QueueView: Component = () => {
                         onDragStart={() => setDraggedTaskId(task.id)}
                         onDragEnd={() => setDraggedTaskId(null)}
                       />
-                    ) : (
-                      <QueueTaskCard
-                        task={task}
-                        onSchedule={handleScheduleTask}
-                        onDiscard={handleDiscardTask}
-                        onEdit={handleEditTask}
-                        onPriorityChange={handlePriorityChange}
-                        onToggleFrog={handleToggleFrog}
-                        isDragging={draggedTaskId() === task.id}
-                        onDragStart={() => setDraggedTaskId(task.id)}
-                        onDragEnd={() => setDraggedTaskId(null)}
-                      />
-                    )
-                  }
+                    </Show>
+                  )}
                 </For>
               </div>
             </div>

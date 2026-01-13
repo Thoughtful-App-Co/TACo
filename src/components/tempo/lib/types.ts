@@ -16,7 +16,7 @@ export type TaskCategory = TaskType;
 export type BaseStatus = 'todo' | 'completed' | 'in-progress';
 export type ExtendedTaskStatus = BaseStatus | 'backlog' | 'scheduled' | 'discarded' | 'pending';
 export type TaskStatus = BaseStatus | 'pending'; // TaskStatus extends base Status with additional states
-export type TimeBoxStatus = BaseStatus; // TimeBox uses base Status
+export type TimeBoxStatus = BaseStatus | 'cancelled'; // TimeBox uses base Status plus 'cancelled' for closed-out sessions
 export type SessionStatus = 'planned' | 'in-progress' | 'completed' | 'incomplete' | 'archived'; // Session has a special 'planned' state, 'incomplete' state, and 'archived' state
 
 export type StoryType = 'timeboxed' | 'flexible' | 'milestone';
