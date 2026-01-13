@@ -11,7 +11,7 @@
  * 4. Refactored into modular components for maintainability
  */
 
-import { Component, createSignal, For, Show, createMemo } from 'solid-js';
+import { Component, createSignal, For, Show, createMemo, createResource } from 'solid-js';
 import { A } from '@solidjs/router';
 import { Footer } from './common/Footer';
 
@@ -27,6 +27,25 @@ import {
   faqItems,
   type TacoClubTier,
 } from './pricing';
+
+// =============================================================================
+// TYPES
+// =============================================================================
+
+interface FoundingStats {
+  total: number;
+  remaining: number;
+  limit: number;
+  percentFilled: number;
+  breakdown: {
+    monthly: number;
+    lifetime: number;
+  };
+  nearLimit: boolean;
+  atLimit: boolean;
+  showWarning: boolean;
+  error?: string;
+}
 
 // =============================================================================
 // MAIN COMPONENT
@@ -46,6 +65,28 @@ export const PricingPage: Component = () => {
 
   // FAQ state
   const [openFaqIndex, setOpenFaqIndex] = createSignal<number | null>(null);
+
+  // Fetch founding member stats
+  const [foundingStats] = createResource<FoundingStats>(async () => {
+    try {
+      const response = await globalThis.fetch('/api/billing/founding-stats');
+      if (!response.ok) throw new Error('Failed to fetch stats');
+      return await response.json();
+    } catch {
+      // Return fallback data on error
+      return {
+        total: 0,
+        remaining: 10000,
+        limit: 10000,
+        percentFilled: 0,
+        breakdown: { monthly: 0, lifetime: 0 },
+        nearLimit: false,
+        atLimit: false,
+        showWarning: false,
+        error: 'Unable to load stats',
+      };
+    }
+  });
 
   // Toggle functions
   const toggleSyncApp = (appId: string) => {
@@ -1090,7 +1131,7 @@ export const PricingPage: Component = () => {
             </Show>
           </div>
 
-          {/* Scarcity Counter */}
+          {/* Scarcity Counter - Dynamic */}
           <Show when={tacoClubTier() !== 'none'}>
             <div
               style={{
@@ -1101,6 +1142,7 @@ export const PricingPage: Component = () => {
                 border: `1px solid ${tokens.colors.border}`,
               }}
             >
+              {/* Progress Bar */}
               <div
                 style={{
                   height: '6px',
@@ -1112,22 +1154,69 @@ export const PricingPage: Component = () => {
               >
                 <div
                   style={{
-                    width: '82.47%',
+                    width: `${foundingStats()?.percentFilled || 0}%`,
                     height: '100%',
                     background: `linear-gradient(90deg, ${tokens.colors.accent.coral}, ${tokens.colors.accent.teal})`,
+                    transition: 'width 0.3s ease',
                   }}
                 />
               </div>
-              <div
-                style={{
-                  'font-size': '12px',
-                  color: tokens.colors.textMuted,
-                  'text-align': 'center',
-                }}
+
+              {/* Stats Text */}
+              <Show
+                when={!foundingStats.loading && foundingStats()}
+                fallback={
+                  <div
+                    style={{
+                      'font-size': '12px',
+                      color: tokens.colors.textMuted,
+                      'text-align': 'center',
+                    }}
+                  >
+                    Loading availability...
+                  </div>
+                }
               >
-                <span style={{ 'font-weight': '700', color: tokens.colors.text }}>8,247</span> of
-                10,000 founding spots left
-              </div>
+                <div
+                  style={{
+                    'font-size': '12px',
+                    color: tokens.colors.textMuted,
+                    'text-align': 'center',
+                  }}
+                >
+                  <Show
+                    when={!foundingStats()?.error}
+                    fallback={
+                      <span>
+                        <span style={{ 'font-weight': '700', color: tokens.colors.text }}>
+                          Limited
+                        </span>{' '}
+                        founding spots available
+                      </span>
+                    }
+                  >
+                    <Show
+                      when={(foundingStats()?.remaining ?? 0) > 0}
+                      fallback={
+                        <span style={{ 'font-weight': '700', color: tokens.colors.accent.coral }}>
+                          Founding member spots are full
+                        </span>
+                      }
+                    >
+                      <span style={{ 'font-weight': '700', color: tokens.colors.text }}>
+                        {foundingStats()?.remaining.toLocaleString()}
+                      </span>{' '}
+                      of {foundingStats()?.limit.toLocaleString()} founding spots left
+                      <Show when={foundingStats()?.showWarning}>
+                        <span style={{ color: tokens.colors.accent.coral, 'font-weight': '600' }}>
+                          {' '}
+                          - Hurry!
+                        </span>
+                      </Show>
+                    </Show>
+                  </Show>
+                </div>
+              </Show>
             </div>
           </Show>
         </div>

@@ -2,7 +2,7 @@
  * File Extractor Service - Client-side text extraction from PDF/DOCX
  *
  * Uses browser-compatible libraries:
- * - pdfjs-dist for PDF extraction (configured globally in src/index.tsx)
+ * - unpdf for PDF extraction (serverless-optimized, no CDN dependencies)
  * - mammoth for DOCX extraction
  *
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
@@ -27,75 +27,54 @@ export interface ExtractionResult {
 // ============================================================================
 
 /**
- * Extract text from a PDF file using pdfjs-dist directly
- * Note: PDF.js worker is configured globally in src/index.tsx
+ * Extract text from a PDF file using unpdf
+ *
+ * unpdf is a modern, serverless-optimized PDF extraction library that:
+ * - Ships with a bundled PDF.js build (no CDN worker fetch required)
+ * - Works in browser, Node.js, and worker environments
+ * - Has zero external dependencies
+ * - Provides a simple, focused API for text extraction
  */
 export async function extractTextFromPDF(file: File): Promise<ExtractionResult> {
-  logger.resume.debug('Starting extraction for:', file.name);
+  logger.resume.debug('Starting PDF extraction for:', file.name);
 
   try {
-    // Import pdfjs-dist - worker is already configured in src/index.tsx
-    const pdfjsLib = await import('pdfjs-dist');
-    logger.resume.debug('pdfjs-dist loaded, version:', pdfjsLib.version);
+    // Dynamic import for code splitting
+    const { getDocumentProxy, extractText } = await import('unpdf');
+    logger.resume.debug('unpdf loaded');
 
-    // Ensure worker is configured (defensive check)
-    if (!pdfjsLib.GlobalWorkerOptions.workerSrc) {
-      logger.resume.debug('Worker not configured, setting up...');
-      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/build/pdf.worker.min.mjs`;
-    } else {
-      logger.resume.debug('Worker already configured:', pdfjsLib.GlobalWorkerOptions.workerSrc);
-    }
-
-    // Read file as ArrayBuffer
+    // Read file as ArrayBuffer and convert to Uint8Array
     const arrayBuffer = await file.arrayBuffer();
     logger.resume.debug('File read as ArrayBuffer, size:', arrayBuffer.byteLength, 'bytes');
 
-    // Load the PDF document with standard font data for font handling
+    // Load the PDF document
     logger.resume.debug('Loading PDF document...');
-    const loadingTask = pdfjsLib.getDocument({
-      data: arrayBuffer,
-      // Use unpkg CDN which has the font files (cdnjs returns 403)
-      standardFontDataUrl: `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/standard_fonts/`,
-      cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjsLib.version}/cmaps/`,
-      cMapPacked: true,
-      // Disable font loading for text-only extraction (improves performance)
-      disableFontFace: true,
-    });
-    const pdf = await loadingTask.promise;
+    const pdf = await getDocumentProxy(new Uint8Array(arrayBuffer));
     logger.resume.debug('PDF loaded successfully, pages:', pdf.numPages);
 
     // Extract text from all pages
-    const textParts: string[] = [];
+    // mergePages: false returns an array of strings (one per page) for better formatting
+    const { totalPages, text } = await extractText(pdf, { mergePages: false });
 
-    for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
-      logger.resume.debug(`Extracting text from page ${pageNum}/${pdf.numPages}...`);
-      const page = await pdf.getPage(pageNum);
-      const textContent = await page.getTextContent();
-      const pageText = textContent.items
-        .map((item: any) => ('str' in item ? item.str : ''))
-        .join(' ');
-      textParts.push(pageText);
-      logger.resume.debug(`Page ${pageNum} extracted, ${pageText.length} characters`);
-    }
+    // Join pages with double newlines for paragraph separation
+    const fullText = Array.isArray(text) ? text.join('\n\n') : text;
+    const wordCount = fullText.split(/\s+/).filter((w: string) => w.length > 0).length;
 
-    const text = textParts.join('\n\n');
-    const wordCount = text.split(/\s+/).filter((w: string) => w.length > 0).length;
-
-    logger.resume.info('Extraction complete!', {
-      totalText: text.length,
+    logger.resume.info('PDF extraction complete!', {
+      totalText: fullText.length,
       wordCount,
-      pageCount: pdf.numPages,
-      preview: text.substring(0, 200),
+      pageCount: totalPages,
+      preview: fullText.substring(0, 200),
     });
 
     return {
       success: true,
-      text,
-      pageCount: pdf.numPages,
+      text: fullText,
+      pageCount: totalPages,
       wordCount,
     };
   } catch (error) {
-    logger.resume.error('Error:', error);
+    logger.resume.error('PDF extraction error:', error);
     logger.resume.error('Error stack:', error instanceof Error ? error.stack : 'No stack');
     return {
       success: false,

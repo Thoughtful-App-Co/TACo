@@ -14,8 +14,9 @@ import Stripe from 'stripe';
 import { jwtVerify } from 'jose';
 import { billingLog } from '../../lib/logger';
 
-// TACo Club monthly price ID - needs 24-month subscription schedule
+// TACo Club price IDs
 const TACO_CLUB_MONTHLY_PRICE = 'price_1Sm564CPMZ8sEjvKCGmRtoZb';
+const TACO_CLUB_LIFETIME_PRICE = 'price_1Sm564CPMZ8sEjvKRuiDExbY';
 
 interface Env {
   AUTH_DB: D1Database;
@@ -75,6 +76,32 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
         JSON.stringify({ error: 'Price ID required', code: 'MISSING_PRICE_ID' }),
         { status: 400, headers }
       );
+    }
+
+    // Soft limit check for LocoTaco founding memberships
+    if (priceId === TACO_CLUB_MONTHLY_PRICE || priceId === TACO_CLUB_LIFETIME_PRICE) {
+      const countQuery = await env.BILLING_DB.prepare(
+        `SELECT COUNT(*) as count 
+         FROM subscriptions 
+         WHERE product = 'taco_club' 
+         AND status IN ('active', 'trialing')
+         AND (lifetime_access = 1 OR stripe_subscription_id IS NOT NULL)`
+      ).first();
+
+      const currentCount = (countQuery?.count as number) || 0;
+      const FOUNDING_MEMBER_LIMIT = 10000;
+
+      if (currentCount >= FOUNDING_MEMBER_LIMIT) {
+        billingLog.warn(
+          `LocoTaco founding limit reached (${currentCount}/${FOUNDING_MEMBER_LIMIT}). User ${userId} attempting purchase.`
+        );
+        // Soft limit - log but allow purchase
+        // Can be changed to hard block by returning error response here
+      } else if (currentCount >= 9900) {
+        billingLog.info(
+          `LocoTaco nearing limit (${currentCount}/${FOUNDING_MEMBER_LIMIT}). User ${userId} purchasing.`
+        );
+      }
     }
 
     // Initialize Stripe

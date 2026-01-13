@@ -217,7 +217,58 @@ wrangler d1 execute BILLING_DB --env production --remote --file=migrations/0002_
 wrangler d1 execute BILLING_DB --env production --remote --file=migrations/0003_credits_schema.sql
 ```
 
-### 6. Start the Development Server
+### 6. Seed Test Users (Recommended)
+
+For testing premium features locally, seed the database with pre-configured test users:
+
+```bash
+pnpm run db:seed
+```
+
+This creates three test user profiles:
+
+| User Type   | Email                | Subscriptions                                          | Credits |
+| ----------- | -------------------- | ------------------------------------------------------ | ------- |
+| **Premium** | `premium@test.local` | tenure_extras, tempo_extras, echoprax_extras, sync_all | 100     |
+| **Sync**    | `sync@test.local`    | sync_all                                               | 10      |
+| **Free**    | `free@test.local`    | (none)                                                 | 0       |
+
+#### Logging In as Test Users
+
+Use the dev-only login endpoint (only works in non-production environments):
+
+```bash
+# In your browser, visit:
+http://localhost:8787/api/auth/dev-login?user=premium
+http://localhost:8787/api/auth/dev-login?user=sync
+http://localhost:8787/api/auth/dev-login?user=free
+```
+
+This bypasses email verification and creates a valid session token, redirecting you to the app as that user.
+
+**Programmatic access** (for scripts/testing):
+
+```bash
+curl -X POST http://localhost:8787/api/auth/dev-login \
+  -H "Content-Type: application/json" \
+  -d '{"user": "premium"}'
+```
+
+Returns JSON with the session token.
+
+#### Re-seeding
+
+If you need to reset test data:
+
+```bash
+# Full reset (drops all tables, re-creates schema, seeds test users)
+pnpm run db:reset
+
+# Just re-seed users (keeps existing data)
+pnpm run db:seed
+```
+
+### 7. Start the Development Server
 
 ```bash
 pnpm run dev

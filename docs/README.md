@@ -25,6 +25,8 @@ Complete documentation for the TACo (Thoughtful App Co) monorepo containing Temp
 ### 🚀 Deployment & Core Systems
 
 - **[Database Setup](./DATABASE_SETUP.md)** - D1 database configuration
+- **[Database Operations](./DATABASE_OPERATIONS.md)** - ⚠️ **CRITICAL:** Best practices for direct database access
+- **[Founding Members Tracking](./FOUNDING_MEMBERS_TRACKING.md)** - LocoTaco membership system
 - **[Secrets Reference](./SECRETS_REFERENCE.md)** - Environment variables and API keys
 - **[Installation](./INSTALLATION.md)** - Project setup and dependencies
 

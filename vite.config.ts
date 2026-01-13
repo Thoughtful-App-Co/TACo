@@ -181,9 +181,11 @@ export default defineConfig({
           'vendor-solid': ['solid-js', 'solid-js/web', '@solidjs/router'],
           // UI components library (~12KB) - Stable
           'vendor-kobalte': ['@kobalte/core'],
-          // Heavy document parsing (~828KB) - Lazy-loaded via dynamic imports
-          // Split separately for better caching since rarely updated
-          'vendor-docs': ['pdfjs-dist', 'mammoth'],
+          // Document parsing - Lazy-loaded via dynamic imports
+          // unpdf: serverless-optimized PDF extraction (includes bundled PDF.js, no CDN deps)
+          // Note: unpdf's internal pdfjs will be auto-split into a separate chunk
+          // mammoth: DOCX text extraction
+          'vendor-docs': ['unpdf', 'mammoth'],
           // NLP libraries (empty chunk) - Fully lazy-loaded via dynamic imports
           'vendor-nlp': ['wink-nlp', 'wink-eng-lite-web-model', 'keyword-extractor'],
           // D3 visualization (~79KB, down from ~500KB via selective imports)

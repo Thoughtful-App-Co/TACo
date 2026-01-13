@@ -11,7 +11,7 @@
 import { Component, createSignal, Show, createMemo, onMount, createEffect } from 'solid-js';
 import { useNavigate, useLocation, useParams } from '@solidjs/router';
 import { BrainDump } from './brain-dump';
-import { CaretRight, Gear } from 'phosphor-solid';
+import { CaretRight, Gear, User } from 'phosphor-solid';
 import { QueueView } from './queue';
 import { tempoDesign } from './theme/tempo-design';
 import { TempoLogo } from './ui/logo';
@@ -22,7 +22,8 @@ import { SessionsList } from './session-manager/components/sessions-list';
 import { SessionView } from './session-manager/components/session-view';
 import { ApiConfigService } from './services/api-config.service';
 import { AppMenuTrigger } from '../common/AppMenuTrigger';
-import { AuthStatusIndicator } from '../common/AuthStatusIndicator';
+import { ProfileBadges } from '../common/ProfileBadges';
+import { useAuth } from '../../lib/auth-context';
 import { TempoNotificationService, type NotificationState } from './services/notification.service';
 
 interface Stats {
@@ -72,6 +73,7 @@ export const TempoApp: Component = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const params = useParams<{ date?: string }>();
+  const auth = useAuth();
 
   const [stats, setStats] = createSignal<Stats>({
     totalTasks: 0,
@@ -217,28 +219,55 @@ export const TempoApp: Component = () => {
           'justify-content': 'space-between',
         }}
       >
+        <AppMenuTrigger>
+          <TempoLogo size={48} />
+        </AppMenuTrigger>
+
+        {/* Right side: Profile and Settings buttons */}
         <div style={{ display: 'flex', 'align-items': 'center', gap: '12px' }}>
-          <AppMenuTrigger>
-            <TempoLogo size={48} />
-          </AppMenuTrigger>
-          <AuthStatusIndicator size="sm" />
+          {/* Profile button with status badges */}
+          <ProfileBadges
+            isAuthenticated={auth.isAuthenticated()}
+            hasSync={auth.hasSyncSubscription()}
+            hasExtras={auth.hasAppExtras('tempo')}
+            isTacoClub={auth.isTacoClubMember()}
+            size={40}
+          >
+            <Button
+              variant="ghost"
+              size="icon"
+              style={{
+                height: '40px',
+                width: '40px',
+                'border-radius': tempoDesign.radius.full,
+                display: 'flex',
+                'align-items': 'center',
+                'justify-content': 'center',
+              }}
+              title="Profile"
+            >
+              <User size={20} />
+            </Button>
+          </ProfileBadges>
+
+          {/* Settings button */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowSettings(true)}
+            style={{
+              height: '40px',
+              width: '40px',
+              'border-radius': tempoDesign.radius.full,
+              display: 'flex',
+              'align-items': 'center',
+              'justify-content': 'center',
+            }}
+            title="Settings"
+          >
+            <Gear size={20} />
+          </Button>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setShowSettings(true)}
-          style={{
-            height: '40px',
-            width: '40px',
-            'border-radius': tempoDesign.radius.full,
-            display: 'flex',
-            'align-items': 'center',
-            'justify-content': 'center',
-          }}
-          title="Settings"
-        >
-          <Gear size={20} />
-        </Button>
       </header>
 
       {/* Settings Sidebar */}
@@ -330,9 +359,9 @@ export const TempoApp: Component = () => {
               }}
             >
               <BrainDump
-                    onTasksProcessed={handleTasksProcessed}
-                    onOpenSettings={() => setShowSettings(true)}
-                  />
+                onTasksProcessed={handleTasksProcessed}
+                onOpenSettings={() => setShowSettings(true)}
+              />
 
               <Show when={stats().totalTasks > 0}>
                 <div

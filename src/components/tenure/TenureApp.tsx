@@ -75,6 +75,8 @@ import {
 import { loadOceanProfile } from './services/ocean';
 import { loadJungianProfile } from './services/jungian';
 import { AppMenuTrigger } from '../common/AppMenuTrigger';
+import { ProfileBadges } from '../common/ProfileBadges';
+import { useAuth } from '../../lib/auth-context';
 import { IconTrophy } from './pipeline/ui/Icons';
 
 // Helper to get RGB string from hex
@@ -941,6 +943,7 @@ const tabToFeatureId: Record<TabName, FeatureId | null> = {
 export const TenureApp: Component = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const auth = useAuth();
 
   // Reactive accessor for current pathname
   const pathname = () => location.pathname;
@@ -1809,77 +1812,71 @@ export const TenureApp: Component = () => {
             </div>
 
             <div style={{ display: 'flex', 'align-items': 'center', gap: '12px' }}>
-              {/* Profile button */}
-              <button
-                onClick={() => setSidebarView(sidebarView() === 'profile' ? null : 'profile')}
-                class="header-icon-btn"
-                style={{
-                  width: '44px',
-                  height: '44px',
-                  'border-radius': '12px',
-                  background:
-                    sidebarView() === 'profile' ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-                  border:
-                    sidebarView() === 'profile'
-                      ? `1px solid ${currentTheme().colors.primary}`
-                      : `1px solid ${maximalist.colors.border}`,
-                  display: 'flex',
-                  'align-items': 'center',
-                  'justify-content': 'center',
-                  cursor: 'pointer',
-                  color:
-                    sidebarView() === 'profile'
-                      ? currentTheme().colors.primary
-                      : maximalist.colors.textMuted,
-                  transition: 'all 0.2s ease',
-                  position: 'relative',
-                }}
-                onMouseEnter={(e) => {
-                  if (sidebarView() !== 'profile') {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                    e.currentTarget.style.borderColor = currentTheme().colors.primary;
-                    e.currentTarget.style.color = currentTheme().colors.text;
-                    e.currentTarget.style.transform = 'scale(1.05)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (sidebarView() !== 'profile') {
-                    e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.borderColor = maximalist.colors.border;
-                    e.currentTarget.style.color = maximalist.colors.textMuted;
-                    e.currentTarget.style.transform = 'scale(1)';
-                  }
-                }}
-                title="Profile"
+              {/* Profile button with status badges */}
+              <ProfileBadges
+                isAuthenticated={auth.isAuthenticated()}
+                hasSync={auth.hasSyncSubscription()}
+                hasExtras={auth.hasAppExtras('tenure')}
+                isTacoClub={auth.isTacoClubMember()}
+                size={44}
               >
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+                <button
+                  onClick={() => setSidebarView(sidebarView() === 'profile' ? null : 'profile')}
+                  class="header-icon-btn"
+                  style={{
+                    width: '44px',
+                    height: '44px',
+                    'border-radius': '12px',
+                    background:
+                      sidebarView() === 'profile' ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                    border:
+                      sidebarView() === 'profile'
+                        ? `1px solid ${currentTheme().colors.primary}`
+                        : `1px solid ${maximalist.colors.border}`,
+                    display: 'flex',
+                    'align-items': 'center',
+                    'justify-content': 'center',
+                    cursor: 'pointer',
+                    color:
+                      sidebarView() === 'profile'
+                        ? currentTheme().colors.primary
+                        : maximalist.colors.textMuted,
+                    transition: 'all 0.2s ease',
+                    position: 'relative',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (sidebarView() !== 'profile') {
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                      e.currentTarget.style.borderColor = currentTheme().colors.primary;
+                      e.currentTarget.style.color = currentTheme().colors.text;
+                      e.currentTarget.style.transform = 'scale(1.05)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (sidebarView() !== 'profile') {
+                      e.currentTarget.style.background = 'transparent';
+                      e.currentTarget.style.borderColor = maximalist.colors.border;
+                      e.currentTarget.style.color = maximalist.colors.textMuted;
+                      e.currentTarget.style.transform = 'scale(1)';
+                    }
+                  }}
+                  title="Profile"
                 >
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                  <circle cx="12" cy="7" r="4" />
-                </svg>
-                {/* Notification dot if no profile */}
-                <Show when={!pipelineStore.state.profile && sidebarView() !== 'profile'}>
-                  <span
-                    style={{
-                      position: 'absolute',
-                      top: '8px',
-                      right: '8px',
-                      width: '8px',
-                      height: '8px',
-                      'border-radius': '50%',
-                      background: '#F59E0B',
-                    }}
-                  />
-                </Show>
-              </button>
+                  <svg
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </svg>
+                </button>
+              </ProfileBadges>
 
               {/* Settings button */}
               <button
