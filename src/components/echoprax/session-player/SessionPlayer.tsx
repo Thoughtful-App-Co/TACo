@@ -12,7 +12,7 @@ import {
 } from 'phosphor-solid';
 import type { WorkoutSession, WorkoutBlock, SessionState } from '../../../schemas/echoprax.schema';
 import { ExerciseCard } from './ExerciseCard';
-import { ProgressTimeline } from './ProgressTimeline';
+import { WorkoutTimeline } from './WorkoutTimeline';
 import { SessionHeader } from '../common/ViewHeader';
 import { speak, cancelSpeech } from '../../../services/tts';
 import {
@@ -183,20 +183,6 @@ export const SessionPlayer: Component<SessionPlayerProps> = (props) => {
 
   // Track elapsed time during user-controlled active phase (for partner workout timing)
   const [userActiveElapsed, setUserActiveElapsed] = createSignal(0);
-
-  const blocksForCurrentPhase = createMemo(() => {
-    const phase = currentPhase();
-    return allBlocks()
-      .filter((b) => b.phase === phase)
-      .map((b) => b.block);
-  });
-
-  const currentIndexInPhase = createMemo(() => {
-    const phase = currentPhase();
-    const globalIndex = currentBlockIndex();
-    const phaseStartIndex = allBlocks().findIndex((b) => b.phase === phase);
-    return globalIndex - phaseStartIndex;
-  });
 
   // TTS speak wrapper (respects mute)
   const speakCue = (text: string, priority = true) => {
@@ -471,29 +457,34 @@ export const SessionPlayer: Component<SessionPlayerProps> = (props) => {
   // Main timer effect
   createEffect(() => {
     const currentState = state();
-    const mode = currentMode();
 
+    // Don't run timer during idle, completed, or paused states
     if (currentState === 'idle' || currentState === 'completed' || currentState === 'paused') {
       clearTimer();
       return;
     }
 
-    // For user-controlled active/rest phases, don't auto-countdown
-    // But we still run a timer to track elapsed time
-    const isUserControlledPhase =
-      (currentState === 'active' && isUserControlledActive(mode)) ||
-      (currentState === 'rest' && isUserControlledRest(mode));
-
     clearTimer();
 
     timerInterval = setInterval(() => {
+      // Check pause state INSIDE the interval
       if (isPaused()) return;
 
+      // Read reactive values INSIDE the interval callback
+      const currentStateNow = state();
+      const modeNow = currentMode();
+
+      // Determine if this is a user-controlled phase
+      const isUserControlledPhase =
+        (currentStateNow === 'active' && isUserControlledActive(modeNow)) ||
+        (currentStateNow === 'rest' && isUserControlledRest(modeNow));
+
+      // Always increment elapsed time
       setElapsedTime((t) => t + 1);
 
       if (isUserControlledPhase) {
         // Count UP for user-controlled phases (track how long they take)
-        if (currentState === 'active') {
+        if (currentStateNow === 'active') {
           setUserActiveElapsed((t) => t + 1);
           setTimeRemaining((t) => t + 1); // Count up for display
         }
@@ -505,7 +496,8 @@ export const SessionPlayer: Component<SessionPlayerProps> = (props) => {
       setTimeRemaining((t) => {
         const newTime = t - 1;
 
-        if (currentState === 'active') {
+        // Voice cues for active countdown
+        if (currentStateNow === 'active') {
           if (newTime === 15) speakCue('15 seconds left');
           if (newTime === 5) speakCue('5 seconds');
           if (newTime === 3) speakCue('3');
@@ -513,19 +505,22 @@ export const SessionPlayer: Component<SessionPlayerProps> = (props) => {
           if (newTime === 1) speakCue('1');
         }
 
-        if (currentState === 'countdown') {
+        // Voice cues for initial countdown (before exercise starts)
+        if (currentStateNow === 'countdown') {
           if (newTime === 3) speakCue('3');
           if (newTime === 2) speakCue('2');
           if (newTime === 1) speakCue('1');
         }
 
-        if (currentState === 'rest') {
+        // Voice cues for rest countdown
+        if (currentStateNow === 'rest') {
           if (newTime === 5) speakCue('5 seconds');
           if (newTime === 3) speakCue('3');
           if (newTime === 2) speakCue('2');
           if (newTime === 1) speakCue('1');
         }
 
+        // Transition when timer reaches 0
         if (newTime <= 0) {
           transitionToNext();
           return 0;
@@ -554,432 +549,473 @@ export const SessionPlayer: Component<SessionPlayerProps> = (props) => {
       style={{
         'min-height': '100vh',
         background: echoprax.colors.background,
-        'background-image': memphisPatterns.terrazzo,
-        'background-size': '200px 200px',
         color: echoprax.colors.text,
         'font-family': echoprax.fonts.body,
-        padding: echoprax.spacing.lg,
         display: 'flex',
         'flex-direction': 'column',
-        gap: echoprax.spacing.lg,
+        position: 'relative',
       }}
     >
-      {/* Header - uses SessionHeader for consistent back navigation */}
-      <Show when={state() !== 'idle' && state() !== 'completed'}>
-        <SessionHeader
-          title={props.workout.name}
-          bpmLabel={`${props.workout.targetBpm.label} | ${props.workout.targetBpm.min}-${props.workout.targetBpm.max} BPM`}
-          elapsedTime={formatElapsedTime()}
-          onExit={() => {
-            setIsPaused(true);
-            setShowExitConfirm(true);
-          }}
-          stateColor={sessionStateColors[state()] || memphisColors.electricBlue}
-        />
-      </Show>
+      {/* Solid background overlay for readability - eliminates pattern distraction */}
+      <div
+        style={{
+          position: 'absolute',
+          inset: 0,
+          background:
+            'linear-gradient(180deg, rgba(13, 13, 13, 0.97) 0%, rgba(26, 26, 31, 0.98) 50%, rgba(13, 13, 13, 0.97) 100%)',
+          'z-index': 0,
+        }}
+      />
 
-      {/* Idle State - Start Screen */}
-      <Show when={state() === 'idle'}>
-        <div
-          style={{
-            flex: 1,
-            display: 'flex',
-            'flex-direction': 'column',
-            'align-items': 'center',
-            'justify-content': 'center',
-            gap: echoprax.spacing.xl,
-            padding: echoprax.spacing.lg,
-          }}
-        >
-          <div style={{ 'text-align': 'center' }}>
-            <div
-              style={{
-                width: '96px',
-                height: '96px',
-                'border-radius': '50%',
-                background: memphisColors.hotPink,
-                display: 'flex',
-                'align-items': 'center',
-                'justify-content': 'center',
-                margin: '0 auto',
-                'margin-bottom': echoprax.spacing.lg,
-                'box-shadow': `0 8px 32px ${memphisColors.hotPink}50`,
-              }}
-              aria-hidden="true"
-            >
-              <DumbbellIcon size={48} color="#FFFFFF" />
-            </div>
-            <h2
-              style={{
-                ...typography.headingLg,
-                color: echoprax.colors.text,
-                margin: 0,
-              }}
-            >
-              Ready to Work?
-            </h2>
-            <p
-              style={{
-                ...typography.body,
-                color: echoprax.colors.textMuted,
-                'margin-top': echoprax.spacing.sm,
-              }}
-            >
-              {allBlocks().length} exercises •{' '}
-              <span style={{ color: memphisColors.acidYellow, 'font-weight': '600' }}>
-                ~{Math.ceil(props.workout.totalDuration / 60)} minutes
-              </span>
-            </p>
-          </div>
+      {/* Content wrapper */}
+      <div
+        style={{
+          position: 'relative',
+          'z-index': 1,
+          padding: echoprax.spacing.lg,
+          display: 'flex',
+          'flex-direction': 'column',
+          gap: echoprax.spacing.lg,
+          flex: 1,
+        }}
+      >
+        {/* Header - uses SessionHeader for consistent back navigation */}
+        <Show when={state() !== 'idle' && state() !== 'completed'}>
+          <SessionHeader
+            title={props.workout.name}
+            bpmLabel={`${props.workout.targetBpm.label} | ${props.workout.targetBpm.min}-${props.workout.targetBpm.max} BPM`}
+            elapsedTime={formatElapsedTime()}
+            onExit={() => {
+              setIsPaused(true);
+              setShowExitConfirm(true);
+            }}
+            stateColor={sessionStateColors[state()] || memphisColors.electricBlue}
+          />
+        </Show>
 
-          <button
-            onClick={startWorkout}
-            class="echoprax-glass-btn"
-            aria-label={`Start workout: ${props.workout.name}`}
+        {/* Idle State - Start Screen */}
+        <Show when={state() === 'idle'}>
+          <div
             style={{
-              ...glassButton.primary,
-              'border-radius': echoprax.radii.organic,
-              padding: `${echoprax.spacing.md} ${echoprax.spacing.xxl}`,
-              ...typography.headingSm,
-              color: memphisColors.hotPink,
-              cursor: 'pointer',
-              'box-shadow': `0 8px 32px ${memphisColors.hotPink}30`,
-              transition: `all 250ms ${kineticAnimations.bouncy}`,
-              'min-height': '56px', // Ensure touch target
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'scale(1.05) translateY(-2px)';
-              e.currentTarget.style.boxShadow = `0 12px 40px ${memphisColors.hotPink}50`;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'scale(1) translateY(0)';
-              e.currentTarget.style.boxShadow = `0 8px 32px ${memphisColors.hotPink}30`;
+              flex: 1,
+              display: 'flex',
+              'flex-direction': 'column',
+              'align-items': 'center',
+              'justify-content': 'center',
+              gap: echoprax.spacing.xl,
+              padding: echoprax.spacing.lg,
             }}
           >
-            Start Workout
-          </button>
-        </div>
-      </Show>
+            <div style={{ 'text-align': 'center' }}>
+              <div
+                style={{
+                  width: '96px',
+                  height: '96px',
+                  'border-radius': '50%',
+                  background: memphisColors.hotPink,
+                  display: 'flex',
+                  'align-items': 'center',
+                  'justify-content': 'center',
+                  margin: '0 auto',
+                  'margin-bottom': echoprax.spacing.lg,
+                  'box-shadow': `0 8px 32px ${memphisColors.hotPink}50`,
+                }}
+                aria-hidden="true"
+              >
+                <DumbbellIcon size={48} color="#FFFFFF" />
+              </div>
+              <h2
+                style={{
+                  ...typography.headingLg,
+                  color: echoprax.colors.text,
+                  margin: 0,
+                }}
+              >
+                Ready to Work?
+              </h2>
+              <p
+                style={{
+                  ...typography.body,
+                  color: echoprax.colors.textMuted,
+                  'margin-top': echoprax.spacing.sm,
+                }}
+              >
+                {allBlocks().length} exercises •{' '}
+                <span style={{ color: memphisColors.acidYellow, 'font-weight': '600' }}>
+                  ~{Math.ceil(props.workout.totalDuration / 60)} minutes
+                </span>
+              </p>
+            </div>
 
-      {/* Active Workout */}
-      <Show when={state() !== 'idle' && state() !== 'completed' && currentBlock()}>
-        {/* Progress Timeline */}
-        <ProgressTimeline
-          blocks={blocksForCurrentPhase()}
-          currentBlockIndex={currentIndexInPhase()}
-          phase={currentPhase()}
-          currentSet={currentSet()}
-          totalSets={totalSets()}
-        />
-
-        {/* Exercise Card */}
-        <ExerciseCard
-          exercise={currentBlock()!.exercise}
-          state={state()}
-          timeRemaining={timeRemaining()}
-          totalDuration={
-            state() === 'countdown'
-              ? COUNTDOWN_DURATION
-              : state() === 'rest'
-                ? currentBlock()!.restAfter
-                : currentBlock()!.duration
-          }
-          nextExercise={nextBlock()?.exercise}
-          mode={currentMode()}
-          reps={currentBlock()!.reps}
-          isUserControlled={
-            (state() === 'active' && isUserControlledActive(currentMode())) ||
-            (state() === 'rest' && isUserControlledRest(currentMode()))
-          }
-          currentSet={currentSet()}
-          totalSets={totalSets()}
-        />
-
-        {/* Controls */}
-        <nav
-          aria-label="Workout controls"
-          style={{
-            display: 'flex',
-            'flex-direction': 'column',
-            'align-items': 'center',
-            gap: echoprax.spacing.lg,
-            'padding-top': echoprax.spacing.lg,
-          }}
-        >
-          {/* Primary Action Button for User-Controlled Modes */}
-          <Show
-            when={
-              (state() === 'active' && isUserControlledActive(currentMode())) ||
-              (state() === 'rest' && isUserControlledRest(currentMode()))
-            }
-          >
             <button
-              onClick={() => {
-                if (state() === 'active') {
-                  completeUserSet();
-                } else if (state() === 'rest') {
-                  userReady();
-                }
-              }}
+              onClick={startWorkout}
               class="echoprax-glass-btn"
-              aria-label={state() === 'active' ? 'Complete set' : 'Start next exercise'}
+              aria-label={`Start workout: ${props.workout.name}`}
               style={{
                 ...glassButton.primary,
                 'border-radius': echoprax.radii.organic,
-                padding: `${echoprax.spacing.xl} ${echoprax.spacing.xxl}`,
-                ...typography.headingMd,
-                'font-size': '1.25rem',
-                color: state() === 'active' ? memphisColors.mintGreen : memphisColors.electricBlue,
+                padding: `${echoprax.spacing.md} ${echoprax.spacing.xxl}`,
+                ...typography.headingSm,
+                color: memphisColors.hotPink,
                 cursor: 'pointer',
-                'box-shadow': `0 12px 40px ${state() === 'active' ? memphisColors.mintGreen : memphisColors.electricBlue}50`,
+                'box-shadow': `0 8px 32px ${memphisColors.hotPink}30`,
                 transition: `all 250ms ${kineticAnimations.bouncy}`,
-                'min-height': '72px',
-                'min-width': '240px',
-                display: 'flex',
-                'align-items': 'center',
-                'justify-content': 'center',
-                gap: echoprax.spacing.md,
-                border: `2px solid ${state() === 'active' ? memphisColors.mintGreen : memphisColors.electricBlue}40`,
+                'min-height': '56px', // Ensure touch target
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.transform = 'scale(1.08) translateY(-4px)';
-                e.currentTarget.style.boxShadow = `0 16px 48px ${state() === 'active' ? memphisColors.mintGreen : memphisColors.electricBlue}60`;
+                e.currentTarget.style.transform = 'scale(1.05) translateY(-2px)';
+                e.currentTarget.style.boxShadow = `0 12px 40px ${memphisColors.hotPink}50`;
               }}
               onMouseLeave={(e) => {
                 e.currentTarget.style.transform = 'scale(1) translateY(0)';
-                e.currentTarget.style.boxShadow = `0 12px 40px ${state() === 'active' ? memphisColors.mintGreen : memphisColors.electricBlue}50`;
+                e.currentTarget.style.boxShadow = `0 8px 32px ${memphisColors.hotPink}30`;
               }}
             >
-              <Show
-                when={state() === 'active'}
-                fallback={
-                  <>
-                    <ArrowRight size={32} weight="bold" />
-                    Next
-                  </>
-                }
-              >
-                <Barbell size={32} weight="bold" />
-                Complete Set
-              </Show>
+              Start Workout
             </button>
-          </Show>
+          </div>
+        </Show>
 
-          {/* Secondary Controls Row - mobile-optimized with standard touch targets */}
-          <div
+        {/* Active Workout */}
+        <Show when={state() !== 'idle' && state() !== 'completed' && currentBlock()}>
+          {/* Workout Timeline - full workout progress */}
+          <WorkoutTimeline
+            warmupBlocks={props.workout.warmup || []}
+            mainBlocks={props.workout.main}
+            cooldownBlocks={props.workout.cooldown || []}
+            currentGlobalIndex={currentBlockIndex()}
+            totalBlocks={allBlocks().length}
+            currentPhase={currentPhase()}
+            currentExerciseName={currentBlock()!.exercise.name}
+            currentSet={currentSet()}
+            totalSets={totalSets()}
+          />
+
+          {/* Exercise Card */}
+          <ExerciseCard
+            exercise={currentBlock()!.exercise}
+            state={state()}
+            timeRemaining={timeRemaining()}
+            totalDuration={
+              state() === 'countdown'
+                ? COUNTDOWN_DURATION
+                : state() === 'rest'
+                  ? currentBlock()!.restAfter
+                  : currentBlock()!.duration
+            }
+            nextExercise={nextBlock()?.exercise}
+            mode={currentMode()}
+            reps={currentBlock()!.reps}
+            isUserControlled={
+              (state() === 'active' && isUserControlledActive(currentMode())) ||
+              (state() === 'rest' && isUserControlledRest(currentMode()))
+            }
+            currentSet={currentSet()}
+            totalSets={totalSets()}
+          />
+
+          {/* Controls */}
+          <nav
+            aria-label="Workout controls"
             style={{
               display: 'flex',
-              'justify-content': 'center',
+              'flex-direction': 'column',
               'align-items': 'center',
-              gap: echoprax.spacing.sm,
-              'flex-wrap': 'wrap',
-              'max-width': '320px',
-              margin: '0 auto',
+              gap: echoprax.spacing.lg,
+              'padding-top': echoprax.spacing.lg,
             }}
           >
-            {/* Mute Toggle */}
-            <button
-              onClick={() => setIsMuted(!isMuted())}
-              class="echoprax-glass-btn"
-              aria-label={isMuted() ? 'Unmute voice coaching' : 'Mute voice coaching'}
-              aria-pressed={isMuted()}
-              style={{
-                ...glassButton.default,
-                border: 'none',
-                'border-radius': '50%',
-                width: touchTargets.minimum,
-                height: touchTargets.minimum,
-                display: 'flex',
-                'align-items': 'center',
-                'justify-content': 'center',
-                cursor: 'pointer',
-                color: isMuted() ? echoprax.colors.textMuted : memphisColors.electricBlue,
-              }}
-              title={isMuted() ? 'Unmute' : 'Mute'}
+            {/* Primary Action Button for User-Controlled Modes - Circular */}
+            <Show
+              when={
+                (state() === 'active' && isUserControlledActive(currentMode())) ||
+                (state() === 'rest' && isUserControlledRest(currentMode()))
+              }
             >
-              <Show when={isMuted()} fallback={<SpeakerHigh size={20} />}>
-                <SpeakerSlash size={20} />
-              </Show>
-            </button>
-
-            {/* Previous Exercise */}
-            <button
-              onClick={goToPrevious}
-              class="echoprax-glass-btn"
-              aria-label="Go to previous exercise"
-              disabled={currentBlockIndex() === 0}
-              style={{
-                ...glassButton.default,
-                border: 'none',
-                'border-radius': '50%',
-                width: touchTargets.secondary,
-                height: touchTargets.secondary,
-                display: 'flex',
-                'align-items': 'center',
-                'justify-content': 'center',
-                cursor: currentBlockIndex() === 0 ? 'not-allowed' : 'pointer',
-                color:
-                  currentBlockIndex() === 0
-                    ? echoprax.colors.textMuted
-                    : memphisColors.electricBlue,
-                opacity: currentBlockIndex() === 0 ? 0.4 : 1,
-              }}
-              title="Previous Exercise"
-            >
-              <SkipBack size={22} weight="fill" />
-            </button>
-
-            {/* Play/Pause - Hero button, only for timed exercises or countdown */}
-            <Show when={!isUserControlledActive(currentMode()) || state() === 'countdown'}>
-              <button
-                onClick={togglePause}
-                class="echoprax-glass-btn"
-                aria-label={isPaused() ? 'Resume workout' : 'Pause workout'}
-                aria-pressed={isPaused()}
+              <div
                 style={{
-                  ...glassButton.primary,
+                  display: 'flex',
+                  'flex-direction': 'column',
+                  'align-items': 'center',
+                  gap: echoprax.spacing.xs,
+                }}
+              >
+                <button
+                  onClick={() => {
+                    if (state() === 'active') {
+                      completeUserSet();
+                    } else if (state() === 'rest') {
+                      userReady();
+                    }
+                  }}
+                  class="echoprax-glass-btn"
+                  aria-label={state() === 'active' ? 'Complete set' : 'Start next exercise'}
+                  style={{
+                    ...glassButton.primary,
+                    'border-radius': '50%',
+                    width: '72px',
+                    height: '72px',
+                    padding: 0,
+                    color:
+                      state() === 'active' ? memphisColors.mintGreen : memphisColors.electricBlue,
+                    cursor: 'pointer',
+                    'box-shadow': `0 8px 32px ${state() === 'active' ? memphisColors.mintGreen : memphisColors.electricBlue}50`,
+                    transition: `all 250ms ${kineticAnimations.bouncy}`,
+                    display: 'flex',
+                    'align-items': 'center',
+                    'justify-content': 'center',
+                    border: `2px solid ${state() === 'active' ? memphisColors.mintGreen : memphisColors.electricBlue}40`,
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'scale(1.1)';
+                    e.currentTarget.style.boxShadow = `0 12px 40px ${state() === 'active' ? memphisColors.mintGreen : memphisColors.electricBlue}60`;
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'scale(1)';
+                    e.currentTarget.style.boxShadow = `0 8px 32px ${state() === 'active' ? memphisColors.mintGreen : memphisColors.electricBlue}50`;
+                  }}
+                >
+                  <Show
+                    when={state() === 'active'}
+                    fallback={<ArrowRight size={32} weight="bold" />}
+                  >
+                    <Barbell size={32} weight="bold" />
+                  </Show>
+                </button>
+                {/* Label below the button */}
+                <span
+                  style={{
+                    ...typography.caption,
+                    color:
+                      state() === 'active' ? memphisColors.mintGreen : memphisColors.electricBlue,
+                    'font-weight': '600',
+                    'text-transform': 'uppercase',
+                    'letter-spacing': '0.05em',
+                  }}
+                >
+                  <Show when={state() === 'active'} fallback="Next">
+                    Done
+                  </Show>
+                </span>
+              </div>
+            </Show>
+
+            {/* Secondary Controls Row - mobile-optimized with standard touch targets */}
+            <div
+              style={{
+                display: 'flex',
+                'justify-content': 'center',
+                'align-items': 'center',
+                gap: echoprax.spacing.sm,
+                'flex-wrap': 'wrap',
+                'max-width': '320px',
+                margin: '0 auto',
+              }}
+            >
+              {/* Mute Toggle */}
+              <button
+                onClick={() => setIsMuted(!isMuted())}
+                class="echoprax-glass-btn"
+                aria-label={isMuted() ? 'Unmute voice coaching' : 'Mute voice coaching'}
+                aria-pressed={isMuted()}
+                style={{
+                  ...glassButton.default,
                   border: 'none',
                   'border-radius': '50%',
-                  width: touchTargets.hero,
-                  height: touchTargets.hero,
+                  width: touchTargets.minimum,
+                  height: touchTargets.minimum,
                   display: 'flex',
                   'align-items': 'center',
                   'justify-content': 'center',
                   cursor: 'pointer',
-                  color: memphisColors.hotPink,
-                  'box-shadow': `0 4px 20px ${memphisColors.hotPink}40`,
+                  color: isMuted() ? echoprax.colors.textMuted : memphisColors.electricBlue,
                 }}
-                title={isPaused() ? 'Resume' : 'Pause'}
+                title={isMuted() ? 'Unmute' : 'Mute'}
               >
-                <Show when={isPaused()} fallback={<Pause size={28} weight="fill" />}>
-                  <Play size={28} weight="fill" />
+                <Show when={isMuted()} fallback={<SpeakerHigh size={20} />}>
+                  <SpeakerSlash size={20} />
                 </Show>
               </button>
-            </Show>
 
-            {/* Next Exercise (Skip) */}
-            <button
-              onClick={skipToNext}
-              class="echoprax-glass-btn"
-              aria-label="Skip to next exercise"
-              style={{
-                ...glassButton.default,
-                border: 'none',
-                'border-radius': '50%',
-                width: touchTargets.secondary,
-                height: touchTargets.secondary,
-                display: 'flex',
-                'align-items': 'center',
-                'justify-content': 'center',
-                cursor: 'pointer',
-                color: memphisColors.acidYellow,
-              }}
-              title="Next Exercise"
-            >
-              <SkipForward size={22} weight="fill" />
-            </button>
+              {/* Previous Exercise */}
+              <button
+                onClick={goToPrevious}
+                class="echoprax-glass-btn"
+                aria-label="Go to previous exercise"
+                disabled={currentBlockIndex() === 0}
+                style={{
+                  ...glassButton.default,
+                  border: 'none',
+                  'border-radius': '50%',
+                  width: touchTargets.secondary,
+                  height: touchTargets.secondary,
+                  display: 'flex',
+                  'align-items': 'center',
+                  'justify-content': 'center',
+                  cursor: currentBlockIndex() === 0 ? 'not-allowed' : 'pointer',
+                  color:
+                    currentBlockIndex() === 0
+                      ? echoprax.colors.textMuted
+                      : memphisColors.electricBlue,
+                  opacity: currentBlockIndex() === 0 ? 0.4 : 1,
+                }}
+                title="Previous Exercise"
+              >
+                <SkipBack size={22} weight="fill" />
+              </button>
 
-            {/* Redo - tertiary action */}
-            <button
-              onClick={redoCurrentExercise}
-              class="echoprax-glass-btn"
-              aria-label="Restart current exercise"
-              style={{
-                ...glassButton.default,
-                border: 'none',
-                'border-radius': '50%',
-                width: touchTargets.minimum,
-                height: touchTargets.minimum,
-                display: 'flex',
-                'align-items': 'center',
-                'justify-content': 'center',
-                cursor: 'pointer',
-                color: echoprax.colors.textMuted,
-              }}
-              title="Restart Exercise"
-            >
-              <ArrowCounterClockwise size={18} />
-            </button>
-          </div>
-        </nav>
-      </Show>
+              {/* Play/Pause - Hero button, only for timed exercises or countdown */}
+              <Show when={!isUserControlledActive(currentMode()) || state() === 'countdown'}>
+                <button
+                  onClick={togglePause}
+                  class="echoprax-glass-btn"
+                  aria-label={isPaused() ? 'Resume workout' : 'Pause workout'}
+                  aria-pressed={isPaused()}
+                  style={{
+                    ...glassButton.primary,
+                    border: 'none',
+                    'border-radius': '50%',
+                    width: touchTargets.hero,
+                    height: touchTargets.hero,
+                    display: 'flex',
+                    'align-items': 'center',
+                    'justify-content': 'center',
+                    cursor: 'pointer',
+                    color: memphisColors.hotPink,
+                    'box-shadow': `0 4px 20px ${memphisColors.hotPink}40`,
+                  }}
+                  title={isPaused() ? 'Resume' : 'Pause'}
+                >
+                  <Show when={isPaused()} fallback={<Pause size={28} weight="fill" />}>
+                    <Play size={28} weight="fill" />
+                  </Show>
+                </button>
+              </Show>
 
-      {/* Completed State */}
-      <Show when={state() === 'completed'}>
-        <div
-          role="status"
-          aria-live="polite"
-          style={{
-            flex: 1,
-            display: 'flex',
-            'flex-direction': 'column',
-            'align-items': 'center',
-            'justify-content': 'center',
-            gap: echoprax.spacing.xl,
-            padding: echoprax.spacing.lg,
-          }}
-        >
-          <div style={{ 'text-align': 'center' }}>
-            <div
-              style={{
-                width: '120px',
-                height: '120px',
-                'border-radius': '50%',
-                background: memphisColors.mintGreen,
-                display: 'flex',
-                'align-items': 'center',
-                'justify-content': 'center',
-                margin: '0 auto',
-                'margin-bottom': echoprax.spacing.lg,
-                'box-shadow': `0 8px 40px ${memphisColors.mintGreen}50`,
-              }}
-              aria-hidden="true"
-            >
-              <CelebrationIcon size={64} color="#0D0D0D" />
+              {/* Next Exercise (Skip) */}
+              <button
+                onClick={skipToNext}
+                class="echoprax-glass-btn"
+                aria-label="Skip to next exercise"
+                style={{
+                  ...glassButton.default,
+                  border: 'none',
+                  'border-radius': '50%',
+                  width: touchTargets.secondary,
+                  height: touchTargets.secondary,
+                  display: 'flex',
+                  'align-items': 'center',
+                  'justify-content': 'center',
+                  cursor: 'pointer',
+                  color: memphisColors.acidYellow,
+                }}
+                title="Next Exercise"
+              >
+                <SkipForward size={22} weight="fill" />
+              </button>
+
+              {/* Redo - tertiary action */}
+              <button
+                onClick={redoCurrentExercise}
+                class="echoprax-glass-btn"
+                aria-label="Restart current exercise"
+                style={{
+                  ...glassButton.default,
+                  border: 'none',
+                  'border-radius': '50%',
+                  width: touchTargets.minimum,
+                  height: touchTargets.minimum,
+                  display: 'flex',
+                  'align-items': 'center',
+                  'justify-content': 'center',
+                  cursor: 'pointer',
+                  color: echoprax.colors.textMuted,
+                }}
+                title="Restart Exercise"
+              >
+                <ArrowCounterClockwise size={18} />
+              </button>
             </div>
-            <h2
-              style={{
-                ...typography.headingXl,
-                margin: 0,
-                color: memphisColors.electricBlue,
-              }}
-            >
-              Workout Complete!
-            </h2>
-            <p
-              style={{
-                ...typography.bodyLg,
-                color: echoprax.colors.textMuted,
-                'margin-top': echoprax.spacing.md,
-              }}
-            >
-              Great work! You crushed it in{' '}
-              <span style={{ color: memphisColors.acidYellow, 'font-weight': '700' }}>
-                {formatElapsedTime()}
-              </span>
-              .
-            </p>
-          </div>
+          </nav>
+        </Show>
 
-          <button
-            onClick={() => props.onExit?.()}
-            class="echoprax-glass-btn"
-            aria-label="Return to home screen"
+        {/* Completed State */}
+        <Show when={state() === 'completed'}>
+          <div
+            role="status"
+            aria-live="polite"
             style={{
-              ...glassButton.default,
-              'border-radius': echoprax.radii.organic,
-              padding: `${echoprax.spacing.md} ${echoprax.spacing.xl}`,
-              ...typography.headingSm,
-              'font-size': '1rem',
-              color: echoprax.colors.text,
-              cursor: 'pointer',
-              'min-height': '48px',
+              flex: 1,
+              display: 'flex',
+              'flex-direction': 'column',
+              'align-items': 'center',
+              'justify-content': 'center',
+              gap: echoprax.spacing.xl,
+              padding: echoprax.spacing.lg,
             }}
           >
-            Back to Home
-          </button>
-        </div>
-      </Show>
+            <div style={{ 'text-align': 'center' }}>
+              <div
+                style={{
+                  width: '120px',
+                  height: '120px',
+                  'border-radius': '50%',
+                  background: memphisColors.mintGreen,
+                  display: 'flex',
+                  'align-items': 'center',
+                  'justify-content': 'center',
+                  margin: '0 auto',
+                  'margin-bottom': echoprax.spacing.lg,
+                  'box-shadow': `0 8px 40px ${memphisColors.mintGreen}50`,
+                }}
+                aria-hidden="true"
+              >
+                <CelebrationIcon size={64} color="#0D0D0D" />
+              </div>
+              <h2
+                style={{
+                  ...typography.headingXl,
+                  margin: 0,
+                  color: memphisColors.electricBlue,
+                }}
+              >
+                Workout Complete!
+              </h2>
+              <p
+                style={{
+                  ...typography.bodyLg,
+                  color: echoprax.colors.textMuted,
+                  'margin-top': echoprax.spacing.md,
+                }}
+              >
+                Great work! You crushed it in{' '}
+                <span style={{ color: memphisColors.acidYellow, 'font-weight': '700' }}>
+                  {formatElapsedTime()}
+                </span>
+                .
+              </p>
+            </div>
+
+            <button
+              onClick={() => props.onExit?.()}
+              class="echoprax-glass-btn"
+              aria-label="Return to home screen"
+              style={{
+                ...glassButton.default,
+                'border-radius': echoprax.radii.organic,
+                padding: `${echoprax.spacing.md} ${echoprax.spacing.xl}`,
+                ...typography.headingSm,
+                'font-size': '1rem',
+                color: echoprax.colors.text,
+                cursor: 'pointer',
+                'min-height': '48px',
+              }}
+            >
+              Back to Home
+            </button>
+          </div>
+        </Show>
+      </div>
 
       {/* Exit Confirmation Modal */}
       <Show when={showExitConfirm()}>

@@ -18,12 +18,15 @@ import {
   onMount,
   JSX,
 } from 'solid-js';
-import { Gear, CaretDown, CaretUp } from 'phosphor-solid';
+import { useNavigate, useParams, useLocation } from '@solidjs/router';
+import { Gear, CaretDown, CaretUp, Play } from 'phosphor-solid';
 import { SessionPlayer } from './session-player';
 import { WorkoutBuilder } from './workout-builder';
 import { WorkoutPersistenceService } from './lib/workout-persistence.service';
 import { WorkoutAreaService } from './lib/workout-area.service';
 import { AIUsageService } from './lib/ai-usage.service';
+import { SessionStateService } from './lib/session-state.service';
+import { WorkoutHistoryService } from './lib/workout-history.service';
 import { AreaOnboarding } from './onboarding/AreaOnboarding';
 import { WorkoutAreaSelector } from './areas/WorkoutAreaSelector';
 import { WorkoutAreaEditor } from './areas/WorkoutAreaEditor';
@@ -186,15 +189,72 @@ const MemphisArc: Component<{ color: string; size: number; style?: JSX.CSSProper
 );
 
 export const EchopraxApp: Component = () => {
-  const [view, setView] = createSignal<View>('home');
+  // Router hooks for URL-based navigation
+  const navigate = useNavigate();
+  const params = useParams<{ workoutId?: string; areaId?: string }>();
+  const location = useLocation();
+
+  // Derive current view from URL path
+  const view = createMemo<View>(() => {
+    const path = location.pathname;
+    if (path.includes('/workout/')) return 'playing';
+    if (path.includes('/builder/') || path === '/echoprax/builder') return 'builder';
+    if (path.includes('/generator')) return 'prompt-generator';
+    if (path.match(/\/areas\/[^/]+$/)) return 'area-editor'; // /areas/:id
+    if (path === '/echoprax/areas') return 'area-manager';
+    if (path.includes('/settings')) return 'settings';
+    return 'home';
+  });
+
+  // Helper to navigate and update view
+  const setView = (newView: View) => {
+    switch (newView) {
+      case 'home':
+        navigate('/echoprax');
+        break;
+      case 'playing':
+        // Should use startWorkout() which navigates with workout ID
+        break;
+      case 'builder':
+        navigate('/echoprax/builder');
+        break;
+      case 'prompt-generator':
+        navigate('/echoprax/generator');
+        break;
+      case 'area-manager':
+        navigate('/echoprax/areas');
+        break;
+      case 'settings':
+        navigate('/echoprax/settings');
+        break;
+      case 'mode-selection':
+        // Mode selection stays in-memory (modal-like)
+        setShowModeSelection(true);
+        break;
+      case 'onboarding':
+        // Onboarding stays in-memory (first-time flow)
+        break;
+      case 'area-editor':
+        // Area editor navigated via handleEditArea
+        break;
+    }
+  };
+
+  // In-memory state for modal-like views
+  const [showModeSelection, setShowModeSelection] = createSignal(false);
+  const [showOnboarding, setShowOnboarding] = createSignal(false);
   const [selectedWorkout, setSelectedWorkout] = createSignal<WorkoutSession | null>(null);
   const [editingWorkout, setEditingWorkout] = createSignal<WorkoutSession | undefined>(undefined);
   const [deleteConfirmId, setDeleteConfirmId] = createSignal<string | null>(null);
   const [selectedArea, setSelectedArea] = createSignal<WorkoutArea | null>(null);
-  const [_onboardingComplete, setOnboardingComplete] = createSignal(true);
   const [editingArea, setEditingArea] = createSignal<WorkoutArea | undefined>(undefined);
   const [showPremiumGate, setShowPremiumGate] = createSignal(false);
   const [howItWorksExpanded, setHowItWorksExpanded] = createSignal(true);
+
+  // Check for resumable session
+  const [resumableSession, setResumableSession] = createSignal(
+    SessionStateService.getActiveSession()
+  );
 
   // LocalStorage key for "How It Works" section
   const HOW_IT_WORKS_SEEN_KEY = 'echoprax:howItWorksSeen';
@@ -216,6 +276,57 @@ export const EchopraxApp: Component = () => {
     WorkoutPersistenceService.getWorkouts()
   );
 
+  // Load workout from URL params if playing
+  createEffect(() => {
+    const workoutId = params.workoutId;
+    if (workoutId && view() === 'playing') {
+      WorkoutPersistenceService.getWorkoutById(workoutId).then((workout) => {
+        if (workout) {
+          setSelectedWorkout(workout);
+          log.info('Loaded workout from URL', { id: workoutId, name: workout.name });
+        } else {
+          log.warn('Workout not found', { id: workoutId });
+          navigate('/echoprax');
+        }
+      });
+    }
+  });
+
+  // Load workout for editing from URL params
+  createEffect(() => {
+    const workoutId = params.workoutId;
+    if (workoutId && view() === 'builder') {
+      WorkoutPersistenceService.getWorkoutById(workoutId).then((workout) => {
+        if (workout) {
+          setEditingWorkout(workout);
+          log.debug('Loaded workout for editing', { id: workoutId });
+        }
+      });
+    } else if (view() === 'builder' && !workoutId) {
+      setEditingWorkout(undefined);
+    }
+  });
+
+  // Load area for editing from URL params
+  createEffect(() => {
+    const areaId = params.areaId;
+    if (areaId && view() === 'area-editor') {
+      if (areaId === 'new') {
+        setEditingArea(undefined);
+      } else {
+        const areas = WorkoutAreaService.getAreas();
+        const area = areas.find((a) => a.id === areaId);
+        if (area) {
+          setEditingArea(area);
+          log.debug('Loaded area for editing', { id: areaId });
+        } else {
+          log.warn('Area not found', { id: areaId });
+          navigate('/echoprax/areas');
+        }
+      }
+    }
+  });
+
   // Inject echoprax CSS on mount and check onboarding status
   onMount(() => {
     const styleId = 'echoprax-theme';
@@ -228,10 +339,9 @@ export const EchopraxApp: Component = () => {
 
     // Check onboarding status
     const isComplete = WorkoutAreaService.isOnboardingComplete();
-    setOnboardingComplete(isComplete);
 
     if (!isComplete) {
-      setView('onboarding');
+      setShowOnboarding(true);
       log.info('Showing onboarding - not complete');
     } else {
       // Load default area
@@ -267,26 +377,59 @@ export const EchopraxApp: Component = () => {
 
   const startWorkout = (workout: WorkoutSession) => {
     setSelectedWorkout(workout);
-    setView('playing');
+    navigate(`/echoprax/workout/${workout.id}`);
     log.info('Starting workout', { name: workout.name });
   };
 
-  const handleWorkoutComplete = () => {
+  // Resume a previously paused workout
+  const resumeWorkout = () => {
+    const session = resumableSession();
+    if (session) {
+      setSelectedWorkout(session.workout);
+      navigate(`/echoprax/workout/${session.workoutId}`);
+      log.info('Resuming workout', { name: session.workout.name });
+    }
+  };
+
+  const handleWorkoutComplete = (completedWorkout: WorkoutSession) => {
+    // Record completion in history
+    const session = resumableSession();
+    if (session) {
+      const totalExercises =
+        (completedWorkout.warmup?.length || 0) +
+        completedWorkout.main.length +
+        (completedWorkout.cooldown?.length || 0);
+
+      WorkoutHistoryService.recordCompletion(
+        completedWorkout,
+        new Date(session.workout.startedAt || Date.now()),
+        session.elapsedTime,
+        totalExercises,
+        'full'
+      );
+    }
+
+    // Clear the active session
+    SessionStateService.clearSession();
+    setResumableSession(null);
+
     log.info('Workout completed');
-    setView('home');
+    navigate('/echoprax');
   };
 
   const handleExit = () => {
-    setView('home');
+    // Clear mode selection if open
+    setShowModeSelection(false);
+    navigate('/echoprax');
   };
 
   const handleCreateWorkout = () => {
     setEditingWorkout(undefined);
     // On desktop, show mode selection; on mobile, go straight to builder
     if (isDesktop()) {
-      setView('mode-selection');
+      setShowModeSelection(true);
     } else {
-      setView('builder');
+      navigate('/echoprax/builder');
     }
   };
 
@@ -296,7 +439,8 @@ export const EchopraxApp: Component = () => {
     const trialRemaining = AIUsageService.getUsageSummary().remaining;
 
     if (access.allowed || trialRemaining > 0) {
-      setView('prompt-generator');
+      setShowModeSelection(false);
+      navigate('/echoprax/generator');
     } else {
       setShowPremiumGate(true);
     }
@@ -307,49 +451,50 @@ export const EchopraxApp: Component = () => {
   };
 
   const handleSelectConstructMode = () => {
-    setView('builder');
+    setShowModeSelection(false);
+    navigate('/echoprax/builder');
   };
 
   const handleOnboardingComplete = () => {
-    setOnboardingComplete(true);
+    setShowOnboarding(false);
     // Load the newly created default area
     const defaultArea = WorkoutAreaService.getDefaultArea();
     if (defaultArea) {
       setSelectedArea(defaultArea);
     }
-    setView('home');
+    navigate('/echoprax');
     log.info('Onboarding completed');
   };
 
   const handleManageAreas = () => {
     setEditingArea(undefined);
-    setView('area-manager');
+    navigate('/echoprax/areas');
   };
 
   const handleAreaSaved = (area: WorkoutArea) => {
     setSelectedArea(area);
-    setView('area-manager');
+    navigate('/echoprax/areas');
     log.info('Area saved', { id: area.id, name: area.name });
   };
 
   const handleAreaEditorCancel = () => {
     // Go back to area manager if we were editing, otherwise home
     if (editingArea() !== undefined) {
-      setView('area-manager');
+      navigate('/echoprax/areas');
     } else {
-      setView('home');
+      navigate('/echoprax');
     }
   };
 
   const handleEditArea = (area: WorkoutArea) => {
     setEditingArea(area);
-    setView('area-editor');
+    navigate(`/echoprax/areas/${area.id}`);
     log.debug('Editing area', { id: area.id, name: area.name });
   };
 
   const handleCreateNewArea = () => {
     setEditingArea(undefined);
-    setView('area-editor');
+    navigate('/echoprax/areas/new');
     log.debug('Creating new area');
   };
 
@@ -359,12 +504,12 @@ export const EchopraxApp: Component = () => {
     if (defaultArea) {
       setSelectedArea(defaultArea);
     }
-    setView('home');
+    navigate('/echoprax');
   };
 
   const handleEditWorkout = (workout: WorkoutSession) => {
     setEditingWorkout(workout);
-    setView('builder');
+    navigate(`/echoprax/builder/${workout.id}`);
   };
 
   const handleSaveWorkout = async (workout: WorkoutSession) => {
@@ -372,7 +517,7 @@ export const EchopraxApp: Component = () => {
       await WorkoutPersistenceService.saveWorkout(workout);
       log.info('Workout saved', { id: workout.id, name: workout.name });
       await refetchWorkouts();
-      setView('home');
+      navigate('/echoprax');
     } catch (error) {
       log.error('Failed to save workout', error);
     }
@@ -527,7 +672,7 @@ export const EchopraxApp: Component = () => {
             {/* Settings Button */}
             <button
               type="button"
-              onClick={() => setView('settings')}
+              onClick={() => navigate('/echoprax/settings')}
               class="echoprax-glass-btn"
               aria-label="Open settings"
               style={{
@@ -546,6 +691,76 @@ export const EchopraxApp: Component = () => {
               <Gear size={24} />
             </button>
           </header>
+
+          {/* Continue Workout Card - shown when there's a resumable session */}
+          <Show when={resumableSession()}>
+            <section style={{ 'margin-bottom': echoprax.spacing.lg }}>
+              <button
+                type="button"
+                onClick={resumeWorkout}
+                class="echoprax-glass-btn"
+                style={{
+                  width: '100%',
+                  ...glassButton.primary,
+                  'border-radius': echoprax.radii.lg,
+                  padding: echoprax.spacing.lg,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  'align-items': 'center',
+                  gap: echoprax.spacing.md,
+                  border: `2px solid ${memphisColors.mintGreen}40`,
+                  'box-shadow': `0 4px 20px ${memphisColors.mintGreen}20`,
+                }}
+              >
+                <div
+                  style={{
+                    width: '48px',
+                    height: '48px',
+                    'border-radius': '50%',
+                    background: memphisColors.mintGreen,
+                    display: 'flex',
+                    'align-items': 'center',
+                    'justify-content': 'center',
+                    'flex-shrink': 0,
+                  }}
+                >
+                  <Play size={24} weight="fill" color="#0D0D0D" />
+                </div>
+                <div style={{ flex: 1, 'text-align': 'left' }}>
+                  <div
+                    style={{
+                      ...typography.bodySm,
+                      'font-weight': '600',
+                      color: memphisColors.mintGreen,
+                    }}
+                  >
+                    Continue Workout
+                  </div>
+                  <div
+                    style={{
+                      ...typography.caption,
+                      color: echoprax.colors.textMuted,
+                    }}
+                  >
+                    {resumableSession()!.workout.name} -{' '}
+                    {Math.floor(resumableSession()!.elapsedTime / 60)}m elapsed
+                  </div>
+                </div>
+                <div
+                  style={{
+                    ...typography.caption,
+                    color: echoprax.colors.textMuted,
+                  }}
+                >
+                  {resumableSession()!.currentBlockIndex + 1}/
+                  {(resumableSession()!.workout.warmup?.length || 0) +
+                    resumableSession()!.workout.main.length +
+                    (resumableSession()!.workout.cooldown?.length || 0)}{' '}
+                  exercises
+                </div>
+              </button>
+            </section>
+          </Show>
 
           {/* My Workouts Section */}
           <section style={{ 'margin-bottom': echoprax.spacing.xxl }}>
@@ -763,7 +978,7 @@ export const EchopraxApp: Component = () => {
       <Show when={view() === 'playing' && selectedWorkout()}>
         <SessionPlayer
           workout={selectedWorkout()!}
-          onComplete={handleWorkoutComplete}
+          onComplete={() => handleWorkoutComplete(selectedWorkout()!)}
           onExit={handleExit}
         />
       </Show>
@@ -778,8 +993,8 @@ export const EchopraxApp: Component = () => {
         />
       </Show>
 
-      {/* Onboarding View */}
-      <Show when={view() === 'onboarding'}>
+      {/* Onboarding View - shown as overlay when not complete */}
+      <Show when={showOnboarding()}>
         <AreaOnboarding onComplete={handleOnboardingComplete} />
       </Show>
 
@@ -846,8 +1061,8 @@ export const EchopraxApp: Component = () => {
         </Show>
       </Show>
 
-      {/* Mode Selection View */}
-      <Show when={view() === 'mode-selection'}>
+      {/* Mode Selection View - modal overlay */}
+      <Show when={showModeSelection()}>
         <div
           style={{
             'min-height': '100vh',

@@ -4,7 +4,7 @@
  * Memphis × Retro-Futurism Design
  */
 
-import { Component, createSignal, createEffect, Show } from 'solid-js';
+import { Component, createSignal, createEffect, Show, For } from 'solid-js';
 import type { WorkoutBlock } from '../../../schemas/echoprax.schema';
 import {
   echoprax,
@@ -161,27 +161,29 @@ export const ExerciseEditor: Component<ExerciseEditorProps> = (props) => {
               'margin-top': echoprax.spacing.sm,
             }}
           >
-            {durationPresets.map((preset) => (
-              <button
-                type="button"
-                onClick={() => setDuration(preset)}
-                class="echoprax-glass-btn"
-                style={{
-                  ...(duration() === preset ? glassButton.active : glassButton.default),
-                  'border-radius': echoprax.radii.sm,
-                  padding: `${echoprax.spacing.xs} ${echoprax.spacing.sm}`,
-                  ...typography.caption,
-                  color: duration() === preset ? memphisColors.hotPink : echoprax.colors.text,
-                  cursor: 'pointer',
-                  border:
-                    duration() === preset
-                      ? `1px solid ${memphisColors.hotPink}`
-                      : glassButton.default.border,
-                }}
-              >
-                {formatDuration(preset)}
-              </button>
-            ))}
+            <For each={durationPresets}>
+              {(preset) => (
+                <button
+                  type="button"
+                  onClick={() => setDuration(preset)}
+                  class="echoprax-glass-btn"
+                  style={{
+                    ...(duration() === preset ? glassButton.active : glassButton.default),
+                    'border-radius': echoprax.radii.sm,
+                    padding: `${echoprax.spacing.xs} ${echoprax.spacing.sm}`,
+                    ...typography.caption,
+                    color: duration() === preset ? memphisColors.hotPink : echoprax.colors.text,
+                    cursor: 'pointer',
+                    border:
+                      duration() === preset
+                        ? `1px solid ${memphisColors.hotPink}`
+                        : glassButton.default.border,
+                  }}
+                >
+                  {formatDuration(preset)}
+                </button>
+              )}
+            </For>
           </div>
         </div>
 
@@ -226,27 +228,30 @@ export const ExerciseEditor: Component<ExerciseEditorProps> = (props) => {
               'margin-top': echoprax.spacing.sm,
             }}
           >
-            {restPresets.map((preset) => (
-              <button
-                type="button"
-                onClick={() => setRestAfter(preset)}
-                class="echoprax-glass-btn"
-                style={{
-                  ...(restAfter() === preset ? glassButton.active : glassButton.default),
-                  'border-radius': echoprax.radii.sm,
-                  padding: `${echoprax.spacing.xs} ${echoprax.spacing.sm}`,
-                  ...typography.caption,
-                  color: restAfter() === preset ? memphisColors.electricBlue : echoprax.colors.text,
-                  cursor: 'pointer',
-                  border:
-                    restAfter() === preset
-                      ? `1px solid ${memphisColors.electricBlue}`
-                      : glassButton.default.border,
-                }}
-              >
-                {preset === 0 ? 'None' : formatDuration(preset)}
-              </button>
-            ))}
+            <For each={restPresets}>
+              {(preset) => (
+                <button
+                  type="button"
+                  onClick={() => setRestAfter(preset)}
+                  class="echoprax-glass-btn"
+                  style={{
+                    ...(restAfter() === preset ? glassButton.active : glassButton.default),
+                    'border-radius': echoprax.radii.sm,
+                    padding: `${echoprax.spacing.xs} ${echoprax.spacing.sm}`,
+                    ...typography.caption,
+                    color:
+                      restAfter() === preset ? memphisColors.electricBlue : echoprax.colors.text,
+                    cursor: 'pointer',
+                    border:
+                      restAfter() === preset
+                        ? `1px solid ${memphisColors.electricBlue}`
+                        : glassButton.default.border,
+                  }}
+                >
+                  {preset === 0 ? 'None' : formatDuration(preset)}
+                </button>
+              )}
+            </For>
           </div>
         </div>
 

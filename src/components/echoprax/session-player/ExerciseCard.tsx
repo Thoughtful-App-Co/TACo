@@ -15,7 +15,6 @@ import {
   sessionStateColors,
   memphisColors,
   memphisSurfaces,
-  kineticAnimations,
   typography,
   responsiveTypography,
 } from '../../../theme/echoprax';
@@ -91,58 +90,6 @@ function getStateLabel(state: SessionState): string {
       return '';
   }
 }
-
-/**
- * Compact Set Indicator - horizontal dots
- */
-const SetIndicator: Component<{ currentSet: number; totalSets: number }> = (props) => {
-  return (
-    <div
-      role="group"
-      aria-label={`Set ${props.currentSet} of ${props.totalSets}`}
-      style={{
-        display: 'flex',
-        'align-items': 'center',
-        'justify-content': 'center',
-        gap: echoprax.spacing.xs,
-      }}
-    >
-      <For each={Array.from({ length: props.totalSets }, (_, i) => i + 1)}>
-        {(setNum) => {
-          const isCompleted = () => setNum < props.currentSet;
-          const isCurrent = () => setNum === props.currentSet;
-
-          return (
-            <div
-              class={isCurrent() ? 'echoprax-countdown' : ''}
-              style={{
-                width: isCurrent() ? '12px' : '8px',
-                height: isCurrent() ? '12px' : '8px',
-                'border-radius': '50%',
-                background: isCompleted()
-                  ? memphisColors.mintGreen
-                  : isCurrent()
-                    ? memphisColors.hotPink
-                    : 'rgba(255,255,255,0.2)',
-                transition: `all 200ms ${kineticAnimations.bouncy}`,
-              }}
-            />
-          );
-        }}
-      </For>
-      <span
-        style={{
-          ...typography.caption,
-          color: memphisColors.hotPink,
-          'margin-left': echoprax.spacing.xs,
-          'font-weight': '600',
-        }}
-      >
-        {props.currentSet}/{props.totalSets}
-      </span>
-    </div>
-  );
-};
 
 /**
  * Hero Timer Display - the main event
@@ -395,7 +342,6 @@ const NextPreview: Component<{ exercise: Exercise }> = (props) => {
  */
 export const ExerciseCard: Component<ExerciseCardProps> = (props) => {
   const stateColor = () => getStateColor(props.state);
-  const showSetIndicator = () => (props.totalSets ?? 1) > 1;
   const hasGif = () => !!props.exercise.gifUrl;
 
   // Progress percentage for the top bar
@@ -419,6 +365,11 @@ export const ExerciseCard: Component<ExerciseCardProps> = (props) => {
         overflow: 'hidden',
         display: 'flex',
         'flex-direction': 'column',
+        // Enhanced background for better readability
+        background: 'rgba(26, 26, 31, 0.98)',
+        'backdrop-filter': 'blur(16px)',
+        '-webkit-backdrop-filter': 'blur(16px)',
+        'box-shadow': '0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.05)',
       }}
     >
       {/* Progress Bar - always at top */}
@@ -500,12 +451,7 @@ export const ExerciseCard: Component<ExerciseCardProps> = (props) => {
           </p>
         </div>
 
-        {/* Row 2: Set Indicator (if multiple sets) */}
-        <Show when={showSetIndicator()}>
-          <SetIndicator currentSet={props.currentSet ?? 1} totalSets={props.totalSets ?? 1} />
-        </Show>
-
-        {/* Row 3: GIF + Timer side by side on tablet+, stacked on mobile */}
+        {/* Timer + GIF section */}
         <div
           style={{
             display: 'flex',

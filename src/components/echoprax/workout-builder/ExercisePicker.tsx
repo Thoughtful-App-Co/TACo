@@ -307,31 +307,33 @@ export const ExercisePicker: Component<ExercisePickerProps> = (props) => {
                 'margin-top': echoprax.spacing.md,
               }}
             >
-              {(['warmup', 'main', 'cooldown'] as WorkoutSection[]).map((section) => (
-                <button
-                  type="button"
-                  onClick={() => setSelectedSection(section)}
-                  class="echoprax-glass-btn"
-                  style={{
-                    ...(selectedSection() === section ? glassButton.active : glassButton.default),
-                    'border-radius': echoprax.radii.sm,
-                    padding: `${echoprax.spacing.xs} ${echoprax.spacing.md}`,
-                    ...typography.label,
-                    color:
-                      selectedSection() === section
-                        ? sectionColors[section]
-                        : echoprax.colors.textMuted,
-                    cursor: 'pointer',
-                    border:
-                      selectedSection() === section
-                        ? `1px solid ${sectionColors[section]}`
-                        : glassButton.default.border,
-                    'text-transform': 'uppercase',
-                  }}
-                >
-                  {section}
-                </button>
-              ))}
+              <For each={['warmup', 'main', 'cooldown'] as WorkoutSection[]}>
+                {(section) => (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedSection(section)}
+                    class="echoprax-glass-btn"
+                    style={{
+                      ...(selectedSection() === section ? glassButton.active : glassButton.default),
+                      'border-radius': echoprax.radii.sm,
+                      padding: `${echoprax.spacing.xs} ${echoprax.spacing.md}`,
+                      ...typography.label,
+                      color:
+                        selectedSection() === section
+                          ? sectionColors[section]
+                          : echoprax.colors.textMuted,
+                      cursor: 'pointer',
+                      border:
+                        selectedSection() === section
+                          ? `1px solid ${sectionColors[section]}`
+                          : glassButton.default.border,
+                      'text-transform': 'uppercase',
+                    }}
+                  >
+                    {section}
+                  </button>
+                )}
+              </For>
             </div>
 
             {/* Search and filters */}
@@ -684,27 +686,29 @@ export const ExercisePicker: Component<ExercisePickerProps> = (props) => {
                   'margin-top': echoprax.spacing.sm,
                 }}
               >
-                {durationPresets.map((preset) => (
-                  <button
-                    type="button"
-                    onClick={() => setDuration(preset)}
-                    class="echoprax-glass-btn"
-                    style={{
-                      ...(duration() === preset ? glassButton.active : glassButton.default),
-                      'border-radius': echoprax.radii.sm,
-                      padding: `${echoprax.spacing.xs} ${echoprax.spacing.sm}`,
-                      ...typography.caption,
-                      color: duration() === preset ? memphisColors.hotPink : echoprax.colors.text,
-                      cursor: 'pointer',
-                      border:
-                        duration() === preset
-                          ? `1px solid ${memphisColors.hotPink}`
-                          : glassButton.default.border,
-                    }}
-                  >
-                    {formatDuration(preset)}
-                  </button>
-                ))}
+                <For each={durationPresets}>
+                  {(preset) => (
+                    <button
+                      type="button"
+                      onClick={() => setDuration(preset)}
+                      class="echoprax-glass-btn"
+                      style={{
+                        ...(duration() === preset ? glassButton.active : glassButton.default),
+                        'border-radius': echoprax.radii.sm,
+                        padding: `${echoprax.spacing.xs} ${echoprax.spacing.sm}`,
+                        ...typography.caption,
+                        color: duration() === preset ? memphisColors.hotPink : echoprax.colors.text,
+                        cursor: 'pointer',
+                        border:
+                          duration() === preset
+                            ? `1px solid ${memphisColors.hotPink}`
+                            : glassButton.default.border,
+                      }}
+                    >
+                      {formatDuration(preset)}
+                    </button>
+                  )}
+                </For>
               </div>
             </div>
 
@@ -749,28 +753,32 @@ export const ExercisePicker: Component<ExercisePickerProps> = (props) => {
                   'margin-top': echoprax.spacing.sm,
                 }}
               >
-                {restPresets.map((preset) => (
-                  <button
-                    type="button"
-                    onClick={() => setRestAfter(preset)}
-                    class="echoprax-glass-btn"
-                    style={{
-                      ...(restAfter() === preset ? glassButton.active : glassButton.default),
-                      'border-radius': echoprax.radii.sm,
-                      padding: `${echoprax.spacing.xs} ${echoprax.spacing.sm}`,
-                      ...typography.caption,
-                      color:
-                        restAfter() === preset ? memphisColors.electricBlue : echoprax.colors.text,
-                      cursor: 'pointer',
-                      border:
-                        restAfter() === preset
-                          ? `1px solid ${memphisColors.electricBlue}`
-                          : glassButton.default.border,
-                    }}
-                  >
-                    {preset === 0 ? 'None' : formatDuration(preset)}
-                  </button>
-                ))}
+                <For each={restPresets}>
+                  {(preset) => (
+                    <button
+                      type="button"
+                      onClick={() => setRestAfter(preset)}
+                      class="echoprax-glass-btn"
+                      style={{
+                        ...(restAfter() === preset ? glassButton.active : glassButton.default),
+                        'border-radius': echoprax.radii.sm,
+                        padding: `${echoprax.spacing.xs} ${echoprax.spacing.sm}`,
+                        ...typography.caption,
+                        color:
+                          restAfter() === preset
+                            ? memphisColors.electricBlue
+                            : echoprax.colors.text,
+                        cursor: 'pointer',
+                        border:
+                          restAfter() === preset
+                            ? `1px solid ${memphisColors.electricBlue}`
+                            : glassButton.default.border,
+                      }}
+                    >
+                      {preset === 0 ? 'None' : formatDuration(preset)}
+                    </button>
+                  )}
+                </For>
               </div>
             </div>
           </div>
