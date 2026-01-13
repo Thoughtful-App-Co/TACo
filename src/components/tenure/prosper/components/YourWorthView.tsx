@@ -17,7 +17,6 @@ import { getRateLimitStatus } from '../services/salary-benchmark.service';
 import { salaryColors, prosperTenure } from '../theme/prosper-tenure';
 import type { SalaryEntry } from '../../../../schemas/tenure';
 import { prepareStore } from '../../prepare';
-import { isV2FeatureEnabled } from '../../../../lib/feature-gates';
 import {
   ChartBarIcon,
   FileTextIcon,
@@ -30,6 +29,8 @@ import {
   ArrowRightIcon,
 } from 'solid-phosphor/bold';
 import { LineChart, LineChartDataPoint, OverlayLine } from '../../../common/charts';
+import { FluidCard } from '../../pipeline/ui';
+import { isV2FeatureEnabled } from '../../../../lib/feature-gates';
 
 // ============================================================================
 // TYPES
@@ -198,115 +199,133 @@ const SalaryChart: Component<SalaryChartProps> = (props) => {
 
   return (
     <Show when={snapshots().length > 0} fallback={<EmptyChartState theme={props.theme} />}>
-      <div
+      <FluidCard
+        variant="elevated"
         style={{
-          background: theme().colors.surface,
-          padding: '24px',
-          'border-radius': '16px',
+          padding: '0',
+          overflow: 'hidden',
+          background: 'linear-gradient(145deg, rgba(15, 15, 22, 0.98), rgba(10, 10, 15, 0.98))',
+          position: 'relative',
         }}
       >
+        {/* Ambient gradient background */}
         <div
           style={{
-            display: 'flex',
-            'justify-content': 'space-between',
-            'align-items': 'center',
-            'margin-bottom': '16px',
-          }}
-        >
-          <h3
-            style={{
-              'font-family': "'Playfair Display', Georgia, serif",
-              'font-size': '20px',
-              color: theme().colors.text,
-              margin: 0,
-            }}
-          >
-            Salary Growth Over Time
-          </h3>
-          <Show when={isV2FeatureEnabled('MARKET_COMPARISON')}>
-            <button
-              onClick={() => prosperStore.toggleMarketComparison()}
-              style={{
-                background: showComparison() ? theme().colors.primary : theme().colors.surface,
-                color: showComparison() ? theme().colors.background : theme().colors.text,
-                border: `1px solid ${showComparison() ? theme().colors.primary : theme().colors.border}`,
-                padding: '8px 16px',
-                'border-radius': '8px',
-                cursor: 'pointer',
-                'font-size': '14px',
-                transition: 'all 0.2s',
-              }}
-            >
-              <Show when={showComparison()}>
-                <CheckIcon
-                  width={14}
-                  height={14}
-                  style={{
-                    display: 'inline-block',
-                    'vertical-align': 'middle',
-                    'margin-right': '4px',
-                  }}
-                />
-              </Show>
-              {showComparison() ? 'Market Comparison' : 'Show Market Comparison'}
-            </button>
-          </Show>
-        </div>
-
-        {/* Reusable LineChart Component */}
-        <LineChart<ExtendedSnapshot>
-          data={chartData()}
-          theme={theme()}
-          overlayLines={overlayLines()}
-          renderTooltip={renderSalaryTooltip}
-          id="prosper-salary-chart"
-          config={{
-            height: 400,
-            margin: { top: 20, right: 20, bottom: 60, left: 80 },
-            showArea: true,
-            showPoints: true,
-            showGrid: true,
-            curveSmooth: true,
-            formatYTick: formatCurrency,
-            formatXTick: (v) => String(v),
-            lineColor: theme().colors.primary,
-            areaGradientOpacity: [0.4, 0.05],
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            right: 0,
+            height: '200px',
+            background: `radial-gradient(ellipse at top, ${theme().colors.primary}25, transparent 70%)`,
+            'pointer-events': 'none',
           }}
         />
 
-        {/* Legend */}
-        <div
-          style={{
-            display: 'flex',
-            'justify-content': 'center',
-            gap: '24px',
-            'margin-top': '16px',
-            'flex-wrap': 'wrap',
-          }}
-        >
-          <LegendItem color={theme().colors.primary} label="Your Salary" theme={props.theme} />
-          <Show when={showComparison()}>
-            <LegendItem
-              color={salaryColors.median}
-              label="Market Median"
-              dashed
-              theme={props.theme}
-            />
-            <LegendItem
-              color={salaryColors.percentile75}
-              label="75th Percentile"
-              dashed
-              theme={props.theme}
-            />
-            <LegendItem
-              color={salaryColors.percentile25}
-              label="25th Percentile"
-              dashed
-              theme={props.theme}
-            />
-          </Show>
+        {/* Content container */}
+        <div style={{ padding: '24px 32px', position: 'relative', 'z-index': 1 }}>
+          <div
+            style={{
+              display: 'flex',
+              'justify-content': 'space-between',
+              'align-items': 'center',
+              'margin-bottom': '16px',
+            }}
+          >
+            <h3
+              style={{
+                'font-family': "'Playfair Display', Georgia, serif",
+                'font-size': '20px',
+                color: theme().colors.text,
+                margin: 0,
+              }}
+            >
+              Salary Growth Over Time
+            </h3>
+            <Show when={isV2FeatureEnabled('MARKET_COMPARISON')}>
+              <button
+                onClick={() => prosperStore.toggleMarketComparison()}
+                style={{
+                  background: showComparison() ? theme().colors.primary : theme().colors.surface,
+                  color: showComparison() ? theme().colors.background : theme().colors.text,
+                  border: `1px solid ${showComparison() ? theme().colors.primary : theme().colors.border}`,
+                  padding: '8px 16px',
+                  'border-radius': '8px',
+                  cursor: 'pointer',
+                  'font-size': '14px',
+                  transition: 'all 0.2s',
+                }}
+              >
+                <Show when={showComparison()}>
+                  <CheckIcon
+                    width={14}
+                    height={14}
+                    style={{
+                      display: 'inline-block',
+                      'vertical-align': 'middle',
+                      'margin-right': '4px',
+                    }}
+                  />
+                </Show>
+                {showComparison() ? 'Market Comparison' : 'Show Market Comparison'}
+              </button>
+            </Show>
+          </div>
+
+          {/* Reusable LineChart Component */}
+          <LineChart<ExtendedSnapshot>
+            data={chartData()}
+            theme={theme()}
+            overlayLines={overlayLines()}
+            renderTooltip={renderSalaryTooltip}
+            id="prosper-salary-chart"
+            config={{
+              height: 400,
+              margin: { top: 20, right: 20, bottom: 60, left: 80 },
+              showArea: true,
+              showPoints: true,
+              showGrid: true,
+              curveSmooth: true,
+              formatYTick: formatCurrency,
+              formatXTick: (v) => String(v),
+              lineColor: theme().colors.primary,
+              areaGradientOpacity: [0.4, 0.05],
+            }}
+          />
+
+          {/* Legend */}
+          <div
+            style={{
+              display: 'flex',
+              'justify-content': 'center',
+              gap: '24px',
+              'margin-top': '16px',
+              'flex-wrap': 'wrap',
+            }}
+          >
+            <LegendItem color={theme().colors.primary} label="Your Salary" theme={props.theme} />
+            <Show when={showComparison()}>
+              <LegendItem
+                color={salaryColors.median}
+                label="Market Median"
+                dashed
+                theme={props.theme}
+              />
+              <LegendItem
+                color={salaryColors.percentile75}
+                label="75th Percentile"
+                dashed
+                theme={props.theme}
+              />
+              <LegendItem
+                color={salaryColors.percentile25}
+                label="25th Percentile"
+                dashed
+                theme={props.theme}
+              />
+            </Show>
+          </div>
         </div>
-      </div>
+      </FluidCard>
     </Show>
   );
 };
@@ -1134,7 +1153,9 @@ const RangeEntryForm: Component<RangeEntryFormProps> = (props) => {
                         }}
                       >
                         {year}: ${Math.round(salary / 1000)}k
-                        {isEstimated && <span style={{ color: theme().colors.textMuted }}> ~</span>}
+                        <Show when={isEstimated}>
+                          <span style={{ color: theme().colors.textMuted }}> ~</span>
+                        </Show>
                       </div>
                     );
                   }}
@@ -2202,7 +2223,9 @@ const FormField: Component<FormFieldProps> = (props) => (
       }}
     >
       {props.label}
-      {props.required && <span style={{ color: props.theme().colors.accent }}>*</span>}
+      <Show when={props.required}>
+        <span style={{ color: props.theme().colors.accent }}>*</span>
+      </Show>
     </label>
     {props.children}
   </div>

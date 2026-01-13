@@ -784,8 +784,9 @@ export const ExportView: Component<ExportViewProps> = (props) => {
       await navigator.clipboard.writeText(content);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
-      console.error('Failed to copy:', err);
+    } catch (_err) {
+      // Clipboard failures are typically user-visible (permission denied, etc.)
+      // Silently ignore as the user will see the copy didn't work
     }
   };
 
@@ -1160,7 +1161,9 @@ export const ExportView: Component<ExportViewProps> = (props) => {
                     ...(copied() ? { color: '#10B981', 'border-color': '#10B981' } : {}),
                   }}
                 >
-                  {copied() ? <CheckIcon /> : <CopyIcon />}
+                  <Show when={copied()} fallback={<CopyIcon />}>
+                    <CheckIcon />
+                  </Show>
                   {copied() ? 'Copied!' : 'Copy to Clipboard'}
                 </button>
               </div>

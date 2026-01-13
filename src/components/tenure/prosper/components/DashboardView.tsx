@@ -8,7 +8,8 @@ import { Component, createMemo, For, Show } from 'solid-js';
 import { prosperStore } from '../store';
 import { prepareStore } from '../../prepare/store';
 import { prosperTenure } from '../theme/prosper-tenure';
-import { FluidCard, Tooltip, StatTooltipContent } from '../../pipeline/ui';
+import { FluidCard } from '../../ui';
+import { Tooltip, StatTooltipContent } from '../../pipeline/ui';
 import type { AccomplishmentType } from '../../../../schemas/tenure';
 
 interface DashboardViewProps {

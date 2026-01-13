@@ -337,7 +337,7 @@ const JobDetailModal: Component<{ job: OnetCareerDetails; onClose: () => void }>
         </h2>
 
         <div style={{ 'margin-bottom': '24px' }}>
-          {props.job.tags.bright_outlook && (
+          <Show when={props.job.tags.bright_outlook}>
             <span
               style={{
                 background: '#F59E0B',
@@ -351,8 +351,8 @@ const JobDetailModal: Component<{ job: OnetCareerDetails; onClose: () => void }>
             >
               Bright Outlook
             </span>
-          )}
-          {props.job.tags.green && (
+          </Show>
+          <Show when={props.job.tags.green}>
             <span
               style={{
                 background: '#10B981',
@@ -365,7 +365,7 @@ const JobDetailModal: Component<{ job: OnetCareerDetails; onClose: () => void }>
             >
               Green Economy
             </span>
-          )}
+          </Show>
         </div>
 
         <div style={{ 'margin-bottom': '32px' }}>
@@ -400,7 +400,7 @@ const JobDetailModal: Component<{ job: OnetCareerDetails; onClose: () => void }>
           </ul>
         </div>
 
-        {props.job.also_called && (
+        <Show when={props.job.also_called}>
           <div>
             <h3
               style={{
@@ -429,7 +429,7 @@ const JobDetailModal: Component<{ job: OnetCareerDetails; onClose: () => void }>
               </For>
             </div>
           </div>
-        )}
+        </Show>
       </div>
     </div>
   );
@@ -852,7 +852,7 @@ const JobCard: Component<{ job: JobMatch }> = (props) => {
         </div>
 
         {/* Salary if available */}
-        {props.job.salary && (
+        <Show when={props.job.salary}>
           <div
             style={{
               padding: '12px 16px',
@@ -879,7 +879,7 @@ const JobCard: Component<{ job: JobMatch }> = (props) => {
               )}
             </span>
           </div>
-        )}
+        </Show>
 
         {/* Actions */}
         <div style={{ display: 'flex', gap: '12px' }}>
@@ -1729,15 +1729,6 @@ export const TenureApp: Component = () => {
                 >
                   Tenure
                 </h1>
-                <p
-                  style={{
-                    margin: 0,
-                    'font-size': '17px',
-                    color: maximalist.colors.textMuted,
-                  }}
-                >
-                  Eternal Career Companion
-                </p>
               </div>
             </div>
 
@@ -1964,7 +1955,7 @@ export const TenureApp: Component = () => {
                   : 'auto',
             }}
           >
-            {activeTab() === 'Matches' && (
+            <Show when={activeTab() === 'Matches'}>
               <>
                 <div style={{ 'margin-bottom': '32px' }}>
                   <h2
@@ -2028,9 +2019,9 @@ export const TenureApp: Component = () => {
                   </div>
                 </Show>
               </>
-            )}
+            </Show>
 
-            {activeTab() === 'Discover' && (
+            <Show when={activeTab() === 'Discover'}>
               <div style={{ 'padding-top': '24px' }}>
                 {/* Sub-tabs - Always visible */}
                 <DiscoverSubTabs
@@ -2244,37 +2235,42 @@ export const TenureApp: Component = () => {
                                     color: opt.color,
                                   }}
                                 >
-                                  {opt.val === 1 ? (
+                                  <Show
+                                    when={opt.val === 1}
+                                    fallback={
+                                      opt.val === 2 ? (
+                                        <SmileySadIcon
+                                          width={24}
+                                          height={24}
+                                          style={{ color: '#F97316' }}
+                                        />
+                                      ) : opt.val === 3 ? (
+                                        <SmileyMehIcon
+                                          width={24}
+                                          height={24}
+                                          style={{ color: '#EAB308' }}
+                                        />
+                                      ) : opt.val === 4 ? (
+                                        <SmileyIcon
+                                          width={24}
+                                          height={24}
+                                          style={{ color: '#22C55E' }}
+                                        />
+                                      ) : (
+                                        <HeartIcon
+                                          width={24}
+                                          height={24}
+                                          style={{ color: '#10B981' }}
+                                        />
+                                      )
+                                    }
+                                  >
                                     <SmileyAngryIcon
                                       width={24}
                                       height={24}
                                       style={{ color: '#EF4444' }}
                                     />
-                                  ) : opt.val === 2 ? (
-                                    <SmileySadIcon
-                                      width={24}
-                                      height={24}
-                                      style={{ color: '#F97316' }}
-                                    />
-                                  ) : opt.val === 3 ? (
-                                    <SmileyMehIcon
-                                      width={24}
-                                      height={24}
-                                      style={{ color: '#EAB308' }}
-                                    />
-                                  ) : opt.val === 4 ? (
-                                    <SmileyIcon
-                                      width={24}
-                                      height={24}
-                                      style={{ color: '#22C55E' }}
-                                    />
-                                  ) : (
-                                    <HeartIcon
-                                      width={24}
-                                      height={24}
-                                      style={{ color: '#10B981' }}
-                                    />
-                                  )}
+                                  </Show>
                                 </span>
                                 <span style={{ 'font-size': '15px', 'text-align': 'center' }}>
                                   {opt.label}
@@ -2531,7 +2527,7 @@ export const TenureApp: Component = () => {
                                       'margin-bottom': '12px',
                                     }}
                                   >
-                                    {career.tags.bright_outlook && (
+                                    <Show when={career.tags.bright_outlook}>
                                       <span
                                         style={{
                                           background: `${maxPalette.teal}30`,
@@ -2545,7 +2541,7 @@ export const TenureApp: Component = () => {
                                       >
                                         Bright Outlook
                                       </span>
-                                    )}
+                                    </Show>
                                     <CartoonBadge fit={career.fit} />
                                   </div>
 
@@ -2697,10 +2693,10 @@ export const TenureApp: Component = () => {
                   </Show>
                 </Show>
               </div>
-            )}
+            </Show>
 
             {/* Prepare Tab - Resume Builder */}
-            {activeTab() === 'Prepare' && (
+            <Show when={activeTab() === 'Prepare'}>
               <PrepareApp
                 currentTheme={() => ({
                   colors: {
@@ -2713,10 +2709,10 @@ export const TenureApp: Component = () => {
                   gradients: currentTheme().gradients,
                 })}
               />
-            )}
+            </Show>
 
             {/* Prospect Tab - Job Pipeline */}
-            {activeTab() === 'Prospect' && (
+            <Show when={activeTab() === 'Prospect'}>
               <PipelineView
                 currentTheme={() => ({
                   colors: {
@@ -2729,10 +2725,10 @@ export const TenureApp: Component = () => {
                   spacing: maximalist.spacing,
                 })}
               />
-            )}
+            </Show>
 
             {/* Prosper Tab - Career Journal & Compensation */}
-            {activeTab() === 'Prosper' && (
+            <Show when={activeTab() === 'Prosper'}>
               <ProsperView
                 currentTheme={() => ({
                   colors: {
@@ -2745,7 +2741,7 @@ export const TenureApp: Component = () => {
                   spacing: maximalist.spacing,
                 })}
               />
-            )}
+            </Show>
           </main>
 
           <Show when={selectedJob()}>

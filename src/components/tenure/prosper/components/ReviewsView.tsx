@@ -198,7 +198,9 @@ const RatingStars: Component<{
               transition: 'color 0.2s',
             }}
           >
-            {star <= props.value ? <StarIcon /> : <StarOutlineIcon />}
+            <Show when={star <= props.value} fallback={<StarOutlineIcon />}>
+              <StarIcon />
+            </Show>
           </button>
         )}
       </For>

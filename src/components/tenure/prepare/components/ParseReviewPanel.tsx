@@ -11,7 +11,7 @@
  */
 
 import { Component, createSignal, Show, For, JSX } from 'solid-js';
-import { FluidCard } from '../../pipeline/ui/FluidCard';
+import { FluidCard } from '../../ui';
 import { IconBriefcase, IconFileText, IconZap, IconUser, IconPlus } from '../../pipeline/ui/Icons';
 import { prepareStore } from '../store';
 import { ExperienceViewer } from './ExperienceViewer';

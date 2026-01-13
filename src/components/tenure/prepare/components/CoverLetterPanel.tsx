@@ -10,6 +10,8 @@
 import { Component, createSignal, Show, For } from 'solid-js';
 import type { CoverLetterResponse } from '../services/cover-letter.service';
 import { IconCopy, IconDownload, IconX, IconPlus } from '../../pipeline/ui/Icons';
+import { Paywall } from '../../../common/Paywall';
+import { canUseCoverLetter } from '../../../../lib/feature-gates';
 
 interface CoverLetterPanelProps {
   // Context from mutation
@@ -71,6 +73,8 @@ export const CoverLetterPanel: Component<CoverLetterPanelProps> = (props) => {
   // Copy state
   const [copied, setCopied] = createSignal(false);
 
+  const [showPaywall, setShowPaywall] = createSignal(false);
+
   const addKeyPoint = () => {
     const point = newKeyPoint().trim();
     if (point && keyPoints().length < 5) {
@@ -84,6 +88,15 @@ export const CoverLetterPanel: Component<CoverLetterPanelProps> = (props) => {
   };
 
   const handleGenerate = () => {
+    // Check access first
+    const access = canUseCoverLetter();
+    if (!access.allowed) {
+      if (access.requiresAuth || access.requiresSubscription) {
+        setShowPaywall(true);
+        return;
+      }
+    }
+
     props.onGenerate({
       targetCompany: targetCompany(),
       targetRole: targetRole(),
@@ -851,6 +864,14 @@ export const CoverLetterPanel: Component<CoverLetterPanelProps> = (props) => {
           </div>
         </div>
       </Show>
+
+      {/* Paywall Modal */}
+      <Paywall
+        isOpen={showPaywall()}
+        onClose={() => setShowPaywall(false)}
+        feature="tenure_extras"
+        featureName="Cover Letter Generation"
+      />
     </div>
   );
 };

@@ -51,15 +51,20 @@ export const ProsperView: Component<ProsperViewProps> = (props) => {
   });
 
   // Merge provided theme with prosperTenure defaults
+  // IMPORTANT: provided.colors.primary should override prosperTenure.colors.primary
+  // to use dynamic RIASEC color instead of static Fuchsia
   const theme = () => {
     const provided = props.currentTheme?.() || {};
     return {
       ...prosperTenure,
-      ...provided,
-      colors: { ...prosperTenure.colors, ...(provided.colors || {}) },
+      colors: {
+        ...prosperTenure.colors,
+        ...(provided.colors || {}), // Dynamic RIASEC primary overrides static primary
+      },
       fonts: provided.fonts || prosperTenure.fonts,
       spacing: provided.spacing || prosperTenure.spacing,
       radii: { ...prosperTenure.radii, ...(provided.radii || {}) },
+      ...provided, // Apply other provided properties
     } as typeof prosperTenure;
   };
 
@@ -91,7 +96,7 @@ export const ProsperView: Component<ProsperViewProps> = (props) => {
       >
         {/* Dashboard Section */}
         <Show when={activeSection() === 'dashboard'}>
-          <DashboardView 
+          <DashboardView
             currentTheme={theme}
             onNavigate={(section) => navigate(`/tenure/prosper/${section}`)}
           />

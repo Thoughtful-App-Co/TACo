@@ -4,7 +4,7 @@
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
-import { Component, createSignal, createEffect } from 'solid-js';
+import { Component, createSignal, createEffect, Show } from 'solid-js';
 import { Modal, ThemeType } from './Modal';
 import { WorkExperience } from '../../../../schemas/pipeline.schema';
 
@@ -236,7 +236,9 @@ export const ExperienceEditor: Component<ExperienceEditorProps> = (props) => {
               placeholder="e.g., Acme Corp"
               style={inputStyle()}
             />
-            {errors().company && <p style={errorStyle()}>{errors().company}</p>}
+            <Show when={errors().company}>
+              <p style={errorStyle()}>{errors().company}</p>
+            </Show>
           </div>
           <div>
             <label style={labelStyle()}>Job Title *</label>
@@ -247,7 +249,9 @@ export const ExperienceEditor: Component<ExperienceEditorProps> = (props) => {
               placeholder="e.g., Senior Software Engineer"
               style={inputStyle()}
             />
-            {errors().title && <p style={errorStyle()}>{errors().title}</p>}
+            <Show when={errors().title}>
+              <p style={errorStyle()}>{errors().title}</p>
+            </Show>
           </div>
         </div>
 
@@ -293,7 +297,9 @@ export const ExperienceEditor: Component<ExperienceEditorProps> = (props) => {
               onInput={(e) => setStartDate(e.currentTarget.value)}
               style={inputStyle()}
             />
-            {errors().startDate && <p style={errorStyle()}>{errors().startDate}</p>}
+            <Show when={errors().startDate}>
+              <p style={errorStyle()}>{errors().startDate}</p>
+            </Show>
           </div>
           <div>
             <label style={labelStyle()}>End Date</label>

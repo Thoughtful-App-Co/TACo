@@ -190,7 +190,9 @@ const CheckInWizard: Component<{ onClose: () => void; theme: () => any }> = (pro
         }}
       >
         {fieldProps.label}
-        {fieldProps.required && <span style={{ color: theme().colors.accent }}>*</span>}
+        <Show when={fieldProps.required}>
+          <span style={{ color: theme().colors.accent }}>*</span>
+        </Show>
       </label>
       {fieldProps.children}
     </div>
@@ -641,7 +643,9 @@ const QuickAccomplishmentForm: Component<{ onClose: () => void; theme: () => any
         }}
       >
         {fieldProps.label}
-        {fieldProps.required && <span style={{ color: theme().colors.accent }}>*</span>}
+        <Show when={fieldProps.required}>
+          <span style={{ color: theme().colors.accent }}>*</span>
+        </Show>
       </label>
       {fieldProps.children}
     </div>
@@ -981,7 +985,9 @@ export const JournalView: Component<JournalViewProps> = (props) => {
               cursor: hasCheckInForCurrentQuarter() ? 'not-allowed' : 'pointer',
             }}
           >
-            {hasCheckInForCurrentQuarter() ? <CheckIcon /> : <PlusIcon />}
+            <Show when={hasCheckInForCurrentQuarter()} fallback={<PlusIcon />}>
+              <CheckIcon />
+            </Show>
             {hasCheckInForCurrentQuarter()
               ? `${currentQuarter.quarter} Complete`
               : `Start ${currentQuarter.quarter} Check-In`}

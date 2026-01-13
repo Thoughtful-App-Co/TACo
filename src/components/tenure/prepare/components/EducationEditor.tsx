@@ -4,7 +4,7 @@
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
-import { Component, createSignal, createEffect, JSX } from 'solid-js';
+import { Component, createSignal, createEffect, JSX, Show } from 'solid-js';
 import { Modal, ThemeType } from './Modal';
 import type { Education } from '../../../../schemas/pipeline.schema';
 
@@ -251,7 +251,9 @@ export const EducationEditor: Component<EducationEditorProps> = (props) => {
                 : theme().colors.border;
             }}
           />
-          {errors().institution && <p style={errorTextStyle()}>{errors().institution}</p>}
+          <Show when={errors().institution}>
+            <p style={errorTextStyle()}>{errors().institution}</p>
+          </Show>
         </div>
 
         {/* Degree */}
@@ -277,7 +279,9 @@ export const EducationEditor: Component<EducationEditorProps> = (props) => {
                 : theme().colors.border;
             }}
           />
-          {errors().degree && <p style={errorTextStyle()}>{errors().degree}</p>}
+          <Show when={errors().degree}>
+            <p style={errorTextStyle()}>{errors().degree}</p>
+          </Show>
         </div>
 
         {/* Field of Study */}
@@ -303,7 +307,9 @@ export const EducationEditor: Component<EducationEditorProps> = (props) => {
                 : theme().colors.border;
             }}
           />
-          {errors().field && <p style={errorTextStyle()}>{errors().field}</p>}
+          <Show when={errors().field}>
+            <p style={errorTextStyle()}>{errors().field}</p>
+          </Show>
         </div>
 
         {/* Graduation Date and GPA - Side by Side */}
@@ -375,7 +381,9 @@ export const EducationEditor: Component<EducationEditorProps> = (props) => {
                   : theme().colors.border;
               }}
             />
-            {errors().gpa && <p style={errorTextStyle()}>{errors().gpa}</p>}
+            <Show when={errors().gpa}>
+              <p style={errorTextStyle()}>{errors().gpa}</p>
+            </Show>
           </div>
         </div>
 

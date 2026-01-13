@@ -7,7 +7,7 @@
 import { Component, For, Show, createSignal } from 'solid-js';
 import type { WorkExperience } from '../../../../schemas/pipeline.schema';
 import type { Theme } from '../../../../theme/types';
-import { FluidCard } from '../../pipeline/ui/FluidCard';
+import { FluidCard } from '../../ui';
 import {
   IconEdit,
   IconTrash,

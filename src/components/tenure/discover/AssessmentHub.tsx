@@ -7,7 +7,7 @@
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
-import { Component } from 'solid-js';
+import { Component, Show } from 'solid-js';
 import { AssessmentCard } from './AssessmentCard';
 import { maximalist, maxGradients } from '../../../theme/maximalist';
 import { isRiasecCompleted, isOceanCompleted } from '../../../stores/assessment-store';
@@ -152,7 +152,36 @@ export const AssessmentHub: Component<AssessmentHubProps> = (props) => {
             'margin-bottom': '16px',
           }}
         >
-          {isRiasecCompleted() && isOceanCompleted() ? (
+          <Show
+            when={isRiasecCompleted() && isOceanCompleted()}
+            fallback={
+              isRiasecCompleted() || isOceanCompleted() ? (
+                <div
+                  style={{
+                    display: 'flex',
+                    'align-items': 'center',
+                    gap: '8px',
+                    'justify-content': 'center',
+                  }}
+                >
+                  <StarIcon width={20} height={20} style={{ color: '#F59E0B' }} /> Great start!
+                  Complete the remaining assessment for a full profile.
+                </div>
+              ) : (
+                <div
+                  style={{
+                    display: 'flex',
+                    'align-items': 'center',
+                    gap: '8px',
+                    'justify-content': 'center',
+                  }}
+                >
+                  <RocketIcon width={20} height={20} style={{ color: '#3B82F6' }} /> Start with any
+                  assessment - they can be taken in any order.
+                </div>
+              )
+            }
+          >
             <div
               style={{
                 display: 'flex',
@@ -164,31 +193,7 @@ export const AssessmentHub: Component<AssessmentHubProps> = (props) => {
               <CheckCircleIcon width={20} height={20} style={{ color: '#10B981' }} /> All
               assessments complete! View your Overview for combined insights.
             </div>
-          ) : isRiasecCompleted() || isOceanCompleted() ? (
-            <div
-              style={{
-                display: 'flex',
-                'align-items': 'center',
-                gap: '8px',
-                'justify-content': 'center',
-              }}
-            >
-              <StarIcon width={20} height={20} style={{ color: '#F59E0B' }} /> Great start! Complete
-              the remaining assessment for a full profile.
-            </div>
-          ) : (
-            <div
-              style={{
-                display: 'flex',
-                'align-items': 'center',
-                gap: '8px',
-                'justify-content': 'center',
-              }}
-            >
-              <RocketIcon width={20} height={20} style={{ color: '#3B82F6' }} /> Start with any
-              assessment - they can be taken in any order.
-            </div>
-          )}
+          </Show>
         </p>
 
         {/* Progress bar */}

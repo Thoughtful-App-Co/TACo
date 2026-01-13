@@ -10,6 +10,7 @@ import { Component, createSignal, Show, For } from 'solid-js';
 import { MagicWandIcon } from 'solid-phosphor/bold';
 import { getMutationsRemaining, getUsageSummary } from '../../../../lib/usage-tracker';
 import { canUseMutation } from '../../../../lib/feature-gates';
+import { Paywall } from '../../../common/Paywall';
 
 interface MutationPanelProps {
   onMutate: (params: {
@@ -54,6 +55,7 @@ export const MutationPanel: Component<MutationPanelProps> = (props) => {
   );
   const [length, setLength] = createSignal<'concise' | 'detailed'>('concise');
   const [error, setError] = createSignal<string | null>(null);
+  const [showPaywall, setShowPaywall] = createSignal(false);
 
   const usageSummary = () => getUsageSummary();
   const canMutate = () => {
@@ -65,14 +67,25 @@ export const MutationPanel: Component<MutationPanelProps> = (props) => {
   const handleMutate = () => {
     setError(null);
 
-    // Validation
-    if (jobDescription().trim().length < 100) {
-      setError('Job description must be at least 100 characters');
+    // Check access first
+    const access = canUseMutation();
+    if (!access.allowed) {
+      // Show paywall for subscription issues, error for quota issues
+      if (access.requiresAuth || access.requiresSubscription) {
+        setShowPaywall(true);
+        return;
+      }
+    }
+
+    // Check quota separately
+    if (getMutationsRemaining() <= 0) {
+      setError('You have reached your mutation limit for this month. Limit resets on the 1st.');
       return;
     }
 
-    if (!canMutate()) {
-      setError('You have reached your mutation limit for this month');
+    // Validation
+    if (jobDescription().trim().length < 100) {
+      setError('Job description must be at least 100 characters');
       return;
     }
 
@@ -389,6 +402,14 @@ export const MutationPanel: Component<MutationPanelProps> = (props) => {
             : `${usageSummary().mutations.remaining}/${usageSummary().mutations.limit} mutations left this month`}
         </div>
       </div>
+
+      {/* Paywall Modal */}
+      <Paywall
+        isOpen={showPaywall()}
+        onClose={() => setShowPaywall(false)}
+        feature="tenure_extras"
+        featureName="Resume Mutation"
+      />
     </div>
   );
 };
