@@ -1,32 +1,34 @@
 /**
  * Keyword Extraction Service v2 - Industry-Agnostic
- * 
+ *
  * Combines wink-nlp (POS tagging, NER) and keyword-extractor (stopword removal)
  * to extract keywords from job descriptions and resumes.
- * 
+ *
  * THIS VERSION IS INDUSTRY-AGNOSTIC - Works for tech, healthcare, construction,
  * hospitality, sales, politics, marketing, etc.
- * 
+ *
  * Uses O*NET universal taxonomy for skill/knowledge matching.
- * 
+ *
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
-import winkNLP from 'wink-nlp';
-import model from 'wink-eng-lite-web-model';
-import keywordExtractor from 'keyword-extractor';
-import { ONET_SKILLS, ONET_KNOWLEDGE, findMatchingSkill, findMatchingKnowledge } from '../../../../data/onet-taxonomy';
+import {
+  ONET_SKILLS,
+  ONET_KNOWLEDGE,
+  findMatchingSkill,
+  findMatchingKnowledge,
+} from '../../../../data/onet-taxonomy';
 
 // ============================================================================
 // TYPES
 // ============================================================================
 
 export interface ExtractedKeywords {
-  skills: string[];          // O*NET universal skills (communication, critical thinking, etc)
-  knowledge: string[];       // O*NET knowledge areas (medicine, law, engineering, etc)
-  tools: string[];           // Tools, software, equipment (domain-neutral extraction)
-  requirements: string[];    // Experience requirements (5+ years, Bachelor's degree, etc)
-  raw: string[];             // All extracted terms (for debugging)
+  skills: string[]; // O*NET universal skills (communication, critical thinking, etc)
+  knowledge: string[]; // O*NET knowledge areas (medicine, law, engineering, etc)
+  tools: string[]; // Tools, software, equipment (domain-neutral extraction)
+  requirements: string[]; // Experience requirements (5+ years, Bachelor's degree, etc)
+  raw: string[]; // All extracted terms (for debugging)
 }
 
 export interface KeywordExtractionOptions {
@@ -37,14 +39,19 @@ export interface KeywordExtractionOptions {
 }
 
 // ============================================================================
-// NLP INITIALIZATION
+// NLP INITIALIZATION (Lazy-loaded)
 // ============================================================================
 
-let nlpInstance: ReturnType<typeof winkNLP> | null = null;
+let nlpInstance: any = null;
 let nlpIts: any = null;
 
-function initializeNLP() {
+async function initializeNLP() {
   if (!nlpInstance) {
+    // Dynamic imports - only load when needed
+    const [{ default: winkNLP }, { default: model }] = await Promise.all([
+      import('wink-nlp'),
+      import('wink-eng-lite-web-model'),
+    ]);
     nlpInstance = winkNLP(model);
     nlpIts = nlpInstance.its;
   }
@@ -57,25 +64,21 @@ function initializeNLP() {
 
 /**
  * Extract keywords from job description or resume text
- * 
+ *
  * This function is INDUSTRY-AGNOSTIC - it doesn't assume tech/software.
  * It extracts nouns, entities, and phrases, then matches against O*NET taxonomy.
  */
-export function extractKeywords(
+export async function extractKeywords(
   text: string,
   options: KeywordExtractionOptions = {}
-): ExtractedKeywords {
-  const {
-    removeDigits = false,
-    lowercase = true,
-    extractPhrases = true,
-    minLength = 3,
-  } = options;
+): Promise<ExtractedKeywords> {
+  const { removeDigits = false, lowercase = true, extractPhrases = true, minLength = 3 } = options;
 
-  // Initialize NLP
-  const { nlp, its } = initializeNLP();
+  // Initialize NLP (lazy-loaded)
+  const { nlp, its } = await initializeNLP();
 
-  // Step 1: Basic keyword extraction using keyword-extractor
+  // Step 1: Basic keyword extraction using keyword-extractor (lazy-loaded)
+  const { default: keywordExtractor } = await import('keyword-extractor');
   const basicKeywords = keywordExtractor.extract(text, {
     language: 'english',
     remove_digits: removeDigits,
@@ -127,7 +130,7 @@ export function extractKeywords(
 
 /**
  * Categorize keywords using O*NET universal taxonomy
- * 
+ *
  * This is INDUSTRY-AGNOSTIC - matches against 35 universal skills and 33 knowledge areas
  */
 function categorizeKeywords(keywords: string[]): ExtractedKeywords {
@@ -181,11 +184,11 @@ function categorizeKeywords(keywords: string[]): ExtractedKeywords {
  */
 function isRequirement(keyword: string): boolean {
   const requirementPatterns = [
-    /\d+\+?\s*(years?|yrs?)/i,             // "5+ years", "3 yrs"
-    /bachelor'?s?|master'?s?|phd|degree/i,  // Degrees
-    /experience (with|in)/i,                 // "experience with"
-    /\d+\s*to\s*\d+/,                        // "3 to 5"
-    /certification|certified|license/i,      // Certifications
+    /\d+\+?\s*(years?|yrs?)/i, // "5+ years", "3 yrs"
+    /bachelor'?s?|master'?s?|phd|degree/i, // Degrees
+    /experience (with|in)/i, // "experience with"
+    /\d+\s*to\s*\d+/, // "3 to 5"
+    /certification|certified|license/i, // Certifications
   ];
 
   return requirementPatterns.some((pattern) => pattern.test(keyword));
@@ -193,14 +196,14 @@ function isRequirement(keyword: string): boolean {
 
 /**
  * Heuristic: Check if keyword looks like a tool/software/equipment
- * 
+ *
  * DOMAIN NEUTRAL - doesn't assume tech tools
  */
 function isToolKeyword(keyword: string): boolean {
   const toolPatterns = [
-    /software|system|platform|application/i,  // Software
-    /tool|equipment|machine|device/i,          // Equipment
-    /crm|erp|pos|ehr|emr/i,                    // Common acronyms (any domain)
+    /software|system|platform|application/i, // Software
+    /tool|equipment|machine|device/i, // Equipment
+    /crm|erp|pos|ehr|emr/i, // Common acronyms (any domain)
   ];
 
   return toolPatterns.some((pattern) => pattern.test(keyword));
@@ -214,14 +217,12 @@ function isToolKeyword(keyword: string): boolean {
  * Extract years of experience from text
  * e.g., "5+ years", "3-5 years" → { min: 5, max: null } or { min: 3, max: 5 }
  */
-export function extractYearsOfExperience(
-  text: string
-): { min: number; max: number | null } | null {
+export function extractYearsOfExperience(text: string): { min: number; max: number | null } | null {
   const patterns = [
-    /(\d+)\+\s*(years?|yrs?)/i,             // "5+ years"
-    /(\d+)\s*-\s*(\d+)\s*(years?|yrs?)/i,   // "3-5 years"
-    /(\d+)\s*to\s*(\d+)\s*(years?|yrs?)/i,  // "3 to 5 years"
-    /(\d+)\s*(years?|yrs?)/i,               // "5 years"
+    /(\d+)\+\s*(years?|yrs?)/i, // "5+ years"
+    /(\d+)\s*-\s*(\d+)\s*(years?|yrs?)/i, // "3-5 years"
+    /(\d+)\s*to\s*(\d+)\s*(years?|yrs?)/i, // "3 to 5 years"
+    /(\d+)\s*(years?|yrs?)/i, // "5 years"
   ];
 
   for (const pattern of patterns) {
@@ -247,8 +248,8 @@ export function extractYearsOfExperience(
 export function normalizeSkill(skill: string): string {
   return skill
     .toLowerCase()
-    .replace(/\.js$/i, '')    // Remove .js suffix
-    .replace(/[^\w\s]/g, '')  // Remove special chars
+    .replace(/\.js$/i, '') // Remove .js suffix
+    .replace(/[^\w\s]/g, '') // Remove special chars
     .trim();
 }
 
@@ -298,8 +299,8 @@ function levenshteinDistance(str1: string, str2: string): number {
       } else {
         matrix[i][j] = Math.min(
           matrix[i - 1][j - 1] + 1, // substitution
-          matrix[i][j - 1] + 1,     // insertion
-          matrix[i - 1][j] + 1      // deletion
+          matrix[i][j - 1] + 1, // insertion
+          matrix[i - 1][j] + 1 // deletion
         );
       }
     }

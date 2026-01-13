@@ -1,11 +1,11 @@
 /**
  * Skill Matcher Service v2 - Industry-Agnostic
- * 
+ *
  * Normalizes and matches skills between job descriptions and resumes.
  * Uses O*NET taxonomy for universal skill standardization.
- * 
+ *
  * Works for ALL industries, not just tech.
- * 
+ *
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
@@ -19,10 +19,10 @@ import { ONET_SKILLS, ONET_KNOWLEDGE } from '../../../../data/onet-taxonomy';
 export type MatchType = 'exact' | 'fuzzy' | 'semantic' | 'synonym' | 'none';
 
 export interface SkillMatch {
-  keyword: string;           // The keyword from JD
-  matchedTo: string | null;  // What it matched in resume (null if no match)
+  keyword: string; // The keyword from JD
+  matchedTo: string | null; // What it matched in resume (null if no match)
   matchType: MatchType;
-  confidence: number;        // 0-100
+  confidence: number; // 0-100
 }
 
 export interface SkillMatchResult {
@@ -38,21 +38,21 @@ export interface SkillMatchResult {
 
 const SKILL_SYNONYMS: Record<string, string[]> = {
   // Universal Skills (from O*NET)
-  'communication': ['communicating', 'communicate', 'verbal', 'written communication'],
-  'leadership': ['leading', 'lead', 'management', 'supervise', 'mentor'],
-  'collaboration': ['collaborate', 'teamwork', 'team player', 'cooperative'],
+  communication: ['communicating', 'communicate', 'verbal', 'written communication'],
+  leadership: ['leading', 'lead', 'management', 'supervise', 'mentor'],
+  collaboration: ['collaborate', 'teamwork', 'team player', 'cooperative'],
   'problem solving': ['problem-solving', 'analytical', 'troubleshooting', 'critical thinking'],
   'time management': ['prioritization', 'organization', 'scheduling'],
   'customer service': ['client service', 'customer care', 'guest services'],
-  
+
   // Education
-  'bachelor': ['bachelors', 'bs', 'ba', 'undergraduate'],
-  'master': ['masters', 'ms', 'ma', 'mba', 'graduate'],
-  'doctorate': ['phd', 'doctoral'],
-  
+  bachelor: ['bachelors', 'bs', 'ba', 'undergraduate'],
+  master: ['masters', 'ms', 'ma', 'mba', 'graduate'],
+  doctorate: ['phd', 'doctoral'],
+
   // Common abbreviations (cross-industry)
-  'management': ['mgmt', 'admin', 'administration'],
-  'experience': ['exp', 'background'],
+  management: ['mgmt', 'admin', 'administration'],
+  experience: ['exp', 'background'],
 };
 
 // Build reverse lookup for synonyms
@@ -71,10 +71,7 @@ for (const [canonical, synonyms] of Object.entries(SKILL_SYNONYMS)) {
 /**
  * Match job description keywords against resume keywords
  */
-export function matchSkills(
-  jdKeywords: string[],
-  resumeKeywords: string[]
-): SkillMatchResult {
+export function matchSkills(jdKeywords: string[], resumeKeywords: string[]): SkillMatchResult {
   const matches: SkillMatch[] = [];
   const matchedJDKeywords: string[] = [];
   const missingKeywords: string[] = [];
@@ -161,9 +158,8 @@ export function matchSkills(
   }
 
   // Calculate overall match score
-  const matchScore = jdKeywords.length > 0
-    ? Math.round((matchedJDKeywords.length / jdKeywords.length) * 100)
-    : 0;
+  const matchScore =
+    jdKeywords.length > 0 ? Math.round((matchedJDKeywords.length / jdKeywords.length) * 100) : 0;
 
   return {
     matches,
@@ -224,7 +220,7 @@ export function suggestSkillsToHighlight(
   limit: number = 5
 ): string[] {
   const matchResult = matchSkills(jdKeywords, resumeKeywords);
-  
+
   // Return skills that matched but might not be prominently featured
   return matchResult.matchedKeywords.slice(0, limit);
 }
@@ -233,8 +229,8 @@ export function suggestSkillsToHighlight(
  * Categorize missing keywords by severity
  */
 export interface MissingKeywordAnalysis {
-  critical: string[];   // Skills mentioned multiple times or in requirements
-  important: string[];  // Skills mentioned once
+  critical: string[]; // Skills mentioned multiple times or in requirements
+  important: string[]; // Skills mentioned once
   niceToHave: string[]; // Skills mentioned in "nice to have" or optional sections
 }
 
@@ -250,7 +246,7 @@ export function analyzeMissingKeywords(
 
   for (const keyword of missingKeywords) {
     const lowerKeyword = keyword.toLowerCase();
-    
+
     // Count occurrences
     const occurrences = (lowerJD.match(new RegExp(lowerKeyword, 'g')) || []).length;
 

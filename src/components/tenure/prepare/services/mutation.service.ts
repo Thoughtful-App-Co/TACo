@@ -1,9 +1,9 @@
 /**
  * Mutation Service - Client-side API caller
- * 
+ *
  * Handles communication with the mutation API endpoint.
  * Includes error handling, retry logic, and response parsing.
- * 
+ *
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
@@ -130,13 +130,9 @@ export class MutationService {
       }
 
       const data: MutationResponse = await response.json();
-      
+
       if (!data.success) {
-        throw new MutationServiceError(
-          'Mutation failed',
-          'MUTATION_FAILED',
-          500
-        );
+        throw new MutationServiceError('Mutation failed', 'MUTATION_FAILED', 500);
       }
 
       return data;
@@ -270,7 +266,7 @@ export function estimateMutationCost(masterResume: MasterResume): {
   estimatedTokens: number;
   estimatedCostUSD: number;
 } {
-  // Rough estimate: 
+  // Rough estimate:
   // - Summary: ~300 tokens
   // - Each bullet: ~100 tokens
   // - Overhead: ~200 tokens

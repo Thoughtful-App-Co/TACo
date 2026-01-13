@@ -378,10 +378,69 @@ export function onetToSoc(onetCode: string): string {
 }
 
 /**
+ * Mapping of detailed O*NET occupation codes to their closest published BLS SOC codes.
+ * BLS OES typically doesn't publish data for detailed occupations, so we map them
+ * to broader occupations or related published codes that have similar wage/employment profiles.
+ */
+const ONET_TO_BLS_SOC_MAPPING: Record<string, string> = {
+  // IT Project Managers (15-1299.09) → Computer and Information Systems Managers (11-3021)
+  // Note: IT Project Managers are better represented by the management occupation
+  '15-1299.09': '11-3021',
+
+  // Add more mappings as needed
+  // Format: 'detailed-onet-code': 'published-bls-soc-code'
+};
+
+/**
+ * Convert O*NET code to the best available BLS SOC code.
+ * For detailed occupations that BLS doesn't publish, maps to the closest
+ * published occupation with similar characteristics.
+ *
+ * Examples:
+ * - "15-1299.09" → "11-3021" (IT Project Managers → Computer & IS Managers)
+ * - "15-1244.00" → "15-1244" (Network Admins, already published)
+ *
+ * @param onetCode - O*NET occupation code (e.g., "15-1299.09")
+ * @returns Best available BLS SOC code for querying wage data
+ */
+export function onetToBlsSoc(onetCode: string): string {
+  if (!onetCode) return '';
+
+  // Check if we have a specific mapping for this detailed occupation
+  const mapped = ONET_TO_BLS_SOC_MAPPING[onetCode];
+  if (mapped) {
+    return mapped;
+  }
+
+  // Otherwise, just strip the decimal suffix
+  return onetCode.split('.')[0];
+}
+
+/**
+ * Convert detailed SOC code to broad SOC code.
+ * BLS OES typically only publishes data for broad occupations (ending in .00),
+ * not detailed occupations (ending in .01-.99).
+ *
+ * Examples:
+ * - "15-1299.09" → "15-1299" (IT Project Managers → All Other Computer Occupations)
+ * - "15-1244.00" → "15-1244" (already broad, no change)
+ *
+ * @param socCode - Detailed or broad SOC code (e.g., "15-1299.09" or "15-1244.00")
+ * @returns Broad SOC code without detail suffix (e.g., "15-1299")
+ */
+export function toBroadSocCode(socCode: string): string {
+  if (!socCode) return '';
+  // Strip any O*NET decimal suffix first
+  const cleanCode = socCode.split('.')[0];
+  // Already in XX-XXXX format, return as-is
+  return cleanCode;
+}
+
+/**
  * Build an OES series ID from components.
  * OES series ID format: OEU{areaType}{areaCode}{industryCode}{socCode}{dataType}
  * Area types: N=National, S=State, M=Metropolitan
- * @param socCode - SOC occupation code (e.g., "15-1252" or "151252")
+ * @param socCode - SOC occupation code (e.g., "15-1252" or "151252") or O*NET code (e.g., "15-1252.00")
  * @param dataType - OES data type code
  * @param areaCode - Optional area code (defaults to national)
  * @param industryCode - Optional industry code (defaults to cross-industry)
@@ -393,8 +452,8 @@ export function buildOesSeriesId(
   areaCode: string = NATIONAL_AREA_CODE,
   industryCode: string = CROSS_INDUSTRY_CODE
 ): string {
-  // Normalize SOC code: remove hyphens and ensure 6 digits
-  const normalizedSoc = socCode.replace(/-/g, '').padEnd(6, '0');
+  // Normalize SOC code: strip O*NET suffix (.XX), remove hyphens, ensure 6 digits
+  const normalizedSoc = socCode.split('.')[0].replace(/-/g, '').padEnd(6, '0').substring(0, 6);
   // Ensure industry code is 6 digits
   const normalizedIndustry = industryCode.padStart(6, '0');
 
@@ -572,11 +631,12 @@ function getAreaName(areaCode: string): string {
 
 /**
  * Format SOC code with hyphen.
- * @param socCode - SOC code (e.g., "151252")
+ * @param socCode - SOC code (e.g., "151252") or O*NET code (e.g., "15-1252.00")
  * @returns Formatted SOC code (e.g., "15-1252")
  */
 function formatSocCode(socCode: string): string {
-  const cleaned = socCode.replace(/-/g, '');
+  // Strip O*NET suffix (.XX) if present, then remove hyphens
+  const cleaned = socCode.split('.')[0].replace(/-/g, '');
   if (cleaned.length >= 6) {
     return `${cleaned.substring(0, 2)}-${cleaned.substring(2, 6)}`;
   }
@@ -628,19 +688,56 @@ export async function getOccupationWages(
     return failedResult(result.error);
   }
 
+  logger.laborMarket.debug(
+    `[getOccupationWages] Received ${result.data.length} series for SOC ${socCode}`
+  );
+
   // Parse the series data into wage structure
   const seriesMap = new Map<string, BlsSeriesData>();
   for (const series of result.data) {
     const dataType = series.seriesID.substring(22, 24);
+    const dataPointCount = series.data?.length || 0;
+    logger.laborMarket.debug(
+      `[getOccupationWages] Series ${series.seriesID} (type ${dataType}): ${dataPointCount} data points`
+    );
     seriesMap.set(dataType, series);
   }
 
   const getValue = (dataTypeCode: string): number | null => {
     const series = seriesMap.get(dataTypeCode);
-    if (!series) return null;
+    if (!series) {
+      logger.laborMarket.debug(`[getOccupationWages] No series for type ${dataTypeCode}`);
+      return null;
+    }
     const point = getMostRecentDataPoint(series.data);
-    return point ? parseBlsValue(point.value) : null;
+    if (!point) {
+      logger.laborMarket.debug(`[getOccupationWages] No data point for type ${dataTypeCode}`);
+      return null;
+    }
+    const parsed = parseBlsValue(point.value);
+    logger.laborMarket.debug(
+      `[getOccupationWages] Type ${dataTypeCode}: raw="${point.value}" → ${parsed} (${point.year} ${point.period})`
+    );
+    return parsed;
   };
+
+  // Check if we got any data points at all
+  // BLS returns success even for invalid SOC codes, but with empty data arrays
+  const hasAnyData = result.data.some((series) => series.data && series.data.length > 0);
+
+  if (!hasAnyData) {
+    // No data points means the SOC code doesn't exist in BLS database
+    return failedResult(
+      createError(
+        'NO_DATA_AVAILABLE',
+        `No wage data available for SOC code ${socCode}. This may be a detailed occupation code - BLS OES typically only publishes data for broad occupations.`
+      )
+    );
+  }
+
+  // Note: Individual wage values (median, mean, etc.) may be null if BLS suppresses them
+  // due to low sample size or data quality issues. This is normal and we'll return
+  // the structure with null values rather than failing.
 
   const getReferencePeriod = (): string => {
     const firstSeries = result.data[0];
@@ -734,6 +831,20 @@ export async function getOccupationEmployment(
     const point = getMostRecentDataPoint(firstSeries.data);
     return point ? `${point.periodName} ${point.year}` : 'Unknown';
   };
+
+  // Check if we got any data points at all
+  const hasAnyData = result.data.some((series) => series.data && series.data.length > 0);
+
+  if (!hasAnyData) {
+    return failedResult(
+      createError(
+        'NO_DATA_AVAILABLE',
+        `No employment data available for SOC code ${socCode}. This may be a detailed occupation code - BLS OES typically only publishes data for broad occupations.`
+      )
+    );
+  }
+
+  // Note: Employment value may be null if suppressed by BLS
 
   const employmentData: OesEmploymentData = {
     socCode: formatSocCode(socCode),
@@ -1221,7 +1332,7 @@ export async function getInflationRate(): Promise<BlsResult<number>> {
 /**
  * Get comprehensive market data for an occupation.
  * Combines OES wage and employment data with projections.
- * @param socCode - SOC occupation code
+ * @param socCode - SOC occupation code or O*NET code (e.g., "15-1252" or "15-1252.00" or "15-1299.09")
  * @param areaCode - Optional area code (defaults to national)
  * @returns Complete occupation market data or error
  */
@@ -1229,8 +1340,10 @@ export async function getOccupationMarketData(
   socCode: string,
   areaCode?: string
 ): Promise<BlsResult<OccupationMarketData>> {
+  // Convert O*NET code to best available BLS SOC code (handles detailed occupations)
+  const normalizedSocCode = onetToBlsSoc(socCode) || socCode;
   const effectiveAreaCode = areaCode || NATIONAL_AREA_CODE;
-  const cacheKey = buildCacheKey('market_data', `${socCode}_${effectiveAreaCode}`);
+  const cacheKey = buildCacheKey('market_data', `${normalizedSocCode}_${effectiveAreaCode}`);
 
   // Check cache first
   const cached = getCachedData<OccupationMarketData>(cacheKey);
@@ -1240,8 +1353,8 @@ export async function getOccupationMarketData(
 
   // Fetch wage and employment data in parallel
   const [wageResult, employmentResult] = await Promise.all([
-    getOccupationWages(socCode, effectiveAreaCode),
-    getOccupationEmployment(socCode, effectiveAreaCode),
+    getOccupationWages(normalizedSocCode, effectiveAreaCode),
+    getOccupationEmployment(normalizedSocCode, effectiveAreaCode),
   ]);
 
   if (!wageResult.success) {
@@ -1257,7 +1370,7 @@ export async function getOccupationMarketData(
   if (employmentResult.warnings) warnings.push(...employmentResult.warnings);
 
   // Determine occupation group from SOC code
-  const socMajorGroup = socCode.replace(/-/g, '').substring(0, 2);
+  const socMajorGroup = normalizedSocCode.replace(/-/g, '').substring(0, 2);
   const occupationGroups: Record<string, string> = {
     '11': 'Management',
     '13': 'Business and Financial Operations',
@@ -1411,7 +1524,7 @@ export async function getLaborMarketSnapshot(): Promise<BlsResult<LaborMarketSna
 
 /**
  * Compare wages for an occupation across multiple regions.
- * @param socCode - SOC occupation code
+ * @param socCode - SOC occupation code or O*NET code (e.g., "15-1252" or "15-1252.00" or "15-1299.09")
  * @param areaCodes - Array of area codes to compare
  * @returns Regional comparison data or error
  */
@@ -1419,11 +1532,14 @@ export async function compareRegionalWages(
   socCode: string,
   areaCodes: string[]
 ): Promise<BlsResult<RegionalComparison>> {
+  // Convert O*NET code to best available BLS SOC code (handles detailed occupations)
+  const normalizedSocCode = onetToBlsSoc(socCode) || socCode;
+
   if (!areaCodes || areaCodes.length === 0) {
     return failedResult(createError('INVALID_SERIES_ID', 'At least one area code is required'));
   }
 
-  const cacheKey = buildCacheKey('regional_compare', `${socCode}_${areaCodes.join('-')}`);
+  const cacheKey = buildCacheKey('regional_compare', `${normalizedSocCode}_${areaCodes.join('-')}`);
 
   // Check cache first
   const cached = getCachedData<RegionalComparison>(cacheKey);
@@ -1432,8 +1548,8 @@ export async function compareRegionalWages(
   }
 
   // Fetch wage data for all regions in parallel
-  const wagePromises = areaCodes.map((areaCode) => getOccupationWages(socCode, areaCode));
-  const nationalWagePromise = getOccupationWages(socCode, NATIONAL_AREA_CODE);
+  const wagePromises = areaCodes.map((areaCode) => getOccupationWages(normalizedSocCode, areaCode));
+  const nationalWagePromise = getOccupationWages(normalizedSocCode, NATIONAL_AREA_CODE);
 
   const [nationalResult, ...regionalResults] = await Promise.all([
     nationalWagePromise,
@@ -1463,7 +1579,10 @@ export async function compareRegionalWages(
   const baseMedian = baseRegion.annual.median || 0;
 
   // Fetch employment data for base region
-  const baseEmploymentResult = await getOccupationEmployment(socCode, baseRegion.areaCode);
+  const baseEmploymentResult = await getOccupationEmployment(
+    normalizedSocCode,
+    baseRegion.areaCode
+  );
   const baseEmployment = baseEmploymentResult.success
     ? baseEmploymentResult.data.employment || 0
     : 0;
@@ -1487,7 +1606,7 @@ export async function compareRegionalWages(
       : baseMedian;
 
   const comparison: RegionalComparison = {
-    socCode: formatSocCode(socCode),
+    socCode: formatSocCode(normalizedSocCode),
     occupationTitle: baseRegion.occupationTitle,
     baseRegion: {
       areaCode: baseRegion.areaCode,
@@ -1510,11 +1629,13 @@ export async function compareRegionalWages(
 
 /**
  * Get a user-friendly career outlook assessment for an occupation.
- * @param socCode - SOC occupation code
+ * @param socCode - SOC occupation code or O*NET code (e.g., "15-1252" or "15-1252.00" or "15-1299.09")
  * @returns Career outlook assessment or error
  */
 export async function getCareerOutlook(socCode: string): Promise<BlsResult<CareerOutlook>> {
-  const cacheKey = buildCacheKey('career_outlook', socCode);
+  // Convert O*NET code to best available BLS SOC code (handles detailed occupations)
+  const normalizedSocCode = onetToBlsSoc(socCode) || socCode;
+  const cacheKey = buildCacheKey('career_outlook', normalizedSocCode);
 
   // Check cache first
   const cached = getCachedData<CareerOutlook>(cacheKey);
@@ -1523,7 +1644,7 @@ export async function getCareerOutlook(socCode: string): Promise<BlsResult<Caree
   }
 
   // Fetch market data
-  const marketResult = await getOccupationMarketData(socCode);
+  const marketResult = await getOccupationMarketData(normalizedSocCode);
 
   if (!marketResult.success) {
     return failedResult(marketResult.error);
@@ -1592,7 +1713,7 @@ export async function getCareerOutlook(socCode: string): Promise<BlsResult<Caree
   const typicalTraining: OnTheJobTraining = 'short_term';
 
   const outlook: CareerOutlook = {
-    socCode: formatSocCode(socCode),
+    socCode: formatSocCode(normalizedSocCode),
     occupationTitle: market.occupationTitle,
     overallOutlook,
     outlookScore: Math.min(100, Math.max(0, outlookScore)),

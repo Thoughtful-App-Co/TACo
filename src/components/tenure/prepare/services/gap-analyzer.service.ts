@@ -1,11 +1,11 @@
 /**
  * Gap Analyzer Service v2 - Industry-Agnostic
- * 
+ *
  * Analyzes the gap between resume keywords and job description requirements.
  * Provides actionable insights on what's missing and what to emphasize.
- * 
+ *
  * Works for ALL industries.
- * 
+ *
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
@@ -23,10 +23,10 @@ import {
 
 export interface GapAnalysis {
   // Overall scores
-  overallMatchScore: number;      // 0-100
-  skillsMatchScore: number;       // 0-100
-  knowledgeMatchScore: number;    // 0-100
-  toolsMatchScore: number;        // 0-100
+  overallMatchScore: number; // 0-100
+  skillsMatchScore: number; // 0-100
+  knowledgeMatchScore: number; // 0-100
+  toolsMatchScore: number; // 0-100
 
   // Matched keywords (what you have)
   matchedKeywords: {
@@ -37,9 +37,9 @@ export interface GapAnalysis {
 
   // Missing keywords (what you need to add)
   missingKeywords: {
-    critical: string[];    // Must have
-    important: string[];   // Should have
-    niceToHave: string[];  // Optional
+    critical: string[]; // Must have
+    important: string[]; // Should have
+    niceToHave: string[]; // Optional
   };
 
   // Actionable suggestions
@@ -73,22 +73,13 @@ export function analyzeGap(
   jobDescriptionText: string
 ): GapAnalysis {
   // Match skills (O*NET universal skills)
-  const skillsMatch = matchSkills(
-    jdKeywords.skills,
-    resumeKeywords.skills
-  );
+  const skillsMatch = matchSkills(jdKeywords.skills, resumeKeywords.skills);
 
   // Match knowledge (O*NET knowledge areas - identifies industry)
-  const knowledgeMatch = matchSkills(
-    jdKeywords.knowledge,
-    resumeKeywords.knowledge
-  );
+  const knowledgeMatch = matchSkills(jdKeywords.knowledge, resumeKeywords.knowledge);
 
   // Match tools (industry-specific tools/software/equipment)
-  const toolsMatch = matchSkills(
-    jdKeywords.tools,
-    resumeKeywords.tools
-  );
+  const toolsMatch = matchSkills(jdKeywords.tools, resumeKeywords.tools);
 
   // Calculate overall match score (weighted average)
   const overallMatchScore = calculateWeightedMatchScore({
@@ -105,10 +96,7 @@ export function analyzeGap(
   ];
 
   // Categorize missing keywords by severity
-  const missingAnalysis = analyzeMissingKeywords(
-    allMissingKeywords,
-    jobDescriptionText
-  );
+  const missingAnalysis = analyzeMissingKeywords(allMissingKeywords, jobDescriptionText);
 
   // Generate suggestions
   const suggestions = generateSuggestions(
@@ -119,17 +107,14 @@ export function analyzeGap(
   );
 
   // Identify skills to emphasize (matched but not prominent)
-  const skillsToEmphasize = identifySkillsToEmphasize(
-    resumeKeywords,
-    jdKeywords,
-    { skills: skillsMatch, knowledge: knowledgeMatch, tools: toolsMatch }
-  );
+  const skillsToEmphasize = identifySkillsToEmphasize(resumeKeywords, jdKeywords, {
+    skills: skillsMatch,
+    knowledge: knowledgeMatch,
+    tools: toolsMatch,
+  });
 
   // Identify skills to de-emphasize (not relevant to JD)
-  const skillsToDeemphasize = identifySkillsToDeemphasize(
-    resumeKeywords,
-    jdKeywords
-  );
+  const skillsToDeemphasize = identifySkillsToDeemphasize(resumeKeywords, jdKeywords);
 
   return {
     overallMatchScore,
@@ -161,15 +146,15 @@ function calculateWeightedMatchScore(scores: {
   tools: number;
 }): number {
   const weights = {
-    skills: 0.4,     // 40% weight (universal skills)
+    skills: 0.4, // 40% weight (universal skills)
     knowledge: 0.35, // 35% weight (identifies industry fit)
-    tools: 0.25,     // 25% weight (specific tools/software)
+    tools: 0.25, // 25% weight (specific tools/software)
   };
 
   return Math.round(
     scores.skills * weights.skills +
-    scores.knowledge * weights.knowledge +
-    scores.tools * weights.tools
+      scores.knowledge * weights.knowledge +
+      scores.tools * weights.tools
   );
 }
 
@@ -341,7 +326,10 @@ export function calculateImprovementPotential(analysis: GapAnalysis): {
   // Assume emphasizing skills would add 5 points
   const emphasizeBoost = analysis.skillsToEmphasize.length > 0 ? 5 : 0;
 
-  const potentialScore = Math.min(currentScore + criticalBoost + importantBoost + emphasizeBoost, 100);
+  const potentialScore = Math.min(
+    currentScore + criticalBoost + importantBoost + emphasizeBoost,
+    100
+  );
 
   return {
     currentScore,
@@ -354,7 +342,8 @@ export function calculateImprovementPotential(analysis: GapAnalysis): {
  * Get a human-readable summary of the gap analysis
  */
 export function getGapSummary(analysis: GapAnalysis): string {
-  const { currentScore, potentialScore, improvementPoints } = calculateImprovementPotential(analysis);
+  const { currentScore, potentialScore, improvementPoints } =
+    calculateImprovementPotential(analysis);
 
   if (currentScore >= 90) {
     return `Excellent match! Your resume aligns ${currentScore}% with this job.`;
