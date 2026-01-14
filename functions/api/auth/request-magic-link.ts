@@ -13,11 +13,11 @@
 import { Resend } from 'resend';
 import { SignJWT } from 'jose';
 import { authLog } from '../../lib/logger';
+import { getJwtSecretEncoded, type AuthEnv } from '../../lib/auth-config';
 
-interface Env {
+interface Env extends AuthEnv {
   AUTH_DB: D1Database;
   RATE_LIMIT: KVNamespace;
-  JWT_SECRET: string;
   RESEND_API_KEY: string;
   RESEND_FROM_EMAIL?: string;
   FRONTEND_URL?: string;
@@ -84,7 +84,7 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     }
 
     // Generate magic link token (15 minute expiry)
-    const secret = new TextEncoder().encode(env.JWT_SECRET);
+    const secret = getJwtSecretEncoded(env);
     const token = await new SignJWT({
       userId: user.id,
       email,

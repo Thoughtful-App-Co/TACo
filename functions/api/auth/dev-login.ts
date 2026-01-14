@@ -11,12 +11,11 @@
 
 import { SignJWT } from 'jose';
 import { authLog } from '../../lib/logger';
+import { getJwtSecretEncoded, type AuthEnv } from '../../lib/auth-config';
 
-interface Env {
+interface Env extends AuthEnv {
   AUTH_DB: D1Database;
   BILLING_DB: D1Database;
-  JWT_SECRET: string;
-  TACO_ENV: string;
   FRONTEND_URL?: string;
 }
 
@@ -105,7 +104,7 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
     });
 
     // Generate session token
-    const secret = new TextEncoder().encode(env.JWT_SECRET);
+    const secret = getJwtSecretEncoded(env);
     const sessionToken = await new SignJWT({
       userId: testUser.id,
       email: testUser.email,
@@ -203,7 +202,7 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     const activeProducts = subscriptions.results?.map((s: any) => s.product) || [];
 
     // Generate token
-    const secret = new TextEncoder().encode(env.JWT_SECRET);
+    const secret = getJwtSecretEncoded(env);
     const sessionToken = await new SignJWT({
       userId: testUser.id,
       email: testUser.email,
