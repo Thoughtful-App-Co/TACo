@@ -1,5 +1,15 @@
-import { Component, createSignal, Show, For, createMemo, onCleanup, createEffect } from 'solid-js';
+import {
+  Component,
+  createSignal,
+  Show,
+  For,
+  createMemo,
+  onCleanup,
+  createEffect,
+  onMount,
+} from 'solid-js';
 import { A, useNavigate, useParams, useLocation } from '@solidjs/router';
+import { useAuth } from './lib/auth-context';
 import { NurtureApp } from './components/nurture/NurtureApp';
 import { JustInCaseApp } from './components/justincase/JustInCaseApp';
 import { TempoApp } from './components/tempo/TempoApp';
@@ -480,7 +490,11 @@ const AppItem: Component<{ app: AppInfo; onClick: () => void }> = (props) => {
             <img
               src={props.app.logo}
               alt={props.app.name}
-              style={{ width: '23px', height: '23px', 'object-fit': 'contain' }}
+              style={{
+                width: props.app.id === 'tenure' ? '26px' : '23px',
+                height: props.app.id === 'tenure' ? '26px' : '23px',
+                'object-fit': 'contain',
+              }}
             />
           </Show>
         </div>
@@ -639,8 +653,6 @@ const AppItem: Component<{ app: AppInfo; onClick: () => void }> = (props) => {
 // Main Landing Page with Manifesto
 const LandingPage: Component = () => {
   const navigate = useNavigate();
-
-  // Mobile detection
   const [isMobile, setIsMobile] = createSignal(window.innerWidth <= 768);
 
   createEffect(() => {
@@ -1519,8 +1531,22 @@ const AppMenu: Component = () => {
                         src={app.logo}
                         alt={`${app.name} Logo`}
                         style={{
-                          height: isMobile() ? '26px' : '32px',
-                          width: isMobile() ? '26px' : '32px',
+                          height:
+                            app.id === 'tenure'
+                              ? isMobile()
+                                ? '36px'
+                                : '42px'
+                              : isMobile()
+                                ? '26px'
+                                : '32px',
+                          width:
+                            app.id === 'tenure'
+                              ? isMobile()
+                                ? '36px'
+                                : '42px'
+                              : isMobile()
+                                ? '26px'
+                                : '32px',
                           'object-fit': 'contain',
                         }}
                       />

@@ -12,6 +12,7 @@ import { useAuth } from '../../lib/auth-context';
 import { logger } from '../../lib/logger';
 import { LoginModal } from './LoginModal';
 import { DoodleRocket, DoodleShield } from './DoodleIcons';
+import { getPriceIdForFeature } from '../../lib/stripe-prices';
 
 // ============================================================================
 // TYPES
@@ -31,7 +32,6 @@ interface FeatureConfig {
   price: string;
   priceAnnual?: string;
   priceSubtext?: string;
-  priceId: string;
   ctaText: string;
   icon: 'rocket' | 'shield'; // Which Doodle icon to use
 }
@@ -53,9 +53,8 @@ const FEATURE_CONFIGS: Record<string, FeatureConfig> = {
     ],
     price: '$5/mo',
     priceAnnual: '$30/year',
-    priceId: 'price_tenure_extras_monthly',
     ctaText: 'Upgrade to Tenure Extras',
-    icon: 'rocket', // Rocket for "extras" = launch/boost
+    icon: 'rocket',
   },
   tempo_extras: {
     title: 'Tempo Extras',
@@ -68,9 +67,8 @@ const FEATURE_CONFIGS: Record<string, FeatureConfig> = {
       'Weekly productivity insights',
     ],
     price: '$12/mo',
-    priceId: 'price_tempo_extras_monthly',
     ctaText: 'Upgrade to Tempo Extras',
-    icon: 'rocket', // Rocket for productivity boost
+    icon: 'rocket',
   },
   echoprax_extras: {
     title: 'Echoprax Extras',
@@ -84,9 +82,8 @@ const FEATURE_CONFIGS: Record<string, FeatureConfig> = {
     ],
     price: '$8/mo',
     priceAnnual: '$80/year',
-    priceId: 'price_echoprax_extras_monthly',
     ctaText: 'Upgrade to Echoprax Extras',
-    icon: 'rocket', // Rocket for fitness boost
+    icon: 'rocket',
   },
   sync: {
     title: 'Sync & Backup',
@@ -99,9 +96,8 @@ const FEATURE_CONFIGS: Record<string, FeatureConfig> = {
       'Priority support',
     ],
     price: '$3.50/mo',
-    priceId: 'price_sync_all_monthly',
     ctaText: 'Enable Sync & Backup',
-    icon: 'shield', // Shield for data protection
+    icon: 'shield',
   },
   backup: {
     title: 'Sync & Backup',
@@ -114,9 +110,8 @@ const FEATURE_CONFIGS: Record<string, FeatureConfig> = {
       'Works across all TACo apps',
     ],
     price: '$3.50/mo',
-    priceId: 'price_sync_all_monthly',
     ctaText: 'Enable Backup',
-    icon: 'shield', // Shield for backup security
+    icon: 'shield',
   },
 };
 
@@ -155,7 +150,7 @@ export const Paywall: Component<PaywallProps> = (props) => {
           Authorization: `Bearer ${localStorage.getItem('taco_session_token')}`,
         },
         body: JSON.stringify({
-          priceId: config().priceId,
+          priceId: getPriceIdForFeature(props.feature),
         }),
       });
 

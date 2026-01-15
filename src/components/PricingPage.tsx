@@ -11,9 +11,12 @@
  * 4. Refactored into modular components for maintainability
  */
 
-import { Component, createSignal, For, Show, createMemo, createResource } from 'solid-js';
-import { A } from '@solidjs/router';
+import { Component, createSignal, For, Show, createMemo, createResource, onMount } from 'solid-js';
+import { A, useSearchParams } from '@solidjs/router';
 import { Footer } from './common/Footer';
+import { getStripePrices } from '../lib/stripe-prices';
+import { useAuth } from '../lib/auth-context';
+import { logger } from '../lib/logger';
 
 // Modular component imports
 import {
@@ -65,6 +68,130 @@ export const PricingPage: Component = () => {
 
   // FAQ state
   const [openFaqIndex, setOpenFaqIndex] = createSignal<number | null>(null);
+
+  // Auth context
+  const auth = useAuth();
+
+  // Checkout state
+  const [isCheckingOut, setIsCheckingOut] = createSignal(false);
+  const [checkoutError, setCheckoutError] = createSignal<string | null>(null);
+
+  // URL params for checkout result
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [showSuccessModal, setShowSuccessModal] = createSignal(false);
+  const [showCanceledMessage, setShowCanceledMessage] = createSignal(false);
+
+  // Handle checkout result on mount
+  onMount(async () => {
+    if (searchParams.success === 'true') {
+      setShowSuccessModal(true);
+      // Clear the URL param
+      setSearchParams({ success: undefined });
+
+      // Poll for subscription to appear (webhook may take a moment)
+      let attempts = 0;
+      const maxAttempts = 5;
+      const pollInterval = 2000; // 2 seconds
+
+      const pollForSubscription = async () => {
+        attempts++;
+        logger.billing.debug(`Polling for subscription, attempt ${attempts}/${maxAttempts}`);
+
+        // Force refresh auth/subscription data
+        if (auth.refreshSession) {
+          await auth.refreshSession();
+        }
+
+        // Keep polling if no subscription yet and haven't maxed out attempts
+        if (attempts < maxAttempts) {
+          setTimeout(pollForSubscription, pollInterval);
+        } else {
+          logger.billing.info('Subscription polling complete');
+        }
+      };
+
+      // Start polling after a brief delay to let webhook process
+      setTimeout(pollForSubscription, 1500);
+    }
+
+    if (searchParams.canceled === 'true') {
+      setShowCanceledMessage(true);
+      // Clear the URL param after a delay
+      setTimeout(() => {
+        setSearchParams({ canceled: undefined });
+        setShowCanceledMessage(false);
+      }, 5000);
+    }
+  });
+
+  // Handle checkout
+  const handleCheckout = async () => {
+    setCheckoutError(null);
+
+    // Must be logged in
+    if (!auth.isAuthenticated()) {
+      logger.billing.warn('User not authenticated, cannot checkout');
+      setCheckoutError('Please sign in to continue');
+      return;
+    }
+
+    // Must have something in cart
+    if (
+      tacoClubTier() === 'none' &&
+      selectedExtras().length === 0 &&
+      !syncAllApps() &&
+      selectedSyncApps().length === 0
+    ) {
+      setCheckoutError('Please select at least one item');
+      return;
+    }
+
+    setIsCheckingOut(true);
+    const prices = getStripePrices();
+
+    try {
+      // Determine which price ID to use based on selection
+      // Priority: TACo Club > Extras > Sync
+      let priceId: string;
+
+      if (tacoClubTier() === 'lifetime') {
+        priceId = prices.TACO_CLUB_LIFETIME;
+      } else if (tacoClubTier() === 'monthly') {
+        priceId = prices.TACO_CLUB_MONTHLY;
+      } else if (selectedExtras().includes('tempo')) {
+        priceId = tempoAnnual() ? prices.TEMPO_EXTRAS_YEARLY : prices.TEMPO_EXTRAS_MONTHLY;
+      } else if (selectedExtras().includes('tenure')) {
+        priceId = prices.TENURE_EXTRAS_MONTHLY;
+      } else if (syncAllApps()) {
+        priceId = syncAnnual() ? prices.SYNC_ALL_YEARLY : prices.SYNC_ALL_MONTHLY;
+      } else {
+        priceId = syncAnnual() ? prices.SYNC_APP_YEARLY : prices.SYNC_APP_MONTHLY;
+      }
+
+      const response = await fetch('/api/billing/create-checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('taco_session_token')}`,
+        },
+        body: JSON.stringify({ priceId }),
+      });
+
+      const data = await response.json();
+
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        logger.billing.error('No checkout URL returned', data);
+        setCheckoutError(data.error || 'Failed to create checkout session');
+      }
+    } catch (error) {
+      logger.billing.error('Checkout error:', error);
+      setCheckoutError('Something went wrong. Please try again.');
+    } finally {
+      setIsCheckingOut(false);
+    }
+  };
 
   // Fetch founding member stats
   const [foundingStats] = createResource<FoundingStats>(async () => {
@@ -201,6 +328,146 @@ export const PricingPage: Component = () => {
         'font-family': tokens.fonts.body,
       }}
     >
+      {/* Success Modal */}
+      <Show when={showSuccessModal()}>
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            'z-index': 9999,
+            display: 'flex',
+            'align-items': 'center',
+            'justify-content': 'center',
+            padding: '20px',
+          }}
+        >
+          {/* Backdrop */}
+          <div
+            onClick={() => setShowSuccessModal(false)}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'rgba(0, 0, 0, 0.7)',
+              'backdrop-filter': 'blur(8px)',
+            }}
+          />
+
+          {/* Modal */}
+          <div
+            style={{
+              position: 'relative',
+              background: tokens.colors.surface,
+              'border-radius': tokens.radius.lg,
+              padding: tokens.spacing.xl,
+              'max-width': '400px',
+              width: '100%',
+              'text-align': 'center',
+              border: `1px solid ${tokens.colors.border}`,
+            }}
+          >
+            {/* Success Icon */}
+            <div
+              style={{
+                width: '64px',
+                height: '64px',
+                background: 'rgba(16, 185, 129, 0.2)',
+                'border-radius': '50%',
+                display: 'flex',
+                'align-items': 'center',
+                'justify-content': 'center',
+                margin: '0 auto 16px',
+              }}
+            >
+              <svg
+                width="32"
+                height="32"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="#10B981"
+                stroke-width="2"
+              >
+                <path d="M20 6L9 17l-5-5" />
+              </svg>
+            </div>
+
+            <h2
+              style={{
+                margin: '0 0 8px',
+                'font-size': '24px',
+                'font-weight': '700',
+                color: tokens.colors.text,
+              }}
+            >
+              Welcome to TACo!
+            </h2>
+
+            <p
+              style={{
+                margin: '0 0 24px',
+                color: tokens.colors.textMuted,
+                'font-size': '15px',
+                'line-height': '1.5',
+              }}
+            >
+              Your subscription is now active. You have full access to all your selected features.
+            </p>
+
+            <button
+              onClick={() => setShowSuccessModal(false)}
+              style={{
+                width: '100%',
+                padding: `${tokens.spacing.md} ${tokens.spacing.lg}`,
+                background: `linear-gradient(135deg, ${tokens.colors.accent.coral}, ${tokens.colors.accent.yellow})`,
+                'border-radius': tokens.radius.md,
+                border: 'none',
+                'font-size': '16px',
+                'font-weight': '600',
+                color: tokens.colors.background,
+                cursor: 'pointer',
+              }}
+            >
+              Get Started
+            </button>
+          </div>
+        </div>
+      </Show>
+
+      {/* Canceled Message */}
+      <Show when={showCanceledMessage()}>
+        <div
+          style={{
+            position: 'fixed',
+            top: '20px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: tokens.colors.surface,
+            padding: `${tokens.spacing.md} ${tokens.spacing.lg}`,
+            'border-radius': tokens.radius.md,
+            border: `1px solid ${tokens.colors.border}`,
+            'z-index': 9998,
+            display: 'flex',
+            'align-items': 'center',
+            gap: tokens.spacing.sm,
+          }}
+        >
+          <span style={{ color: tokens.colors.textMuted }}>
+            Checkout canceled. Your cart is still saved.
+          </span>
+          <button
+            onClick={() => setShowCanceledMessage(false)}
+            style={{
+              background: 'none',
+              border: 'none',
+              color: tokens.colors.textDim,
+              cursor: 'pointer',
+              padding: '4px',
+            }}
+          >
+            x
+          </button>
+        </div>
+      </Show>
+
       {/* Breadcrumb Navigation */}
       <div
         style={{
@@ -1110,23 +1377,41 @@ export const PricingPage: Component = () => {
                 </Show>
 
                 <button
+                  onClick={handleCheckout}
+                  disabled={isCheckingOut()}
                   style={{
                     width: '100%',
                     padding: `${tokens.spacing.md} ${tokens.spacing.lg}`,
-                    background: `linear-gradient(135deg, ${tokens.colors.accent.coral}, ${tokens.colors.accent.yellow})`,
+                    background: isCheckingOut()
+                      ? tokens.colors.textMuted
+                      : `linear-gradient(135deg, ${tokens.colors.accent.coral}, ${tokens.colors.accent.yellow})`,
                     'border-radius': tokens.radius.md,
                     border: 'none',
                     'font-size': '16px',
                     'font-weight': '600',
                     color: tokens.colors.background,
-                    cursor: 'pointer',
+                    cursor: isCheckingOut() ? 'not-allowed' : 'pointer',
                     transition: 'all 0.2s ease',
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.filter = 'brightness(1.1)')}
+                  onMouseEnter={(e) =>
+                    !isCheckingOut() && (e.currentTarget.style.filter = 'brightness(1.1)')
+                  }
                   onMouseLeave={(e) => (e.currentTarget.style.filter = 'brightness(1)')}
                 >
-                  Continue to Checkout
+                  {isCheckingOut() ? 'Processing...' : 'Continue to Checkout'}
                 </button>
+                <Show when={checkoutError()}>
+                  <div
+                    style={{
+                      color: '#ef4444',
+                      'font-size': '13px',
+                      'margin-top': tokens.spacing.sm,
+                      'text-align': 'center',
+                    }}
+                  >
+                    {checkoutError()}
+                  </div>
+                </Show>
               </div>
             </Show>
           </div>

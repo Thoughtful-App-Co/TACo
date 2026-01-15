@@ -6,6 +6,8 @@ import { PricingPage } from './components/PricingPage';
 import { InvestorsPage } from './components/InvestorsPage';
 import { PrivacyPolicyPage } from './components/PrivacyPolicyPage';
 import { TermsOfServicePage } from './components/TermsOfServicePage';
+import { SettingsPage } from './components/SettingsPage';
+import { HomePage } from './components/HomePage';
 import { AuthProvider } from './lib/auth-context';
 import { TempoApp } from './components/tempo/TempoApp';
 
@@ -189,10 +191,12 @@ if (root) {
       <AuthProvider>
         <Router root={App}>
           <Route path="/" component={LandingPage} />
+          <Route path="/home" component={HomePage} />
           <Route path="/pricing" component={PricingPage} />
           <Route path="/investors" component={InvestorsPage} />
           <Route path="/privacy" component={PrivacyPolicyPage} />
           <Route path="/terms" component={TermsOfServicePage} />
+          <Route path="/settings" component={SettingsPage} />
 
           {/* Tempo app with nested routes */}
           <Route path="/tempo">

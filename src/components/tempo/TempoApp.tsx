@@ -23,6 +23,7 @@ import { SessionView } from './session-manager/components/session-view';
 import { ApiConfigService } from './services/api-config.service';
 import { AppMenuTrigger } from '../common/AppMenuTrigger';
 import { ProfileBadges } from '../common/ProfileBadges';
+import { PremiumIndicator } from '../common/PremiumIndicator';
 import { useAuth } from '../../lib/auth-context';
 import { TempoNotificationService, type NotificationState } from './services/notification.service';
 
@@ -192,50 +193,73 @@ export const TempoApp: Component = () => {
   });
 
   return (
-    <main
-      class="tempo-main"
-      style={{
-        flex: 1,
-        'max-width': '1280px',
-        margin: '0 auto',
-        padding: '24px',
-        'font-family': tempoDesign.typography.fontFamily,
-        background: tempoDesign.colors.background,
-        color: tempoDesign.colors.foreground,
-        'min-height': '100vh',
-        display: 'flex',
-        'flex-direction': 'column',
-      }}
-    >
-      {/* Header */}
-      <header
-        class="tempo-header"
+    <>
+      {/* Premium Indicator */}
+      <PremiumIndicator hasExtras={auth.hasAppExtras('tempo')} appName="Tempo" color="#5E6AD2" />
+
+      <main
+        class="tempo-main"
         style={{
-          'margin-bottom': '32px',
-          'padding-bottom': '24px',
-          'border-bottom': `1px solid ${tempoDesign.colors.border}`,
+          flex: 1,
+          'max-width': '1280px',
+          margin: '0 auto',
+          padding: '24px',
+          'font-family': tempoDesign.typography.fontFamily,
+          background: tempoDesign.colors.background,
+          color: tempoDesign.colors.foreground,
+          'min-height': '100vh',
           display: 'flex',
-          'align-items': 'center',
-          'justify-content': 'space-between',
+          'flex-direction': 'column',
         }}
       >
-        <AppMenuTrigger>
-          <TempoLogo size={48} />
-        </AppMenuTrigger>
+        {/* Header */}
+        <header
+          class="tempo-header"
+          style={{
+            'margin-bottom': '32px',
+            'padding-bottom': '24px',
+            'border-bottom': `1px solid ${tempoDesign.colors.border}`,
+            display: 'flex',
+            'align-items': 'center',
+            'justify-content': 'space-between',
+          }}
+        >
+          <AppMenuTrigger>
+            <TempoLogo size={48} />
+          </AppMenuTrigger>
 
-        {/* Right side: Profile and Settings buttons */}
-        <div style={{ display: 'flex', 'align-items': 'center', gap: '12px' }}>
-          {/* Profile button with status badges */}
-          <ProfileBadges
-            isAuthenticated={auth.isAuthenticated()}
-            hasSync={auth.hasSyncSubscription()}
-            hasExtras={auth.hasAppExtras('tempo')}
-            isTacoClub={auth.isTacoClubMember()}
-            size={40}
-          >
+          {/* Right side: Profile and Settings buttons */}
+          <div style={{ display: 'flex', 'align-items': 'center', gap: '12px' }}>
+            {/* Profile button with status badges */}
+            <ProfileBadges
+              isAuthenticated={auth.isAuthenticated()}
+              hasSync={auth.hasSyncSubscription()}
+              hasExtras={auth.hasAppExtras('tempo')}
+              isTacoClub={auth.isTacoClubMember()}
+              size={40}
+            >
+              <Button
+                variant="ghost"
+                size="icon"
+                style={{
+                  height: '40px',
+                  width: '40px',
+                  'border-radius': tempoDesign.radius.full,
+                  display: 'flex',
+                  'align-items': 'center',
+                  'justify-content': 'center',
+                }}
+                title="Profile"
+              >
+                <User size={20} />
+              </Button>
+            </ProfileBadges>
+
+            {/* Settings button */}
             <Button
               variant="ghost"
               size="icon"
+              onClick={() => setShowSettings(true)}
               style={{
                 height: '40px',
                 width: '40px',
@@ -244,252 +268,155 @@ export const TempoApp: Component = () => {
                 'align-items': 'center',
                 'justify-content': 'center',
               }}
-              title="Profile"
+              title="Settings"
             >
-              <User size={20} />
+              <Gear size={20} />
             </Button>
-          </ProfileBadges>
+          </div>
+        </header>
 
-          {/* Settings button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setShowSettings(true)}
+        {/* Settings Sidebar */}
+        <SettingsSidebar
+          isOpen={showSettings()}
+          onClose={() => setShowSettings(false)}
+          onSave={handleSettingsSave}
+        />
+
+        {/* API Key Warning */}
+        <Show when={!hasApiKey()}>
+          <div
             style={{
-              height: '40px',
-              width: '40px',
-              'border-radius': tempoDesign.radius.full,
+              'background-color': `${tempoDesign.colors.amber[600]}10`,
+              border: `1px solid ${tempoDesign.colors.amber[600]}30`,
+              'border-radius': tempoDesign.radius.lg,
+              padding: '12px 16px',
+              'margin-bottom': '16px',
+              'font-size': tempoDesign.typography.sizes.sm,
+              color: tempoDesign.colors.amber[700],
               display: 'flex',
               'align-items': 'center',
-              'justify-content': 'center',
-            }}
-            title="Settings"
-          >
-            <Gear size={20} />
-          </Button>
-        </div>
-      </header>
-
-      {/* Settings Sidebar */}
-      <SettingsSidebar
-        isOpen={showSettings()}
-        onClose={() => setShowSettings(false)}
-        onSave={handleSettingsSave}
-      />
-
-      {/* API Key Warning */}
-      <Show when={!hasApiKey()}>
-        <div
-          style={{
-            'background-color': `${tempoDesign.colors.amber[600]}10`,
-            border: `1px solid ${tempoDesign.colors.amber[600]}30`,
-            'border-radius': tempoDesign.radius.lg,
-            padding: '12px 16px',
-            'margin-bottom': '16px',
-            'font-size': tempoDesign.typography.sizes.sm,
-            color: tempoDesign.colors.amber[700],
-            display: 'flex',
-            'align-items': 'center',
-            'justify-content': 'space-between',
-            gap: '12px',
-          }}
-        >
-          <span>Please configure your Claude API key in settings to use Tempo</span>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowSettings(true)}
-            style={{
-              color: tempoDesign.colors.amber[600],
-              'text-decoration': 'underline',
-              'white-space': 'nowrap',
+              'justify-content': 'space-between',
+              gap: '12px',
             }}
           >
-            Configure Now
-          </Button>
-        </div>
-      </Show>
+            <span>Please configure your Claude API key in settings to use Tempo</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowSettings(true)}
+              style={{
+                color: tempoDesign.colors.amber[600],
+                'text-decoration': 'underline',
+                'white-space': 'nowrap',
+              }}
+            >
+              Configure Now
+            </Button>
+          </div>
+        </Show>
 
-      {/* Tab Navigation - Only show when not viewing a session */}
-      <Show when={!isViewingSession()}>
-        <Tabs tabs={tabs()} defaultTab={activeTab()} onChange={handleTabChange} />
-      </Show>
+        {/* Tab Navigation - Only show when not viewing a session */}
+        <Show when={!isViewingSession()}>
+          <Tabs tabs={tabs()} defaultTab={activeTab()} onChange={handleTabChange} />
+        </Show>
 
-      {/* Content Area */}
-      <Show
-        when={isViewingSession()}
-        fallback={
-          <Show
-            when={activeTab() === 'tasks'}
-            fallback={
-              <Show
-                when={activeTab() === 'sessions'}
-                fallback={
-                  /* The Queue View */
+        {/* Content Area */}
+        <Show
+          when={isViewingSession()}
+          fallback={
+            <Show
+              when={activeTab() === 'tasks'}
+              fallback={
+                <Show
+                  when={activeTab() === 'sessions'}
+                  fallback={
+                    /* The Queue View */
+                    <div
+                      style={{
+                        'margin-top': '24px',
+                      }}
+                    >
+                      <QueueView />
+                    </div>
+                  }
+                >
+                  {/* Sessions View */}
                   <div
                     style={{
                       'margin-top': '24px',
+                      display: 'flex',
+                      'flex-direction': 'column',
+                      gap: '16px',
                     }}
                   >
-                    <QueueView />
+                    <SessionsList />
                   </div>
-                }
-              >
-                {/* Sessions View */}
-                <div
-                  style={{
-                    'margin-top': '24px',
-                    display: 'flex',
-                    'flex-direction': 'column',
-                    gap: '16px',
-                  }}
-                >
-                  <SessionsList />
-                </div>
-              </Show>
-            }
-          >
-            <div
-              class="tempo-grid"
-              style={{
-                display: 'grid',
-                gap: '24px',
-                'grid-template-columns': '1.5fr 1fr',
-                'margin-top': '24px',
-              }}
+                </Show>
+              }
             >
-              <BrainDump
-                onTasksProcessed={handleTasksProcessed}
-                onOpenSettings={() => setShowSettings(true)}
-              />
+              <div
+                class="tempo-grid"
+                style={{
+                  display: 'grid',
+                  gap: '24px',
+                  'grid-template-columns': '1.5fr 1fr',
+                  'margin-top': '24px',
+                }}
+              >
+                <BrainDump
+                  onTasksProcessed={handleTasksProcessed}
+                  onOpenSettings={() => setShowSettings(true)}
+                />
 
-              <Show when={stats().totalTasks > 0}>
-                <div
-                  style={{
-                    'border-radius': tempoDesign.radius.lg,
-                    border: `1px solid ${tempoDesign.colors.cardBorder}`,
-                    background: tempoDesign.colors.card,
-                    'box-shadow': tempoDesign.shadows.sm,
-                    height: 'fit-content',
-                  }}
-                >
-                  {/* Header */}
+                <Show when={stats().totalTasks > 0}>
                   <div
                     style={{
-                      display: 'flex',
-                      'flex-direction': 'row',
-                      'align-items': 'center',
-                      'justify-content': 'space-between',
-                      padding: '24px 24px 8px',
+                      'border-radius': tempoDesign.radius.lg,
+                      border: `1px solid ${tempoDesign.colors.cardBorder}`,
+                      background: tempoDesign.colors.card,
+                      'box-shadow': tempoDesign.shadows.sm,
+                      height: 'fit-content',
                     }}
                   >
-                    <div>
-                      <h3
-                        style={{
-                          'font-size': tempoDesign.typography.sizes.lg,
-                          'font-weight': tempoDesign.typography.weights.medium,
-                          margin: 0,
-                          color: tempoDesign.colors.foreground,
-                        }}
-                      >
-                        Session Preview
-                      </h3>
-                    </div>
+                    {/* Header */}
                     <div
                       style={{
                         display: 'flex',
+                        'flex-direction': 'row',
                         'align-items': 'center',
-                        gap: '4px',
-                        'font-size': tempoDesign.typography.sizes.xs,
-                        color: tempoDesign.colors.mutedForeground,
+                        'justify-content': 'space-between',
+                        padding: '24px 24px 8px',
                       }}
                     >
-                      <CaretRight style={{ width: '12px', height: '12px' }} />
-                      <span>Optimize workflow</span>
+                      <div>
+                        <h3
+                          style={{
+                            'font-size': tempoDesign.typography.sizes.lg,
+                            'font-weight': tempoDesign.typography.weights.medium,
+                            margin: 0,
+                            color: tempoDesign.colors.foreground,
+                          }}
+                        >
+                          Session Preview
+                        </h3>
+                      </div>
+                      <div
+                        style={{
+                          display: 'flex',
+                          'align-items': 'center',
+                          gap: '4px',
+                          'font-size': tempoDesign.typography.sizes.xs,
+                          color: tempoDesign.colors.mutedForeground,
+                        }}
+                      >
+                        <CaretRight style={{ width: '12px', height: '12px' }} />
+                        <span>Optimize workflow</span>
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Content */}
-                  <div style={{ padding: '24px 24px', 'padding-top': 0 }}>
-                    <dl style={{ display: 'flex', 'flex-direction': 'column', gap: '16px' }}>
-                      <div
-                        style={{
-                          display: 'flex',
-                          'justify-content': 'space-between',
-                          'align-items': 'baseline',
-                        }}
-                      >
-                        <dt
-                          style={{
-                            color: tempoDesign.colors.mutedForeground,
-                            'font-size': tempoDesign.typography.sizes.sm,
-                          }}
-                        >
-                          Tasks
-                        </dt>
-                        <dd
-                          style={{
-                            'font-size': tempoDesign.typography.sizes['2xl'],
-                            'font-weight': tempoDesign.typography.weights.medium,
-                            margin: 0,
-                          }}
-                        >
-                          {stats().totalTasks}
-                        </dd>
-                      </div>
-                      <div
-                        style={{
-                          display: 'flex',
-                          'justify-content': 'space-between',
-                          'align-items': 'baseline',
-                        }}
-                      >
-                        <dt
-                          style={{
-                            color: tempoDesign.colors.mutedForeground,
-                            'font-size': tempoDesign.typography.sizes.sm,
-                          }}
-                        >
-                          Estimated Time
-                        </dt>
-                        <dd
-                          style={{
-                            'font-size': tempoDesign.typography.sizes['2xl'],
-                            'font-weight': tempoDesign.typography.weights.medium,
-                            margin: 0,
-                          }}
-                        >
-                          {stats().totalDuration > 59
-                            ? `${Math.floor(stats().totalDuration / 60)}h ${stats().totalDuration % 60}m`
-                            : `${stats().totalDuration}m`}
-                        </dd>
-                      </div>
-                      <div
-                        style={{
-                          display: 'flex',
-                          'justify-content': 'space-between',
-                          'align-items': 'baseline',
-                        }}
-                      >
-                        <dt
-                          style={{
-                            color: tempoDesign.colors.mutedForeground,
-                            'font-size': tempoDesign.typography.sizes.sm,
-                          }}
-                        >
-                          Focus Stories
-                        </dt>
-                        <dd
-                          style={{
-                            'font-size': tempoDesign.typography.sizes['2xl'],
-                            'font-weight': tempoDesign.typography.weights.medium,
-                            margin: 0,
-                          }}
-                        >
-                          {stats().totalStories}
-                        </dd>
-                      </div>
-                      <Show when={stats().totalFrogs > 0}>
+                    {/* Content */}
+                    <div style={{ padding: '24px 24px', 'padding-top': 0 }}>
+                      <dl style={{ display: 'flex', 'flex-direction': 'column', gap: '16px' }}>
                         <div
                           style={{
                             display: 'flex',
@@ -501,38 +428,117 @@ export const TempoApp: Component = () => {
                             style={{
                               color: tempoDesign.colors.mutedForeground,
                               'font-size': tempoDesign.typography.sizes.sm,
-                              display: 'flex',
-                              'align-items': 'center',
-                              gap: '4px',
                             }}
                           >
-                            <span>Frogs</span>
+                            Tasks
                           </dt>
                           <dd
                             style={{
                               'font-size': tempoDesign.typography.sizes['2xl'],
                               'font-weight': tempoDesign.typography.weights.medium,
-                              color: tempoDesign.colors.primary,
                               margin: 0,
                             }}
                           >
-                            {stats().totalFrogs}
+                            {stats().totalTasks}
                           </dd>
                         </div>
-                      </Show>
-                    </dl>
+                        <div
+                          style={{
+                            display: 'flex',
+                            'justify-content': 'space-between',
+                            'align-items': 'baseline',
+                          }}
+                        >
+                          <dt
+                            style={{
+                              color: tempoDesign.colors.mutedForeground,
+                              'font-size': tempoDesign.typography.sizes.sm,
+                            }}
+                          >
+                            Estimated Time
+                          </dt>
+                          <dd
+                            style={{
+                              'font-size': tempoDesign.typography.sizes['2xl'],
+                              'font-weight': tempoDesign.typography.weights.medium,
+                              margin: 0,
+                            }}
+                          >
+                            {stats().totalDuration > 59
+                              ? `${Math.floor(stats().totalDuration / 60)}h ${stats().totalDuration % 60}m`
+                              : `${stats().totalDuration}m`}
+                          </dd>
+                        </div>
+                        <div
+                          style={{
+                            display: 'flex',
+                            'justify-content': 'space-between',
+                            'align-items': 'baseline',
+                          }}
+                        >
+                          <dt
+                            style={{
+                              color: tempoDesign.colors.mutedForeground,
+                              'font-size': tempoDesign.typography.sizes.sm,
+                            }}
+                          >
+                            Focus Stories
+                          </dt>
+                          <dd
+                            style={{
+                              'font-size': tempoDesign.typography.sizes['2xl'],
+                              'font-weight': tempoDesign.typography.weights.medium,
+                              margin: 0,
+                            }}
+                          >
+                            {stats().totalStories}
+                          </dd>
+                        </div>
+                        <Show when={stats().totalFrogs > 0}>
+                          <div
+                            style={{
+                              display: 'flex',
+                              'justify-content': 'space-between',
+                              'align-items': 'baseline',
+                            }}
+                          >
+                            <dt
+                              style={{
+                                color: tempoDesign.colors.mutedForeground,
+                                'font-size': tempoDesign.typography.sizes.sm,
+                                display: 'flex',
+                                'align-items': 'center',
+                                gap: '4px',
+                              }}
+                            >
+                              <span>Frogs</span>
+                            </dt>
+                            <dd
+                              style={{
+                                'font-size': tempoDesign.typography.sizes['2xl'],
+                                'font-weight': tempoDesign.typography.weights.medium,
+                                color: tempoDesign.colors.primary,
+                                margin: 0,
+                              }}
+                            >
+                              {stats().totalFrogs}
+                            </dd>
+                          </div>
+                        </Show>
+                      </dl>
+                    </div>
                   </div>
-                </div>
-              </Show>
-            </div>
-          </Show>
-        }
-      >
-        {/* Session View */}
-        <div style={{ 'margin-top': '24px' }}>
-          <SessionView />
-        </div>
-      </Show>
-    </main>
+                </Show>
+              </div>
+            </Show>
+          }
+        >
+          {/* Session View */}
+          <div style={{ 'margin-top': '24px' }}>
+            <SessionView />
+          </div>
+        </Show>
+      </main>
+    </>
   );
 };
