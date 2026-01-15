@@ -38,6 +38,7 @@ import { normalizeJobTitle, getCanonicalPositionName } from './utils/position-ma
 import { normalizeToAnnual } from './utils/salary';
 import { notificationInteractionStore } from './store/notification-interactions';
 import { logger } from '../../../lib/logger';
+import { notifyTenureDataChanged } from '../../../lib/sync';
 
 // ============================================================================
 // STORAGE KEYS
@@ -164,6 +165,16 @@ createEffect(() => {
 // Auto-save feature flags
 createEffect(() => {
   localStorage.setItem(STORAGE_KEYS.featureFlags, JSON.stringify(state.featureFlags));
+});
+
+// Notify sync manager when data changes
+createEffect(() => {
+  // Explicitly read each reactive value to ensure SolidJS tracks them as dependencies
+  void state.applications.length;
+  void state.profile?.updatedAt;
+  void state.settings.syncVersion;
+  // Notify sync manager (debounced internally)
+  notifyTenureDataChanged();
 });
 
 // ============================================================================

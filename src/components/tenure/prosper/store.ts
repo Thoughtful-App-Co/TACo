@@ -38,6 +38,7 @@ import {
   interpolateSalaryRange,
 } from '../../../schemas/tenure';
 import { logger } from '../../../lib/logger';
+import { notifyTenureDataChanged } from '../../../lib/sync';
 
 // Alias for compatibility
 type SalaryRange = ProsperSalaryRange;
@@ -189,6 +190,18 @@ createEffect(() => {
 
 createEffect(() => {
   localStorage.setItem(STORAGE_KEYS.accolades, JSON.stringify(state.accolades));
+});
+
+// Notify sync manager when data changes
+createEffect(() => {
+  // Explicitly read each reactive value to ensure SolidJS tracks them as dependencies
+  void state.salaryHistory?.lastUpdated;
+  void state.checkIns.length;
+  void state.accomplishments.length;
+  void state.reviewCycles.length;
+  void state.accolades.length;
+  // Notify sync manager (debounced internally)
+  notifyTenureDataChanged();
 });
 
 // ============================================================================

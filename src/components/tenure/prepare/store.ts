@@ -24,6 +24,7 @@ import {
   createEmptyWizardState,
   generateId,
 } from '../../../schemas/tenure';
+import { notifyTenureDataChanged } from '../../../lib/sync';
 
 // ============================================================================
 // STORAGE KEYS
@@ -138,6 +139,15 @@ createEffect(() => {
   if (state.currentVariantId) {
     localStorage.setItem(STORAGE_KEYS.currentVariant, state.currentVariantId);
   }
+});
+
+// Notify sync manager when data changes
+createEffect(() => {
+  // Explicitly read each reactive value to ensure SolidJS tracks them as dependencies
+  void state.masterResume?.updatedAt;
+  void state.variants.length;
+  void state.wizardState.currentStep;
+  notifyTenureDataChanged();
 });
 
 // ============================================================================

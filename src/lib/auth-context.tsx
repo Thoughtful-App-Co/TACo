@@ -32,6 +32,7 @@ import {
   isTacoClubMember,
   getAndClearRedirectIntent,
 } from './auth';
+import { clearSubscriptionCache } from './feature-gates';
 
 // ============================================================================
 // TYPES
@@ -181,6 +182,9 @@ export const AuthProvider: ParentComponent = (props) => {
   async function refreshSession() {
     setIsLoading(true);
     try {
+      // Clear the feature-gates subscription cache so fresh data is fetched
+      clearSubscriptionCache();
+
       const sessionUser = await validateSession();
       setUser(sessionUser);
     } catch (error) {

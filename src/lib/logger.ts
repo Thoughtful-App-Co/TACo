@@ -174,6 +174,9 @@ export const logger = {
   /** API calls (generic) */
   api: createLogger('API'),
 
+  /** Sync operations */
+  sync: createLogger('Sync'),
+
   // ==========================================================================
   // UTILITY METHODS
   // ==========================================================================

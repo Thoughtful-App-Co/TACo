@@ -241,6 +241,60 @@ export function canUseBackup(): FeatureGateResult {
 }
 
 /**
+ * Check if user can use Tenure sync
+ */
+export function canUseTenureSync(): FeatureGateResult {
+  if (!isAuthenticated()) {
+    return {
+      allowed: false,
+      reason: 'Sign in required',
+      requiresAuth: true,
+      upgradeUrl: '/pricing',
+    };
+  }
+
+  const subs = getCachedSubscriptions();
+
+  if (subs.includes('taco_club') || subs.includes('sync_all') || subs.includes('sync_tenure')) {
+    return { allowed: true };
+  }
+
+  return {
+    allowed: false,
+    reason: 'Tenure Sync subscription required',
+    requiresSubscription: 'sync_tenure',
+    upgradeUrl: '/pricing#sync',
+  };
+}
+
+/**
+ * Check if user can use Tempo sync
+ */
+export function canUseTempoSync(): FeatureGateResult {
+  if (!isAuthenticated()) {
+    return {
+      allowed: false,
+      reason: 'Sign in required',
+      requiresAuth: true,
+      upgradeUrl: '/pricing',
+    };
+  }
+
+  const subs = getCachedSubscriptions();
+
+  if (subs.includes('taco_club') || subs.includes('sync_all') || subs.includes('sync_tempo')) {
+    return { allowed: true };
+  }
+
+  return {
+    allowed: false,
+    reason: 'Tempo Sync subscription required',
+    requiresSubscription: 'sync_tempo',
+    upgradeUrl: '/pricing#sync',
+  };
+}
+
+/**
  * Check if user can use Tempo AI features (brain dump processing, session creation)
  */
 export function canUseTempoAI(): FeatureGateResult {
