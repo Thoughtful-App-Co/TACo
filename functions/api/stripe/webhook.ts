@@ -176,118 +176,157 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription, env: 
     return;
   }
 
-  const priceId = subscription.items.data[0]?.price?.id;
-  const product = mapPriceToProduct(priceId);
-
-  if (!product) {
-    billingLog.error('Unknown price ID:', priceId);
+  // Process ALL items in the subscription (multi-product support)
+  const items = subscription.items.data;
+  if (!items || items.length === 0) {
+    billingLog.error('No items in subscription');
     return;
   }
 
-  // Check if this is a new subscription or renewal
-  const existing = await env.BILLING_DB.prepare(
-    'SELECT id FROM subscriptions WHERE stripe_subscription_id = ?'
-  )
-    .bind(subscription.id)
-    .first();
+  billingLog.info(
+    `Processing subscription ${subscription.id} with ${items.length} items for user ${userId}`
+  );
 
-  const isNewSubscription = !existing;
+  // Track which products we're processing for token grants
+  const processedProducts: string[] = [];
+  let hasTacoClubMonthly = false;
+  let tacoClubPriceId: string | null = null;
 
-  // Upsert subscription
-  await env.BILLING_DB.prepare(
-    `
-    INSERT INTO subscriptions (
-      id, user_id, product, status,
-      stripe_customer_id, stripe_subscription_id, stripe_price_id,
-      current_period_start, current_period_end, cancel_at_period_end,
-      created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT(stripe_subscription_id) DO UPDATE SET
-      status = excluded.status,
-      current_period_start = excluded.current_period_start,
-      current_period_end = excluded.current_period_end,
-      cancel_at_period_end = excluded.cancel_at_period_end,
-      updated_at = excluded.updated_at
-  `
-  )
-    .bind(
-      crypto.randomUUID(),
-      userId,
-      product,
-      subscription.status,
-      subscription.customer as string,
-      subscription.id,
-      priceId,
-      (subscription as any).current_period_start * 1000,
-      (subscription as any).current_period_end * 1000,
-      subscription.cancel_at_period_end ? 1 : 0,
-      Date.now(),
-      Date.now()
+  // Process each line item in the subscription
+  for (const item of items) {
+    const priceId = item.price?.id;
+    const product = mapPriceToProduct(priceId);
+
+    if (!product) {
+      billingLog.warn(`Unknown price ID in subscription item: ${priceId}`);
+      continue;
+    }
+
+    billingLog.info(`Processing item: ${product} (price: ${priceId})`);
+
+    // Check if this specific product already exists for this subscription
+    const existing = await env.BILLING_DB.prepare(
+      'SELECT id FROM subscriptions WHERE stripe_subscription_id = ? AND product = ?'
     )
-    .run();
+      .bind(subscription.id, product)
+      .first();
 
-  // Set up 24-month subscription schedule for TACo Club monthly
-  // This auto-cancels after 24 payments, then user keeps lifetime access
-  if (isNewSubscription && isTacoClubMonthly(priceId) && subscription.status === 'active') {
-    try {
-      // Create a subscription schedule from the existing subscription
-      // It will run for 24 iterations then cancel
-      const stripeForSchedule = getStripeClient(env);
+    const isNewProduct = !existing;
 
-      // Get the current subscription to migrate it to a schedule
-      const schedule = await stripeForSchedule.subscriptionSchedules.create({
-        from_subscription: subscription.id,
-      });
-
-      // Update the schedule to run for exactly 24 months then cancel
-      // Note: 'iterations' field was removed in Stripe API 2025-09-30.clover
-      // Instead, we calculate the end date as 24 months from the subscription start
-      const startTime = (subscription as any).current_period_start as number;
-      const endTime = startTime + 24 * 30 * 24 * 60 * 60; // 24 months in seconds (approximation)
-
-      await stripeForSchedule.subscriptionSchedules.update(schedule.id, {
-        end_behavior: 'cancel',
-        phases: [
-          {
-            items: [{ price: priceId, quantity: 1 }],
-            start_date: startTime,
-            end_date: endTime,
-            metadata: {
-              userId,
-              reason: 'TACo Club 24-month subscription',
-            },
-          },
-        ],
-      });
-
-      // Update our DB to note this has a schedule
-      await env.BILLING_DB.prepare(
-        `UPDATE subscriptions SET 
-          total_payments = 0,
-          max_payments = 24,
-          updated_at = ?
-        WHERE stripe_subscription_id = ?`
+    // Upsert subscription record for this product
+    // Uses composite unique key: (stripe_subscription_id, product)
+    await env.BILLING_DB.prepare(
+      `
+      INSERT INTO subscriptions (
+        id, user_id, product, status,
+        stripe_customer_id, stripe_subscription_id, stripe_price_id,
+        current_period_start, current_period_end, cancel_at_period_end,
+        created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(stripe_subscription_id, product) DO UPDATE SET
+        status = excluded.status,
+        stripe_price_id = excluded.stripe_price_id,
+        current_period_start = excluded.current_period_start,
+        current_period_end = excluded.current_period_end,
+        cancel_at_period_end = excluded.cancel_at_period_end,
+        updated_at = excluded.updated_at
+    `
+    )
+      .bind(
+        crypto.randomUUID(),
+        userId,
+        product,
+        subscription.status,
+        subscription.customer as string,
+        subscription.id,
+        priceId,
+        (subscription as any).current_period_start * 1000,
+        (subscription as any).current_period_end * 1000,
+        subscription.cancel_at_period_end ? 1 : 0,
+        Date.now(),
+        Date.now()
       )
-        .bind(Date.now(), subscription.id)
-        .run();
+      .run();
 
-      billingLog.info(`Created 24-month subscription schedule for TACo Club user ${userId}`);
-    } catch (scheduleError) {
-      billingLog.error('Failed to create subscription schedule:', scheduleError);
-      // Don't fail the whole webhook - the subscription is still valid
+    processedProducts.push(product);
+
+    // Track TACo Club for schedule setup
+    if (isTacoClubMonthly(priceId)) {
+      hasTacoClubMonthly = true;
+      tacoClubPriceId = priceId;
+    }
+
+    // Grant tokens for new tenure_extras
+    if (product === 'tenure_extras' && subscription.status === 'active' && isNewProduct) {
+      await grantTokens(
+        userId,
+        10,
+        'Tenure Extras purchase - 10 tokens granted',
+        env,
+        subscription.id
+      );
+      billingLog.info(`Granted 10 tokens to user ${userId} for new tenure_extras`);
     }
   }
 
-  // Grant 10 tokens for tenure_extras purchases/renewals
-  if (product === 'tenure_extras' && subscription.status === 'active') {
-    const reason = isNewSubscription
-      ? 'Tenure Extras purchase - 10 tokens granted'
-      : 'Tenure Extras renewal - 10 tokens granted';
+  billingLog.info(
+    `Processed products for subscription ${subscription.id}: ${processedProducts.join(', ')}`
+  );
 
-    await grantTokens(userId, 10, reason, env, subscription.id);
-    billingLog.info(
-      `Granted 10 tokens to user ${userId} for tenure_extras (${isNewSubscription ? 'new' : 'renewal'})`
-    );
+  // Set up 24-month subscription schedule for TACo Club monthly
+  // Only do this once per subscription, not per item
+  if (hasTacoClubMonthly && tacoClubPriceId && subscription.status === 'active') {
+    // Check if schedule already exists
+    const existingSchedule = await env.BILLING_DB.prepare(
+      'SELECT max_payments FROM subscriptions WHERE stripe_subscription_id = ? AND product = ? AND max_payments IS NOT NULL'
+    )
+      .bind(subscription.id, 'taco_club')
+      .first();
+
+    if (!existingSchedule) {
+      try {
+        const stripeForSchedule = getStripeClient(env);
+
+        // Get the current subscription to migrate it to a schedule
+        const schedule = await stripeForSchedule.subscriptionSchedules.create({
+          from_subscription: subscription.id,
+        });
+
+        const startTime = (subscription as any).current_period_start as number;
+        const endTime = startTime + 24 * 30 * 24 * 60 * 60; // 24 months in seconds
+
+        await stripeForSchedule.subscriptionSchedules.update(schedule.id, {
+          end_behavior: 'cancel',
+          phases: [
+            {
+              items: items.map((item) => ({ price: item.price.id, quantity: item.quantity })),
+              start_date: startTime,
+              end_date: endTime,
+              metadata: {
+                userId,
+                reason: 'TACo Club 24-month subscription',
+              },
+            },
+          ],
+        });
+
+        // Update TACo Club record with schedule info
+        await env.BILLING_DB.prepare(
+          `UPDATE subscriptions SET 
+            total_payments = 0,
+            max_payments = 24,
+            updated_at = ?
+          WHERE stripe_subscription_id = ? AND product = 'taco_club'`
+        )
+          .bind(Date.now(), subscription.id)
+          .run();
+
+        billingLog.info(`Created 24-month subscription schedule for TACo Club user ${userId}`);
+      } catch (scheduleError) {
+        billingLog.error('Failed to create subscription schedule:', scheduleError);
+        // Don't fail the whole webhook - subscriptions are still valid
+      }
+    }
   }
 }
 
