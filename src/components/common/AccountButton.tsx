@@ -14,6 +14,7 @@ import { getAuthHeaders } from '../../lib/auth';
 import { logger } from '../../lib/logger';
 import { LoginModal } from './LoginModal';
 import { showNotification } from '../../lib/notifications';
+import { appMenuStore } from '../../stores/app-menu-store';
 
 // ============================================================================
 // TYPES
@@ -169,6 +170,12 @@ export const AccountButton: Component<AccountButtonProps> = (props) => {
    */
   const handleManageBilling = async () => {
     setIsLoadingPortal(true);
+
+    // Close the app menu if it's open
+    appMenuStore.close();
+
+    // Close the dropdown
+    setShowDropdown(false);
 
     try {
       const authHeaders = getAuthHeaders();

@@ -353,7 +353,7 @@ export const ToastContainer: Component = () => {
     position: 'fixed',
     top: '20px',
     right: '20px',
-    'z-index': 9999,
+    'z-index': 100000,
     display: 'flex',
     'flex-direction': 'column',
     gap: '12px',
