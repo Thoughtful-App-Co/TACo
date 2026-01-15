@@ -4,7 +4,7 @@
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
-import { Component, createSignal, Show } from 'solid-js';
+import { Component, createSignal, Show, createEffect } from 'solid-js';
 import { pipelineStore } from '../store';
 import { liquidTenure, pipelineAnimations } from '../theme/liquid-tenure';
 import { FluidCard } from '../ui';
@@ -18,6 +18,9 @@ import {
   IconCopy,
   IconSettings,
 } from '../ui/Icons';
+import { useTenureSync } from '../../../../lib/sync';
+import { canUseTenureSync } from '../../../../lib/feature-gates';
+import { SyncStatusIndicator, SyncConflictModal } from '../../../common/sync';
 
 interface SyncSettingsProps {
   currentTheme: () => Partial<typeof liquidTenure> & typeof liquidTenure;
@@ -26,6 +29,23 @@ interface SyncSettingsProps {
 export const SyncSettings: Component<SyncSettingsProps> = (props) => {
   const theme = () => props.currentTheme();
   const settings = () => pipelineStore.state.settings;
+
+  // Cloud sync state
+  const syncAccess = canUseTenureSync();
+  const { state: syncState, isEnabled: syncEnabled, syncNow, resolveConflict } = useTenureSync();
+  const [showConflictModal, setShowConflictModal] = createSignal(false);
+
+  // Show conflict modal when conflict detected
+  createEffect(() => {
+    if (syncState()?.status === 'conflict' && syncState()?.conflict) {
+      setShowConflictModal(true);
+    }
+  });
+
+  const handleResolveConflict = async (choice: 'local' | 'remote') => {
+    await resolveConflict(choice);
+    setShowConflictModal(false);
+  };
 
   const [syncCode, setSyncCode] = createSignal('');
   const [importCode, setImportCode] = createSignal('');
@@ -151,7 +171,169 @@ export const SyncSettings: Component<SyncSettingsProps> = (props) => {
 
   return (
     <div style={{ 'max-width': '600px' }}>
-      {/* Sync Status */}
+      {/* Cloud Sync Section */}
+      <Show when={syncAccess.allowed && syncEnabled()}>
+        <FluidCard style={{ 'margin-bottom': '24px' }}>
+          <h3
+            style={{
+              margin: '0 0 16px',
+              'font-size': '18px',
+              'font-family': "'Playfair Display', Georgia, serif",
+              'font-weight': '600',
+              color: theme().colors.text,
+              display: 'flex',
+              'align-items': 'center',
+              'justify-content': 'space-between',
+            }}
+          >
+            <span style={{ display: 'flex', 'align-items': 'center', gap: '10px' }}>
+              <IconSync size={20} color={theme().colors.primary} /> Cloud Sync
+            </span>
+            <Show when={syncState()}>
+              <SyncStatusIndicator
+                status={syncState()!.status}
+                lastSyncedAt={syncState()!.lastSyncedAt}
+                onSyncNow={syncNow}
+                showLabel
+              />
+            </Show>
+          </h3>
+
+          <p
+            style={{
+              margin: '0 0 16px',
+              'font-size': '13px',
+              'font-family': "'Space Grotesk', system-ui, sans-serif",
+              color: theme().colors.textMuted,
+              'line-height': '1.5',
+            }}
+          >
+            Your data is automatically synced across all your devices. Changes sync within 30
+            seconds of your last edit or when you leave the page.
+          </p>
+
+          <Show when={syncState()?.lastSyncedAt}>
+            <div
+              style={{
+                padding: '12px 16px',
+                background: theme().colors.surfaceLight,
+                'border-radius': '10px',
+                display: 'flex',
+                'justify-content': 'space-between',
+                'align-items': 'center',
+              }}
+            >
+              <span
+                style={{
+                  'font-size': '13px',
+                  color: theme().colors.textMuted,
+                  'font-family': "'Space Grotesk', system-ui, sans-serif",
+                }}
+              >
+                Last synced
+              </span>
+              <span
+                style={{
+                  'font-size': '13px',
+                  color: theme().colors.text,
+                  'font-family': "'Space Grotesk', system-ui, sans-serif",
+                  'font-weight': '500',
+                }}
+              >
+                {new Date(syncState()!.lastSyncedAt!).toLocaleString()}
+              </span>
+            </div>
+          </Show>
+
+          <Show when={syncState()?.lastError}>
+            <div
+              style={{
+                'margin-top': '12px',
+                padding: '12px',
+                background: 'rgba(239, 68, 68, 0.1)',
+                border: '1px solid rgba(239, 68, 68, 0.3)',
+                'border-radius': '8px',
+                color: '#EF4444',
+                'font-size': '13px',
+                'font-family': "'Space Grotesk', system-ui, sans-serif",
+              }}
+            >
+              {syncState()!.lastError}
+            </div>
+          </Show>
+        </FluidCard>
+      </Show>
+
+      {/* Upgrade prompt for non-subscribers */}
+      <Show when={!syncAccess.allowed}>
+        <FluidCard style={{ 'margin-bottom': '24px' }}>
+          <h3
+            style={{
+              margin: '0 0 12px',
+              'font-size': '18px',
+              'font-family': "'Playfair Display', Georgia, serif",
+              'font-weight': '600',
+              color: theme().colors.text,
+              display: 'flex',
+              'align-items': 'center',
+              gap: '10px',
+            }}
+          >
+            <IconSync size={20} color={theme().colors.textMuted} /> Cloud Sync
+          </h3>
+          <p
+            style={{
+              margin: '0 0 16px',
+              'font-size': '13px',
+              'font-family': "'Space Grotesk', system-ui, sans-serif",
+              color: theme().colors.textMuted,
+              'line-height': '1.5',
+            }}
+          >
+            Upgrade to sync your data automatically across all your devices. Your data stays in sync
+            within seconds of any change.
+          </p>
+          <div
+            style={{
+              padding: '16px',
+              background:
+                'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%)',
+              border: '1px solid rgba(59, 130, 246, 0.2)',
+              'border-radius': '12px',
+              'text-align': 'center',
+            }}
+          >
+            <div
+              style={{
+                'font-size': '14px',
+                color: theme().colors.text,
+                'font-weight': '500',
+                'margin-bottom': '8px',
+              }}
+            >
+              Cloud Sync is available with Tenure Extras
+            </div>
+            <div
+              style={{
+                'font-size': '12px',
+                color: theme().colors.textMuted,
+              }}
+            >
+              Use manual export/import below for free backup and transfer
+            </div>
+          </div>
+        </FluidCard>
+      </Show>
+
+      {/* Conflict Modal */}
+      <SyncConflictModal
+        isOpen={showConflictModal()}
+        conflict={syncState()?.conflict || null}
+        onResolve={handleResolveConflict}
+        onClose={() => setShowConflictModal(false)}
+      />
+
+      {/* Manual Sync Status */}
       <FluidCard style={{ 'margin-bottom': '24px' }}>
         <h3
           style={{
