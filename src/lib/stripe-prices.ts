@@ -67,15 +67,31 @@ export const STRIPE_PRICES_LIVE = {
 // ============================================================================
 
 /**
- * Check if we're in production mode
- * Uses Vite's import.meta.env for build-time detection
+ * Production domains that should use LIVE Stripe prices
+ * Add any custom domains here
+ */
+const PRODUCTION_DOMAINS = ['thoughtfulapp.co', 'www.thoughtfulapp.co', 'taco.thoughtfulapp.co'];
+
+/**
+ * Check if we're in production mode using RUNTIME hostname detection
+ *
+ * This checks the actual hostname rather than build-time env vars because:
+ * - Cloudflare Pages preview deployments are production builds (import.meta.env.PROD = true)
+ * - But they should use TEST Stripe keys, not LIVE
+ * - Only the actual production domain should use LIVE prices
  */
 function isProduction(): boolean {
-  // Check for production mode via Vite env
-  if (typeof import.meta !== 'undefined' && import.meta.env) {
-    return import.meta.env.PROD === true || import.meta.env.MODE === 'production';
+  // SSR safety check
+  if (typeof window === 'undefined') {
+    return false;
   }
-  return false;
+
+  const hostname = window.location.hostname;
+
+  // Check if hostname matches any production domain
+  return PRODUCTION_DOMAINS.some(
+    (domain) => hostname === domain || hostname.endsWith(`.${domain}`)
+  );
 }
 
 /**
