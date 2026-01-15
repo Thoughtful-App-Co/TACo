@@ -59,11 +59,13 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     const email = payload.email as string;
 
     // Get fresh subscription data from billing DB
+    // Include both active subscriptions AND lifetime access (e.g., TACo Club after 24 payments)
     const subscriptions = await env.BILLING_DB.prepare(
       `
-      SELECT product, status, current_period_end, cancel_at_period_end
+      SELECT product, status, current_period_end, cancel_at_period_end, lifetime_access
       FROM subscriptions 
-      WHERE user_id = ? AND status IN ('active', 'trialing')
+      WHERE user_id = ? 
+        AND (status IN ('active', 'trialing') OR lifetime_access = 1)
     `
     )
       .bind(userId)
