@@ -30,6 +30,7 @@ import {
   hasAppSync,
   hasAppExtras,
   isTacoClubMember,
+  getAndClearRedirectIntent,
 } from './auth';
 
 // ============================================================================
@@ -85,7 +86,7 @@ export const AuthProvider: ParentComponent = (props) => {
       setUser(sessionUser);
 
       // If we just processed a callback and got a valid session,
-      // show a success notification
+      // show a success notification and handle redirect
       if (wasCallback && sessionUser) {
         logger.auth.info('Successfully logged in as:', sessionUser.email);
 
@@ -135,6 +136,21 @@ export const AuthProvider: ParentComponent = (props) => {
           notification.style.animation = 'slideIn 0.3s ease reverse';
           setTimeout(() => notification.remove(), 300);
         }, 4000);
+
+        // Handle redirect based on stored intent
+        const redirectPath = getAndClearRedirectIntent();
+        const currentPath = window.location.pathname;
+
+        if (redirectPath && redirectPath !== currentPath) {
+          // User was somewhere specific when they logged in - take them back there
+          logger.auth.debug('Redirecting to stored intent:', redirectPath);
+          window.location.href = redirectPath;
+        } else if (currentPath === '/') {
+          // User logged in from landing page - send them to app home
+          logger.auth.debug('Redirecting to /home after landing page login');
+          window.location.href = '/home';
+        }
+        // Otherwise, stay on current page (e.g., already in an app)
       }
     } catch (error) {
       logger.auth.error('Auth initialization error:', error);

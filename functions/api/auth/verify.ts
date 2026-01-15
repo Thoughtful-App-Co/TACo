@@ -11,11 +11,11 @@
 
 import { jwtVerify, SignJWT } from 'jose';
 import { authLog } from '../../lib/logger';
+import { getJwtSecretEncoded, type AuthEnv } from '../../lib/auth-config';
 
-interface Env {
+interface Env extends AuthEnv {
   AUTH_DB: D1Database;
   BILLING_DB: D1Database;
-  JWT_SECRET: string;
   FRONTEND_URL?: string; // URL of the frontend app (for redirects after auth)
 }
 
@@ -32,17 +32,17 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
   const baseUrl = env.FRONTEND_URL || `${url.protocol}//${url.host}`;
 
   if (!token) {
-    return Response.redirect(`${baseUrl}/login?error=missing_token`, 302);
+    return Response.redirect(`${baseUrl}/?auth_error=missing_token`, 302);
   }
 
   try {
     // Verify magic link token
-    const secret = new TextEncoder().encode(env.JWT_SECRET);
+    const secret = getJwtSecretEncoded(env);
     const { payload } = await jwtVerify(token, secret);
 
     // Validate token type
     if (payload.type !== 'magic-link') {
-      return Response.redirect(`${baseUrl}/login?error=invalid_token`, 302);
+      return Response.redirect(`${baseUrl}/?auth_error=invalid_token`, 302);
     }
 
     const userId = payload.userId as string;
@@ -90,9 +90,9 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
 
     // Check if it's an expiration error
     if (error instanceof Error && error.message.includes('exp')) {
-      return Response.redirect(`${baseUrl}/login?error=expired_token`, 302);
+      return Response.redirect(`${baseUrl}/?auth_error=expired_token`, 302);
     }
 
-    return Response.redirect(`${baseUrl}/login?error=invalid_token`, 302);
+    return Response.redirect(`${baseUrl}/?auth_error=invalid_token`, 302);
   }
 }

@@ -42,6 +42,7 @@ export type SubscriptionProduct =
 
 const TOKEN_STORAGE_KEY = 'taco_session_token';
 const AUTH_CALLBACK_PARAM = 'auth_token';
+const REDIRECT_INTENT_KEY = 'taco_redirect_intent';
 
 // ============================================================================
 // TOKEN MANAGEMENT
@@ -77,6 +78,35 @@ export function clearToken(): void {
     localStorage.removeItem(TOKEN_STORAGE_KEY);
   } catch (error) {
     logger.auth.error('Failed to clear auth token:', error);
+  }
+}
+
+/**
+ * Store the redirect intent (where user was before login)
+ */
+export function storeRedirectIntent(path: string): void {
+  try {
+    localStorage.setItem(REDIRECT_INTENT_KEY, path);
+  } catch (error) {
+    logger.auth.error('Failed to store redirect intent:', error);
+  }
+}
+
+/**
+ * Get and clear the stored redirect intent
+ * @returns The stored redirect path, or null if none exists
+ */
+export function getAndClearRedirectIntent(): string | null {
+  try {
+    const intent = localStorage.getItem(REDIRECT_INTENT_KEY);
+    if (intent) {
+      localStorage.removeItem(REDIRECT_INTENT_KEY);
+      return intent;
+    }
+    return null;
+  } catch (error) {
+    logger.auth.error('Failed to get redirect intent:', error);
+    return null;
   }
 }
 
@@ -129,19 +159,23 @@ export function handleAuthCallback(): boolean {
       // Clean up URL (remove auth_token param)
       const url = new URL(window.location.href);
       url.searchParams.delete(AUTH_CALLBACK_PARAM);
-      url.searchParams.delete('error'); // Also clean up any error params
+      url.searchParams.delete('auth_error'); // Also clean up any error params
       window.history.replaceState({}, '', url.pathname + url.search);
 
       return true;
     }
 
     // Check for error in URL (from failed verification)
-    const error = params.get('error');
-    if (error) {
-      logger.auth.warn('Auth error:', error);
+    const authError = params.get('auth_error');
+    if (authError) {
+      logger.auth.warn('Auth error:', authError);
+
+      // Show error notification to user
+      showAuthErrorNotification(authError);
+
       // Clean up URL
       const url = new URL(window.location.href);
-      url.searchParams.delete('error');
+      url.searchParams.delete('auth_error');
       window.history.replaceState({}, '', url.pathname + url.search);
     }
 
@@ -150,6 +184,69 @@ export function handleAuthCallback(): boolean {
     logger.auth.error('Error handling auth callback:', error);
     return false;
   }
+}
+
+/**
+ * Show an auth error notification to the user
+ * @param errorType - The error type from URL params
+ */
+function showAuthErrorNotification(errorType: string): void {
+  const errorMessages: Record<string, string> = {
+    missing_token: 'No authentication token provided',
+    invalid_token: 'Invalid or corrupted sign-in link',
+    expired_token: 'Sign-in link has expired. Please request a new one.',
+  };
+
+  const message = errorMessages[errorType] || 'Authentication failed. Please try again.';
+
+  const notification = document.createElement('div');
+  notification.innerHTML = `
+    <div style="
+      position: fixed;
+      top: 80px;
+      right: 24px;
+      background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%);
+      color: white;
+      padding: 16px 20px;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+      font-family: 'DM Sans', system-ui, sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 10000;
+      animation: authErrorSlideIn 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      max-width: 400px;
+    ">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <circle cx="12" cy="12" r="10"/>
+        <line x1="12" y1="8" x2="12" y2="12"/>
+        <line x1="12" y1="16" x2="12.01" y2="16"/>
+      </svg>
+      <span>${message}</span>
+    </div>
+    <style>
+      @keyframes authErrorSlideIn {
+        from {
+          transform: translateX(400px);
+          opacity: 0;
+        }
+        to {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+    </style>
+  `;
+  document.body.appendChild(notification);
+
+  // Remove after 6 seconds (longer for error messages)
+  setTimeout(() => {
+    notification.style.animation = 'authErrorSlideIn 0.3s ease reverse';
+    setTimeout(() => notification.remove(), 300);
+  }, 6000);
 }
 
 /**

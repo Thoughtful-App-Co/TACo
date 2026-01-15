@@ -14,9 +14,10 @@
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
-import { Component, createSignal, Show } from 'solid-js';
+import { Component, createSignal, Show, createEffect } from 'solid-js';
 import { Portal } from 'solid-js/web';
 import { useAuth } from '../../lib/auth-context';
+import { storeRedirectIntent } from '../../lib/auth';
 import { DoodleShield, DoodleSparkle } from './DoodleIcons';
 
 // ============================================================================
@@ -154,6 +155,14 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
   const [state, setState] = createSignal<LoginState>('idle');
   const [errorMessage, setErrorMessage] = createSignal('');
   const [submittedEmail, setSubmittedEmail] = createSignal('');
+
+  // Store redirect intent when modal opens
+  createEffect(() => {
+    if (props.isOpen && !auth.isAuthenticated()) {
+      // Store current path so user returns here after login
+      storeRedirectIntent(window.location.pathname);
+    }
+  });
 
   const handleSubmit = async (e: Event) => {
     e.preventDefault();
@@ -296,48 +305,76 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
                 <CloseIcon />
               </button>
 
-              {/* Logo Icon - DoodleShield for security/privacy */}
-              <div
-                style={{
-                  width: '64px',
-                  height: '64px',
-                  background: `linear-gradient(135deg, ${tokens.colors.brand.coral}, ${tokens.colors.brand.yellow}, ${tokens.colors.brand.teal})`,
-                  'border-radius': tokens.radius.md,
-                  margin: `0 auto ${tokens.spacing.lg}`,
-                  display: 'flex',
-                  'align-items': 'center',
-                  'justify-content': 'center',
-                  color: 'white',
-                  border: 'none',
-                  'box-shadow': `
-                0 0 0 3px ${tokens.colors.surface},
-                0 0 0 4px rgba(255, 255, 255, 0.1),
-                0 8px 24px rgba(0, 0, 0, 0.4)
-              `,
-                }}
-              >
-                <DoodleShield size={32} color="white" />
-              </div>
-
               {/* Success State */}
               <Show when={state() === 'success'}>
                 <div style={{ 'text-align': 'center' }}>
-                  {/* DoodleSparkle Icon - "Magic Link" with sparkle aesthetic */}
+                  {/* DoodleShield Icon - Security with brand gradient fill */}
                   <div
                     style={{
                       width: '80px',
                       height: '80px',
-                      background: `radial-gradient(circle, ${tokens.colors.success}25, ${tokens.colors.success}10)`,
                       'border-radius': '50%',
                       margin: `0 auto ${tokens.spacing.lg}`,
                       display: 'flex',
                       'align-items': 'center',
                       'justify-content': 'center',
-                      'box-shadow': `0 0 30px ${tokens.colors.success}40`,
+                      'box-shadow': `0 0 30px ${tokens.colors.brand.coral}60`,
                       animation: 'loginModalSuccessPulse 2s ease-in-out infinite',
                     }}
                   >
-                    <DoodleSparkle size={40} color={tokens.colors.success} />
+                    <svg
+                      width="64"
+                      height="64"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      style={{ filter: 'drop-shadow(0 2px 8px rgba(0, 0, 0, 0.3))' }}
+                    >
+                      <defs>
+                        <linearGradient id="shieldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                          <animate
+                            attributeName="x1"
+                            values="0%;100%;0%"
+                            dur="3s"
+                            repeatCount="indefinite"
+                          />
+                          <animate
+                            attributeName="x2"
+                            values="100%;0%;100%"
+                            dur="3s"
+                            repeatCount="indefinite"
+                          />
+                          <stop offset="0%" stop-color={tokens.colors.brand.coral} />
+                          <stop offset="50%" stop-color="#FFA500" />
+                          <stop offset="100%" stop-color="#F5A623" />
+                        </linearGradient>
+                      </defs>
+                      {/* Shield outline */}
+                      <path
+                        d="M12 3L4 7V12C4 16.5 7.5 20.5 12 21.5C16.5 20.5 20 16.5 20 12V7L12 3Z"
+                        stroke="url(#shieldGradient)"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        fill="url(#shieldGradient)"
+                        fill-opacity="0.2"
+                      />
+                      {/* Checkmark */}
+                      <path
+                        d="M9 12L11 14L15 10"
+                        stroke="url(#shieldGradient)"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                      />
+                      {/* Sketchy detail */}
+                      <path
+                        d="M12 3.2C12.1 3.1 12.3 3.2 12.2 3.3"
+                        stroke="url(#shieldGradient)"
+                        stroke-width="0.8"
+                        stroke-linecap="round"
+                        opacity="0.4"
+                      />
+                    </svg>
                   </div>
 
                   <h2
@@ -671,10 +708,19 @@ export const LoginModal: Component<LoginModalProps> = (props) => {
 
               @keyframes loginModalSuccessPulse {
                 0%, 100% {
-                  box-shadow: 0 0 30px rgba(16, 185, 129, 0.4);
+                  box-shadow: 0 0 30px rgba(255, 107, 107, 0.6);
                 }
                 50% {
-                  box-shadow: 0 0 40px rgba(16, 185, 129, 0.6);
+                  box-shadow: 0 0 40px rgba(255, 165, 0, 0.8);
+                }
+              }
+
+              @keyframes loginModalGradientFlow {
+                0%, 100% {
+                  background-position: 0% 50%;
+                }
+                50% {
+                  background-position: 100% 50%;
                 }
               }
             `}

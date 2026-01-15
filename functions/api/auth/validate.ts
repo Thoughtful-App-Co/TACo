@@ -14,11 +14,11 @@
 
 import { jwtVerify } from 'jose';
 import { authLog } from '../../lib/logger';
+import { getJwtSecretEncoded, type AuthEnv } from '../../lib/auth-config';
 
-interface Env {
+interface Env extends AuthEnv {
   AUTH_DB: D1Database;
   BILLING_DB: D1Database;
-  JWT_SECRET: string;
 }
 
 export async function onRequestPost(context: { request: Request; env: Env }): Promise<Response> {
@@ -44,7 +44,7 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
 
   try {
     // Verify session token
-    const secret = new TextEncoder().encode(env.JWT_SECRET);
+    const secret = getJwtSecretEncoded(env);
     const { payload } = await jwtVerify(token, secret);
 
     // Validate token type
