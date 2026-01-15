@@ -143,6 +143,12 @@ export const Paywall: Component<PaywallProps> = (props) => {
     setIsLoading(true);
 
     try {
+      // Build return URLs to bring user back to current page after checkout
+      // Use URL API to properly handle query params and hash fragments
+      const currentUrl = window.location.origin + window.location.pathname;
+      const successUrl = `${currentUrl}?purchase_success=true`;
+      const cancelUrl = `${currentUrl}?purchase_canceled=true`;
+
       const response = await fetch('/api/billing/create-checkout', {
         method: 'POST',
         headers: {
@@ -150,7 +156,9 @@ export const Paywall: Component<PaywallProps> = (props) => {
           Authorization: `Bearer ${localStorage.getItem('taco_session_token')}`,
         },
         body: JSON.stringify({
-          priceId: getPriceIdForFeature(props.feature),
+          items: [{ priceId: getPriceIdForFeature(props.feature), quantity: 1 }],
+          successUrl,
+          cancelUrl,
         }),
       });
 
@@ -159,7 +167,7 @@ export const Paywall: Component<PaywallProps> = (props) => {
       if (data.url) {
         window.location.href = data.url;
       } else {
-        logger.billing.error('No checkout URL returned');
+        logger.billing.error('No checkout URL returned', { error: data.error, code: data.code });
       }
     } catch (error) {
       logger.billing.error('Checkout error:', error);
