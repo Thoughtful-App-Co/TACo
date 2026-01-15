@@ -149,6 +149,31 @@ Create each product below. After creating, copy the `price_xxx` ID and update th
 
 ---
 
+### Echoprax Extras
+
+**Product: Echoprax Extras**
+
+| Setting     | Value                                   |
+| ----------- | --------------------------------------- |
+| Name        | Echoprax Extras                         |
+| Description | Unlimited AI-powered workout generation |
+
+**Price 1: Monthly**
+| Setting | Value |
+|---------|-------|
+| Price | $8.00 |
+| Billing period | Monthly |
+| Price ID | `price_xxx` -> Copy this! |
+
+**Price 2: Yearly**
+| Setting | Value |
+|---------|-------|
+| Price | $80.00 |
+| Billing period | Yearly |
+| Price ID | `price_xxx` -> Copy this! |
+
+---
+
 ## Step 3: Update Code with Live Price IDs
 
 After creating all products, update these two files with the live price IDs:
@@ -169,6 +194,8 @@ export const STRIPE_PRICES_LIVE: StripePrices = {
   TEMPO_EXTRAS_YEARLY: 'price_xxx', // Replace with live price ID
   TENURE_EXTRAS_MONTHLY: 'price_xxx', // Replace with live price ID
   TENURE_EXTRAS_YEARLY: 'price_xxx', // Replace with live price ID
+  ECHOPRAX_EXTRAS_MONTHLY: 'price_xxx', // Replace with live price ID
+  ECHOPRAX_EXTRAS_YEARLY: 'price_xxx', // Replace with live price ID
 } as const;
 ```
 
@@ -204,23 +231,27 @@ Ensure your live webhook is subscribed to these events:
 
 ### Test Mode (Current)
 
-| Product       | Monthly                          | Yearly/Lifetime                  |
-| ------------- | -------------------------------- | -------------------------------- |
-| TACo Club     | `price_1Sm564CPMZ8sEjvKCGmRtoZb` | `price_1Sm564CPMZ8sEjvKRuiDExbY` |
-| Sync All      | `price_1Sm4s7CPMZ8sEjvK94OxRR1O` | `price_1Sm4sTCPMZ8sEjvKAWdgAz3V` |
-| Sync App      | `price_1Sm5JsCPMZ8sEjvK66l5S7yG` | `price_1Sm5JYCPMZ8sEjvKoGh2rbWj` |
-| Tempo Extras  | `price_1Sm4nYCPMZ8sEjvKbUqYoog4` | `price_1Sm4oRCPMZ8sEjvK35pjZ6v5` |
-| Tenure Extras | `price_1Sm4nCCPMZ8sEjvKm7zIFJ3K` | `price_1Sm4nCCPMZ8sEjvKYLvfcZmb` |
+| Product         | Monthly                             | Yearly/Lifetime                    |
+| --------------- | ----------------------------------- | ---------------------------------- |
+| TACo Club       | `price_1Sm564CPMZ8sEjvKCGmRtoZb`    | `price_1Sm564CPMZ8sEjvKRuiDExbY`   |
+| Sync All        | `price_1Sm4s7CPMZ8sEjvK94OxRR1O`    | `price_1Sm4sTCPMZ8sEjvKAWdgAz3V`   |
+| Sync App        | `price_1Sm5JsCPMZ8sEjvK66l5S7yG`    | `price_1Sm5JYCPMZ8sEjvKoGh2rbWj`   |
+| Tempo Extras    | `price_1Sm4nYCPMZ8sEjvKbUqYoog4`    | `price_1Sm4oRCPMZ8sEjvK35pjZ6v5`   |
+| Tenure Extras   | `price_1Sm4nCCPMZ8sEjvKm7zIFJ3K`    | `price_1Sm4nCCPMZ8sEjvKYLvfcZmb`   |
+| Echoprax Extras | `PLACEHOLDER_ECHOPRAX_MONTHLY_TEST` | `PLACEHOLDER_ECHOPRAX_YEARLY_TEST` |
+
+**Note:** Echoprax test mode prices need to be created in Stripe Dashboard ($8/mo and $80/year).
 
 ### Live Mode (Fill in after creating)
 
-| Product       | Monthly           | Yearly/Lifetime   |
-| ------------- | ----------------- | ----------------- |
-| TACo Club     | `_______________` | `_______________` |
-| Sync All      | `_______________` | `_______________` |
-| Sync App      | `_______________` | `_______________` |
-| Tempo Extras  | `_______________` | `_______________` |
-| Tenure Extras | `_______________` | `_______________` |
+| Product         | Monthly           | Yearly/Lifetime   |
+| --------------- | ----------------- | ----------------- |
+| TACo Club       | `_______________` | `_______________` |
+| Sync All        | `_______________` | `_______________` |
+| Sync App        | `_______________` | `_______________` |
+| Tempo Extras    | `_______________` | `_______________` |
+| Tenure Extras   | `_______________` | `_______________` |
+| Echoprax Extras | `_______________` | `_______________` |
 
 ---
 
