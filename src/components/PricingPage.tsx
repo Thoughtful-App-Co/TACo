@@ -17,6 +17,7 @@ import { Footer } from './common/Footer';
 import { getStripePrices } from '../lib/stripe-prices';
 import { useAuth } from '../lib/auth-context';
 import { logger } from '../lib/logger';
+import { clearSubscriptionCache } from '../lib/feature-gates';
 
 // Modular component imports
 import {
@@ -97,7 +98,8 @@ export const PricingPage: Component = () => {
         attempts++;
         logger.billing.debug(`Polling for subscription, attempt ${attempts}/${maxAttempts}`);
 
-        // Force refresh auth/subscription data
+        // Clear feature-gates cache and force refresh auth/subscription data
+        clearSubscriptionCache();
         if (auth.refreshSession) {
           await auth.refreshSession();
         }

@@ -26,6 +26,8 @@ import { ProfileBadges } from '../common/ProfileBadges';
 import { PremiumIndicator } from '../common/PremiumIndicator';
 import { useAuth } from '../../lib/auth-context';
 import { TempoNotificationService, type NotificationState } from './services/notification.service';
+import { usePurchaseSuccess } from '../../lib/use-purchase-success';
+import { logger } from '../../lib/logger';
 
 interface Stats {
   totalTasks: number;
@@ -92,6 +94,17 @@ export const TempoApp: Component = () => {
   const [notifications, setNotifications] = createSignal<NotificationState>({
     sessions: { count: 0, hasUrgent: false, scheduledForToday: 0, overdueSessions: 0 },
     queue: { count: 0, hasOverdue: false, overdueCount: 0 },
+  });
+
+  // Handle post-purchase success (user returning from Stripe checkout)
+  const [showPurchaseSuccess, setShowPurchaseSuccess] = createSignal(false);
+  usePurchaseSuccess({
+    onSuccess: () => {
+      logger.billing.info('Tempo Extras purchase completed successfully');
+      setShowPurchaseSuccess(true);
+      // Auto-hide after 5 seconds
+      setTimeout(() => setShowPurchaseSuccess(false), 5000);
+    },
   });
 
   // Load notification state
@@ -194,6 +207,80 @@ export const TempoApp: Component = () => {
 
   return (
     <>
+      {/* Purchase Success Toast */}
+      <Show when={showPurchaseSuccess()}>
+        <div
+          style={{
+            position: 'fixed',
+            top: '80px',
+            right: '24px',
+            background: 'linear-gradient(135deg, #10B981 0%, #059669 100%)',
+            color: 'white',
+            padding: '16px 20px',
+            'border-radius': '12px',
+            'box-shadow': '0 8px 24px rgba(0, 0, 0, 0.3)',
+            'font-family': tempoDesign.typography.fontFamily,
+            'font-size': '14px',
+            'font-weight': '500',
+            'z-index': 10000,
+            display: 'flex',
+            'align-items': 'center',
+            gap: '10px',
+            animation: 'slideInRight 0.3s ease',
+          }}
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+          >
+            <polyline points="20 6 9 17 4 12" />
+          </svg>
+          <span>Tempo Extras activated! AI features are now available.</span>
+          <button
+            onClick={() => setShowPurchaseSuccess(false)}
+            style={{
+              background: 'rgba(255,255,255,0.2)',
+              border: 'none',
+              color: 'white',
+              cursor: 'pointer',
+              padding: '4px',
+              'border-radius': '4px',
+              display: 'flex',
+              'align-items': 'center',
+              'justify-content': 'center',
+              'margin-left': '8px',
+            }}
+          >
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path d="M18 6L6 18M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+      </Show>
+      <style>{`
+        @keyframes slideInRight {
+          from {
+            transform: translateX(100%);
+            opacity: 0;
+          }
+          to {
+            transform: translateX(0);
+            opacity: 1;
+          }
+        }
+      `}</style>
+
       {/* Premium Indicator */}
       <PremiumIndicator hasExtras={auth.hasAppExtras('tempo')} appName="Tempo" color="#5E6AD2" />
 
