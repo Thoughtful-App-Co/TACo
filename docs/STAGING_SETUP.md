@@ -256,12 +256,6 @@ wrangler d1 execute taco-billing-staging --remote \
 
 ## Troubleshooting
 
-### Issue: "Not available in this environment" on dev-login
-
-**Cause:** `TACO_ENV` is not set to `development` or `test`
-
-**Solution:** Dev-login only works locally. On staging, use magic link auth.
-
 ### Issue: Webhook returns 400 error
 
 **Cause:** Wrong webhook secret

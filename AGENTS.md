@@ -219,51 +219,6 @@ const secret = env.TACO_ENV === 'production' ? env.JWT_SECRET_PROD : env.JWT_SEC
 
 ---
 
-### 8. Test Users (Local Development)
-
-Three pre-seeded test users exist for local development. Use these to test premium features without real Stripe integration.
-
-| User      | Email                | Subscriptions                                          | Credits | Use For                          |
-| --------- | -------------------- | ------------------------------------------------------ | ------- | -------------------------------- |
-| `premium` | `premium@test.local` | tenure_extras, tempo_extras, echoprax_extras, sync_all | 100     | Testing all premium features     |
-| `sync`    | `sync@test.local`    | sync_all                                               | 10      | Testing sync/backup only         |
-| `free`    | `free@test.local`    | (none)                                                 | 0       | Testing paywalls & upgrade flows |
-
-**Login (bypasses email verification):**
-
-```
-http://localhost:8787/api/auth/dev-login?user=premium
-http://localhost:8787/api/auth/dev-login?user=sync
-http://localhost:8787/api/auth/dev-login?user=free
-```
-
-**Feature Access Matrix:**
-
-| Feature         | premium | sync | free |
-| --------------- | :-----: | :--: | :--: |
-| Resume mutation |   Yes   |  No  |  No  |
-| Cover letter    |   Yes   |  No  |  No  |
-| Tempo AI        |   Yes   |  No  |  No  |
-| Echoprax AI     |   Yes   |  No  |  No  |
-| Backup/Sync     |   Yes   | Yes  |  No  |
-
-**Troubleshooting:**
-
-| Issue                             | Solution                                       |
-| --------------------------------- | ---------------------------------------------- |
-| "Failed to generate session"      | Check `.dev.vars` has `JWT_SECRET_TEST`        |
-| "Test user not found"             | Run `pnpm run db:seed`                         |
-| Paywall still showing after login | Clear localStorage, re-login via dev-login URL |
-| Subscriptions not appearing       | Restart dev server after db:seed               |
-
-**Files:**
-
-- Seed SQL: `migrations/seed-test-users.sql`, `seed-test-subscriptions.sql`, `seed-test-credits.sql`
-- Dev login endpoint: `functions/api/auth/dev-login.ts`
-- Feature gates: `src/lib/feature-gates.ts`
-
----
-
 ## Quick Reference
 
 | Task             | Command/Location           |
