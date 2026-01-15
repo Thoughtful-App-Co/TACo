@@ -11,35 +11,31 @@
 import Stripe from 'stripe';
 import { grantTokens } from '../../lib/auth-middleware';
 import { billingLog } from '../../lib/logger';
+import {
+  getStripeClient,
+  getWebhookSecret,
+  getStripePrices,
+  mapPriceToProduct,
+  isTacoClubLifetime,
+  isTacoClubMonthly,
+  type StripeEnv,
+} from '../../lib/stripe';
 
-// Price ID constants for use in checkout
-export const STRIPE_PRICES = {
-  TACO_CLUB_MONTHLY: 'price_1Sm564CPMZ8sEjvKCGmRtoZb',
-  TACO_CLUB_LIFETIME: 'price_1Sm564CPMZ8sEjvKRuiDExbY',
-  SYNC_ALL_MONTHLY: 'price_1Sm4s7CPMZ8sEjvK94OxRR1O',
-  SYNC_ALL_YEARLY: 'price_1Sm4sTCPMZ8sEjvKAWdgAz3V',
-  SYNC_APP_MONTHLY: 'price_1Sm5JsCPMZ8sEjvK66l5S7yG',
-  SYNC_APP_YEARLY: 'price_1Sm5JYCPMZ8sEjvKoGh2rbWj',
-  TEMPO_EXTRAS_MONTHLY: 'price_1Sm4nYCPMZ8sEjvKbUqYoog4',
-  TEMPO_EXTRAS_YEARLY: 'price_1Sm4oRCPMZ8sEjvK35pjZ6v5',
-  TENURE_EXTRAS_MONTHLY: 'price_1Sm4nCCPMZ8sEjvKm7zIFJ3K',
-  TENURE_EXTRAS_YEARLY: 'price_1Sm4nCCPMZ8sEjvKYLvfcZmb',
-} as const;
+// Re-export for backwards compatibility
+export { getStripePrices as STRIPE_PRICES } from '../../lib/stripe';
 
-interface Env {
+interface Env extends StripeEnv {
   AUTH_DB: any; // D1Database from Cloudflare runtime
   BILLING_DB: any; // D1Database from Cloudflare runtime
   JWT_SECRET: string;
-  STRIPE_SECRET_KEY: string;
-  STRIPE_WEBHOOK_SECRET: string;
 }
 
 export async function onRequestPost(context: { request: Request; env: Env }): Promise<Response> {
   const { request, env } = context;
 
-  const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
-    apiVersion: '2025-12-15.clover',
-  });
+  // Use centralized Stripe client with environment-aware key selection
+  const stripe = getStripeClient(env);
+  const webhookSecret = getWebhookSecret(env);
 
   // Get the signature from headers
   const signature = request.headers.get('stripe-signature');
@@ -53,7 +49,7 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
   let event: Stripe.Event;
 
   try {
-    event = stripe.webhooks.constructEvent(body, signature, env.STRIPE_WEBHOOK_SECRET);
+    event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
   } catch (err) {
     billingLog.error('Webhook signature verification failed:', err);
     return new Response(`Webhook Error: ${err instanceof Error ? err.message : 'Unknown'}`, {
@@ -119,11 +115,11 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, env: En
     const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
     const priceId = lineItems.data[0]?.price?.id;
 
-    // Map price ID to product
+    // Map price ID to product (using centralized mapper)
     const product = mapPriceToProduct(priceId);
 
     // Check if this is TACo Club lifetime purchase
-    const isLifetime = priceId === STRIPE_PRICES.TACO_CLUB_LIFETIME;
+    const isLifetime = isTacoClubLifetime(priceId);
 
     if (product) {
       await env.BILLING_DB.prepare(
@@ -232,30 +228,30 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription, env: 
 
   // Set up 24-month subscription schedule for TACo Club monthly
   // This auto-cancels after 24 payments, then user keeps lifetime access
-  if (
-    isNewSubscription &&
-    priceId === STRIPE_PRICES.TACO_CLUB_MONTHLY &&
-    subscription.status === 'active'
-  ) {
+  if (isNewSubscription && isTacoClubMonthly(priceId) && subscription.status === 'active') {
     try {
       // Create a subscription schedule from the existing subscription
       // It will run for 24 iterations then cancel
-      const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
-        apiVersion: '2024-12-18.acacia',
-      });
+      const stripeForSchedule = getStripeClient(env);
 
       // Get the current subscription to migrate it to a schedule
-      const schedule = await stripe.subscriptionSchedules.create({
+      const schedule = await stripeForSchedule.subscriptionSchedules.create({
         from_subscription: subscription.id,
       });
 
-      // Update the schedule to have exactly 24 phases then cancel
-      await stripe.subscriptionSchedules.update(schedule.id, {
+      // Update the schedule to run for exactly 24 months then cancel
+      // Note: 'iterations' field was removed in Stripe API 2025-09-30.clover
+      // Instead, we calculate the end date as 24 months from the subscription start
+      const startTime = (subscription as any).current_period_start as number;
+      const endTime = startTime + 24 * 30 * 24 * 60 * 60; // 24 months in seconds (approximation)
+
+      await stripeForSchedule.subscriptionSchedules.update(schedule.id, {
         end_behavior: 'cancel',
         phases: [
           {
             items: [{ price: priceId, quantity: 1 }],
-            iterations: 24, // Run for exactly 24 billing cycles
+            start_date: startTime,
+            end_date: endTime,
             metadata: {
               userId,
               reason: 'TACo Club 24-month subscription',
@@ -380,7 +376,12 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice, env: Env) {
 
 async function handlePaymentFailed(invoice: Stripe.Invoice, env: Env) {
   // Mark subscription as past_due
-  if (invoice.subscription) {
+  // Handle both string ID and expanded Subscription object
+  const rawSubscription = (invoice as any).subscription;
+  const subscriptionId =
+    typeof rawSubscription === 'string' ? rawSubscription : (rawSubscription?.id ?? null);
+
+  if (subscriptionId) {
     await env.BILLING_DB.prepare(
       `
       UPDATE subscriptions 
@@ -388,7 +389,7 @@ async function handlePaymentFailed(invoice: Stripe.Invoice, env: Env) {
       WHERE stripe_subscription_id = ?
     `
     )
-      .bind(Date.now(), invoice.subscription)
+      .bind(Date.now(), subscriptionId)
       .run();
   }
 
@@ -399,40 +400,4 @@ async function handlePaymentFailed(invoice: Stripe.Invoice, env: Env) {
 // HELPERS
 // ============================================================================
 
-/**
- * Map Stripe price ID to product name
- *
- * Price IDs from Stripe Dashboard (Test Mode):
- * - TACo Club: $25/month (24 months) or $500 lifetime
- * - Sync All Apps: $3.50/month or $35/year
- * - Sync One App: $2/month or $20/year (need app context)
- * - Tempo Extras: $12/month or $120/year
- * - Tenure Extras: $5/month or $30/year
- */
-function mapPriceToProduct(priceId: string | undefined): string | null {
-  if (!priceId) return null;
-
-  const priceMap: Record<string, string> = {
-    // TACo Club
-    price_1Sm564CPMZ8sEjvKCGmRtoZb: 'taco_club', // Monthly ($25/mo for 24 months)
-    price_1Sm564CPMZ8sEjvKRuiDExbY: 'taco_club', // Lifetime ($500 one-time)
-
-    // Sync All Apps
-    price_1Sm4s7CPMZ8sEjvK94OxRR1O: 'sync_all', // Monthly ($3.50/mo)
-    price_1Sm4sTCPMZ8sEjvKAWdgAz3V: 'sync_all', // Yearly ($35/year)
-
-    // Sync One App (generic - app selected at checkout via metadata)
-    price_1Sm5JsCPMZ8sEjvK66l5S7yG: 'sync_app', // Monthly ($2/mo)
-    price_1Sm5JYCPMZ8sEjvKoGh2rbWj: 'sync_app', // Yearly ($20/year)
-
-    // Tempo Extras
-    price_1Sm4nYCPMZ8sEjvKbUqYoog4: 'tempo_extras', // Monthly ($12/mo)
-    price_1Sm4oRCPMZ8sEjvK35pjZ6v5: 'tempo_extras', // Yearly ($120/year)
-
-    // Tenure Extras
-    price_1Sm4nCCPMZ8sEjvKm7zIFJ3K: 'tenure_extras', // Monthly ($5/mo)
-    price_1Sm4nCCPMZ8sEjvKYLvfcZmb: 'tenure_extras', // Yearly ($30/year)
-  };
-
-  return priceMap[priceId] || null;
-}
+// mapPriceToProduct is now imported from ../../lib/stripe
