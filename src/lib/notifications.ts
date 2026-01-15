@@ -69,7 +69,7 @@ export function showNotification(options: NotificationOptions): void {
       position: fixed;
       top: 80px;
       right: 20px;
-      z-index: 10000;
+      z-index: 100000;
       animation: tacoToastSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
       font-family: ${theme.fonts.body};
     ">
