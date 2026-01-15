@@ -11,15 +11,14 @@
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
-import Stripe from 'stripe';
 import { jwtVerify } from 'jose';
 import { billingLog } from '../../lib/logger';
+import { getStripeClient, type StripeEnv } from '../../lib/stripe';
+import { getJwtSecretEncoded, type AuthEnv } from '../../lib/auth-config';
 
-interface Env {
-  AUTH_DB: D1Database;
-  BILLING_DB: D1Database;
-  JWT_SECRET: string;
-  STRIPE_SECRET_KEY: string;
+interface Env extends StripeEnv, AuthEnv {
+  AUTH_DB: any; // D1Database from Cloudflare runtime
+  BILLING_DB: any; // D1Database from Cloudflare runtime
 }
 
 const CREDITS_PER_DOLLAR = 3;
@@ -152,9 +151,8 @@ async function handlePurchase(
   const totalCredits = packs * CREDITS_PER_DOLLAR;
   const priceInCents = packs * 100; // $1 per pack
 
-  const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
-    apiVersion: '2024-12-18.acacia',
-  });
+  // Use centralized Stripe client with environment-aware key selection
+  const stripe = getStripeClient(env);
 
   // Get or create Stripe customer
   const user = await env.AUTH_DB.prepare('SELECT * FROM users WHERE id = ?').bind(userId).first();
@@ -286,7 +284,7 @@ async function authenticateRequest(request: Request, env: Env): Promise<string |
   }
 
   const token = authHeader.replace('Bearer ', '');
-  const secret = new TextEncoder().encode(env.JWT_SECRET);
+  const secret = getJwtSecretEncoded(env);
 
   try {
     const { payload } = await jwtVerify(token, secret);

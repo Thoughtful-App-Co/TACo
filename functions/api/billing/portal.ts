@@ -12,14 +12,12 @@
 
 import Stripe from 'stripe';
 import { jwtVerify } from 'jose';
+import { billingLog } from '../../lib/logger';
+import { getStripeClient, type StripeEnv } from '../../lib/stripe';
+import { getJwtSecretEncoded, type AuthEnv } from '../../lib/auth-config';
 
-interface Env {
-  AUTH_DB: D1Database;
-  JWT_SECRET: string;
-  STRIPE_SECRET_KEY: string;
-  STRIPE_SECRET_KEY_TEST?: string;
-  STRIPE_SECRET_KEY_LIVE?: string;
-  TACO_ENV?: string;
+interface Env extends StripeEnv, AuthEnv {
+  AUTH_DB: any; // D1Database from Cloudflare runtime
   FRONTEND_URL?: string;
 }
 
@@ -44,7 +42,7 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     }
 
     const token = authHeader.replace('Bearer ', '');
-    const secret = new TextEncoder().encode(env.JWT_SECRET);
+    const secret = getJwtSecretEncoded(env);
 
     let userId: string;
     let email: string;
@@ -90,35 +88,19 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     const baseUrl = env.FRONTEND_URL || `${url.protocol}//${url.host}`;
     const returnUrl = body.returnUrl || `${baseUrl}/`;
 
-    // Select correct Stripe key (support both old and new env var names)
-    const stripeKey =
-      env.TACO_ENV === 'production'
-        ? env.STRIPE_SECRET_KEY_LIVE || env.STRIPE_SECRET_KEY
-        : env.STRIPE_SECRET_KEY_TEST || env.STRIPE_SECRET_KEY;
-
-    if (!stripeKey) {
-      console.error('Missing Stripe key for environment:', env.TACO_ENV);
-      return new Response(
-        JSON.stringify({ error: 'Billing configuration error', code: 'CONFIG_ERROR' }),
-        { status: 500, headers }
-      );
-    }
-
-    // Initialize Stripe and create portal session
-    const stripe = new Stripe(stripeKey, {
-      apiVersion: '2024-12-18.acacia',
-    });
+    // Initialize Stripe with environment-aware key selection
+    const stripe = getStripeClient(env);
 
     const session = await stripe.billingPortal.sessions.create({
       customer: customerId,
       return_url: returnUrl,
     });
 
-    console.log(`Billing portal created for user ${email} (${customerId})`);
+    billingLog.info(`Billing portal created for user ${email} (${customerId})`);
 
     return new Response(JSON.stringify({ url: session.url }), { status: 200, headers });
   } catch (error) {
-    console.error('Portal error:', error);
+    billingLog.error('Portal error:', error);
 
     let errorMessage = 'Failed to create portal session';
     let errorCode = 'PORTAL_ERROR';

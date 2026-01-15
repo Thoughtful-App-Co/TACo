@@ -13,16 +13,17 @@
 import Stripe from 'stripe';
 import { jwtVerify } from 'jose';
 import { billingLog } from '../../lib/logger';
+import {
+  getStripeClient,
+  isTacoClubMonthly,
+  isTacoClubLifetime,
+  type StripeEnv,
+} from '../../lib/stripe';
+import { getJwtSecretEncoded, type AuthEnv } from '../../lib/auth-config';
 
-// TACo Club price IDs
-const TACO_CLUB_MONTHLY_PRICE = 'price_1Sm564CPMZ8sEjvKCGmRtoZb';
-const TACO_CLUB_LIFETIME_PRICE = 'price_1Sm564CPMZ8sEjvKRuiDExbY';
-
-interface Env {
-  AUTH_DB: D1Database;
-  BILLING_DB: D1Database;
-  JWT_SECRET: string;
-  STRIPE_SECRET_KEY: string;
+interface Env extends StripeEnv, AuthEnv {
+  AUTH_DB: any; // D1Database from Cloudflare runtime
+  BILLING_DB: any; // D1Database from Cloudflare runtime
 }
 
 export async function onRequestPost(context: { request: Request; env: Env }): Promise<Response> {
@@ -46,7 +47,7 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     }
 
     const token = authHeader.replace('Bearer ', '');
-    const secret = new TextEncoder().encode(env.JWT_SECRET);
+    const secret = getJwtSecretEncoded(env);
 
     let userId: string;
     let email: string;
@@ -79,7 +80,7 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     }
 
     // Soft limit check for LocoTaco founding memberships
-    if (priceId === TACO_CLUB_MONTHLY_PRICE || priceId === TACO_CLUB_LIFETIME_PRICE) {
+    if (isTacoClubMonthly(priceId) || isTacoClubLifetime(priceId)) {
       const countQuery = await env.BILLING_DB.prepare(
         `SELECT COUNT(*) as count 
          FROM subscriptions 
@@ -104,10 +105,8 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
       }
     }
 
-    // Initialize Stripe
-    const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
-      apiVersion: '2024-12-18.acacia',
-    });
+    // Initialize Stripe with environment-aware key selection
+    const stripe = getStripeClient(env);
 
     // Get or create Stripe customer
     const user = await env.AUTH_DB.prepare('SELECT * FROM users WHERE id = ?').bind(userId).first();
@@ -173,7 +172,7 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     // For TACo Club monthly, create a subscription schedule to auto-cancel after 24 months
     // This runs AFTER the checkout is complete (handled in webhook)
     // We just add metadata here to signal the webhook to set up the schedule
-    if (priceId === TACO_CLUB_MONTHLY_PRICE && session.subscription) {
+    if (isTacoClubMonthly(priceId) && session.subscription) {
       billingLog.info(`TACo Club monthly checkout created. Schedule will be set up after payment.`);
     }
 
