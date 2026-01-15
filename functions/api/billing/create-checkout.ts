@@ -2,10 +2,10 @@
  * Create Checkout Session API
  *
  * Creates a Stripe checkout session for subscription purchases.
- * Requires authentication.
+ * Requires authentication. Supports multi-item carts.
  *
  * POST /api/billing/create-checkout
- * Body: { priceId: string, successUrl?: string, cancelUrl?: string }
+ * Body: { items: Array<{ priceId: string, quantity: number }>, successUrl?: string, cancelUrl?: string }
  *
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
@@ -22,8 +22,13 @@ import {
 import { getJwtSecretEncoded, type AuthEnv } from '../../lib/auth-config';
 
 interface Env extends StripeEnv, AuthEnv {
-  AUTH_DB: any; // D1Database from Cloudflare runtime
-  BILLING_DB: any; // D1Database from Cloudflare runtime
+  AUTH_DB: D1Database;
+  BILLING_DB: D1Database;
+}
+
+interface CartItem {
+  priceId: string;
+  quantity: number;
 }
 
 export async function onRequestPost(context: { request: Request; env: Env }): Promise<Response> {
@@ -65,22 +70,36 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
 
     // Parse request body
     const body = (await request.json().catch(() => ({}))) as {
-      priceId?: string;
+      items?: CartItem[];
       successUrl?: string;
       cancelUrl?: string;
     };
 
-    const { priceId, successUrl, cancelUrl } = body;
+    const { items, successUrl, cancelUrl } = body;
 
-    if (!priceId) {
-      return new Response(
-        JSON.stringify({ error: 'Price ID required', code: 'MISSING_PRICE_ID' }),
-        { status: 400, headers }
-      );
+    // Validate items array
+    if (!items || items.length === 0) {
+      return new Response(JSON.stringify({ error: 'No items provided', code: 'MISSING_ITEMS' }), {
+        status: 400,
+        headers,
+      });
     }
 
+    if (items.some((item) => !item.priceId || item.quantity < 1)) {
+      return new Response(JSON.stringify({ error: 'Invalid cart items', code: 'INVALID_ITEMS' }), {
+        status: 400,
+        headers,
+      });
+    }
+
+    billingLog.info(`Checkout with ${items.length} items for user ${userId}`);
+
     // Soft limit check for LocoTaco founding memberships
-    if (isTacoClubMonthly(priceId) || isTacoClubLifetime(priceId)) {
+    const hasTacoClubItem = items.some(
+      (item) => isTacoClubMonthly(item.priceId) || isTacoClubLifetime(item.priceId)
+    );
+
+    if (hasTacoClubItem) {
       const countQuery = await env.BILLING_DB.prepare(
         `SELECT COUNT(*) as count 
          FROM subscriptions 
@@ -96,8 +115,6 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
         billingLog.warn(
           `LocoTaco founding limit reached (${currentCount}/${FOUNDING_MEMBER_LIMIT}). User ${userId} attempting purchase.`
         );
-        // Soft limit - log but allow purchase
-        // Can be changed to hard block by returning error response here
       } else if (currentCount >= 9900) {
         billingLog.info(
           `LocoTaco nearing limit (${currentCount}/${FOUNDING_MEMBER_LIMIT}). User ${userId} purchasing.`
@@ -105,25 +122,56 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
       }
     }
 
-    // Initialize Stripe with environment-aware key selection
+    // Initialize Stripe
     const stripe = getStripeClient(env);
+
+    // Fetch price details from Stripe to determine payment mode
+    const pricePromises = items.map((item) => stripe.prices.retrieve(item.priceId));
+    let prices: Stripe.Price[];
+
+    try {
+      prices = await Promise.all(pricePromises);
+    } catch (priceError) {
+      billingLog.error('Failed to retrieve price info from Stripe', priceError);
+      return new Response(
+        JSON.stringify({ error: 'Invalid price ID(s)', code: 'INVALID_PRICE_ID' }),
+        { status: 400, headers }
+      );
+    }
+
+    // Check for mixed payment modes (Stripe doesn't allow mixing in one session)
+    const hasRecurring = prices.some((p) => p.type === 'recurring');
+    const hasOneTime = prices.some((p) => p.type === 'one_time');
+
+    if (hasRecurring && hasOneTime) {
+      billingLog.warn('User attempted mixed payment modes', {
+        userId,
+        items: items.map((item) => item.priceId),
+      });
+      return new Response(
+        JSON.stringify({
+          error:
+            'Cannot mix one-time and subscription items in a single checkout. ' +
+            'Please purchase them separately.',
+          code: 'MIXED_PAYMENT_MODES',
+        }),
+        { status: 400, headers }
+      );
+    }
+
+    const mode: 'subscription' | 'payment' = hasRecurring ? 'subscription' : 'payment';
 
     // Get or create Stripe customer
     const user = await env.AUTH_DB.prepare('SELECT * FROM users WHERE id = ?').bind(userId).first();
-
     let customerId = user?.stripe_customer_id as string | null;
 
     if (!customerId) {
-      // Create new Stripe customer
       const customer = await stripe.customers.create({
         email,
-        metadata: {
-          userId,
-        },
+        metadata: { userId },
       });
       customerId = customer.id;
 
-      // Save customer ID to user record
       await env.AUTH_DB.prepare('UPDATE users SET stripe_customer_id = ? WHERE id = ?')
         .bind(customerId, userId)
         .run();
@@ -135,44 +183,38 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
     const defaultSuccessUrl = `${baseUrl}/pricing?success=true`;
     const defaultCancelUrl = `${baseUrl}/pricing?canceled=true`;
 
-    // Determine if this is a one-time payment or subscription
-    const price = await stripe.prices.retrieve(priceId);
-    const mode = price.type === 'recurring' ? 'subscription' : 'payment';
+    // Build line_items array
+    const line_items: Stripe.Checkout.SessionCreateParams.LineItem[] = items.map((item) => ({
+      price: item.priceId,
+      quantity: item.quantity,
+    }));
+
+    billingLog.info('Creating checkout session', { mode, itemCount: line_items.length, userId });
 
     // Create checkout session
     const sessionConfig: Stripe.Checkout.SessionCreateParams = {
       customer: customerId,
       mode,
       payment_method_types: ['card'],
-      line_items: [
-        {
-          price: priceId,
-          quantity: 1,
-        },
-      ],
+      line_items,
       success_url: successUrl || defaultSuccessUrl,
       cancel_url: cancelUrl || defaultCancelUrl,
       metadata: {
         userId,
+        itemCount: String(items.length),
       },
       allow_promotion_codes: true,
     };
 
-    // Add subscription-specific data
     if (mode === 'subscription') {
       sessionConfig.subscription_data = {
-        metadata: {
-          userId,
-        },
+        metadata: { userId },
       };
     }
 
     const session = await stripe.checkout.sessions.create(sessionConfig);
 
-    // For TACo Club monthly, create a subscription schedule to auto-cancel after 24 months
-    // This runs AFTER the checkout is complete (handled in webhook)
-    // We just add metadata here to signal the webhook to set up the schedule
-    if (isTacoClubMonthly(priceId) && session.subscription) {
+    if (items.some((item) => isTacoClubMonthly(item.priceId)) && session.subscription) {
       billingLog.info(`TACo Club monthly checkout created. Schedule will be set up after payment.`);
     }
 

@@ -146,27 +146,75 @@ export const PricingPage: Component = () => {
       return;
     }
 
+    // Check for mixed payment modes (lifetime is one-time, everything else is subscription)
+    // Stripe cannot mix one-time and subscription items in a single checkout
+    const hasLifetime = tacoClubTier() === 'lifetime';
+    const hasSubscriptionItems =
+      tacoClubTier() === 'monthly' ||
+      selectedExtras().length > 0 ||
+      (!hasLifetime && (syncAllApps() || selectedSyncApps().length > 0));
+
+    if (hasLifetime && hasSubscriptionItems) {
+      setCheckoutError(
+        'TACo Club Lifetime cannot be combined with subscriptions in one checkout. ' +
+          'Please purchase Lifetime first, then add extras from your account.'
+      );
+      return;
+    }
+
     setIsCheckingOut(true);
     const prices = getStripePrices();
 
     try {
-      // Determine which price ID to use based on selection
-      // Priority: TACo Club > Extras > Sync
-      let priceId: string;
-
-      if (tacoClubTier() === 'lifetime') {
-        priceId = prices.TACO_CLUB_LIFETIME;
-      } else if (tacoClubTier() === 'monthly') {
-        priceId = prices.TACO_CLUB_MONTHLY;
-      } else if (selectedExtras().includes('tempo')) {
-        priceId = tempoAnnual() ? prices.TEMPO_EXTRAS_YEARLY : prices.TEMPO_EXTRAS_MONTHLY;
-      } else if (selectedExtras().includes('tenure')) {
-        priceId = prices.TENURE_EXTRAS_MONTHLY;
-      } else if (syncAllApps()) {
-        priceId = syncAnnual() ? prices.SYNC_ALL_YEARLY : prices.SYNC_ALL_MONTHLY;
-      } else {
-        priceId = syncAnnual() ? prices.SYNC_APP_YEARLY : prices.SYNC_APP_MONTHLY;
+      // Build cart items array - collect ALL selected items
+      interface CartItem {
+        priceId: string;
+        quantity: number;
       }
+
+      const items: CartItem[] = [];
+      const hasTacoClub = tacoClubTier() !== 'none';
+
+      // 1. TACo Club (if selected)
+      if (tacoClubTier() === 'lifetime') {
+        items.push({ priceId: prices.TACO_CLUB_LIFETIME, quantity: 1 });
+      } else if (tacoClubTier() === 'monthly') {
+        items.push({ priceId: prices.TACO_CLUB_MONTHLY, quantity: 1 });
+      }
+
+      // 2. Sync & Backup (only if NO TACo Club - sync is FREE with club membership)
+      if (!hasTacoClub) {
+        if (syncAllApps()) {
+          const priceId = syncAnnual() ? prices.SYNC_ALL_YEARLY : prices.SYNC_ALL_MONTHLY;
+          items.push({ priceId, quantity: 1 });
+        } else if (selectedSyncApps().length > 0) {
+          // Per-app sync: charge per app selected
+          const priceId = syncAnnual() ? prices.SYNC_APP_YEARLY : prices.SYNC_APP_MONTHLY;
+          items.push({ priceId, quantity: selectedSyncApps().length });
+        }
+      }
+
+      // 3. App Extras (use discounted club prices if TACo Club member)
+      if (selectedExtras().includes('tempo')) {
+        let priceId: string;
+        if (hasTacoClub) {
+          // 75% discount for TACo Club members
+          priceId = tempoAnnual()
+            ? prices.TEMPO_EXTRAS_YEARLY_CLUB
+            : prices.TEMPO_EXTRAS_MONTHLY_CLUB;
+        } else {
+          priceId = tempoAnnual() ? prices.TEMPO_EXTRAS_YEARLY : prices.TEMPO_EXTRAS_MONTHLY;
+        }
+        items.push({ priceId, quantity: 1 });
+      }
+      if (selectedExtras().includes('tenure')) {
+        const priceId = hasTacoClub
+          ? prices.TENURE_EXTRAS_MONTHLY_CLUB
+          : prices.TENURE_EXTRAS_MONTHLY;
+        items.push({ priceId, quantity: 1 });
+      }
+
+      logger.billing.info('Building checkout with items', { itemCount: items.length, items });
 
       const response = await fetch('/api/billing/create-checkout', {
         method: 'POST',
@@ -174,7 +222,7 @@ export const PricingPage: Component = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${localStorage.getItem('taco_session_token')}`,
         },
-        body: JSON.stringify({ priceId }),
+        body: JSON.stringify({ items }),
       });
 
       const data = await response.json();
