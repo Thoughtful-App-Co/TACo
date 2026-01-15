@@ -1,10 +1,12 @@
 import { Component, createSignal, Show, createEffect, onCleanup } from 'solid-js';
-import { X, Warning, Check, Star } from 'phosphor-solid';
+import { X, Warning, Check, Star, CloudArrowUp, CloudSlash, CloudCheck } from 'phosphor-solid';
 import { Button } from './button';
 import { Input } from './input';
 import { tempoDesign } from '../theme/tempo-design';
 import { ApiConfigService, type ApiKeyMode } from '../services/api-config.service';
-import { canUseTempoAI } from '../../../lib/feature-gates';
+import { canUseTempoAI, canUseTempoSync } from '../../../lib/feature-gates';
+import { useTempoSync } from '../../../lib/sync';
+import { SyncConflictModal } from '../../common/sync';
 
 interface SettingsSidebarProps {
   isOpen: boolean;
@@ -78,6 +80,37 @@ export const SettingsSidebar: Component<SettingsSidebarProps> = (props) => {
 
   const isManagedActive = ApiConfigService.hasManagedSubscription();
   const hasTempoExtras = () => canUseTempoAI().allowed;
+
+  // Cloud sync state
+  const syncAccess = canUseTempoSync();
+  const { state: syncState, isEnabled: syncEnabled, syncNow, resolveConflict } = useTempoSync();
+  const [showConflictModal, setShowConflictModal] = createSignal(false);
+
+  // Show conflict modal when conflict detected
+  createEffect(() => {
+    if (syncState()?.status === 'conflict' && syncState()?.conflict) {
+      setShowConflictModal(true);
+    }
+  });
+
+  const handleResolveConflict = async (choice: 'local' | 'remote') => {
+    await resolveConflict(choice);
+    setShowConflictModal(false);
+  };
+
+  const formatLastSynced = (timestamp: string | null): string => {
+    if (!timestamp) return 'Never';
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return date.toLocaleDateString();
+  };
 
   // Handle ESC key to close sidebar
   createEffect(() => {
@@ -540,6 +573,147 @@ export const SettingsSidebar: Component<SettingsSidebarProps> = (props) => {
               </div>
             </div>
           </div>
+
+          {/* Cloud Sync Section */}
+          <Show when={syncAccess.allowed && syncEnabled()}>
+            <div
+              style={{
+                'border-top': `1px solid ${tempoDesign.colors.border}`,
+                'padding-top': '20px',
+                'margin-top': '4px',
+              }}
+            >
+              <p
+                style={{
+                  'font-size': tempoDesign.typography.sizes.sm,
+                  'font-weight': tempoDesign.typography.weights.medium,
+                  color: tempoDesign.colors.foreground,
+                  margin: '0 0 12px 0',
+                  display: 'flex',
+                  'align-items': 'center',
+                  gap: '8px',
+                }}
+              >
+                <CloudArrowUp size={16} />
+                Cloud Sync
+              </p>
+
+              <div
+                style={{
+                  padding: '12px',
+                  background: `${tempoDesign.colors.primary}08`,
+                  border: `1px solid ${tempoDesign.colors.border}`,
+                  'border-radius': tempoDesign.radius.lg,
+                }}
+              >
+                {/* Sync Status */}
+                <div
+                  style={{
+                    display: 'flex',
+                    'align-items': 'center',
+                    'justify-content': 'space-between',
+                    'margin-bottom': '8px',
+                  }}
+                >
+                  <div style={{ display: 'flex', 'align-items': 'center', gap: '8px' }}>
+                    <Show
+                      when={syncState()?.status === 'idle'}
+                      fallback={
+                        <Show
+                          when={syncState()?.status === 'syncing'}
+                          fallback={
+                            <Show
+                              when={syncState()?.status === 'offline'}
+                              fallback={
+                                <Warning
+                                  size={16}
+                                  style={{ color: tempoDesign.colors.destructive }}
+                                />
+                              }
+                            >
+                              <CloudSlash
+                                size={16}
+                                style={{ color: tempoDesign.colors.mutedForeground }}
+                              />
+                            </Show>
+                          }
+                        >
+                          <CloudArrowUp
+                            size={16}
+                            style={{
+                              color: tempoDesign.colors.primary,
+                              animation: 'pulse 1s infinite',
+                            }}
+                          />
+                        </Show>
+                      }
+                    >
+                      <CloudCheck size={16} style={{ color: tempoDesign.colors.frog }} />
+                    </Show>
+                    <span
+                      style={{
+                        'font-size': tempoDesign.typography.sizes.sm,
+                        color: tempoDesign.colors.foreground,
+                      }}
+                    >
+                      {syncState()?.status === 'idle' && 'Synced'}
+                      {syncState()?.status === 'syncing' && 'Syncing...'}
+                      {syncState()?.status === 'offline' && 'Offline'}
+                      {syncState()?.status === 'error' && 'Sync Error'}
+                      {syncState()?.status === 'conflict' && 'Conflict'}
+                    </span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={syncNow}
+                    disabled={syncState()?.status === 'syncing'}
+                    style={{
+                      'font-size': tempoDesign.typography.sizes.xs,
+                      padding: '4px 8px',
+                      height: 'auto',
+                    }}
+                  >
+                    Sync Now
+                  </Button>
+                </div>
+
+                {/* Last Synced */}
+                <div
+                  style={{
+                    'font-size': tempoDesign.typography.sizes.xs,
+                    color: tempoDesign.colors.mutedForeground,
+                  }}
+                >
+                  Last synced: {formatLastSynced(syncState()?.lastSyncedAt || null)}
+                </div>
+
+                {/* Error message */}
+                <Show when={syncState()?.lastError}>
+                  <div
+                    style={{
+                      'margin-top': '8px',
+                      padding: '8px',
+                      background: `${tempoDesign.colors.destructive}10`,
+                      'border-radius': tempoDesign.radius.md,
+                      'font-size': tempoDesign.typography.sizes.xs,
+                      color: tempoDesign.colors.destructive,
+                    }}
+                  >
+                    {syncState()!.lastError}
+                  </div>
+                </Show>
+              </div>
+            </div>
+          </Show>
+
+          {/* Sync Conflict Modal */}
+          <SyncConflictModal
+            isOpen={showConflictModal()}
+            conflict={syncState()?.conflict || null}
+            onResolve={handleResolveConflict}
+            onClose={() => setShowConflictModal(false)}
+          />
 
           {/* Bring Your Own - API Key Input */}
           <Show when={apiKeyMode() === 'bring-your-own'}>
