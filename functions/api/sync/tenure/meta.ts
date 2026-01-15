@@ -1,0 +1,104 @@
+/**
+ * Sync Meta API - Tenure
+ *
+ * Lightweight endpoint to check sync status without downloading data.
+ * Used for conflict detection on app load.
+ *
+ * GET /api/sync/tenure/meta
+ *
+ * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
+ */
+
+import { validateAuth } from '../../../lib/auth-middleware';
+import {
+  syncLog,
+  SyncMeta,
+  getSyncPaths,
+  hasAppSyncSubscription,
+  errorResponse,
+  successResponse,
+  corsResponse,
+} from '../../../lib/sync-helpers';
+
+interface Env {
+  BILLING_DB: D1Database;
+  AUTH_DB: D1Database;
+  BACKUPS: R2Bucket;
+  JWT_SECRET: string;
+}
+
+export async function onRequestGet(context: { request: Request; env: Env }): Promise<Response> {
+  const { request, env } = context;
+  const app = 'tenure' as const;
+
+  try {
+    // Authenticate user
+    const authResult = await validateAuth(request, {
+      JWT_SECRET: env.JWT_SECRET,
+      AUTH_DB: env.AUTH_DB,
+      BILLING_DB: env.BILLING_DB,
+    });
+
+    if (!authResult.success) {
+      return authResult.response;
+    }
+
+    const { auth } = authResult;
+
+    // Check sync subscription
+    if (!hasAppSyncSubscription(auth.subscriptions, app)) {
+      return errorResponse('Sync subscription required', 'SUBSCRIPTION_REQUIRED', 403, {
+        upgradeUrl: '/pricing#sync',
+      });
+    }
+
+    const paths = getSyncPaths(auth.userId, app);
+
+    // Get meta
+    const metaObj = await env.BACKUPS.get(paths.meta);
+    if (!metaObj) {
+      // No data yet - not an error, just empty
+      return successResponse({
+        success: true,
+        exists: false,
+        meta: null,
+        availableVersions: [],
+      });
+    }
+
+    const meta = (await metaObj.json()) as SyncMeta;
+
+    // Get available versions from history
+    const historyList = await env.BACKUPS.list({ prefix: paths.historyPrefix });
+    const availableVersions = historyList.objects
+      .map((obj) => {
+        const match = obj.key.match(/\/(\d+)\.json$/);
+        return match ? parseInt(match[1], 10) : 0;
+      })
+      .filter((v) => v > 0)
+      .sort((a, b) => b - a);
+
+    // Add current version
+    availableVersions.unshift(meta.version);
+
+    syncLog.debug('Sync meta check', {
+      userId: auth.userId,
+      app,
+      version: meta.version,
+    });
+
+    return successResponse({
+      success: true,
+      exists: true,
+      meta,
+      availableVersions,
+    });
+  } catch (error) {
+    syncLog.error('Sync meta error:', error);
+    return errorResponse('Failed to fetch sync meta', 'SYNC_ERROR', 500);
+  }
+}
+
+export async function onRequestOptions(): Promise<Response> {
+  return corsResponse();
+}
