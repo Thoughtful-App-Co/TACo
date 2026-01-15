@@ -40,10 +40,29 @@ TACO_ENV = "staging"
 # =============================================================================
 # PREVIEW ENVIRONMENT (PR deployments)
 # =============================================================================
-# Inherits default staging bindings above
+# Explicitly set bindings for preview deployments
 # Triggered automatically for pull requests
 
 [env.preview]
+
+[[env.preview.d1_databases]]
+binding = "AUTH_DB"
+database_name = "taco-auth-staging"
+database_id = "ba7fe27f-e3f3-4329-a884-d9ce0586c507"
+
+[[env.preview.d1_databases]]
+binding = "BILLING_DB"
+database_name = "taco-billing-staging"
+database_id = "82db418e-8563-4086-86c3-22398526a63a"
+
+[[env.preview.r2_buckets]]
+binding = "BACKUPS"
+bucket_name = "taco-backups-staging"
+
+[[env.preview.kv_namespaces]]
+binding = "RATE_LIMIT"
+id = "c62ad9f9a1db44139a6daf7be3428f87"
+
 [env.preview.vars]
 TACO_ENV = "preview"
 
