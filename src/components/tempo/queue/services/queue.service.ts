@@ -6,6 +6,7 @@
 
 import { nanoid } from 'nanoid';
 import { logger } from '../../../../lib/logger';
+import { notifyTempoDataChanged } from '../../../../lib/sync';
 import type { TaskPriority, TaskSource } from '../../lib/types';
 import {
   type QueueTask,
@@ -58,6 +59,9 @@ export class QueueService {
       const updated = { ...current, ...settings };
       localStorage.setItem(SETTINGS_KEY, JSON.stringify(updated));
       log.info('Queue settings saved');
+
+      // Notify sync manager of data change
+      notifyTempoDataChanged();
     } catch (error) {
       log.error('Failed to save queue settings', error);
     }
@@ -429,6 +433,9 @@ export class QueueService {
       // Strip computed fields before saving
       const toStore = tasks.map(({ effectivePriority, ageInDays, ...rest }) => rest);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(toStore));
+
+      // Notify sync manager of data change
+      notifyTempoDataChanged();
     } catch (error) {
       log.error('Failed to save tasks', error);
       throw new Error('Failed to save tasks');

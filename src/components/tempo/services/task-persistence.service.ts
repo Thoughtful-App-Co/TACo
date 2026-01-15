@@ -1,6 +1,7 @@
 import { nanoid } from 'nanoid';
 import type { Task, Session, TaskPriority } from '../lib/types';
 import { logger } from '../../../lib/logger';
+import { notifyTempoDataChanged } from '../../../lib/sync';
 
 const STORAGE_KEY = 'tempo_tasks';
 
@@ -51,6 +52,9 @@ export class TaskPersistenceService {
       });
 
       localStorage.setItem(STORAGE_KEY, JSON.stringify(mergedTasks));
+
+      // Notify sync manager of data change
+      notifyTempoDataChanged();
     } catch (error) {
       logger.storage.error('Error saving tasks:', error);
       throw new Error('Failed to save tasks');
@@ -112,6 +116,9 @@ export class TaskPersistenceService {
   static async clearTasks(): Promise<void> {
     try {
       localStorage.removeItem(STORAGE_KEY);
+
+      // Notify sync manager of data change
+      notifyTempoDataChanged();
     } catch (error) {
       logger.storage.error('Error clearing tasks:', error);
       throw new Error('Failed to clear tasks');

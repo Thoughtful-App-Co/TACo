@@ -1,4 +1,5 @@
 import { logger } from '../../../lib/logger';
+import { notifyTempoDataChanged } from '../../../lib/sync';
 
 export interface SessionMetrics {
   totalFocusTime: number; // in seconds
@@ -55,6 +56,9 @@ export class DebriefStorageService {
       // Save to localStorage
       localStorage.setItem(this.DEBRIEF_STORAGE_KEY, JSON.stringify(updatedDebriefs));
 
+      // Notify sync manager of data change
+      notifyTempoDataChanged();
+
       return true;
     } catch (error) {
       logger.storage.error('Failed to save debrief data:', error);
@@ -107,6 +111,9 @@ export class DebriefStorageService {
       );
 
       localStorage.setItem(this.DEBRIEF_STORAGE_KEY, JSON.stringify(updatedDebriefs));
+
+      // Notify sync manager of data change
+      notifyTempoDataChanged();
 
       return true;
     } catch (error) {

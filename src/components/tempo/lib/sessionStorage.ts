@@ -8,6 +8,7 @@ import type {
   BaseStatus,
 } from './types';
 import { logger } from '../../../lib/logger';
+import { notifyTempoDataChanged } from '../../../lib/sync';
 
 export interface StoredSession extends SessionPlan {
   totalSessions: number;
@@ -37,6 +38,9 @@ export const sessionStorage = {
 
       // Save to localStorage
       localStorage.setItem(`${SESSION_PREFIX}${date}`, JSON.stringify(updatedSession));
+
+      // Notify sync manager of data change
+      notifyTempoDataChanged();
     } catch (error) {
       logger.storage.error('Failed to save session:', error);
     }
@@ -94,6 +98,9 @@ export const sessionStorage = {
     try {
       // Delete from localStorage
       localStorage.removeItem(`${SESSION_PREFIX}${date}`);
+
+      // Notify sync manager of data change
+      notifyTempoDataChanged();
     } catch (error) {
       logger.storage.error('Failed to delete session:', error);
     }
@@ -113,6 +120,9 @@ export const sessionStorage = {
         }
       }
       keys.forEach((key) => localStorage.removeItem(key));
+
+      // Notify sync manager of data change
+      notifyTempoDataChanged();
     } catch (error) {
       logger.storage.error('Failed to clear sessions:', error);
     }
