@@ -10,7 +10,7 @@
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
 
-import { validateAuth, hasSubscription } from '../../../lib/auth-middleware';
+import { validateAuth, hasSubscription, type AuthEnv } from '../../../lib/auth-middleware';
 import {
   syncLog,
   SyncMeta,
@@ -25,11 +25,8 @@ import {
   CORS_HEADERS,
 } from '../../../lib/sync-helpers';
 
-interface Env {
-  BILLING_DB: D1Database;
-  AUTH_DB: D1Database;
+interface Env extends AuthEnv {
   BACKUPS: R2Bucket;
-  JWT_SECRET: string;
 }
 
 interface PushRequestBody {
@@ -44,11 +41,7 @@ export async function onRequestPost(context: { request: Request; env: Env }): Pr
 
   try {
     // Authenticate user
-    const authResult = await validateAuth(request, {
-      JWT_SECRET: env.JWT_SECRET,
-      AUTH_DB: env.AUTH_DB,
-      BILLING_DB: env.BILLING_DB,
-    });
+    const authResult = await validateAuth(request, env);
 
     if (!authResult.success) {
       return authResult.response;

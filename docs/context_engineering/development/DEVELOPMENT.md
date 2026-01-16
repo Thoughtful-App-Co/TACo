@@ -1,6 +1,6 @@
 # Development Guide
 
-Guidelines and best practices for developing Tempo.
+Guidelines and best practices for developing TACo applications.
 
 ## Getting Started
 

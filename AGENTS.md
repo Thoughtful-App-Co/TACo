@@ -2,6 +2,22 @@
 
 This document provides essential context for AI agents (Claude, GPT, Copilot, Cursor, etc.) working on the TACo codebase.
 
+---
+
+## ⚠️ IMPORTANT: Do NOT Read Archived Documentation
+
+**The `/docs/archive/` directory contains outdated historical documents that are no longer relevant.**
+
+**DO NOT:**
+
+- Reference information from `/docs/archive/` in your responses
+- Use archived docs as source of truth for current implementation
+- Suggest approaches based on archived planning documents
+
+**Archived docs are kept for historical reference only.** Always use current documentation from active directories.
+
+---
+
 ## Project Overview
 
 TACo (Thoughtful App Co) is a monorepo containing multiple SolidJS applications:
@@ -16,7 +32,7 @@ TACo (Thoughtful App Co) is a monorepo containing multiple SolidJS applications:
 - Frontend: SolidJS + TypeScript + Vite
 - Backend: Cloudflare Pages Functions (Workers)
 - Database: Cloudflare D1 (SQLite)
-- Styling: Tailwind CSS + custom themes
+- Styling: Inline styles + custom CSS classes with design tokens
 
 ---
 
@@ -131,7 +147,7 @@ functions/
 - **TypeScript**: Strict mode, explicit types for public APIs
 - **Components**: Functional components with SolidJS primitives
 - **State**: SolidJS signals and stores (NOT React hooks)
-- **Styling**: Tailwind utility classes, theme tokens
+- **Styling**: Inline styles with design tokens, custom CSS classes
 - **Formatting**: Prettier (auto-formatted on commit)
 
 ---

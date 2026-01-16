@@ -9,10 +9,11 @@
 
 import { jwtVerify } from 'jose';
 import { authLog } from './logger';
+import { getJwtSecretEncoded, type AuthEnv as JwtAuthEnv } from './auth-config';
 
 // D1Database is provided by Cloudflare Workers runtime
-export interface AuthEnv {
-  JWT_SECRET: string;
+// Extends JwtAuthEnv to include TACO_ENV, JWT_SECRET_TEST, JWT_SECRET_PROD
+export interface AuthEnv extends JwtAuthEnv {
   AUTH_DB: any; // D1Database from Cloudflare runtime
   BILLING_DB: any; // D1Database from Cloudflare runtime
 }
@@ -58,7 +59,7 @@ export async function validateAuth(
   const token = authHeader.replace('Bearer ', '');
 
   try {
-    const secret = new TextEncoder().encode(env.JWT_SECRET);
+    const secret = getJwtSecretEncoded(env);
     const { payload } = await jwtVerify(token, secret);
 
     if (payload.type !== 'session') {

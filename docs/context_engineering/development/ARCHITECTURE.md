@@ -1,57 +1,70 @@
-# Tempo Architecture
+# TACo Architecture
 
-High-level overview of Tempo's architecture, project structure, and design decisions.
+High-level overview of TACo's monorepo architecture, project structure, and design decisions.
 
 ## Project Overview
 
-Tempo is a premium time-management application built with:
+TACo (Thoughtful App Co) is a monorepo containing multiple SolidJS applications built with:
 
 - **Framework**: Solid.js 1.8.0 (frontend framework)
 - **Build Tool**: Vite 5.0.0 (fast build tooling)
 - **Language**: TypeScript 5.3.0 (type safety)
-- **Styling**: Inline styles with design tokens (no CSS framework)
+- **Styling**: Inline styles with design tokens + custom CSS classes
 - **Deployment**: Cloudflare Pages (static hosting)
+- **Backend**: Cloudflare Pages Functions (Workers)
 
 ## Directory Structure
 
 ```
-tempo/
+TACo/
 ├── src/
 │   ├── components/
-│   │   ├── tempo/              # Main Tempo app
+│   │   ├── tempo/              # Tempo app (time management)
 │   │   │   ├── TempoApp.tsx    # Root component
-│   │   │   ├── brain-dump/     # Task input & processing
+│   │   │   ├── brain-dump/     # Task input & AI processing
 │   │   │   ├── session-manager/# Session tracking
-│   │   │   ├── ui/             # Reusable UI components
-│   │   │   ├── services/       # Business logic
-│   │   │   ├── lib/            # Utilities & types
-│   │   │   └── theme/          # Design tokens
-│   │   ├── augment/            # Other app features
-│   │   ├── friendly/
-│   │   ├── justincase/
-│   │   ├── lol/
-│   │   ├── manifest/
-│   │   └── nurture/
-│   ├── App.tsx                 # Main router
-│   ├── index.tsx               # Global styles & entry
-│   └── schemas/                # Validation schemas
-├── functions/                  # Edge functions (optional)
+│   │   │   └── theme/          # Tempo design tokens
+│   │   ├── tenure/             # Tenure app (career management)
+│   │   │   ├── prepare/        # Resume & job prep
+│   │   │   ├── pipeline/       # Application tracking
+│   │   │   └── prosper/        # Career reflection
+│   │   ├── echoprax/           # Echoprax app (fitness tracking)
+│   │   ├── nurture/            # Nurture app (relationship management)
+│   │   ├── common/             # Shared components (Paywall, etc.)
+│   │   └── pricing/            # Pricing page components
+│   ├── lib/                    # Shared utilities
+│   │   ├── auth-context.tsx    # Authentication state
+│   │   ├── feature-gates.ts    # Premium feature gating
+│   │   └── logger.ts           # Centralized logging
+│   ├── services/               # API clients (BLS, O*NET, etc.)
+│   ├── schemas/                # Zod validation schemas
+│   ├── theme/                  # Theme configurations
+│   ├── App.tsx                 # Main router & app shell
+│   └── index.tsx               # Entry point
+├── functions/                  # Cloudflare Pages Functions (API routes)
+│   ├── api/
+│   │   ├── auth/               # Authentication endpoints
+│   │   ├── billing/            # Stripe integration
+│   │   ├── resume/             # Resume parsing/mutation
+│   │   └── tasks/              # Task processing (Tempo)
+│   └── lib/                    # Backend utilities
+├── migrations/                 # D1 database schema migrations
 ├── public/
 │   ├── fonts/                  # Geist variable fonts
-│   ├── tempo/                  # Tempo-specific assets
-│   └── [policies]              # Legal docs
+│   └── [app-assets]/           # App-specific static assets
 ├── docs/                       # Documentation
-│   ├── setup/                  # Getting started
-│   ├── development/            # Development guides
-│   ├── design/                 # Design specifications
-│   ├── deployment/             # Deployment guides
-│   └── guides/                 # Additional guides
+│   ├── core/                   # Core system docs
+│   ├── tenure/                 # Tenure-specific docs
+│   ├── tempo/                  # Tempo-specific docs
+│   ├── echoprax/               # Echoprax-specific docs
+│   └── context_engineering/    # Design & development guides
 ├── .github/workflows/          # CI/CD pipelines
 ├── eslint.config.js            # ESLint config
 ├── .prettierrc.json            # Prettier config
-├── .editorconfig               # Editor settings
+├── postcss.config.js           # PostCSS config (if needed)
 ├── tsconfig.json               # TypeScript config
 ├── vite.config.ts              # Vite config
+├── wrangler.toml               # Cloudflare Workers config
 └── package.json                # Dependencies & scripts
 ```
 
@@ -202,24 +215,30 @@ Persist to Browser Storage
 
 ## Styling Strategy
 
-### No CSS Framework
+### Inline Styles with Design Tokens
 
-- **No Tailwind**: Removed entirely
-- **Inline Styles**: All styling via inline style objects
-- **Design Tokens**: Centralized in `tempo-design.ts`
-- **Responsive**: Media queries in global styles + CSS classes
+- **No CSS Framework**: No Tailwind, Bootstrap, or external CSS frameworks
+- **Inline Styles**: JSX style objects for component styling
+- **Design Tokens**: Centralized tokens per app (tempo-design.ts, etc.)
+- **Custom CSS Classes**: Global styles in `src/index.css` for base resets and utilities
 
 ### Component Styling
 
 ```typescript
+// Inline styles with design tokens (primary approach)
 <div style={{
   background: tempoDesign.colors.primary,
+  color: tempoDesign.colors.text,
   padding: tempoDesign.spacing.lg,
-  borderRadius: tempoDesign.radius.md,
-  transition: `all ${tempoDesign.transitions.normal}`
+  borderRadius: tempoDesign.radius.md
 }}>
   Content
 </div>
+
+// Or with component token objects
+<button style={tempoComponents.button.primary}>
+  Click me
+</button>
 ```
 
 ## State Management

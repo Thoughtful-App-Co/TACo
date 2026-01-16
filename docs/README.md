@@ -206,6 +206,6 @@ For technical issues, feature requests, or feedback:
 
 ---
 
-**Last Updated**: December 2025
-**Maintained By**: Thoughtful App Co.
+**Last Updated**: January 2026  
+**Maintained By**: Thoughtful App Co.  
 **Version**: 1.0.0

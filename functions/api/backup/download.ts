@@ -11,11 +11,11 @@
 
 import { jwtVerify } from 'jose';
 import { backupLog } from '../../lib/logger';
+import { getJwtSecretEncoded, type AuthEnv as JwtAuthEnv } from '../../lib/auth-config';
 
-interface Env {
+interface Env extends JwtAuthEnv {
   BILLING_DB: D1Database;
   BACKUPS: R2Bucket;
-  JWT_SECRET: string;
 }
 
 const VALID_APPS = ['tempo', 'tenure', 'nurture', 'all'];
@@ -41,7 +41,7 @@ export async function onRequestGet(context: { request: Request; env: Env }): Pro
     }
 
     const token = authHeader.replace('Bearer ', '');
-    const secret = new TextEncoder().encode(env.JWT_SECRET);
+    const secret = getJwtSecretEncoded(env);
 
     let userId: string;
 
