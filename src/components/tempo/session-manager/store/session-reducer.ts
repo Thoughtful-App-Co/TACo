@@ -155,22 +155,18 @@ export function sessionReducer(
       let updatedStoryBlocks = resetInProgressTimeBoxes(state.session.storyBlocks);
 
       // Set the target timebox to in-progress with startTime
-      updatedStoryBlocks = updateStoryBlocksWithCascade(
-        updatedStoryBlocks,
-        storyId,
-        (story) => ({
-          ...story,
-          timeBoxes: story.timeBoxes.map((tb, idx) =>
-            idx === timeBoxIndex
-              ? {
-                  ...tb,
-                  status: 'in-progress' as TimeBoxStatus,
-                  startTime: new Date().toISOString(),
-                }
-              : tb
-          ),
-        })
-      );
+      updatedStoryBlocks = updateStoryBlocksWithCascade(updatedStoryBlocks, storyId, (story) => ({
+        ...story,
+        timeBoxes: story.timeBoxes.map((tb, idx) =>
+          idx === timeBoxIndex
+            ? {
+                ...tb,
+                status: 'in-progress' as TimeBoxStatus,
+                startTime: new Date().toISOString(),
+              }
+            : tb
+        ),
+      }));
 
       // Recalculate session status
       const newSessionStatus = calculateSessionStatus(updatedStoryBlocks);
@@ -310,22 +306,18 @@ export function sessionReducer(
       let updatedStoryBlocks = resetInProgressTimeBoxes(state.session.storyBlocks);
 
       // Set the target timebox to in-progress
-      updatedStoryBlocks = updateStoryBlocksWithCascade(
-        updatedStoryBlocks,
-        storyId,
-        (story) => ({
-          ...story,
-          timeBoxes: story.timeBoxes.map((tb, idx) =>
-            idx === timeBoxIndex
-              ? {
-                  ...tb,
-                  status: 'in-progress' as TimeBoxStatus,
-                  startTime: new Date().toISOString(),
-                }
-              : tb
-          ),
-        })
-      );
+      updatedStoryBlocks = updateStoryBlocksWithCascade(updatedStoryBlocks, storyId, (story) => ({
+        ...story,
+        timeBoxes: story.timeBoxes.map((tb, idx) =>
+          idx === timeBoxIndex
+            ? {
+                ...tb,
+                status: 'in-progress' as TimeBoxStatus,
+                startTime: new Date().toISOString(),
+              }
+            : tb
+        ),
+      }));
 
       const newSessionStatus = calculateSessionStatus(updatedStoryBlocks);
 
@@ -498,9 +490,7 @@ export function sessionReducer(
           return {
             ...story,
             timeBoxes: story.timeBoxes.map((tb, idx) =>
-              idx === timeBoxIndex
-                ? { ...tb, tasks: updatedTasks, status: newTimeBoxStatus }
-                : tb
+              idx === timeBoxIndex ? { ...tb, tasks: updatedTasks, status: newTimeBoxStatus } : tb
             ),
           };
         }
@@ -558,9 +548,7 @@ export function sessionReducer(
           return {
             ...story,
             timeBoxes: story.timeBoxes.map((tb, idx) =>
-              idx === timeBoxIndex
-                ? { ...tb, tasks: updatedTasks, status: newTimeBoxStatus }
-                : tb
+              idx === timeBoxIndex ? { ...tb, tasks: updatedTasks, status: newTimeBoxStatus } : tb
             ),
           };
         }

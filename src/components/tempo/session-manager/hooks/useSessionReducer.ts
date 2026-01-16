@@ -370,7 +370,12 @@ export function useSessionReducer({
       storageService.updateTimeBoxStatus(currentSession.date, storyId, timeBoxIndex, 'completed');
 
       if (actualDuration !== undefined) {
-        storageService.saveActualDuration(currentSession.date, storyId, timeBoxIndex, actualDuration);
+        storageService.saveActualDuration(
+          currentSession.date,
+          storyId,
+          timeBoxIndex,
+          actualDuration
+        );
       }
     }
 

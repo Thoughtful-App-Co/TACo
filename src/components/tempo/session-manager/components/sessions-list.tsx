@@ -82,7 +82,8 @@ document.head.appendChild(auroraStyles);
 
 export const SessionsList: Component<SessionsListProps> = (props) => {
   const navigate = useNavigate();
-  const { sessions, allSessions, loading, error, refreshSessions, filterByStatus } = useSessionCrud();
+  const { sessions, allSessions, loading, error, refreshSessions, filterByStatus } =
+    useSessionCrud();
   const [hoveredCard, setHoveredCard] = createSignal<string | null>(null);
 
   // Modal state management
@@ -478,7 +479,9 @@ export const SessionsList: Component<SessionsListProps> = (props) => {
                     <div style={{ display: 'flex', 'align-items': 'center', gap: '8px' }}>
                       <Warning size={16} weight="fill" color="#EF4444" />
                       <div>
-                        <span style={{ 'font-weight': '500', color: tempoDesign.colors.foreground }}>
+                        <span
+                          style={{ 'font-weight': '500', color: tempoDesign.colors.foreground }}
+                        >
                           {format(new Date(session.date), 'EEEE, MMM d, yyyy')}
                         </span>
                         <span
@@ -523,7 +526,9 @@ export const SessionsList: Component<SessionsListProps> = (props) => {
                     <div style={{ display: 'flex', 'align-items': 'center', gap: '8px' }}>
                       <CalendarX size={16} weight="fill" color={tempoDesign.colors.amber[600]} />
                       <div>
-                        <span style={{ 'font-weight': '500', color: tempoDesign.colors.foreground }}>
+                        <span
+                          style={{ 'font-weight': '500', color: tempoDesign.colors.foreground }}
+                        >
                           {format(new Date(session.date), 'EEEE, MMM d, yyyy')}
                         </span>
                         <span

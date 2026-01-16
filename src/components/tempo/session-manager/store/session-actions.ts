@@ -94,11 +94,7 @@ export const sessionActions = {
   clearSession: (): SessionAction => ({ type: 'SESSION_CLEAR' }),
 
   // Timer
-  startTimer: (
-    storyId: string,
-    timeBoxIndex: number,
-    durationMinutes: number
-  ): SessionAction => ({
+  startTimer: (storyId: string, timeBoxIndex: number, durationMinutes: number): SessionAction => ({
     type: 'TIMER_START',
     payload: { storyId, timeBoxIndex, durationSeconds: durationMinutes * 60 },
   }),

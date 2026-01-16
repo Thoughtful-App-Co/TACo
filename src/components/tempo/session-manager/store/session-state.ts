@@ -1,10 +1,4 @@
-import type {
-  Session,
-  StoryBlock,
-  TimeBox,
-  TimeBoxStatus,
-  SessionStatus,
-} from '../../lib/types';
+import type { Session, StoryBlock, TimeBox, TimeBoxStatus, SessionStatus } from '../../lib/types';
 
 /**
  * Timer-specific state, separate from session data for clarity
@@ -76,13 +70,9 @@ export const selectors = {
     );
 
     const totalWorkBoxes = allWorkTimeBoxes.length;
-    const completedWorkBoxes = allWorkTimeBoxes.filter(
-      (tb) => tb.status === 'completed'
-    ).length;
+    const completedWorkBoxes = allWorkTimeBoxes.filter((tb) => tb.status === 'completed').length;
 
-    return totalWorkBoxes > 0
-      ? Math.round((completedWorkBoxes / totalWorkBoxes) * 100)
-      : 0;
+    return totalWorkBoxes > 0 ? Math.round((completedWorkBoxes / totalWorkBoxes) * 100) : 0;
   },
 
   /** Check if session is fully complete */
@@ -91,9 +81,7 @@ export const selectors = {
   },
 
   /** Find next available timebox (any type) */
-  findNextTimeBox(
-    state: SessionManagerState
-  ): { storyId: string; timeBoxIndex: number } | null {
+  findNextTimeBox(state: SessionManagerState): { storyId: string; timeBoxIndex: number } | null {
     if (!state.session) return null;
 
     for (const story of state.session.storyBlocks) {
