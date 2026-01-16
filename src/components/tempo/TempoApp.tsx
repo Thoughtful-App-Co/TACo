@@ -11,7 +11,7 @@
 import { Component, createSignal, Show, createMemo, onMount, createEffect } from 'solid-js';
 import { useNavigate, useLocation, useParams } from '@solidjs/router';
 import { BrainDump } from './brain-dump';
-import { CaretRight, Gear, User, Star } from 'phosphor-solid';
+import { CaretRight, Gear, User } from 'phosphor-solid';
 import { QueueView } from './queue';
 import { tempoDesign } from './theme/tempo-design';
 import { TempoLogo } from './ui/logo';
@@ -307,11 +307,13 @@ export const TempoApp: Component = () => {
             'justify-content': 'space-between',
           }}
         >
+          {/* Left side: Logo + Premium badge */}
           <div style={{ display: 'flex', 'align-items': 'center', gap: '12px' }}>
             <AppMenuTrigger>
               <TempoLogo size={48} />
             </AppMenuTrigger>
-            {/* Show badge next to logo if user has extras */}
+
+            {/* Inline Premium Badge - only show if user has extras */}
             <Show when={auth.hasAppExtras('tempo')}>
               <div
                 style={{
@@ -322,20 +324,29 @@ export const TempoApp: Component = () => {
                   background: `${tempoDesign.colors.primary}15`,
                   border: `1px solid ${tempoDesign.colors.primary}30`,
                   'border-radius': '16px',
-                  'font-size': '12px',
-                  'font-weight': '600',
-                  color: tempoDesign.colors.primary,
                 }}
+                title="Tempo Extras Active - You have access to premium AI features"
               >
-                <Star size={14} weight="fill" />
-                Tempo Extras
+                <svg width="12" height="12" viewBox="0 0 24 24" fill={tempoDesign.colors.primary}>
+                  <path d="M12 0L14.472 9.528L24 12L14.472 14.472L12 24L9.528 14.472L0 12L9.528 9.528L12 0Z" />
+                </svg>
+                <span
+                  style={{
+                    'font-size': '11px',
+                    'font-weight': '600',
+                    color: tempoDesign.colors.primary,
+                    'letter-spacing': '0.3px',
+                  }}
+                >
+                  Extras
+                </span>
               </div>
             </Show>
           </div>
 
           {/* Right side: Profile and Settings buttons */}
           <div style={{ display: 'flex', 'align-items': 'center', gap: '12px' }}>
-            {/* Profile button with status badges */}
+            {/* Profile button - navigates to /settings */}
             <ProfileBadges
               isAuthenticated={auth.isAuthenticated()}
               hasSync={auth.hasSyncSubscription()}
@@ -355,13 +366,13 @@ export const TempoApp: Component = () => {
                   'align-items': 'center',
                   'justify-content': 'center',
                 }}
-                title="Profile"
+                title="Profile & Account Settings"
               >
                 <User size={20} />
               </Button>
             </ProfileBadges>
 
-            {/* Settings button */}
+            {/* Settings button - opens Tempo-specific settings sidebar */}
             <Button
               variant="ghost"
               size="icon"
@@ -374,7 +385,7 @@ export const TempoApp: Component = () => {
                 'align-items': 'center',
                 'justify-content': 'center',
               }}
-              title="Settings"
+              title="Tempo Settings (API Configuration)"
             >
               <Gear size={20} />
             </Button>
@@ -389,7 +400,7 @@ export const TempoApp: Component = () => {
         />
 
         {/* API Key Warning */}
-        <Show when={!hasApiKey() && !auth.hasAppExtras('tempo')}>
+        <Show when={!hasApiKey()}>
           <div
             style={{
               'background-color': `${tempoDesign.colors.amber[600]}10`,

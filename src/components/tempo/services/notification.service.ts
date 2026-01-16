@@ -55,8 +55,7 @@ export class TempoNotificationService {
       const today = new Date().toISOString().split('T')[0];
 
       const needsAttention = sessions.filter(
-        (s) =>
-          s.status === 'incomplete' || (s.status === 'planned' && s.date < today)
+        (s) => s.status === 'incomplete' || (s.status === 'planned' && s.date < today)
       );
 
       return needsAttention.length;

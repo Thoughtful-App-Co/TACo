@@ -454,7 +454,9 @@ export const PlanSessionPanel: Component<PlanSessionPanelProps> = (props) => {
                     'border-radius': tempoDesign.radius.md,
                     border: `1px solid ${customMinutes() ? tempoDesign.colors.primary : tempoDesign.colors.border}`,
                     background: customMinutes() ? `${tempoDesign.colors.primary}15` : 'transparent',
-                    color: customMinutes() ? tempoDesign.colors.primary : tempoDesign.colors.foreground,
+                    color: customMinutes()
+                      ? tempoDesign.colors.primary
+                      : tempoDesign.colors.foreground,
                     'font-size': tempoDesign.typography.sizes.sm,
                     'font-weight': '500',
                     cursor: 'pointer',

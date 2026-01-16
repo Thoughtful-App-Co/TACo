@@ -339,7 +339,9 @@ export const QuickAddTask: Component<QuickAddTaskProps> = (props) => {
               <span
                 style={{
                   'font-size': tempoDesign.typography.sizes.sm,
-                  color: isFrog() ? tempoDesign.colors.frog : tempoDesign.colors.secondaryForeground,
+                  color: isFrog()
+                    ? tempoDesign.colors.frog
+                    : tempoDesign.colors.secondaryForeground,
                   'font-weight': isFrog() ? '600' : '500',
                   'user-select': 'none',
                   'letter-spacing': '0.02em',

@@ -32,7 +32,7 @@ import {
   isTacoClubMember,
   getAndClearRedirectIntent,
 } from './auth';
-import { clearSubscriptionCache } from './feature-gates';
+import { clearSubscriptionCache, initializeSubscriptionCache } from './feature-gates';
 
 // ============================================================================
 // TYPES
@@ -85,6 +85,11 @@ export const AuthProvider: ParentComponent = (props) => {
       // Validate existing session
       const sessionUser = await validateSession();
       setUser(sessionUser);
+
+      // Initialize subscription cache so sync feature checks work immediately
+      if (sessionUser) {
+        await initializeSubscriptionCache();
+      }
 
       // If we just processed a callback and got a valid session,
       // show a success notification and handle redirect

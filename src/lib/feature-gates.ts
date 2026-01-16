@@ -69,7 +69,7 @@ const CACHE_TTL = 60 * 1000; // 1 minute
 /**
  * Get cached subscriptions or fetch fresh
  */
-async function getSubscriptions(): Promise<string[]> {
+export async function getSubscriptions(): Promise<string[]> {
   const token = getStoredToken();
 
   if (!token) {
@@ -129,6 +129,14 @@ function isAuthenticated(): boolean {
 export function clearSubscriptionCache(): void {
   cachedSubscriptions = null;
   cacheTimestamp = 0;
+}
+
+/**
+ * Initialize subscription cache - call this on app load
+ * This pre-populates the cache so sync feature checks work immediately
+ */
+export async function initializeSubscriptionCache(): Promise<void> {
+  await getSubscriptions();
 }
 
 // ============================================================================

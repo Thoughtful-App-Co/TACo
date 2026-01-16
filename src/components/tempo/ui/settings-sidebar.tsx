@@ -45,12 +45,7 @@ export const SettingsSidebar: Component<SettingsSidebarProps> = (props) => {
         ApiConfigService.setApiKeyMode('bring-your-own');
         ApiConfigService.setClaudeApiKey(key);
       } else {
-        // For managed mode, check if user has Tempo Extras subscription
-        if (!hasTempoExtras()) {
-          // Redirect to pricing page for subscription
-          window.location.href = '/pricing#tempo-extras';
-          return;
-        }
+        // For managed mode - user already has subscription (we only show this option if they do)
         setIsSaving(true);
         ApiConfigService.setApiKeyMode('managed');
       }
@@ -80,6 +75,13 @@ export const SettingsSidebar: Component<SettingsSidebarProps> = (props) => {
 
   const isManagedActive = ApiConfigService.hasManagedSubscription();
   const hasTempoExtras = () => canUseTempoAI().allowed;
+
+  // Auto-select managed mode if user has Tempo Extras subscription
+  createEffect(() => {
+    if (hasTempoExtras() && !ApiConfigService.hasApiKey()) {
+      setApiKeyMode('managed');
+    }
+  });
 
   // Cloud sync state
   const syncAccess = canUseTempoSync();

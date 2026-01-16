@@ -12,7 +12,6 @@ import type { ProcessedStory } from '../../lib/types';
 import { tempoDesign } from '../../theme/tempo-design';
 import { useTempoAIAccess } from '../../hooks/useTempoAIAccess';
 import { Paywall } from '../../../common/Paywall';
-import { useAuth } from '../../../../lib/auth-context';
 import { QueuePickerModal } from '../../queue/components/QueuePickerModal';
 import type { QueueTask } from '../../queue/types';
 import { BrainDumpLockOverlay } from './BrainDumpLockOverlay';
@@ -49,7 +48,6 @@ export const BrainDump = (props: BrainDumpProps) => {
 
   // AI access control - checks both API key AND subscription
   const { canUseAI, requireAccess, showPaywall, setShowPaywall } = useTempoAIAccess();
-  const auth = useAuth();
 
   // Queue picker state
   const [showQueuePicker, setShowQueuePicker] = createSignal(false);
@@ -73,7 +71,7 @@ export const BrainDump = (props: BrainDumpProps) => {
     <>
       <div style={{ position: 'relative' }}>
         {/* Lock overlay when user has no API key and no subscription */}
-        <Show when={!canUseAI() && !auth.hasAppExtras('tempo')}>
+        <Show when={!canUseAI()}>
           <BrainDumpLockOverlay onOpenSettings={() => props.onOpenSettings?.()} />
         </Show>
 
