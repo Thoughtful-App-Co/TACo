@@ -11,7 +11,7 @@
 import { Component, createSignal, Show, createMemo, onMount, createEffect } from 'solid-js';
 import { useNavigate, useLocation, useParams } from '@solidjs/router';
 import { BrainDump } from './brain-dump';
-import { CaretRight, Gear, User } from 'phosphor-solid';
+import { CaretRight, Gear, User, Star } from 'phosphor-solid';
 import { QueueView } from './queue';
 import { tempoDesign } from './theme/tempo-design';
 import { TempoLogo } from './ui/logo';
@@ -23,7 +23,6 @@ import { SessionView } from './session-manager/components/session-view';
 import { ApiConfigService } from './services/api-config.service';
 import { AppMenuTrigger } from '../common/AppMenuTrigger';
 import { ProfileBadges } from '../common/ProfileBadges';
-import { PremiumIndicator } from '../common/PremiumIndicator';
 import { useAuth } from '../../lib/auth-context';
 import { TempoNotificationService, type NotificationState } from './services/notification.service';
 import { usePurchaseSuccess } from '../../lib/use-purchase-success';
@@ -281,9 +280,6 @@ export const TempoApp: Component = () => {
         }
       `}</style>
 
-      {/* Premium Indicator */}
-      <PremiumIndicator hasExtras={auth.hasAppExtras('tempo')} appName="Tempo" color="#5E6AD2" />
-
       <main
         class="tempo-main"
         style={{
@@ -311,9 +307,31 @@ export const TempoApp: Component = () => {
             'justify-content': 'space-between',
           }}
         >
-          <AppMenuTrigger>
-            <TempoLogo size={48} />
-          </AppMenuTrigger>
+          <div style={{ display: 'flex', 'align-items': 'center', gap: '12px' }}>
+            <AppMenuTrigger>
+              <TempoLogo size={48} />
+            </AppMenuTrigger>
+            {/* Show badge next to logo if user has extras */}
+            <Show when={auth.hasAppExtras('tempo')}>
+              <div
+                style={{
+                  display: 'flex',
+                  'align-items': 'center',
+                  gap: '6px',
+                  padding: '4px 10px',
+                  background: `${tempoDesign.colors.primary}15`,
+                  border: `1px solid ${tempoDesign.colors.primary}30`,
+                  'border-radius': '16px',
+                  'font-size': '12px',
+                  'font-weight': '600',
+                  color: tempoDesign.colors.primary,
+                }}
+              >
+                <Star size={14} weight="fill" />
+                Tempo Extras
+              </div>
+            </Show>
+          </div>
 
           {/* Right side: Profile and Settings buttons */}
           <div style={{ display: 'flex', 'align-items': 'center', gap: '12px' }}>
@@ -328,6 +346,7 @@ export const TempoApp: Component = () => {
               <Button
                 variant="ghost"
                 size="icon"
+                onClick={() => navigate('/settings')}
                 style={{
                   height: '40px',
                   width: '40px',
@@ -370,7 +389,7 @@ export const TempoApp: Component = () => {
         />
 
         {/* API Key Warning */}
-        <Show when={!hasApiKey()}>
+        <Show when={!hasApiKey() && !auth.hasAppExtras('tempo')}>
           <div
             style={{
               'background-color': `${tempoDesign.colors.amber[600]}10`,
