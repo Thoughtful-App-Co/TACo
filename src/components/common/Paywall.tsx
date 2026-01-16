@@ -53,6 +53,7 @@ const FEATURE_CONFIGS: Record<string, FeatureConfig> = {
     ],
     price: '$5/mo',
     priceAnnual: '$30/year',
+    priceSubtext: 'Monthly or annual available',
     ctaText: 'Upgrade to Tenure Extras',
     icon: 'rocket',
   },

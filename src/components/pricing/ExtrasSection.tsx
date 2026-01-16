@@ -13,6 +13,8 @@ interface ExtrasSectionProps {
   toggleExtra: (appId: string) => void;
   tempoAnnual: () => boolean;
   setTempoAnnual: (val: boolean) => void;
+  tenureAnnual: () => boolean;
+  setTenureAnnual: (val: boolean) => void;
   activeTooltip: () => string | null;
   setActiveTooltip: (val: string | null) => void;
 }
@@ -222,7 +224,6 @@ export const ExtrasSection: Component<ExtrasSectionProps> = (props) => {
 
         {/* Tenure Extras - WITH APP-SPECIFIC TOOLTIP */}
         <div
-          onClick={() => props.toggleExtra('tenure')}
           style={{
             padding: tokens.spacing.lg,
             background: props.selectedExtras().includes('tenure')
@@ -230,106 +231,210 @@ export const ExtrasSection: Component<ExtrasSectionProps> = (props) => {
               : tokens.colors.surface,
             border: `2px solid ${props.selectedExtras().includes('tenure') ? '#9333EA' : tokens.colors.border}`,
             'border-radius': tokens.radius.lg,
-            cursor: 'pointer',
             transition: 'all 0.2s ease',
             display: 'flex',
-            'align-items': 'center',
+            'flex-direction': 'column',
             gap: tokens.spacing.md,
           }}
         >
           <div
+            onClick={() => props.toggleExtra('tenure')}
             style={{
-              width: '24px',
-              height: '24px',
-              'border-radius': '6px',
-              border: `2px solid ${props.selectedExtras().includes('tenure') ? '#9333EA' : tokens.colors.border}`,
-              background: props.selectedExtras().includes('tenure') ? '#9333EA' : 'transparent',
               display: 'flex',
               'align-items': 'center',
-              'justify-content': 'center',
-              'flex-shrink': 0,
+              gap: tokens.spacing.md,
+              cursor: 'pointer',
             }}
           >
-            <Show when={props.selectedExtras().includes('tenure')}>
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="white"
-                stroke-width="3"
-              >
-                <polyline points="20 6 9 17 4 12" />
-              </svg>
-            </Show>
-          </div>
-
-          <div
-            style={{
-              width: '48px',
-              height: '48px',
-              'border-radius': tokens.radius.md,
-              background: '#9333EA',
-              display: 'flex',
-              'align-items': 'center',
-              'justify-content': 'center',
-            }}
-          >
-            <img
-              src="/tenure/tenure_logo.png"
-              alt="Tenure"
-              style={{ width: '36px', height: '36px' }}
-            />
-          </div>
-
-          <div style={{ flex: 1 }}>
             <div
               style={{
-                'font-size': '18px',
-                'font-weight': '600',
-                color: tokens.colors.text,
+                width: '24px',
+                height: '24px',
+                'border-radius': '6px',
+                border: `2px solid ${props.selectedExtras().includes('tenure') ? '#9333EA' : tokens.colors.border}`,
+                background: props.selectedExtras().includes('tenure') ? '#9333EA' : 'transparent',
                 display: 'flex',
                 'align-items': 'center',
-                gap: tokens.spacing.sm,
+                'justify-content': 'center',
+                'flex-shrink': 0,
               }}
             >
-              Tenure Extras
-              {/* APP-SPECIFIC TOOLTIP */}
-              <div onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex' }}>
-                <InfoIcon
-                  content={tooltipContent.tenureExtras}
-                  activeTooltip={props.activeTooltip}
-                  setActiveTooltip={props.setActiveTooltip}
-                  tooltipKey="tenureExtras"
-                />
-              </div>
+              <Show when={props.selectedExtras().includes('tenure')}>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="white"
+                  stroke-width="3"
+                >
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+              </Show>
             </div>
+
             <div
               style={{
-                'font-size': '13px',
-                color: tokens.colors.textMuted,
-                'margin-top': '4px',
+                width: '48px',
+                height: '48px',
+                'border-radius': tokens.radius.md,
+                background: '#9333EA',
+                display: 'flex',
+                'align-items': 'center',
+                'justify-content': 'center',
               }}
             >
-              "For the cost of a small lunch" • 5 resume mutations • AI job matching
+              <img
+                src="/tenure/tenure_logo.png"
+                alt="Tenure"
+                style={{ width: '36px', height: '36px' }}
+              />
+            </div>
+
+            <div style={{ flex: 1 }}>
+              <div
+                style={{
+                  'font-size': '18px',
+                  'font-weight': '600',
+                  color: tokens.colors.text,
+                  display: 'flex',
+                  'align-items': 'center',
+                  gap: tokens.spacing.sm,
+                }}
+              >
+                Tenure Extras
+                {/* APP-SPECIFIC TOOLTIP */}
+                <div onClick={(e) => e.stopPropagation()} style={{ display: 'inline-flex' }}>
+                  <InfoIcon
+                    content={tooltipContent.tenureExtras}
+                    activeTooltip={props.activeTooltip}
+                    setActiveTooltip={props.setActiveTooltip}
+                    tooltipKey="tenureExtras"
+                  />
+                </div>
+              </div>
+              <div
+                style={{
+                  'font-size': '13px',
+                  color: tokens.colors.textMuted,
+                  'margin-top': '4px',
+                }}
+              >
+                10 AI mutations/month • Job matching • Career analytics
+              </div>
             </div>
           </div>
 
-          <div style={{ 'text-align': 'right' }}>
-            <div style={{ 'font-size': '20px', 'font-weight': '700', color: tokens.colors.text }}>
-              $30
+          {/* Tenure Monthly/Annual Toggle */}
+          <div
+            style={{
+              display: 'flex',
+              'align-items': 'center',
+              'justify-content': 'flex-end',
+              gap: tokens.spacing.md,
+              'padding-top': tokens.spacing.sm,
+              'border-top': `1px solid ${tokens.colors.border}`,
+            }}
+          >
+            <div style={{ flex: 1 }} />
+            <div style={{ display: 'flex', 'align-items': 'center', gap: '8px' }}>
               <span
                 style={{
-                  'font-size': '14px',
-                  'font-weight': '500',
-                  color: tokens.colors.textMuted,
+                  'font-size': '11px',
+                  color: props.selectedExtras().includes('tenure')
+                    ? tokens.colors.text
+                    : tokens.colors.textDim,
+                  transition: 'color 0.2s ease',
                 }}
               >
-                /year
+                Monthly
+              </span>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  props.setTenureAnnual(!props.tenureAnnual());
+                }}
+                disabled={!props.selectedExtras().includes('tenure')}
+                aria-label="Toggle annual billing"
+                style={{
+                  padding: '2px',
+                  background: tokens.colors.surface,
+                  border: `1px solid ${tokens.colors.border}`,
+                  'border-radius': '12px',
+                  display: 'flex',
+                  'align-items': 'center',
+                  cursor: props.selectedExtras().includes('tenure') ? 'pointer' : 'not-allowed',
+                  position: 'relative',
+                  width: '40px',
+                  height: '20px',
+                  opacity: props.selectedExtras().includes('tenure') ? 1 : 0.5,
+                  transition: 'opacity 0.2s ease',
+                }}
+              >
+                <div
+                  style={{
+                    width: '16px',
+                    height: '16px',
+                    'border-radius': '50%',
+                    background:
+                      props.tenureAnnual() && props.selectedExtras().includes('tenure')
+                        ? tokens.colors.success
+                        : tokens.colors.textDim,
+                    position: 'absolute',
+                    left:
+                      props.tenureAnnual() && props.selectedExtras().includes('tenure')
+                        ? '21px'
+                        : '2px',
+                    transition: 'left 0.2s ease, background 0.2s ease',
+                  }}
+                />
+              </button>
+              <span
+                style={{
+                  'font-size': '11px',
+                  color:
+                    props.tenureAnnual() && props.selectedExtras().includes('tenure')
+                      ? tokens.colors.success
+                      : tokens.colors.textDim,
+                  transition: 'color 0.2s ease',
+                }}
+              >
+                Annual
               </span>
             </div>
-            <div style={{ 'font-size': '11px', color: tokens.colors.textDim }}>
-              +$1/mutation after 5
+
+            <div
+              style={{
+                'text-align': 'right',
+                display: 'flex',
+                'flex-direction': 'column',
+                'align-items': 'flex-end',
+                gap: '6px',
+              }}
+            >
+              <div
+                style={{
+                  'font-size': '20px',
+                  'font-weight': '700',
+                  color: tokens.colors.text,
+                }}
+              >
+                {props.tenureAnnual() ? '$30' : '$5'}
+                <span
+                  style={{
+                    'font-size': '14px',
+                    'font-weight': '500',
+                    color: tokens.colors.textMuted,
+                  }}
+                >
+                  /{props.tenureAnnual() ? 'year' : 'mo'}
+                </span>
+              </div>
+              <Show when={props.tenureAnnual()}>
+                <div style={{ 'font-size': '11px', color: tokens.colors.success }}>
+                  Save $30/year
+                </div>
+              </Show>
             </div>
           </div>
         </div>

@@ -62,6 +62,7 @@ export const PricingPage: Component = () => {
   const [syncAnnual, setSyncAnnual] = createSignal(false); // Monthly vs Annual for sync
   const [selectedExtras, setSelectedExtras] = createSignal<string[]>([]);
   const [tempoAnnual, setTempoAnnual] = createSignal(false);
+  const [tenureAnnual, setTenureAnnual] = createSignal(true); // Monthly vs Annual for tenure (default to annual)
   const [tacoClubTier, setTacoClubTier] = createSignal<TacoClubTier>('none');
 
   // Tooltip state
@@ -210,9 +211,15 @@ export const PricingPage: Component = () => {
         items.push({ priceId, quantity: 1 });
       }
       if (selectedExtras().includes('tenure')) {
-        const priceId = hasTacoClub
-          ? prices.TENURE_EXTRAS_MONTHLY_CLUB
-          : prices.TENURE_EXTRAS_MONTHLY;
+        let priceId: string;
+        if (hasTacoClub) {
+          // 75% discount for TACo Club members
+          priceId = tenureAnnual()
+            ? prices.TENURE_EXTRAS_YEARLY_CLUB
+            : prices.TENURE_EXTRAS_MONTHLY_CLUB;
+        } else {
+          priceId = tenureAnnual() ? prices.TENURE_EXTRAS_YEARLY : prices.TENURE_EXTRAS_MONTHLY;
+        }
         items.push({ priceId, quantity: 1 });
       }
 
@@ -308,7 +315,10 @@ export const PricingPage: Component = () => {
     if (selectedExtras().includes('tempo')) {
       total += tempoAnnual() ? 120 : 12;
     }
-    if (selectedExtras().includes('tenure')) total += 30;
+    if (selectedExtras().includes('tenure')) {
+      // $30/year (annual) or $5/mo × 12 = $60/year (monthly)
+      total += tenureAnnual() ? 30 : 60;
+    }
     return total;
   });
 
@@ -920,6 +930,8 @@ export const PricingPage: Component = () => {
             toggleExtra={toggleExtra}
             tempoAnnual={tempoAnnual}
             setTempoAnnual={setTempoAnnual}
+            tenureAnnual={tenureAnnual}
+            setTenureAnnual={setTenureAnnual}
             activeTooltip={activeTooltip}
             setActiveTooltip={setActiveTooltip}
           />
@@ -1291,9 +1303,14 @@ export const PricingPage: Component = () => {
                     'font-size': '14px',
                   }}
                 >
-                  <span style={{ color: tokens.colors.textMuted }}>Tenure Extras</span>
+                  <span style={{ color: tokens.colors.textMuted }}>
+                    Tenure Extras {tenureAnnual() ? '(annual)' : '(monthly)'}
+                  </span>
                   <span style={{ color: tokens.colors.text, 'font-weight': '600' }}>
-                    <Show when={tacoClubTier() !== 'none'} fallback={'$30'}>
+                    <Show
+                      when={tacoClubTier() !== 'none'}
+                      fallback={`$${tenureAnnual() ? '30' : '60'}`}
+                    >
                       <>
                         <span
                           style={{
@@ -1301,9 +1318,9 @@ export const PricingPage: Component = () => {
                             color: tokens.colors.textDim,
                           }}
                         >
-                          $30
+                          ${tenureAnnual() ? '30' : '60'}
                         </span>{' '}
-                        $7.50
+                        ${tenureAnnual() ? '7.50' : '15'}
                       </>
                     </Show>
                   </span>
