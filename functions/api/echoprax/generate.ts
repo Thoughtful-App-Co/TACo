@@ -8,34 +8,12 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import { createLogger } from '../../lib/logger';
+import { authorizeSubscriptionFeature, type AuthEnv } from '../../lib/auth-middleware';
 
 const log = createLogger('EchopraxGenerate');
 
-interface Env {
+interface Env extends AuthEnv {
   ANTHROPIC_API_KEY: string;
-  JWT_SECRET_TEST?: string;
-  JWT_SECRET_PROD?: string;
-  TACO_ENV?: string;
-}
-
-/**
- * Verify if request has valid subscription for premium features.
- * Returns isPremium: true if user has echoprax_extras or taco_club subscription.
- * Trial users (no JWT or no subscription) are still allowed - tracking happens on frontend.
- */
-function verifySubscription(request: Request): {
-  isPremium: boolean;
-  userId?: string;
-} {
-  const authHeader = request.headers.get('Authorization');
-  if (!authHeader?.startsWith('Bearer ')) {
-    return { isPremium: false };
-  }
-
-  // For now, just check if token exists - full verification handled by auth middleware
-  // In production, we'd decode and verify the JWT here
-  // The frontend canUseEchopraxAI() already validated subscription
-  return { isPremium: true };
 }
 
 /**
@@ -239,8 +217,16 @@ FIELD NOTES:
 export async function onRequestPost(context: { request: Request; env: Env }) {
   const { request, env } = context;
 
-  // Check subscription status for premium header
-  const { isPremium } = verifySubscription(request);
+  // SECURITY: Validate authentication and subscription
+  const authResult = await authorizeSubscriptionFeature(request, env, {
+    requiredProducts: ['echoprax_extras', 'taco_club'],
+  });
+
+  if (!authResult.success) {
+    return authResult.response;
+  }
+
+  const { auth } = authResult;
 
   // Check for API key
   if (!env.ANTHROPIC_API_KEY) {
@@ -249,7 +235,6 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
       status: 503,
       headers: {
         'Content-Type': 'application/json',
-        'X-Premium-User': isPremium ? 'true' : 'false',
       },
     });
   }
@@ -262,7 +247,6 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
       status: 400,
       headers: {
         'Content-Type': 'application/json',
-        'X-Premium-User': isPremium ? 'true' : 'false',
       },
     });
   }
@@ -273,7 +257,6 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
       status: 400,
       headers: {
         'Content-Type': 'application/json',
-        'X-Premium-User': isPremium ? 'true' : 'false',
       },
     });
   }
@@ -283,7 +266,6 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
       status: 400,
       headers: {
         'Content-Type': 'application/json',
-        'X-Premium-User': isPremium ? 'true' : 'false',
       },
     });
   }
@@ -382,7 +364,6 @@ Remember to calculate totalDuration accurately based on all factors (sets, rest,
         status: 500,
         headers: {
           'Content-Type': 'application/json',
-          'X-Premium-User': isPremium ? 'true' : 'false',
         },
       });
     }
@@ -399,7 +380,6 @@ Remember to calculate totalDuration accurately based on all factors (sets, rest,
         status: 500,
         headers: {
           'Content-Type': 'application/json',
-          'X-Premium-User': isPremium ? 'true' : 'false',
         },
       });
     }
@@ -409,14 +389,14 @@ Remember to calculate totalDuration accurately based on all factors (sets, rest,
       mainExercises: workout.main.length,
       totalDuration: workout.totalDuration,
       estimatedMinutes: Math.round(workout.totalDuration / 60),
+      userId: auth.userId,
     });
 
     return new Response(JSON.stringify({ workout }), {
       status: 200,
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'no-store', // Don't cache generated workouts
-        'X-Premium-User': isPremium ? 'true' : 'false',
+        'Cache-Control': 'no-store',
       },
     });
   } catch (error) {
@@ -430,7 +410,6 @@ Remember to calculate totalDuration accurately based on all factors (sets, rest,
             status: 429,
             headers: {
               'Content-Type': 'application/json',
-              'X-Premium-User': isPremium ? 'true' : 'false',
             },
           }
         );
@@ -441,7 +420,6 @@ Remember to calculate totalDuration accurately based on all factors (sets, rest,
       status: 500,
       headers: {
         'Content-Type': 'application/json',
-        'X-Premium-User': isPremium ? 'true' : 'false',
       },
     });
   }

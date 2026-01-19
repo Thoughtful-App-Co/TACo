@@ -16,6 +16,7 @@ interface Env {
   JWT_SECRET: string;
   AUTH_DB: any;
   BILLING_DB: any;
+  TACO_ENV?: string;
 }
 
 interface ParseRequest {
@@ -232,35 +233,39 @@ CRITICAL REQUIREMENTS:
       resumeLog.error('Response starts with:', responseText.substring(0, 100));
       resumeLog.error('Response ends with:', responseText.substring(responseText.length - 100));
 
-      // Try to save the problematic response for debugging
-      return new Response(
-        JSON.stringify({
-          success: false,
-          error: 'Failed to parse AI response as JSON',
-          debugInfo: {
-            parseError: parseError instanceof Error ? parseError.message : String(parseError),
-            responseLength: responseText.length,
-            responsePreview: responseText.substring(0, 500),
-            responseSuffix: responseText.substring(Math.max(0, responseText.length - 200)),
-          },
-          parsed: {
-            experience: [],
-            education: [],
-            skills: [],
-            certifications: [],
-          },
-          keywords: {
-            technical: [],
-            soft: [],
-            industry: [],
-            tools: [],
-          },
-        }),
-        {
-          status: 500,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      );
+      // SECURITY: Only include debug info in non-production environments
+      const isProduction = env.TACO_ENV === 'production';
+      const errorResponse: any = {
+        success: false,
+        error: 'Failed to parse AI response as JSON',
+        parsed: {
+          experience: [],
+          education: [],
+          skills: [],
+          certifications: [],
+        },
+        keywords: {
+          technical: [],
+          soft: [],
+          industry: [],
+          tools: [],
+        },
+      };
+
+      // Add debug info only in development/staging
+      if (!isProduction) {
+        errorResponse.debugInfo = {
+          parseError: parseError instanceof Error ? parseError.message : String(parseError),
+          responseLength: responseText.length,
+          responsePreview: responseText.substring(0, 500),
+          responseSuffix: responseText.substring(Math.max(0, responseText.length - 200)),
+        };
+      }
+
+      return new Response(JSON.stringify(errorResponse), {
+        status: 500,
+        headers: { 'Content-Type': 'application/json' },
+      });
     }
 
     // Validate structure

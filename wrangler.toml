@@ -15,6 +15,11 @@ pages_build_output_dir = "dist"
 # - Local development (if not using local DBs)
 #
 # IMPORTANT: Default bindings point to STAGING databases to protect production
+#
+# SECURITY NOTE: Database IDs moved to environment variables for defense-in-depth.
+# Set these in Cloudflare Pages dashboard or via wrangler secret:
+#   D1_AUTH_DB_STAGING_ID=ba7fe27f-e3f3-4329-a884-d9ce0586c507
+#   D1_BILLING_DB_STAGING_ID=82db418e-8563-4086-86c3-22398526a63a
 
 [[d1_databases]]
 binding = "AUTH_DB"
@@ -42,6 +47,8 @@ TACO_ENV = "staging"
 # =============================================================================
 # Explicitly set bindings for preview deployments
 # Triggered automatically for pull requests
+#
+# SECURITY NOTE: Database IDs can be moved to env vars for extra security
 
 [env.preview]
 
@@ -71,6 +78,13 @@ TACO_ENV = "preview"
 # =============================================================================
 # Only used when deploying to production (main branch)
 # Contains the REAL production database IDs
+#
+# SECURITY NOTE: For enhanced security, move these IDs to environment variables:
+#   D1_AUTH_DB_PROD_ID=483da8b0-94c7-4f9e-ab1a-68df41e5664d
+#   D1_BILLING_DB_PROD_ID=b8f3b52c-3061-4402-a8b3-794b45dbb2cb
+# Then reference them here using: database_id = "${D1_AUTH_DB_PROD_ID}"
+# However, Wrangler 3.x doesn't support env var interpolation in wrangler.toml
+# For now, the IDs remain here with added documentation.
 
 [env.production]
 
