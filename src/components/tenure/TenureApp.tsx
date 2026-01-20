@@ -1815,7 +1815,6 @@ export const TenureApp: Component = () => {
               {/* Profile button with status badges */}
               <ProfileBadges
                 isAuthenticated={auth.isAuthenticated()}
-                hasSync={auth.hasSyncSubscription()}
                 hasExtras={auth.hasAppExtras('tenure')}
                 isTacoClub={auth.isTacoClubMember()}
                 size={44}

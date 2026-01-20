@@ -349,7 +349,6 @@ export const TempoApp: Component = () => {
             {/* Profile button - navigates to /settings */}
             <ProfileBadges
               isAuthenticated={auth.isAuthenticated()}
-              hasSync={auth.hasSyncSubscription()}
               hasExtras={auth.hasAppExtras('tempo')}
               isTacoClub={auth.isTacoClubMember()}
               size={40}
