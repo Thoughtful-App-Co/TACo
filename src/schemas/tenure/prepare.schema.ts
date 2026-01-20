@@ -323,24 +323,28 @@ export const ResumeMutationResultSchema = z.object({
 
 export interface MutationHistoryEntry {
   id: string;
-  variantId: string;
+  variantId?: string;
   timestamp: Date;
   targetRole?: string;
   targetCompany?: string;
   jobDescription?: string;
-  changesSummary: string;
-  keywordMatchScore: number;
+  changesSummary?: string;
+  keywordMatchScore?: number;
+  matchScoreBefore?: number;
+  matchScoreAfter?: number;
 }
 
 export const MutationHistoryEntrySchema = z.object({
   id: z.string(),
-  variantId: z.string(),
+  variantId: z.string().optional(),
   timestamp: z.date(),
   targetRole: z.string().optional(),
   targetCompany: z.string().optional(),
   jobDescription: z.string().optional(),
-  changesSummary: z.string(),
-  keywordMatchScore: z.number(),
+  changesSummary: z.string().optional(),
+  keywordMatchScore: z.number().optional(),
+  matchScoreBefore: z.number().optional(),
+  matchScoreAfter: z.number().optional(),
 });
 
 // =============================================================================
