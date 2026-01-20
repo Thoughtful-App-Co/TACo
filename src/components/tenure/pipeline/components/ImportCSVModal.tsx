@@ -167,6 +167,16 @@ export const ImportCSVModal: Component<ImportCSVModalProps> = (props) => {
     const result: string[][] = [];
 
     for (const line of lines) {
+      // Skip comment lines (used in comprehensive export format)
+      if (line.trim().startsWith('#')) {
+        continue;
+      }
+
+      // Skip empty lines
+      if (!line.trim()) {
+        continue;
+      }
+
       // Handle quoted values with commas
       const row: string[] = [];
       let current = '';
