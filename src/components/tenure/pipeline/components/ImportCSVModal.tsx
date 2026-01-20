@@ -575,8 +575,7 @@ export const ImportCSVModal: Component<ImportCSVModalProps> = (props) => {
       };
 
       if (row.isFullFormat && row.statusTimeline && row.statusTimeline.length > 0) {
-        // For full format imports, we need to add the application with its timeline
-        // This requires direct store manipulation since addApplication creates new timeline
+        // For full format imports, preserve the complete application data including timeline
         const fullApp: JobApplication = {
           ...baseApp,
           id: row.id || crypto.randomUUID(),
@@ -586,21 +585,15 @@ export const ImportCSVModal: Component<ImportCSVModalProps> = (props) => {
           syncVersion: 1,
         };
 
-        // Add directly to store state (bypass addApplication which creates new statusHistory)
-        pipelineStore.state.applications.push(fullApp);
+        // Use proper store method that triggers reactivity and auto-save
+        pipelineStore.importFullApplication(fullApp);
       } else {
         pipelineStore.addApplication(baseApp);
       }
       imported++;
     }
 
-    // Trigger store save for direct additions
-    if (isComprehensiveFormat()) {
-      localStorage.setItem(
-        'augment_pipeline_applications',
-        JSON.stringify(pipelineStore.state.applications)
-      );
-    }
+    // No need to manually save - SolidJS effects handle persistence automatically
 
     setImportedCount(imported);
     setStep('complete');

@@ -206,6 +206,15 @@ export const pipelineStore = {
     return newApp;
   },
 
+  /**
+   * Import a complete application (used for CSV import with full data)
+   * Unlike addApplication, this preserves the existing statusHistory and timestamps
+   */
+  importFullApplication: (app: JobApplication) => {
+    setState('applications', (apps) => [app, ...apps]);
+    return app;
+  },
+
   updateApplication: (id: string, updates: Partial<JobApplication>) => {
     setState(
       'applications',
