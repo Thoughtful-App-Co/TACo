@@ -2,9 +2,8 @@
  * Profile Badges Component
  *
  * Renders badge overlays on a profile button indicating user status:
- * - No Profile (warning): User not logged in to TACo
- * - No Sync (warning): User logged in but no sync subscription
- * - Extras (achievement): Has app-specific Pro features
+ * - Not Signed In (warning): Red pulsing dot when user not authenticated
+ * - Extras (achievement): Purple star for app-specific Pro features
  * - TACo Club (premium): Animated gradient border for club members
  *
  * Similar to Twitter/Facebook verified badges - small indicators overlaid on profile icon.
@@ -21,8 +20,6 @@ import { Component, Show, JSX, ParentComponent } from 'solid-js';
 export interface ProfileBadgesProps {
   /** User is authenticated with TACo */
   isAuthenticated: boolean;
-  /** User has sync subscription */
-  hasSync: boolean;
   /** User has app-specific extras (Pro) */
   hasExtras: boolean;
   /** User is TACo Club member */
@@ -38,8 +35,7 @@ export interface ProfileBadgesProps {
 const tokens = {
   colors: {
     warning: {
-      noProfile: '#F59E0B', // Orange - amber-500
-      noSync: '#EF4444', // Red - red-500
+      notSignedIn: '#EF4444', // Red - red-500
     },
     achievement: {
       extras: '#9333EA', // Purple - purple-600
@@ -69,35 +65,26 @@ const StarIcon: Component<{ size: number }> = (props) => (
 // ============================================================================
 
 /**
- * Warning dot badge - for no profile or no sync
+ * Warning dot badge - for not signed in status
  */
 const WarningDot: Component<{
-  color: string;
-  position: 'top-right' | 'top-left';
   title: string;
-  pulse?: boolean;
 }> = (props) => {
-  const positionStyles = (): JSX.CSSProperties => {
-    if (props.position === 'top-right') {
-      return { top: '0px', right: '0px' };
-    }
-    return { top: '0px', left: '0px' };
-  };
-
   return (
     <span
       title={props.title}
       style={{
         position: 'absolute',
-        ...positionStyles(),
+        top: '0px',
+        right: '0px',
         width: tokens.badge.dotSize,
         height: tokens.badge.dotSize,
         'border-radius': '50%',
-        background: props.color,
+        background: tokens.colors.warning.notSignedIn,
         border: '2px solid #1A1A2E',
-        'box-shadow': `0 0 6px ${props.color}80`,
+        'box-shadow': `0 0 6px ${tokens.colors.warning.notSignedIn}80`,
         'z-index': 10,
-        animation: props.pulse ? 'profileBadgePulse 2s ease-in-out infinite' : 'none',
+        animation: 'profileBadgePulse 2s ease-in-out infinite',
       }}
     />
   );
@@ -188,7 +175,6 @@ const TacoClubBorder: ParentComponent<{ size: number }> = (props) => {
  * ```tsx
  * <ProfileBadges
  *   isAuthenticated={auth.isAuthenticated()}
- *   hasSync={auth.hasSyncSubscription()}
  *   hasExtras={auth.hasAppExtras('tenure')}
  *   isTacoClub={auth.isTacoClubMember()}
  *   size={44}
@@ -200,9 +186,8 @@ const TacoClubBorder: ParentComponent<{ size: number }> = (props) => {
 export const ProfileBadges: ParentComponent<ProfileBadgesProps> = (props) => {
   const size = () => props.size ?? 44;
 
-  // Determine which warnings to show
-  const showNoProfileWarning = () => !props.isAuthenticated;
-  const showNoSyncWarning = () => props.isAuthenticated && !props.hasSync;
+  // Determine which badges to show
+  const showNotSignedInWarning = () => !props.isAuthenticated;
   const showExtrasBadge = () => props.hasExtras;
   const showTacoClubBorder = () => props.isTacoClub;
 
@@ -211,23 +196,9 @@ export const ProfileBadges: ParentComponent<ProfileBadgesProps> = (props) => {
     <div style={{ position: 'relative', display: 'inline-flex' }}>
       {props.children}
 
-      {/* Warning: No Profile */}
-      <Show when={showNoProfileWarning()}>
-        <WarningDot
-          color={tokens.colors.warning.noProfile}
-          position="top-right"
-          title="Sign in to TACo"
-          pulse
-        />
-      </Show>
-
-      {/* Warning: No Sync */}
-      <Show when={showNoSyncWarning()}>
-        <WarningDot
-          color={tokens.colors.warning.noSync}
-          position={showNoProfileWarning() ? 'top-left' : 'top-right'}
-          title="Enable sync to backup your data"
-        />
+      {/* Warning: Not Signed In */}
+      <Show when={showNotSignedInWarning()}>
+        <WarningDot title="Sign in to TACo" />
       </Show>
 
       {/* Achievement: Extras (Pro) */}

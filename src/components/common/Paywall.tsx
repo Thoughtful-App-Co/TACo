@@ -53,7 +53,7 @@ const FEATURE_CONFIGS: Record<string, FeatureConfig> = {
     ],
     price: '$5/mo',
     priceAnnual: '$30/year',
-    priceSubtext: 'Monthly or annual available',
+    priceSubtext: 'or $30/year (save 50%)',
     ctaText: 'Upgrade to Tenure Extras',
     icon: 'rocket',
   },
@@ -68,6 +68,8 @@ const FEATURE_CONFIGS: Record<string, FeatureConfig> = {
       'Weekly productivity insights',
     ],
     price: '$12/mo',
+    priceAnnual: '$80/year',
+    priceSubtext: 'or $80/year (save 44%)',
     ctaText: 'Upgrade to Tempo Extras',
     icon: 'rocket',
   },
@@ -83,6 +85,7 @@ const FEATURE_CONFIGS: Record<string, FeatureConfig> = {
     ],
     price: '$8/mo',
     priceAnnual: '$80/year',
+    priceSubtext: 'or $80/year (save 17%)',
     ctaText: 'Upgrade to Echoprax Extras',
     icon: 'rocket',
   },
@@ -402,6 +405,17 @@ export const Paywall: Component<PaywallProps> = (props) => {
                 >
                   /month
                 </span>
+                <Show when={config().priceSubtext}>
+                  <div
+                    style={{
+                      'font-size': '13px',
+                      color: 'rgba(255, 255, 255, 0.6)',
+                      'margin-top': '6px',
+                    }}
+                  >
+                    {config().priceSubtext}
+                  </div>
+                </Show>
               </div>
 
               {/* CTA Button */}

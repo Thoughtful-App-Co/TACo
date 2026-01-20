@@ -84,15 +84,6 @@ function getSubscriptionBadges(auth: ReturnType<typeof useAuth>): string[] {
   if (auth.hasAppExtras('tempo')) {
     badges.push('Tempo Pro');
   }
-  if (auth.hasAppSync('tenure')) {
-    badges.push('Tenure Sync');
-  }
-  if (auth.hasAppSync('tempo')) {
-    badges.push('Tempo Sync');
-  }
-  if (auth.hasAppSync('nurture')) {
-    badges.push('Nurture Sync');
-  }
 
   return badges;
 }
@@ -439,6 +430,37 @@ export const AccountButton: Component<AccountButtonProps> = (props) => {
                   >
                     {auth.user()?.email}
                   </div>
+
+                  {/* Sync status - subtle indicator */}
+                  <Show when={auth.hasSyncSubscription()}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        'align-items': 'center',
+                        gap: '6px',
+                        'margin-top': '6px',
+                      }}
+                    >
+                      <span
+                        style={{
+                          width: '6px',
+                          height: '6px',
+                          'border-radius': '50%',
+                          background: '#10B981',
+                          'box-shadow': '0 0 4px #10B981',
+                        }}
+                      />
+                      <span
+                        style={{
+                          'font-family': tokens.typography.fontFamily,
+                          'font-size': '11px',
+                          color: 'rgba(255, 255, 255, 0.5)',
+                        }}
+                      >
+                        Sync on
+                      </span>
+                    </div>
+                  </Show>
 
                   {/* Subscription badges */}
                   <Show when={subscriptionBadges().length > 0}>
