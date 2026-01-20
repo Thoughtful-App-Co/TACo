@@ -13,6 +13,7 @@ import {
   For,
   createSignal,
   onMount,
+  onCleanup,
   Show,
   createMemo,
   createEffect,
@@ -78,6 +79,8 @@ import { AppMenuTrigger } from '../common/AppMenuTrigger';
 import { ProfileBadges } from '../common/ProfileBadges';
 import { useAuth } from '../../lib/auth-context';
 import { IconTrophy } from './pipeline/ui/Icons';
+import { getTenureSyncManager, destroyTenureSyncManager } from '../../lib/sync/tenure-sync';
+import { logger } from '../../lib/logger';
 
 // Helper to get RGB string from hex
 const hexToRgb = (hex: string) => {
@@ -1209,6 +1212,15 @@ export const TenureApp: Component = () => {
 
   // Load saved state on mount
   onMount(async () => {
+    // Initialize sync manager for cross-device sync
+    const syncManager = getTenureSyncManager();
+    if (syncManager) {
+      syncManager.init().catch((err) => {
+        // Log but don't block - sync is best-effort
+        logger.sync.warn('Sync init failed:', err);
+      });
+    }
+
     // Load local storage
     const savedAnswers = localStorage.getItem('augment_answers');
     if (savedAnswers) {
@@ -1241,6 +1253,11 @@ export const TenureApp: Component = () => {
         setActiveTab('Discover');
       }
     }
+  });
+
+  // Cleanup sync manager on unmount
+  onCleanup(() => {
+    destroyTenureSyncManager();
   });
 
   const startAssessment = async () => {

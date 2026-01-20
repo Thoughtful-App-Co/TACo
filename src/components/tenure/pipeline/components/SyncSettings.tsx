@@ -12,7 +12,6 @@ import {
   IconSync,
   IconUpload,
   IconDownload,
-  IconKey,
   IconCheck,
   IconX,
   IconCopy,
@@ -53,9 +52,6 @@ export const SyncSettings: Component<SyncSettingsProps> = (props) => {
   const [importSuccess, setImportSuccess] = createSignal(false);
   const [importError, setImportError] = createSignal<string | null>(null);
 
-  // API Config state
-  const [apiKey, setApiKey] = createSignal(settings().apiKey || '');
-  const [apiMode, setApiMode] = createSignal(settings().apiMode);
   const [defaultLandingTab, setDefaultLandingTab] = createSignal<
     'discover' | 'prepare' | 'prospect' | 'prosper'
   >(settings().defaultLandingTab || 'discover');
@@ -154,13 +150,6 @@ export const SyncSettings: Component<SyncSettingsProps> = (props) => {
     };
     reader.readAsText(file);
     input.value = '';
-  };
-
-  const handleSaveApiConfig = () => {
-    pipelineStore.updateSettings({
-      apiMode: apiMode(),
-      apiKey: apiMode() === 'byok' ? apiKey() : undefined,
-    });
   };
 
   const stats = () => ({
@@ -1053,144 +1042,6 @@ export const SyncSettings: Component<SyncSettingsProps> = (props) => {
             }}
           >
             Trends
-          </button>
-        </div>
-      </FluidCard>
-
-      {/* API Configuration */}
-      <FluidCard>
-        <h4
-          style={{
-            margin: '0 0 12px',
-            'font-size': '16px',
-            'font-family': "'Playfair Display', Georgia, serif",
-            'font-weight': '600',
-            color: theme().colors.text,
-            display: 'flex',
-            'align-items': 'center',
-            gap: '10px',
-          }}
-        >
-          <IconKey size={18} color={theme().colors.primary} /> API Configuration
-        </h4>
-        <p
-          style={{
-            margin: '0 0 16px',
-            'font-size': '13px',
-            'font-family': "'Space Grotesk', system-ui, sans-serif",
-            color: theme().colors.textMuted,
-            'line-height': '1.5',
-          }}
-        >
-          Configure AI analysis. Bring your own API key or use our managed service.
-        </p>
-
-        <div style={{ display: 'flex', 'flex-direction': 'column', gap: '12px' }}>
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button
-              class="pipeline-btn"
-              onClick={() => setApiMode('none')}
-              style={{
-                flex: 1,
-                padding: '12px',
-                background: '#0A0A0A',
-                border:
-                  apiMode() === 'none' ? '2px solid #FFFFFF' : '1px solid rgba(255, 255, 255, 0.3)',
-                'border-radius': '10px',
-                color: '#FFFFFF',
-                'font-family': "'Space Grotesk', system-ui, sans-serif",
-                'font-weight': apiMode() === 'none' ? '600' : '400',
-                opacity: apiMode() === 'none' ? 1 : 0.7,
-                cursor: 'pointer',
-              }}
-            >
-              No AI
-            </button>
-            <button
-              class="pipeline-btn"
-              onClick={() => setApiMode('byok')}
-              style={{
-                flex: 1,
-                padding: '12px',
-                background: '#0A0A0A',
-                border:
-                  apiMode() === 'byok' ? '2px solid #FFFFFF' : '1px solid rgba(255, 255, 255, 0.3)',
-                'border-radius': '10px',
-                color: '#FFFFFF',
-                'font-family': "'Space Grotesk', system-ui, sans-serif",
-                'font-weight': apiMode() === 'byok' ? '600' : '400',
-                opacity: apiMode() === 'byok' ? 1 : 0.7,
-                cursor: 'pointer',
-              }}
-            >
-              Your API Key
-            </button>
-            <button
-              class="pipeline-btn"
-              onClick={() => setApiMode('managed')}
-              style={{
-                flex: 1,
-                padding: '12px',
-                background: '#0A0A0A',
-                border:
-                  apiMode() === 'managed'
-                    ? '2px solid #FFFFFF'
-                    : '1px solid rgba(255, 255, 255, 0.3)',
-                'border-radius': '10px',
-                color: '#FFFFFF',
-                'font-family': "'Space Grotesk', system-ui, sans-serif",
-                'font-weight': apiMode() === 'managed' ? '600' : '400',
-                opacity: apiMode() === 'managed' ? 1 : 0.7,
-                cursor: 'pointer',
-              }}
-            >
-              Managed
-            </button>
-          </div>
-
-          <Show when={apiMode() === 'byok'}>
-            <div>
-              <label style={labelStyle()}>Anthropic API Key</label>
-              <input
-                type="password"
-                value={apiKey()}
-                onInput={(e) => setApiKey(e.currentTarget.value)}
-                placeholder="sk-ant-..."
-                style={inputStyle()}
-              />
-            </div>
-          </Show>
-
-          <Show when={apiMode() === 'managed'}>
-            <div
-              style={{
-                padding: '16px',
-                background: theme().colors.surfaceLight,
-                'border-radius': '12px',
-                'text-align': 'center',
-              }}
-            >
-              <div style={{ 'font-size': '14px', color: theme().colors.textMuted }}>
-                Managed API coming soon! For now, use your own API key.
-              </div>
-            </div>
-          </Show>
-
-          <button
-            class="pipeline-btn"
-            onClick={handleSaveApiConfig}
-            style={{
-              padding: '12px',
-              background: '#0A0A0A',
-              border: '2px solid #FFFFFF',
-              'border-radius': '10px',
-              color: '#FFFFFF',
-              'font-family': "'Space Grotesk', system-ui, sans-serif",
-              cursor: 'pointer',
-              'font-weight': '600',
-            }}
-          >
-            Save API Settings
           </button>
         </div>
       </FluidCard>

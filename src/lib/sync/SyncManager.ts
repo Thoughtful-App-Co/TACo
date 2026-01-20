@@ -32,6 +32,8 @@ const DEFAULT_OPTIONS: Required<SyncManagerOptions> = {
   debounceMs: 30000, // 30 seconds
   autoSync: true,
   pushOnBlur: true,
+  pollIntervalMs: 60000, // 60 seconds - check for server changes periodically
+  pullOnFocus: true, // Pull when tab gains focus
 };
 
 /**
@@ -96,6 +98,8 @@ export class SyncManager<T = unknown> {
   private boundHandleOffline: () => void;
   private boundHandleBlur: () => void;
   private boundHandleBeforeUnload: (e: BeforeUnloadEvent) => void;
+  private boundHandleVisibilityChange: () => void;
+  private pollTimer: ReturnType<typeof setInterval> | null = null;
 
   constructor(
     app: SyncApp,
@@ -126,6 +130,7 @@ export class SyncManager<T = unknown> {
     this.boundHandleOffline = this.handleOffline.bind(this);
     this.boundHandleBlur = this.handleBlur.bind(this);
     this.boundHandleBeforeUnload = this.handleBeforeUnload.bind(this);
+    this.boundHandleVisibilityChange = this.handleVisibilityChange.bind(this);
 
     // Set up event listeners
     window.addEventListener('online', this.boundHandleOnline);
@@ -134,6 +139,10 @@ export class SyncManager<T = unknown> {
     if (this.options.pushOnBlur) {
       window.addEventListener('blur', this.boundHandleBlur);
       window.addEventListener('beforeunload', this.boundHandleBeforeUnload);
+    }
+
+    if (this.options.pullOnFocus) {
+      document.addEventListener('visibilitychange', this.boundHandleVisibilityChange);
     }
 
     logger.sync.info(`SyncManager initialized for ${app}`, {
@@ -160,6 +169,9 @@ export class SyncManager<T = unknown> {
     } catch (error) {
       logger.sync.error('Sync init failed:', error);
     }
+
+    // Start polling for changes
+    this.startPolling();
   }
 
   /**
@@ -431,6 +443,37 @@ export class SyncManager<T = unknown> {
   }
 
   /**
+   * Start periodic polling for server changes
+   */
+  private startPolling(): void {
+    if (this.pollTimer || !this.options.pollIntervalMs) {
+      return;
+    }
+
+    this.pollTimer = setInterval(() => {
+      if (this.isAuthenticated() && this.isOnline && this.state.status === 'idle') {
+        logger.sync.debug('Polling for changes...');
+        this.checkAndSync().catch((error) => {
+          logger.sync.error('Poll sync check failed:', error);
+        });
+      }
+    }, this.options.pollIntervalMs);
+
+    logger.sync.info(`Polling started with ${this.options.pollIntervalMs}ms interval`);
+  }
+
+  /**
+   * Stop polling
+   */
+  private stopPolling(): void {
+    if (this.pollTimer) {
+      clearInterval(this.pollTimer);
+      this.pollTimer = null;
+      logger.sync.info('Polling stopped');
+    }
+  }
+
+  /**
    * Clean up resources
    */
   destroy(): void {
@@ -438,10 +481,13 @@ export class SyncManager<T = unknown> {
       clearTimeout(this.debounceTimer);
     }
 
+    this.stopPolling();
+
     window.removeEventListener('online', this.boundHandleOnline);
     window.removeEventListener('offline', this.boundHandleOffline);
     window.removeEventListener('blur', this.boundHandleBlur);
     window.removeEventListener('beforeunload', this.boundHandleBeforeUnload);
+    document.removeEventListener('visibilitychange', this.boundHandleVisibilityChange);
 
     this.listeners.clear();
 
@@ -531,6 +577,15 @@ export class SyncManager<T = unknown> {
   private handleBeforeUnload(_e: BeforeUnloadEvent): void {
     if (this.state.pendingChanges) {
       this.forcePush();
+    }
+  }
+
+  private handleVisibilityChange(): void {
+    if (document.visibilityState === 'visible' && this.isOnline && this.isAuthenticated()) {
+      logger.sync.info('Tab became visible, checking for updates');
+      this.checkAndSync().catch((error) => {
+        logger.sync.error('Visibility sync check failed:', error);
+      });
     }
   }
 }

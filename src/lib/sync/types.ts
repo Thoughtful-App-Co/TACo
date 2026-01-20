@@ -53,6 +53,10 @@ export interface SyncManagerOptions {
   autoSync?: boolean;
   /** Push on window blur (default: true) */
   pushOnBlur?: boolean;
+  /** Polling interval in ms for checking server changes (default: 60000, 0 to disable) */
+  pollIntervalMs?: number;
+  /** Pull data when tab gains focus (default: true) */
+  pullOnFocus?: boolean;
 }
 
 /**
