@@ -136,6 +136,13 @@ function getTenureData(): TenureSyncData {
  * Apply synced data to localStorage
  */
 function setTenureData(data: TenureSyncData): void {
+  logger.sync.info('setTenureData() called - applying synced data', {
+    hasApplications: !!data.applications,
+    applicationCount: data.applications?.length ?? 0,
+    hasProfile: !!data.profile,
+    hasSettings: !!data.settings,
+  });
+
   // Only update keys that exist in the incoming data
   if (data.applications !== undefined) {
     saveToStorage(STORAGE_KEYS.applications, data.applications);
@@ -190,6 +197,7 @@ function setTenureData(data: TenureSyncData): void {
   }
 
   // Trigger a storage event so reactive stores can update
+  logger.sync.info('Dispatching tenure_sync_updated event');
   window.dispatchEvent(new StorageEvent('storage', { key: 'tenure_sync_updated' }));
 
   logger.sync.info('Tenure data applied from sync');
@@ -207,6 +215,12 @@ let tenureSyncManager: SyncManager<TenureSyncData> | null = null;
 export function getTenureSyncManager(): SyncManager<TenureSyncData> | null {
   // Check subscription
   const access = canUseTenureSync();
+  logger.sync.info('getTenureSyncManager() called', {
+    allowed: access.allowed,
+    reason: access.allowed ? 'has subscription' : access.reason,
+    hasExistingManager: !!tenureSyncManager,
+  });
+
   if (!access.allowed) {
     logger.sync.debug('Tenure sync not available:', access.reason);
     return null;
@@ -310,4 +324,77 @@ export function notifyTenureDataChanged(): void {
   if (manager) {
     manager.schedulePush();
   }
+}
+
+// ============================================================================
+// DEBUG UTILITIES (for browser console)
+// ============================================================================
+
+/**
+ * Expose sync debug utilities on window for troubleshooting
+ * Usage in browser console:
+ *   window.TACo.sync.status() - Get current sync state
+ *   window.TACo.sync.forcePush() - Force push now
+ *   window.TACo.sync.forcePull() - Force pull now
+ *   window.TACo.sync.checkSubscription() - Check subscription status
+ */
+if (typeof window !== 'undefined') {
+  (window as any).TACo = (window as any).TACo || {};
+  (window as any).TACo.sync = {
+    status: () => {
+      const manager = tenureSyncManager;
+      if (!manager) {
+        logger.sync.warn('Sync manager not initialized');
+        logger.sync.info('Subscription check:', canUseTenureSync());
+        return null;
+      }
+      const state = manager.getState();
+      logger.sync.info('Sync State:', state);
+      logger.sync.info('Local storage keys:', {
+        applications: localStorage.getItem('tenure_prospect_applications')?.length ?? 0,
+        profile: localStorage.getItem('tenure_prospect_profile')?.length ?? 0,
+        syncMeta: localStorage.getItem('taco_sync_tenure_meta'),
+      });
+      return state;
+    },
+    forcePush: async () => {
+      const manager = getTenureSyncManager();
+      if (!manager) {
+        logger.sync.error('Sync manager not available');
+        return;
+      }
+      logger.sync.info('Forcing push...');
+      try {
+        await manager.push();
+        logger.sync.info('Push complete');
+      } catch (e) {
+        logger.sync.error('Push failed:', e);
+      }
+    },
+    forcePull: async () => {
+      const manager = getTenureSyncManager();
+      if (!manager) {
+        logger.sync.error('Sync manager not available');
+        return;
+      }
+      logger.sync.info('Forcing pull...');
+      try {
+        await manager.pull();
+        logger.sync.info('Pull complete');
+      } catch (e) {
+        logger.sync.error('Pull failed:', e);
+      }
+    },
+    checkSubscription: () => {
+      const result = canUseTenureSync();
+      logger.sync.info('Subscription check:', result);
+      logger.sync.info('Cached subscriptions:', localStorage.getItem('taco_subscriptions'));
+      return result;
+    },
+    getManager: () => tenureSyncManager,
+  };
+
+  logger.sync.info(
+    'TACo sync debug utilities loaded. Use window.TACo.sync.status() to check sync state.'
+  );
 }
