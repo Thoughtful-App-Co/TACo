@@ -62,7 +62,7 @@ export const PricingPage: Component = () => {
   const [syncAnnual, setSyncAnnual] = createSignal(false); // Monthly vs Annual for sync
   const [selectedExtras, setSelectedExtras] = createSignal<string[]>([]);
   const [tempoAnnual, setTempoAnnual] = createSignal(false);
-  const [tenureAnnual, setTenureAnnual] = createSignal(true); // Monthly vs Annual for tenure (default to annual)
+  const [tenureAnnual, setTenureAnnual] = createSignal(false); // Monthly vs Annual for tenure (default to monthly for discoverability)
   const [tacoClubTier, setTacoClubTier] = createSignal<TacoClubTier>('none');
 
   // Tooltip state

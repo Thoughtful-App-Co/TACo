@@ -22,6 +22,7 @@ import { logger } from '../lib/logger';
 import { showNotification } from '../lib/notifications';
 import { LoginModal } from './common/LoginModal';
 import { DoodleShield, DoodleSparkle, DoodleRocket } from './common/DoodleIcons';
+import { getSubscriptionsSyncTimestamp, isUsingCachedSubscriptions } from '../lib/feature-gates';
 
 // ============================================================================
 // TYPES
@@ -198,6 +199,26 @@ function maskCustomerId(customerId: string | null): string {
   const visible = 8;
   if (customerId.length <= visible) return customerId;
   return customerId.substring(0, visible) + '•••';
+}
+
+function formatRelativeTime(timestamp: number): string {
+  const now = Date.now();
+  const diff = now - timestamp;
+
+  const seconds = Math.floor(diff / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+
+  if (seconds < 60) return 'just now';
+  if (minutes < 60) return `${minutes}m ago`;
+  if (hours < 24) return `${hours}h ago`;
+  if (days === 1) return 'yesterday';
+  if (days < 7) return `${days}d ago`;
+
+  // For older timestamps, show the date
+  const date = new Date(timestamp);
+  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
 // ============================================================================
@@ -575,19 +596,47 @@ export const SettingsPage: Component = () => {
     const details: SubscriptionDetails[] = [];
 
     if (auth.isTacoClubMember()) {
+      // Get detailed subscription info if available
+      const tacoClubDetails = user.subscriptionDetails?.taco_club;
+      const isLifetime = tacoClubDetails?.lifetimeAccess ?? false;
+      const totalPayments = tacoClubDetails?.totalPayments ?? 0;
+      const maxPayments = tacoClubDetails?.maxPayments ?? 24;
+      const totalPaidCents = tacoClubDetails?.totalPaidCents ?? 0;
+
+      // Build billing info based on payment status
+      let billingInfo: string;
+      if (isLifetime) {
+        // Lifetime member - either purchased lifetime or completed 24 payments
+        if (totalPayments >= maxPayments) {
+          billingInfo = `Lifetime (${totalPayments} payments completed)`;
+        } else {
+          // Purchased lifetime upfront
+          billingInfo = `Lifetime ($${(totalPaidCents / 100).toFixed(0)} paid)`;
+        }
+      } else if (totalPayments > 0) {
+        // Active monthly subscription with progress
+        const remaining = maxPayments - totalPayments;
+        billingInfo = `${totalPayments}/${maxPayments} payments ($${(totalPaidCents / 100).toFixed(0)} paid) - ${remaining} remaining`;
+      } else {
+        // No payment data yet (new subscription)
+        billingInfo = '$25/mo for 24 months';
+      }
+
       details.push({
         id: 'taco_club',
         name: 'TACo Club',
-        description: 'Founding Member',
+        description: isLifetime ? 'Lifetime Member' : 'Founding Member',
         features: [
           'All apps, all features',
           'Unlimited AI credits',
           'Priority support',
-          'Lifetime access',
+          isLifetime
+            ? 'Lifetime access unlocked'
+            : `${maxPayments - totalPayments} payments to lifetime`,
         ],
         icon: 'club',
         color: tokens.colors.brand.yellow,
-        billingInfo: '$24/mo × 24 months',
+        billingInfo,
       });
     }
 
@@ -604,7 +653,7 @@ export const SettingsPage: Component = () => {
         ],
         icon: 'tenure',
         color: tokens.colors.brand.coral,
-        billingInfo: '$10/mo',
+        billingInfo: '$5/mo or $30/year',
       });
     }
 
@@ -621,7 +670,7 @@ export const SettingsPage: Component = () => {
         ],
         icon: 'tempo',
         color: tokens.colors.brand.teal,
-        billingInfo: '$5/mo',
+        billingInfo: '$12/mo or $80/year',
       });
     }
 
@@ -643,7 +692,7 @@ export const SettingsPage: Component = () => {
         ],
         icon: 'sync',
         color: tokens.colors.brand.teal,
-        billingInfo: '$3/mo per app',
+        billingInfo: '$2/mo per app or $3.50/mo all apps',
       });
     }
 
@@ -1364,6 +1413,59 @@ export const SettingsPage: Component = () => {
             >
               <For each={subscriptionDetails()}>{(sub) => <SubscriptionCard {...sub} />}</For>
             </div>
+
+            {/* Subtle sync timestamp indicator */}
+            <Show when={getSubscriptionsSyncTimestamp()}>
+              <div
+                style={{
+                  'margin-top': tokens.spacing.lg,
+                  'padding-top': tokens.spacing.md,
+                  'border-top': `1px solid ${tokens.colors.border}`,
+                  display: 'flex',
+                  'align-items': 'center',
+                  'justify-content': 'flex-end',
+                  gap: tokens.spacing.xs,
+                }}
+              >
+                <Show
+                  when={isUsingCachedSubscriptions()}
+                  fallback={
+                    <span
+                      style={{
+                        'font-size': tokens.font.sizes.xs,
+                        color: tokens.colors.text.muted,
+                      }}
+                    >
+                      Last synced {formatRelativeTime(getSubscriptionsSyncTimestamp()!)}
+                    </span>
+                  }
+                >
+                  <svg
+                    width="12"
+                    height="12"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke={tokens.colors.status.warning}
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="12" y1="8" x2="12" y2="12" />
+                    <line x1="12" y1="16" x2="12.01" y2="16" />
+                  </svg>
+                  <span
+                    style={{
+                      'font-size': tokens.font.sizes.xs,
+                      color: tokens.colors.status.warning,
+                    }}
+                    title="Subscription data may be outdated. Connect to the internet to refresh."
+                  >
+                    Cached ({formatRelativeTime(getSubscriptionsSyncTimestamp()!)})
+                  </span>
+                </Show>
+              </div>
+            </Show>
           </Show>
         </SectionCard>
 
