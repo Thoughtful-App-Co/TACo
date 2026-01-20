@@ -66,6 +66,87 @@ let cachedSubscriptions: string[] | null = null;
 let cacheTimestamp: number = 0;
 const CACHE_TTL = 60 * 1000; // 1 minute
 
+// localStorage keys for offline persistence
+const SUBSCRIPTIONS_STORAGE_KEY = 'taco_subscriptions';
+const SUBSCRIPTIONS_TIMESTAMP_KEY = 'taco_subscriptions_timestamp';
+
+/**
+ * Persist subscriptions to localStorage for offline access
+ */
+function persistSubscriptionsToStorage(subs: string[]): void {
+  try {
+    localStorage.setItem(SUBSCRIPTIONS_STORAGE_KEY, JSON.stringify(subs));
+    localStorage.setItem(SUBSCRIPTIONS_TIMESTAMP_KEY, Date.now().toString());
+  } catch (error) {
+    logger.features.warn('Failed to persist subscriptions to localStorage:', error);
+  }
+}
+
+/**
+ * Get persisted subscriptions from localStorage
+ * Returns null if not found or invalid
+ */
+function getPersistedSubscriptions(): { subscriptions: string[]; timestamp: number } | null {
+  try {
+    const subs = localStorage.getItem(SUBSCRIPTIONS_STORAGE_KEY);
+    const timestamp = localStorage.getItem(SUBSCRIPTIONS_TIMESTAMP_KEY);
+
+    if (!subs || !timestamp) {
+      return null;
+    }
+
+    const parsed = JSON.parse(subs);
+    if (!Array.isArray(parsed)) {
+      return null;
+    }
+
+    return {
+      subscriptions: parsed,
+      timestamp: parseInt(timestamp, 10),
+    };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Clear persisted subscriptions from localStorage
+ */
+function clearPersistedSubscriptions(): void {
+  try {
+    localStorage.removeItem(SUBSCRIPTIONS_STORAGE_KEY);
+    localStorage.removeItem(SUBSCRIPTIONS_TIMESTAMP_KEY);
+  } catch (error) {
+    logger.features.warn('Failed to clear persisted subscriptions:', error);
+  }
+}
+
+/**
+ * Get the timestamp of when subscriptions were last synced
+ * Returns null if no cached data exists
+ */
+export function getSubscriptionsSyncTimestamp(): number | null {
+  // First check in-memory cache
+  if (cacheTimestamp > 0) {
+    return cacheTimestamp;
+  }
+
+  // Fall back to localStorage timestamp
+  const persisted = getPersistedSubscriptions();
+  return persisted?.timestamp || null;
+}
+
+/**
+ * Check if we're currently using offline/cached subscription data
+ */
+export function isUsingCachedSubscriptions(): boolean {
+  const syncTimestamp = getSubscriptionsSyncTimestamp();
+  if (!syncTimestamp) return false;
+
+  // If last sync was more than cache TTL ago, we're using stale/offline data
+  return Date.now() - syncTimestamp > CACHE_TTL;
+}
+
 /**
  * Get cached subscriptions or fetch fresh
  */
@@ -74,6 +155,7 @@ export async function getSubscriptions(): Promise<string[]> {
 
   if (!token) {
     cachedSubscriptions = null;
+    clearPersistedSubscriptions();
     return [];
   }
 
@@ -93,27 +175,68 @@ export async function getSubscriptions(): Promise<string[]> {
 
     if (!response.ok) {
       cachedSubscriptions = null;
-      return [];
+      // Don't clear localStorage here - keep offline fallback available
+      return getOfflineFallbackSubscriptions();
     }
 
     const data = await response.json();
     const subs: string[] = data.subscriptions || [];
     cachedSubscriptions = subs;
     cacheTimestamp = Date.now();
+
+    // Persist to localStorage for offline access
+    persistSubscriptionsToStorage(subs);
+
     return subs;
   } catch {
-    if (cachedSubscriptions) {
-      return cachedSubscriptions;
-    }
-    return [];
+    // Network error - try offline fallback
+    return getOfflineFallbackSubscriptions();
   }
 }
 
 /**
+ * Get subscriptions from offline storage when API is unavailable
+ */
+function getOfflineFallbackSubscriptions(): string[] {
+  // First try in-memory cache
+  if (cachedSubscriptions) {
+    return cachedSubscriptions;
+  }
+
+  // Fall back to localStorage
+  const persisted = getPersistedSubscriptions();
+  if (persisted) {
+    logger.features.debug(
+      'Using offline persisted subscriptions from',
+      new Date(persisted.timestamp).toISOString()
+    );
+    // Update in-memory cache with persisted data
+    cachedSubscriptions = persisted.subscriptions;
+    cacheTimestamp = persisted.timestamp;
+    return persisted.subscriptions;
+  }
+
+  return [];
+}
+
+/**
  * Synchronous check using cached data
+ * Falls back to localStorage if in-memory cache is empty
  */
 function getCachedSubscriptions(): string[] {
-  return cachedSubscriptions || [];
+  if (cachedSubscriptions) {
+    return cachedSubscriptions;
+  }
+
+  // Try localStorage fallback for offline support
+  const persisted = getPersistedSubscriptions();
+  if (persisted) {
+    cachedSubscriptions = persisted.subscriptions;
+    cacheTimestamp = persisted.timestamp;
+    return persisted.subscriptions;
+  }
+
+  return [];
 }
 
 /**
@@ -129,6 +252,17 @@ function isAuthenticated(): boolean {
 export function clearSubscriptionCache(): void {
   cachedSubscriptions = null;
   cacheTimestamp = 0;
+  // Note: We don't clear localStorage here to maintain offline fallback
+  // It will be updated on next successful API call
+}
+
+/**
+ * Clear all subscription data including localStorage (call on logout)
+ */
+export function clearAllSubscriptionData(): void {
+  cachedSubscriptions = null;
+  cacheTimestamp = 0;
+  clearPersistedSubscriptions();
 }
 
 /**

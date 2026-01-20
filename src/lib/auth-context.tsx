@@ -32,7 +32,11 @@ import {
   isTacoClubMember,
   getAndClearRedirectIntent,
 } from './auth';
-import { clearSubscriptionCache, initializeSubscriptionCache } from './feature-gates';
+import {
+  clearSubscriptionCache,
+  clearAllSubscriptionData,
+  initializeSubscriptionCache,
+} from './feature-gates';
 
 // ============================================================================
 // TYPES
@@ -178,6 +182,8 @@ export const AuthProvider: ParentComponent = (props) => {
    */
   function logout(redirectTo?: string) {
     setUser(null);
+    // Clear all subscription data including localStorage persistence
+    clearAllSubscriptionData();
     authLogout(redirectTo);
   }
 

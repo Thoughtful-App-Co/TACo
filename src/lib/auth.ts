@@ -13,10 +13,26 @@ import { logger } from './logger';
 // TYPES
 // ============================================================================
 
+/**
+ * Detailed subscription information for a single product
+ * Used to display payment progress, status, etc.
+ */
+export interface SubscriptionDetail {
+  status: string;
+  lifetimeAccess: boolean;
+  totalPayments: number | null;
+  maxPayments: number | null;
+  totalPaidCents: number | null;
+  currentPeriodEnd: number | null;
+  cancelAtPeriodEnd: boolean;
+}
+
 export interface User {
   userId: string;
   email: string;
   subscriptions: string[];
+  /** Detailed subscription info keyed by product name (e.g., 'taco_club', 'tenure_extras') */
+  subscriptionDetails?: Record<string, SubscriptionDetail>;
   stripeCustomerId: string | null;
   createdAt: number;
 }
@@ -43,6 +59,8 @@ export type SubscriptionProduct =
 const TOKEN_STORAGE_KEY = 'taco_session_token';
 const AUTH_CALLBACK_PARAM = 'auth_token';
 const REDIRECT_INTENT_KEY = 'taco_redirect_intent';
+const USER_CACHE_KEY = 'taco_user_cache';
+const USER_CACHE_TIMESTAMP_KEY = 'taco_user_cache_timestamp';
 
 // ============================================================================
 // TOKEN MANAGEMENT
@@ -79,6 +97,134 @@ export function clearToken(): void {
   } catch (error) {
     logger.auth.error('Failed to clear auth token:', error);
   }
+}
+
+// ============================================================================
+// JWT UTILITIES (Client-Side)
+// ============================================================================
+
+/**
+ * JWT payload structure (matches server-side token)
+ */
+interface JwtPayload {
+  userId: string;
+  email: string;
+  subscriptions: string[];
+  type: string;
+  exp: number;
+  iat: number;
+  jti: string;
+}
+
+/**
+ * Decode a JWT token without verification (client-side only)
+ * This is safe because we only use it for UX decisions, not authorization.
+ * Server always re-validates the full token on API calls.
+ */
+function decodeJwtPayload(token: string): JwtPayload | null {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) {
+      return null;
+    }
+    // Decode base64url to base64, then to string
+    const payload = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+    const decoded = atob(payload);
+    return JSON.parse(decoded) as JwtPayload;
+  } catch (error) {
+    logger.auth.warn('Failed to decode JWT payload:', error);
+    return null;
+  }
+}
+
+/**
+ * Check if a JWT token is expired (client-side check)
+ */
+function isTokenExpired(token: string): boolean {
+  const payload = decodeJwtPayload(token);
+  if (!payload?.exp) {
+    return true; // Treat missing exp as expired
+  }
+  // exp is in seconds, Date.now() is in milliseconds
+  const now = Math.floor(Date.now() / 1000);
+  return now >= payload.exp;
+}
+
+/**
+ * Get time until token expires (in seconds)
+ * Returns 0 if expired or invalid
+ */
+export function getTokenTimeRemaining(token: string | null): number {
+  if (!token) return 0;
+  const payload = decodeJwtPayload(token);
+  if (!payload?.exp) return 0;
+  const now = Math.floor(Date.now() / 1000);
+  const remaining = payload.exp - now;
+  return remaining > 0 ? remaining : 0;
+}
+
+// ============================================================================
+// USER CACHE (for offline support)
+// ============================================================================
+
+/**
+ * Cache user data to localStorage for offline access
+ */
+function cacheUserData(user: User): void {
+  try {
+    localStorage.setItem(USER_CACHE_KEY, JSON.stringify(user));
+    localStorage.setItem(USER_CACHE_TIMESTAMP_KEY, Date.now().toString());
+    logger.auth.debug('User data cached for offline access');
+  } catch (error) {
+    logger.auth.warn('Failed to cache user data:', error);
+  }
+}
+
+/**
+ * Get cached user data from localStorage
+ */
+function getCachedUserData(): User | null {
+  try {
+    const cached = localStorage.getItem(USER_CACHE_KEY);
+    if (!cached) return null;
+    return JSON.parse(cached) as User;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Clear cached user data
+ */
+function clearCachedUserData(): void {
+  try {
+    localStorage.removeItem(USER_CACHE_KEY);
+    localStorage.removeItem(USER_CACHE_TIMESTAMP_KEY);
+  } catch (error) {
+    logger.auth.warn('Failed to clear cached user data:', error);
+  }
+}
+
+/**
+ * Build a User object from JWT payload and cached data
+ * Used when offline to maintain authentication state
+ */
+function buildUserFromToken(token: string): User | null {
+  const payload = decodeJwtPayload(token);
+  if (!payload) return null;
+
+  // Try to get richer data from cache
+  const cached = getCachedUserData();
+
+  return {
+    userId: payload.userId,
+    email: payload.email,
+    // Prefer cached subscriptions (more up-to-date) but fall back to JWT
+    subscriptions: cached?.subscriptions ?? payload.subscriptions ?? [],
+    subscriptionDetails: cached?.subscriptionDetails,
+    stripeCustomerId: cached?.stripeCustomerId ?? null,
+    createdAt: cached?.createdAt ?? payload.iat * 1000,
+  };
 }
 
 /**
@@ -252,6 +398,11 @@ function showAuthErrorNotification(errorType: string): void {
 /**
  * Validate the current session and get user info
  *
+ * Works offline by:
+ * 1. Checking JWT expiration client-side (no network needed)
+ * 2. Returning cached user data when offline
+ * 3. Refreshing from server when online for latest subscription data
+ *
  * @returns User object if session is valid, null otherwise
  */
 export async function validateSession(): Promise<User | null> {
@@ -261,6 +412,15 @@ export async function validateSession(): Promise<User | null> {
     return null;
   }
 
+  // First, check if token is expired (client-side, no network needed)
+  if (isTokenExpired(token)) {
+    logger.auth.info('Session token expired (client-side check)');
+    clearToken();
+    clearCachedUserData();
+    return null;
+  }
+
+  // Try to validate with server for fresh subscription data
   try {
     const response = await fetch('/api/auth/validate', {
       method: 'POST',
@@ -271,27 +431,45 @@ export async function validateSession(): Promise<User | null> {
     });
 
     if (!response.ok) {
-      // Token is invalid or expired - clear it
+      // Server says token is invalid - trust server over client
+      logger.auth.info('Session invalid (server rejected)');
       clearToken();
+      clearCachedUserData();
       return null;
     }
 
-    const user = await response.json();
-    return user as User;
+    const user = (await response.json()) as User;
+
+    // Cache user data for offline access
+    cacheUserData(user);
+
+    return user;
   } catch (error) {
-    logger.auth.error('Session validation error:', error);
+    // Network error - we're offline
+    logger.auth.info('Network unavailable, using offline authentication');
+
+    // Token is valid (not expired), return user from token + cache
+    const offlineUser = buildUserFromToken(token);
+    if (offlineUser) {
+      logger.auth.debug('Returning offline user:', { email: offlineUser.email });
+      return offlineUser;
+    }
+
+    // Couldn't build user from token
+    logger.auth.error('Failed to build offline user from token');
     return null;
   }
 }
 
 /**
  * Log out the current user
- * Clears local token and optionally redirects
+ * Clears local token, cached user data, and optionally redirects
  *
  * @param redirectTo - Optional URL to redirect to after logout
  */
 export function logout(redirectTo?: string): void {
   clearToken();
+  clearCachedUserData();
 
   if (redirectTo) {
     window.location.href = redirectTo;
