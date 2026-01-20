@@ -25,6 +25,7 @@ import {
   generateId,
 } from '../../../schemas/tenure';
 import { notifyTenureDataChanged } from '../../../lib/sync';
+import { logger } from '../../../lib/logger';
 
 // ============================================================================
 // STORAGE KEYS
@@ -149,6 +150,31 @@ createEffect(() => {
   void state.wizardState.currentStep;
   notifyTenureDataChanged();
 });
+
+// Listen for sync updates from other tabs/devices
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (event) => {
+    if (
+      event.key === 'tenure_sync_updated' ||
+      event.key === STORAGE_KEYS.masterResume ||
+      event.key === STORAGE_KEYS.variants ||
+      event.key === STORAGE_KEYS.wizard
+    ) {
+      logger.sync.info('Prepare sync data changed, reloading store');
+      reloadFromStorage();
+    }
+  });
+}
+
+function reloadFromStorage(): void {
+  const newState = loadInitialState();
+  setState({
+    masterResume: newState.masterResume,
+    variants: newState.variants,
+    wizardState: newState.wizardState,
+    currentVariantId: newState.currentVariantId,
+  });
+}
 
 // ============================================================================
 // STORE ACTIONS
