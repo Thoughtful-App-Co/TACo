@@ -158,12 +158,12 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session, env: En
       if (product === 'tenure_extras') {
         await grantTokens(
           userId,
-          10,
-          'Tenure Extras one-time purchase - 10 tokens granted',
+          20,
+          'Tenure Extras one-time purchase - 20 tokens granted',
           env,
           session.payment_intent as string
         );
-        billingLog.info(`Granted 10 tokens to user ${userId} for tenure_extras one-time purchase`);
+        billingLog.info(`Granted 20 tokens to user ${userId} for tenure_extras one-time purchase`);
       }
     }
   }
@@ -260,12 +260,12 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription, env: 
     if (product === 'tenure_extras' && subscription.status === 'active' && isNewProduct) {
       await grantTokens(
         userId,
-        10,
-        'Tenure Extras purchase - 10 tokens granted',
+        20,
+        'Tenure Extras purchase - 20 tokens granted',
         env,
         subscription.id
       );
-      billingLog.info(`Granted 10 tokens to user ${userId} for new tenure_extras`);
+      billingLog.info(`Granted 20 tokens to user ${userId} for new tenure_extras`);
     }
   }
 
@@ -404,12 +404,12 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice, env: Env) {
   if (product === 'tenure_extras') {
     await grantTokens(
       userId,
-      10,
-      'Tenure Extras renewal payment - 10 tokens granted',
+      20,
+      'Tenure Extras renewal payment - 20 tokens granted',
       env,
       (invoice as any).payment_intent
     );
-    billingLog.info(`Granted 10 tokens to user ${userId} for tenure_extras renewal payment`);
+    billingLog.info(`Granted 20 tokens to user ${userId} for tenure_extras renewal payment`);
   }
 }
 
