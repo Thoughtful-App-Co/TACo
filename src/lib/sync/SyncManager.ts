@@ -155,6 +155,12 @@ export class SyncManager<T = unknown> {
    * Initialize sync - check server and pull if needed
    */
   async init(): Promise<void> {
+    logger.sync.info(`[${this.app}] SyncManager.init() called`, {
+      isAuthenticated: this.isAuthenticated(),
+      autoSync: this.options.autoSync,
+      isOnline: this.isOnline,
+    });
+
     if (!this.isAuthenticated()) {
       logger.sync.debug('Not authenticated, skipping sync init');
       return;
@@ -178,6 +184,12 @@ export class SyncManager<T = unknown> {
    * Check server meta and sync if needed
    */
   private async checkAndSync(): Promise<void> {
+    logger.sync.info(`[${this.app}] checkAndSync() starting`, {
+      isOnline: this.isOnline,
+      localVersion: this.state.localVersion,
+      pendingChanges: this.state.pendingChanges,
+    });
+
     if (!this.isOnline) {
       this.updateStatus('offline');
       return;
@@ -232,7 +244,9 @@ export class SyncManager<T = unknown> {
       throw new Error(error.error || `HTTP ${response.status}`);
     }
 
-    return response.json();
+    const result = await response.json();
+    logger.sync.info(`[${this.app}] fetchMeta response`, result);
+    return result;
   }
 
   /**
@@ -256,6 +270,10 @@ export class SyncManager<T = unknown> {
       const result: PullResponse = await response.json();
 
       // Apply data
+      logger.sync.info(`[${this.app}] Applying pulled data`, {
+        version: result.meta.version,
+        dataKeys: Object.keys(result.data || {}),
+      });
       this.setData(result.data as T);
 
       // Update local meta
@@ -296,6 +314,11 @@ export class SyncManager<T = unknown> {
 
     try {
       const data = this.getData();
+
+      logger.sync.info(`[${this.app}] Pushing data`, {
+        localVersion: this.state.localVersion,
+        dataSize: JSON.stringify(data).length,
+      });
 
       const response = await authFetch(`/api/sync/${this.app}/push`, {
         method: 'POST',
@@ -447,6 +470,10 @@ export class SyncManager<T = unknown> {
    */
   private startPolling(): void {
     if (this.pollTimer || !this.options.pollIntervalMs) {
+      logger.sync.debug(`[${this.app}] Polling not started`, {
+        alreadyRunning: !!this.pollTimer,
+        pollInterval: this.options.pollIntervalMs,
+      });
       return;
     }
 
@@ -581,6 +608,12 @@ export class SyncManager<T = unknown> {
   }
 
   private handleVisibilityChange(): void {
+    logger.sync.info(`[${this.app}] Visibility changed`, {
+      visibilityState: document.visibilityState,
+      isOnline: this.isOnline,
+      isAuthenticated: this.isAuthenticated(),
+    });
+
     if (document.visibilityState === 'visible' && this.isOnline && this.isAuthenticated()) {
       logger.sync.info('Tab became visible, checking for updates');
       this.checkAndSync().catch((error) => {
