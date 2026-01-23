@@ -15,6 +15,7 @@ export interface VerticalTimelineProps {
   activeTimeBoxIndex?: number;
   startTime?: string;
   completedPercentage: number;
+  timerProgress?: number;
   onTaskClick?: (
     storyId: string,
     timeBoxIndex: number,
@@ -218,10 +219,11 @@ export const VerticalTimeline = (props: VerticalTimelineProps) => {
                                     display: 'flex',
                                     'align-items': 'center',
                                     gap: '8px',
-                                    padding: '8px',
-                                    'border-radius': tempoDesign.radius.sm,
+                                    padding: '8px 12px',
+                                    'border-radius': tempoDesign.radius.md,
                                     cursor: 'pointer',
-                                    transition: 'background-color 0.2s',
+                                    transition: 'all 0.15s ease',
+                                    border: `1px solid transparent`,
                                     ...(task.status === 'completed' ? { opacity: 0.6 } : {}),
                                   }}
                                   onClick={() => {
@@ -231,23 +233,42 @@ export const VerticalTimeline = (props: VerticalTimelineProps) => {
                                     } as TimeBoxTask;
                                     props.onTaskClick?.(story.id, boxIdx(), taskIdx(), newTask);
                                   }}
-                                  onMouseEnter={(e) =>
-                                    (e.currentTarget.style.backgroundColor =
-                                      tempoDesign.colors.secondary)
-                                  }
-                                  onMouseLeave={(e) =>
-                                    (e.currentTarget.style.backgroundColor = 'transparent')
-                                  }
+                                  onMouseEnter={(e) => {
+                                    e.currentTarget.style.backgroundColor =
+                                      tempoDesign.colors.secondary;
+                                    e.currentTarget.style.borderColor = tempoDesign.colors.border;
+                                    e.currentTarget.style.transform = 'scale(0.99)';
+                                    e.currentTarget.style.boxShadow =
+                                      'inset 0 1px 3px rgba(0,0,0,0.2)';
+                                  }}
+                                  onMouseLeave={(e) => {
+                                    e.currentTarget.style.backgroundColor = 'transparent';
+                                    e.currentTarget.style.borderColor = 'transparent';
+                                    e.currentTarget.style.transform = 'scale(1)';
+                                    e.currentTarget.style.boxShadow = 'none';
+                                  }}
+                                  onMouseDown={(e) => {
+                                    e.currentTarget.style.transform = 'scale(0.97)';
+                                    e.currentTarget.style.boxShadow =
+                                      'inset 0 2px 4px rgba(0,0,0,0.3)';
+                                  }}
+                                  onMouseUp={(e) => {
+                                    e.currentTarget.style.transform = 'scale(0.99)';
+                                    e.currentTarget.style.boxShadow =
+                                      'inset 0 1px 3px rgba(0,0,0,0.2)';
+                                  }}
                                 >
                                   <Show
                                     when={task.status === 'completed'}
                                     fallback={
                                       <div
                                         style={{
-                                          width: '16px',
-                                          height: '16px',
+                                          width: '18px',
+                                          height: '18px',
                                           'border-radius': '4px',
-                                          border: `1px solid ${tempoDesign.colors.mutedForeground}`,
+                                          border: `2px solid ${tempoDesign.colors.mutedForeground}`,
+                                          'flex-shrink': 0,
+                                          transition: 'all 0.15s ease',
                                         }}
                                       />
                                     }
@@ -281,7 +302,7 @@ export const VerticalTimeline = (props: VerticalTimelineProps) => {
                         {/* Progress bar for in-progress timeboxes */}
                         <Show when={timeBox.status === 'in-progress'}>
                           <div style={{ 'margin-top': '12px' }}>
-                            <Progress value={50} style={{ height: '8px' }} />
+                            <Progress value={props.timerProgress ?? 0} style={{ height: '8px' }} />
                           </div>
                         </Show>
                       </div>

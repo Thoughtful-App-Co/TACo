@@ -4,6 +4,7 @@ import { X, Plus, Trash, Clock, CaretDown, Warning, Check, XCircle } from 'phosp
 import { format } from 'date-fns';
 import { Button } from '../../ui/button';
 import { Input } from '../../ui/input';
+import { NeoNumberInput } from '../../ui/neo-number-input';
 import { Card, CardContent } from '../../ui/card';
 import { ReorderButtons } from '../../ui/reorder-buttons';
 import { tempoDesign } from '../../theme/tempo-design';
@@ -64,7 +65,7 @@ interface FormTimebox {
   id: string;
   type: TimeBoxType;
   duration: number;
-  status?: 'todo' | 'completed' | 'in-progress';
+  status?: 'todo' | 'completed' | 'in-progress' | 'cancelled';
   actualDuration?: number;
 }
 
@@ -517,7 +518,6 @@ export const SessionEditModal: Component<SessionEditModalProps> = (props) => {
               display: 'flex',
               'flex-direction': 'column',
               'max-height': '90vh',
-              overflow: 'hidden',
             }}
           >
             {/* Header */}
@@ -954,38 +954,21 @@ export const SessionEditModal: Component<SessionEditModalProps> = (props) => {
                                     </div>
 
                                     {/* Duration Input */}
-                                    <div style={{ position: 'relative' }}>
-                                      <Input
-                                        type="number"
-                                        min="1"
-                                        max="180"
-                                        value={timebox.duration}
-                                        onInput={(e) =>
-                                          updateTimebox(block.id, timebox.id, {
-                                            duration: parseInt(e.currentTarget.value) || 0,
-                                          })
-                                        }
-                                        disabled={isLoading()}
-                                        style={{
-                                          width: '100%',
-                                          'padding-right': '36px',
-                                          'text-align': 'right',
-                                        }}
-                                      />
-                                      <span
-                                        style={{
-                                          position: 'absolute',
-                                          right: '10px',
-                                          top: '50%',
-                                          transform: 'translateY(-50%)',
-                                          'font-size': '12px',
-                                          color: tempoDesign.colors.mutedForeground,
-                                          'pointer-events': 'none',
-                                        }}
-                                      >
-                                        min
-                                      </span>
-                                    </div>
+                                    <NeoNumberInput
+                                      value={timebox.duration}
+                                      onChange={(value) =>
+                                        updateTimebox(block.id, timebox.id, {
+                                          duration: value,
+                                        })
+                                      }
+                                      min={1}
+                                      max={180}
+                                      step={5}
+                                      disabled={isLoading()}
+                                      width="60px"
+                                      suffix="min"
+                                      aria-label="Timebox duration in minutes"
+                                    />
 
                                     {/* Status indicator */}
                                     <Show when={timebox.status && timebox.status !== 'todo'}>
