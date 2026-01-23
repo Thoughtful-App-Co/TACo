@@ -1,6 +1,7 @@
 // /features/brain-dump/components/BrainDumpForm.tsx
 // Solid.js component
 import { Show, createSignal } from 'solid-js';
+import { useNavigate } from '@solidjs/router';
 import { Button } from '../../ui/button';
 import { Textarea } from '../../ui/textarea';
 import { Info, CircleDashed, Lock, LockOpen, XCircle, Bug } from 'phosphor-solid';
@@ -15,6 +16,8 @@ interface BrainDumpFormProps {
 }
 
 export const BrainDumpForm = (props: BrainDumpFormProps) => {
+  const navigate = useNavigate();
+
   const {
     tasks,
     setTasks,
@@ -30,7 +33,12 @@ export const BrainDumpForm = (props: BrainDumpFormProps) => {
     handleCreateSession,
     handleDurationChange,
     handleRetry,
-  } = useBrainDump(props.onTasksProcessed);
+  } = useBrainDump({
+    onTasksProcessed: props.onTasksProcessed,
+    onSessionCreated: (sessionDate) => {
+      navigate(`/tempo/sessions/${sessionDate}`);
+    },
+  });
 
   // AI access control - checks both API key AND subscription
   const { accessStatus, requireAccess, showPaywall, setShowPaywall } = useTempoAIAccess();
@@ -204,10 +212,7 @@ Task 4 - due by 5pm`}
         <ProcessedStories
           stories={processedStories()}
           editedDurations={editedDurations()}
-          isCreatingSession={isCreatingSession()}
           onDurationChange={handleDurationChange}
-          onRetry={handleRetry}
-          onCreateSession={handleCreateSession}
         />
       </div>
       <Paywall

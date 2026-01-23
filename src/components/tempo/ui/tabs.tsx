@@ -1,4 +1,5 @@
 import { Component, createSignal, For, Show } from 'solid-js';
+import { Dynamic } from 'solid-js/web';
 import { tempoDesign } from '../theme/tempo-design';
 
 // Add fade-in animation for tooltips
@@ -103,9 +104,7 @@ export const Tabs: Component<TabsProps> = (props) => {
               }}
             >
               <Show when={tab.icon}>
-                <Show when={tab.icon}>
-                  <tab.icon />
-                </Show>
+                <Dynamic component={tab.icon} />
               </Show>
               {tab.label}
               {/* Badge rendering */}

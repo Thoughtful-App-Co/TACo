@@ -1,7 +1,6 @@
 // /features/brain-dump/components/ProcessedStories.tsx
 import { Show, For } from 'solid-js';
-import { Info, CircleDashed } from 'phosphor-solid';
-import { Button } from '../../ui/button';
+import { Info } from 'phosphor-solid';
 import { StoryCard } from './StoryCard';
 import type { ProcessedStory } from '../../lib/types';
 import { tempoDesign } from '../../theme/tempo-design';
@@ -10,9 +9,6 @@ interface ProcessedStoriesProps {
   stories: ProcessedStory[];
   editedDurations: Record<string, number>;
   onDurationChange: (storyTitle: string, newDuration: number) => void;
-  isCreatingSession?: boolean;
-  onRetry?: () => void;
-  onCreateSession?: () => Promise<any>;
 }
 
 export const ProcessedStories = (props: ProcessedStoriesProps) => {
@@ -101,39 +97,9 @@ export const ProcessedStories = (props: ProcessedStoriesProps) => {
           </div>
         </Show>
 
-        <Show when={props.onRetry && props.onCreateSession}>
-          <div
-            style={{ display: 'flex', 'align-items': 'center', 'justify-content': 'space-between' }}
-          >
-            <h3 style={{ 'font-weight': tempoDesign.typography.weights.medium, margin: 0 }}>
-              Focus Block Analysis
-            </h3>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <Button onClick={props.onRetry} variant="outline" size="sm">
-                Reset Analysis
-              </Button>
-              <Button
-                onClick={props.onCreateSession}
-                size="sm"
-                disabled={props.isCreatingSession ?? false}
-              >
-                <Show when={props.isCreatingSession} fallback="Schedule Work Session">
-                  <>
-                    <CircleDashed
-                      style={{
-                        'margin-right': '8px',
-                        height: '16px',
-                        width: '16px',
-                        animation: 'spin 1s linear infinite',
-                      }}
-                    />
-                    Generating...
-                  </>
-                </Show>
-              </Button>
-            </div>
-          </div>
-        </Show>
+        <h3 style={{ 'font-weight': tempoDesign.typography.weights.medium, margin: 0 }}>
+          Focus Block Analysis
+        </h3>
 
         <div style={{ display: 'flex', 'flex-direction': 'column', gap: '16px' }}>
           <For each={props.stories}>

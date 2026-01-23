@@ -14,7 +14,12 @@ const log = logger.create('BrainDump');
 // Create a singleton instance of SessionStorageService
 const sessionStorage = new SessionStorageService();
 
-export function useBrainDump(onTasksProcessed?: (stories: ProcessedStory[]) => void) {
+export interface UseBrainDumpOptions {
+  onTasksProcessed?: (stories: ProcessedStory[]) => void;
+  onSessionCreated?: (sessionDate: string) => void;
+}
+
+export function useBrainDump(options?: UseBrainDumpOptions) {
   const [tasks, setTasks] = createSignal<string>('');
   const [processedStories, setProcessedStories] = createSignal<ProcessedStory[]>([]);
   const [editedDurations, setEditedDurations] = createSignal<Record<string, number>>({});
@@ -48,8 +53,8 @@ export function useBrainDump(onTasksProcessed?: (stories: ProcessedStory[]) => v
 
   // Effect to notify parent when stories are processed
   createEffect(() => {
-    if (shouldNotifyParent() && processedStories().length > 0 && onTasksProcessed) {
-      onTasksProcessed(processedStories());
+    if (shouldNotifyParent() && processedStories().length > 0 && options?.onTasksProcessed) {
+      options.onTasksProcessed(processedStories());
       setShouldNotifyParent(false);
     }
   });
@@ -294,7 +299,7 @@ export function useBrainDump(onTasksProcessed?: (stories: ProcessedStory[]) => v
       log.debug(`Validated session duration: ${validTotalDuration} minutes`);
 
       // Format today's date as YYYY-MM-DD for the session key
-      const today = now.toISOString().split('T')[0];
+      const today = now.toLocaleDateString('en-CA');
 
       // Calculate end time with duration validation
       const durationMs = Math.floor(validTotalDuration) * 60 * 1000;
@@ -353,9 +358,12 @@ export function useBrainDump(onTasksProcessed?: (stories: ProcessedStory[]) => v
       // Show success notification to user
       showNotification({
         type: 'success',
-        message: 'Session created! Navigate to Sessions tab to start.',
-        duration: 5000,
+        message: 'Session created! Redirecting to your session...',
+        duration: 3000,
       });
+
+      // Call the onSessionCreated callback with the session date
+      options?.onSessionCreated?.(today);
     } catch (error) {
       log.error('Failed to create session: ' + String(error));
 

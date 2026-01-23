@@ -6,6 +6,7 @@ import type {
   SessionStatus,
   TimeBoxType,
   BaseStatus,
+  TimeBoxStatus,
 } from './types';
 import { logger } from '../../../lib/logger';
 import { notifyTempoDataChanged } from '../../../lib/sync';
@@ -135,7 +136,7 @@ export const sessionStorage = {
     date: string,
     storyId: string,
     timeBoxIndex: number,
-    status: 'todo' | 'completed' | 'in-progress'
+    status: TimeBoxStatus
   ): Promise<boolean> {
     try {
       const sessionData = await this.getSession(date);

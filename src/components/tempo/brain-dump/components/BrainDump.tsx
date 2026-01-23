@@ -2,6 +2,7 @@
 // Solid.js component
 
 import { createSignal, Show } from 'solid-js';
+import { useNavigate } from '@solidjs/router';
 import { Card, CardContent } from '../../ui/card';
 import { Button } from '../../ui/button';
 import { Textarea } from '../../ui/textarea';
@@ -29,6 +30,8 @@ interface BrainDumpProps {
  * - Allows users to create structured work sessions.
  */
 export const BrainDump = (props: BrainDumpProps) => {
+  const navigate = useNavigate();
+
   const {
     tasks,
     setTasks,
@@ -44,7 +47,12 @@ export const BrainDump = (props: BrainDumpProps) => {
     handleSendToQueue,
     handleDurationChange,
     handleRetry,
-  } = useBrainDump(props.onTasksProcessed);
+  } = useBrainDump({
+    onTasksProcessed: props.onTasksProcessed,
+    onSessionCreated: (sessionDate) => {
+      navigate(`/tempo/sessions/${sessionDate}`);
+    },
+  });
 
   // AI access control - checks both API key AND subscription
   const { canUseAI, requireAccess, showPaywall, setShowPaywall } = useTempoAIAccess();
@@ -265,10 +273,7 @@ Finalize product specs - EOD`}
                 <ProcessedStories
                   stories={processedStories()}
                   editedDurations={editedDurations()}
-                  isCreatingSession={isCreatingSession()}
                   onDurationChange={handleDurationChange}
-                  onRetry={handleRetry}
-                  onCreateSession={handleCreateSession}
                 />
               </div>
             </Show>

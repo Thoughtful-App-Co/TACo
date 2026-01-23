@@ -178,7 +178,7 @@ export const SessionsList: Component<SessionsListProps> = (props) => {
 
       refreshSessions();
     } catch (error) {
-      logger.error('Failed to reschedule session:', error);
+      logger.tasks.error('Failed to reschedule session:', error);
     }
   };
 

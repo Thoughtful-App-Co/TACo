@@ -555,7 +555,7 @@ const createSession = async (stories: ProcessedStory[], startTime: string, maxRe
 
       // Update session saving logic to use the new service
       try {
-        const today = new Date(startTime).toISOString().split('T')[0];
+        const today = new Date(startTime).toLocaleDateString('en-CA');
         log.debug(`Saving session for date: ${today}`);
 
         // Ensure all required fields are present for a valid session
