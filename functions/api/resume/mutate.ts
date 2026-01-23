@@ -125,7 +125,7 @@ export async function onRequestPost(context: { request: Request; env: Env }) {
   // SECURITY: Validate authentication, check subscription, and deduct token
   const authResult = await authorizeTokenFeature(request, env, {
     requiredProducts: ['tenure_extras'],
-    tokenCost: 1,
+    tokenCost: 2,
     resourceName: 'resume_mutation',
   });
 
@@ -557,4 +557,15 @@ Return ONLY valid JSON array in this format:
       tokensUsed: 0,
     };
   }
+}
+
+// Handle CORS preflight
+export async function onRequestOptions() {
+  return new Response(null, {
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    },
+  });
 }

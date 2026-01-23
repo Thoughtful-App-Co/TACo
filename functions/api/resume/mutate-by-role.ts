@@ -109,7 +109,7 @@ export async function onRequest(context: { request: Request; env: Env }): Promis
   // SECURITY: Validate authentication, check subscription, and deduct token
   const authResult = await authorizeTokenFeature(request, env, {
     requiredProducts: ['tenure_extras'],
-    tokenCost: 1,
+    tokenCost: 2,
     resourceName: 'resume_mutation_by_role',
   });
 
