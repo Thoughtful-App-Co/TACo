@@ -1,4 +1,4 @@
-import { createEffect, createMemo, onCleanup, batch, untrack, on } from 'solid-js';
+import { createEffect, createMemo, createSignal, onCleanup, batch, untrack, on } from 'solid-js';
 import { createStore } from 'solid-js/store';
 import { useNavigate } from '@solidjs/router';
 import type { TimeBox, TimeBoxTask, Session } from '../../lib/types';
@@ -7,30 +7,29 @@ import { createInitialState, selectors } from '../store/session-state';
 import { sessionReducer } from '../store/session-reducer';
 import { sessionActions, SessionAction } from '../store/session-actions';
 import { SessionStorageService } from '../../services/session-storage.service';
+import { browserNotificationService } from '../../services/browser-notification.service';
 import { logger } from '../../../../lib/logger';
+import { showNotification } from '../../../../lib/notifications';
 
 const log = logger.create('SessionReducer');
 
-// Toast fallback (same as useSession)
-const useToastFallback = () => {
-  const toast = (props: {
-    title: string;
-    description: string;
-    variant?: string;
-    actionLabel?: string;
-    onAction?: () => void;
-  }) => {
-    if (
-      props.actionLabel &&
-      props.onAction &&
-      window.confirm(`${props.title}\n${props.description}\n\nDo you want to ${props.actionLabel}?`)
-    ) {
-      props.onAction();
-    }
-  };
+// Modal state for timer completion prompts
+interface CompletionModalState {
+  isOpen: boolean;
+  title: string;
+  description: string;
+  actionLabel?: string;
+  onAction?: () => void;
+  variant?: 'success' | 'default';
+}
 
-  return { toast };
-};
+interface TaskCompletionModalState {
+  isOpen: boolean;
+  taskName: string;
+  storyId: string;
+  timeBoxIndex: number;
+  taskIndex: number;
+}
 
 export interface UseSessionReducerProps {
   id?: string;
@@ -70,6 +69,15 @@ export interface UseSessionReducerReturn {
   findNextTimeBox: () => { storyId: string; timeBoxIndex: number } | null;
   isCurrentTimeBox: (timeBox: TimeBox) => boolean;
 
+  // Modal state for completion prompts
+  completionModal: () => CompletionModalState;
+  hideCompletionModal: () => void;
+
+  // Task completion modal state
+  taskCompletionModal: () => TaskCompletionModalState;
+  hideTaskCompletionModal: () => void;
+  confirmTaskCompletion: (minutesSpent: number) => void;
+
   // Direct dispatch for advanced use cases
   dispatch: (action: SessionAction) => void;
 }
@@ -86,11 +94,42 @@ export function useSessionReducer({
   id,
   storageService = new SessionStorageService(),
 }: UseSessionReducerProps = {}): UseSessionReducerReturn {
-  const { toast } = useToastFallback();
   const navigate = useNavigate();
 
   // Create the store with initial state
   const [state, setState] = createStore<SessionManagerState>(createInitialState(id));
+
+  // Modal state for timer completion prompts
+  const [completionModal, setCompletionModal] = createSignal<CompletionModalState>({
+    isOpen: false,
+    title: '',
+    description: '',
+  });
+
+  const showCompletionModal = (options: Omit<CompletionModalState, 'isOpen'>) => {
+    setCompletionModal({ ...options, isOpen: true });
+  };
+
+  const hideCompletionModal = () => {
+    setCompletionModal((prev) => ({ ...prev, isOpen: false }));
+  };
+
+  // Task completion modal state
+  const [taskCompletionModal, setTaskCompletionModal] = createSignal<TaskCompletionModalState>({
+    isOpen: false,
+    taskName: '',
+    storyId: '',
+    timeBoxIndex: -1,
+    taskIndex: -1,
+  });
+
+  const showTaskCompletionModal = (options: Omit<TaskCompletionModalState, 'isOpen'>) => {
+    setTaskCompletionModal({ ...options, isOpen: true });
+  };
+
+  const hideTaskCompletionModal = () => {
+    setTaskCompletionModal((prev) => ({ ...prev, isOpen: false }));
+  };
 
   // Timer interval reference
   let timerIntervalRef: ReturnType<typeof setInterval> | null = null;
@@ -161,6 +200,24 @@ export function useSessionReducer({
     }
 
     onCleanup(stopTimerInterval);
+  });
+
+  // Effect to handle timer completion (when timer reaches 0)
+  createEffect(() => {
+    const remaining = state.timer.timeRemaining;
+    const wasRunning = state.timer.lastTickAt !== null;
+
+    // Timer just reached 0 (was running and now stopped at 0)
+    if (remaining === 0 && !state.timer.isRunning && wasRunning) {
+      const activeBox = state.timer.activeTimeBox;
+      if (activeBox && state.session) {
+        const story = state.session.storyBlocks.find((s) => s.id === activeBox.storyId);
+        const taskName = story?.title || 'Timer';
+
+        // Send browser notification
+        browserNotificationService.notifyTimerComplete(taskName, false);
+      }
+    }
   });
 
   // ===========================================================================
@@ -296,7 +353,6 @@ export function useSessionReducer({
     taskIndex: number,
     task: TimeBoxTask
   ) => {
-    // Use untrack to read state without creating dependencies
     const currentSession = untrack(() => state.session);
 
     if (!storyId || !currentSession) {
@@ -304,13 +360,28 @@ export function useSessionReducer({
       return;
     }
 
-    const newStatus = task.status === 'completed' ? 'todo' : 'completed';
+    const newStatus = (task.status ?? 'todo') as 'todo' | 'completed';
 
-    log.debug(`Toggling task ${taskIndex} in timebox ${timeBoxIndex} to ${newStatus}`);
+    // If completing a task, show the time estimation modal
+    if (newStatus === 'completed') {
+      const story = currentSession.storyBlocks.find((s) => s.id === storyId);
+      const timeBox = story?.timeBoxes[timeBoxIndex];
+      const taskData = timeBox?.tasks?.[taskIndex];
+
+      showTaskCompletionModal({
+        taskName: taskData?.title || `Task ${taskIndex + 1}`,
+        storyId,
+        timeBoxIndex,
+        taskIndex,
+      });
+      return;
+    }
+
+    // If unchecking (marking as todo), just do it directly
+    log.debug(`Setting task ${taskIndex} in timebox ${timeBoxIndex} to ${newStatus}`);
 
     dispatch(sessionActions.toggleTask(storyId, timeBoxIndex, taskIndex, newStatus));
 
-    // Also persist to storage service
     storageService.updateTaskStatus(
       currentSession.date,
       storyId,
@@ -318,6 +389,62 @@ export function useSessionReducer({
       taskIndex,
       newStatus
     );
+  };
+
+  const confirmTaskCompletion = (minutesSpent: number) => {
+    const modal = untrack(() => taskCompletionModal());
+    if (!modal.storyId) return;
+
+    const currentSession = untrack(() => state.session);
+    if (!currentSession) return;
+
+    if (minutesSpent === 0) {
+      log.debug(`Task completed (time tracking skipped)`);
+    } else {
+      log.debug(`Task completed with ${minutesSpent} minutes spent`);
+    }
+
+    // Dispatch the task toggle action
+    dispatch(
+      sessionActions.toggleTask(modal.storyId, modal.timeBoxIndex, modal.taskIndex, 'completed')
+    );
+
+    // Persist to storage
+    storageService.updateTaskStatus(
+      currentSession.date,
+      modal.storyId,
+      modal.timeBoxIndex,
+      modal.taskIndex,
+      'completed'
+    );
+
+    // TODO: Save the time spent to the task (you may need to extend the data model for this)
+
+    hideTaskCompletionModal();
+
+    // Check if all tasks are now completed
+    const story = currentSession.storyBlocks.find((s) => s.id === modal.storyId);
+    const timeBox = story?.timeBoxes[modal.timeBoxIndex];
+
+    if (timeBox && timeBox.status === 'in-progress' && timeBox.tasks) {
+      const allTasksComplete = timeBox.tasks.every((t, idx) =>
+        idx === modal.taskIndex ? true : t.status === 'completed'
+      );
+
+      if (allTasksComplete) {
+        const nextTimeBox = findNextTimeBox();
+        showCompletionModal({
+          title: 'All Tasks Complete!',
+          description: 'Great work! All tasks in this timebox are done. Complete the timebox?',
+          actionLabel: nextTimeBox ? 'Complete & Start Next' : 'Complete TimeBox',
+          variant: 'default',
+          onAction: () => {
+            hideCompletionModal();
+            completeTimeBox(modal.storyId, modal.timeBoxIndex);
+          },
+        });
+      }
+    }
   };
 
   const startTimeBox = (storyId: string, timeBoxIndex: number, duration: number) => {
@@ -379,14 +506,16 @@ export function useSessionReducer({
       }
     }
 
-    // Show toast and offer to start next
+    // Show completion modal and offer to start next
     const nextTimeBox = findNextTimeBox();
     if (nextTimeBox) {
-      toast({
+      showCompletionModal({
         title: 'TimeBox Completed!',
         description: 'Great work! Ready for the next one?',
         actionLabel: 'Start Next',
+        variant: 'default',
         onAction: () => {
+          hideCompletionModal();
           const session = untrack(() => state.session);
           const story = session?.storyBlocks.find((s) => s.id === nextTimeBox.storyId);
           const tb = story?.timeBoxes[nextTimeBox.timeBoxIndex];
@@ -396,7 +525,10 @@ export function useSessionReducer({
         },
       });
     } else if (isSessionComplete()) {
-      toast({
+      // Send browser notification for session complete
+      browserNotificationService.notifyTimerComplete('All tasks', true);
+
+      showCompletionModal({
         title: 'Session Complete!',
         description: 'Congratulations! You completed all timeboxes.',
         variant: 'success',
@@ -419,9 +551,11 @@ export function useSessionReducer({
     log.debug(`Updating time remaining to: ${newTime} seconds`);
     dispatch(sessionActions.setTime(newTime));
 
-    toast({
-      title: 'Timer Adjusted',
-      description: `Time set to ${Math.floor(newTime / 60)}:${String(newTime % 60).padStart(2, '0')}`,
+    // Use showNotification from lib/notifications instead of toast
+    showNotification({
+      type: 'info',
+      message: `Timer adjusted to ${Math.floor(newTime / 60)}:${String(newTime % 60).padStart(2, '0')}`,
+      duration: 2000,
     });
   };
 
@@ -491,6 +625,15 @@ export function useSessionReducer({
     findNextWorkTimeBox,
     findNextTimeBox,
     isCurrentTimeBox,
+
+    // Modal state
+    completionModal,
+    hideCompletionModal,
+
+    // Task completion modal state
+    taskCompletionModal,
+    hideTaskCompletionModal,
+    confirmTaskCompletion,
 
     // Direct dispatch
     dispatch,

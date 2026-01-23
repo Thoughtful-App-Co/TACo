@@ -34,7 +34,10 @@ import { useSessionReducer as useSession } from '../hooks/useSessionReducer';
 import { SessionStorageService } from '../../services/session-storage.service';
 import { format } from 'date-fns';
 import { VerticalTimeline } from './vertical-timeline';
+import { TimerCompletionModal } from './timer-completion-modal';
+import { TaskCompletionModal } from './task-completion-modal';
 import { tempoDesign } from '../../theme/tempo-design';
+import { browserNotificationService } from '../../services/browser-notification.service';
 
 interface SessionViewProps {
   id?: string;
@@ -527,7 +530,36 @@ export const SessionView = (props: SessionViewProps) => {
     undoCompleteTimeBox,
     isCurrentTimeBox,
     updateTimeRemaining,
+    completionModal,
+    hideCompletionModal,
+    taskCompletionModal,
+    hideTaskCompletionModal,
+    confirmTaskCompletion,
   } = useSession({ id: sessionId, storageService: props.storageService });
+
+  // Request notification permission on first visit
+  createEffect(() => {
+    if (
+      session() &&
+      !browserNotificationService.isEnabled() &&
+      !browserNotificationService.isDenied()
+    ) {
+      // Request permission after a short delay to not overwhelm the user
+      setTimeout(() => {
+        browserNotificationService.requestPermission();
+      }, 2000);
+    }
+  });
+
+  // Show warning if notifications are denied
+  const [notificationWarning, setNotificationWarning] = createSignal<string | null>(null);
+
+  createEffect(() => {
+    const warning = browserNotificationService.getPermissionWarning();
+    if (warning && session()) {
+      setNotificationWarning(warning);
+    }
+  });
 
   // State for active time update
   const [currentFormattedTime, setCurrentFormattedTime] = createSignal('00:00');
@@ -942,6 +974,39 @@ export const SessionView = (props: SessionViewProps) => {
               <CaretLeft size={16} />
               Back to Sessions
             </Button>
+
+            {/* Notification Permission Warning */}
+            <Show when={notificationWarning()}>
+              <div
+                style={{
+                  display: 'flex',
+                  'align-items': 'center',
+                  gap: '12px',
+                  padding: '12px 16px',
+                  'border-radius': tempoDesign.radius.md,
+                  background: `${tempoDesign.colors.amber[600]}15`,
+                  border: `1px solid ${tempoDesign.colors.amber[600]}30`,
+                  'margin-bottom': '16px',
+                }}
+              >
+                <span
+                  style={{
+                    'font-size': tempoDesign.typography.sizes.sm,
+                    color: tempoDesign.colors.amber[600],
+                  }}
+                >
+                  {notificationWarning()}
+                </span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setNotificationWarning(null)}
+                  style={{ 'margin-left': 'auto', color: tempoDesign.colors.amber[600] }}
+                >
+                  Dismiss
+                </Button>
+              </div>
+            </Show>
 
             {/* Floating Timer - Separated into stable container and content */}
             <FloatingTimerContainer isVisible={stableFloatingVisible()}>
@@ -1725,6 +1790,7 @@ export const SessionView = (props: SessionViewProps) => {
                     activeTimeBoxIndex={activeTimeBox()?.timeBoxIndex}
                     startTime={session()!.lastUpdated || new Date().toISOString()}
                     completedPercentage={completedPercentage()}
+                    timerProgress={activeTimeBoxDetails()?.progress}
                     onTaskClick={handleTaskClick}
                     onTimeBoxClick={(storyId: string, timeBoxIndex: number) => {
                       const story = session()!.storyBlocks.find((s) => s.id === storyId);
@@ -1758,6 +1824,24 @@ export const SessionView = (props: SessionViewProps) => {
                 </CardContent>
               </Card>
             </div>
+
+            {/* Timer Completion Modal */}
+            <TimerCompletionModal
+              isOpen={completionModal().isOpen}
+              title={completionModal().title}
+              description={completionModal().description}
+              actionLabel={completionModal().actionLabel}
+              onAction={completionModal().onAction}
+              onClose={hideCompletionModal}
+              variant={completionModal().variant}
+            />
+
+            {/* Task Completion Modal */}
+            <TaskCompletionModal
+              isOpen={taskCompletionModal().isOpen}
+              taskName={taskCompletionModal().taskName}
+              onConfirm={confirmTaskCompletion}
+            />
           </div>
         </Show>
       </Show>
