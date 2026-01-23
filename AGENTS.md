@@ -18,6 +18,54 @@ This document provides essential context for AI agents (Claude, GPT, Copilot, Cu
 
 ---
 
+## 🎯 CORE PRINCIPLES (READ FIRST)
+
+### 1. Tokens Are Time - Quality Is Non-Negotiable
+
+**There is no concept of "time" or "speed" - only token efficiency and correctness.**
+
+- **Definition of Done**: Production-ready, complete, efficient, non-duplicated code
+- **Before writing ANY code**: Search the codebase for existing implementations, patterns, utilities, and components
+- **Zero hallucinations**: If you don't know where something is, use `Grep` and `Glob` tools to find it
+- **No code duplication**: Reuse existing functions, components, and patterns - if it exists, use it
+- **Write efficient code**: Choose optimal algorithms and data structures - every token counts
+- **Measure twice, cut once**: Read existing code, understand context, then implement correctly the first time
+
+**Anti-patterns:**
+
+- Writing new code without searching for existing implementations
+- Duplicating logic that already exists elsewhere in the codebase
+- Guessing at API signatures or patterns instead of reading the actual code
+- Implementing suboptimal solutions that will need refactoring
+
+### 2. No "Quick Fixes" - Only Complete Solutions
+
+**There is no such thing as a quick fix. Do it right the first time, then move on.**
+
+- **Complete what we want done**: Implement the full requirement, not a subset
+- **No shortcuts**: No TODOs, no placeholders, no "we can add this later"
+- **Production-ready**: Error handling, edge cases, validation, types - all included
+- **One and done**: Build it correctly once so it never needs revisiting
+
+**Anti-patterns:**
+
+- "Let me do a quick implementation first, then we can refine it"
+- "I'll add error handling later"
+- "This is just a temporary solution"
+- Leaving TODOs or FIXMEs in committed code
+- Implementing 80% of a feature and calling it done
+
+**Mindset shift:**
+
+- ❌ "Let me quickly patch this"
+- ✅ "Let me understand the requirement completely and implement the full solution"
+- ❌ "I'll skip edge cases for now"
+- ✅ "I'll handle all cases properly from the start"
+- ❌ "We can optimize this later if needed"
+- ✅ "I'll implement the optimal solution now"
+
+---
+
 ## Project Overview
 
 TACo (Thoughtful App Co) is a monorepo containing multiple SolidJS applications:
