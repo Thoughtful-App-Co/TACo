@@ -34,7 +34,7 @@ export interface UsageData {
 
 const STORAGE_KEY = 'augment_usage_tracker';
 const FREE_TIER_MUTATION_LIMIT = 0;
-const PAID_TIER_MUTATION_LIMIT: number = 10; // Can be -1 for unlimited
+const PAID_TIER_MUTATION_LIMIT: number = 20; // Can be -1 for unlimited
 
 // ============================================================================
 // USAGE TRACKING

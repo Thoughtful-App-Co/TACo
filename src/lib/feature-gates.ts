@@ -283,7 +283,13 @@ export async function initializeSubscriptionCache(): Promise<void> {
  *
  * @deprecated Use subscription-based feature gates instead
  */
-export type V2Feature = 'laborMarket' | 'salaryBenchmark' | 'matches' | 'seasonalInsights';
+export type V2Feature =
+  | 'laborMarket'
+  | 'salaryBenchmark'
+  | 'matches'
+  | 'seasonalInsights'
+  | 'BLS_INTEGRATION'
+  | 'MARKET_COMPARISON';
 
 /**
  * Check if a V2 feature is enabled
@@ -303,6 +309,8 @@ export function isV2FeatureEnabled(feature: V2Feature): boolean {
     case 'laborMarket':
     case 'salaryBenchmark':
     case 'matches':
+    case 'BLS_INTEGRATION':
+    case 'MARKET_COMPARISON':
       return true;
     case 'seasonalInsights':
       // Disabled until v2 launch - set localStorage.setItem('v2_seasonalInsights', 'true') to test
