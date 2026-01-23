@@ -58,13 +58,13 @@ export const AssessmentCard: Component<AssessmentCardProps> = (props) => {
       onMouseEnter={(e) => {
         if (!props.isComingSoon) {
           e.currentTarget.style.transform = 'translateY(-2px)';
-          e.currentTarget.style['box-shadow'] = '0 8px 24px rgba(0,0,0,0.3)';
+          e.currentTarget.style.boxShadow = '0 8px 24px rgba(0,0,0,0.3)';
         }
       }}
       onMouseLeave={(e) => {
         if (!props.isComingSoon) {
           e.currentTarget.style.transform = 'translateY(0)';
-          e.currentTarget.style['box-shadow'] = 'none';
+          e.currentTarget.style.boxShadow = 'none';
         }
       }}
       onClick={() => {
@@ -291,11 +291,11 @@ export const AssessmentCard: Component<AssessmentCardProps> = (props) => {
             }}
             onMouseEnter={(e) => {
               e.currentTarget.style.transform = 'scale(1.02)';
-              e.currentTarget.style['box-shadow'] = '0 4px 16px rgba(0,0,0,0.3)';
+              e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.3)';
             }}
             onMouseLeave={(e) => {
               e.currentTarget.style.transform = 'scale(1)';
-              e.currentTarget.style['box-shadow'] = 'none';
+              e.currentTarget.style.boxShadow = 'none';
             }}
           >
             Start Assessment

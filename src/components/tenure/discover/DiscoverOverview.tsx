@@ -9,6 +9,7 @@
  */
 
 import { Component, createMemo, Show } from 'solid-js';
+import { useMobile } from '../lib/use-mobile';
 import { AssessmentCard } from './AssessmentCard';
 import { maximalist, maxGradients } from '../../../theme/maximalist';
 import {
@@ -60,6 +61,8 @@ export interface DiscoverOverviewProps {
 }
 
 export const DiscoverOverview: Component<DiscoverOverviewProps> = (props) => {
+  const isMobile = useMobile();
+
   const completedCount = () => {
     let count = 0;
     if (isRiasecCompleted()) count++;
@@ -119,17 +122,18 @@ export const DiscoverOverview: Component<DiscoverOverviewProps> = (props) => {
       style={{
         'max-width': '1200px',
         margin: '0 auto',
-        padding: '48px 24px',
+        padding: isMobile() ? '24px 16px' : '48px 24px',
       }}
     >
       {/* Two-Column Header: Title + Progress */}
       <div
         style={{
-          display: 'grid',
-          'grid-template-columns': '1fr auto',
-          gap: '48px',
-          'align-items': 'center',
-          'margin-bottom': '64px',
+          display: isMobile() ? 'flex' : 'grid',
+          'flex-direction': 'column',
+          'grid-template-columns': isMobile() ? 'none' : '1fr auto',
+          gap: isMobile() ? '24px' : '48px',
+          'align-items': isMobile() ? 'stretch' : 'center',
+          'margin-bottom': isMobile() ? '32px' : '64px',
         }}
       >
         {/* Left Column: Title & Description */}
@@ -144,22 +148,23 @@ export const DiscoverOverview: Component<DiscoverOverviewProps> = (props) => {
           >
             <div
               style={{
-                width: '64px',
-                height: '64px',
+                width: isMobile() ? '48px' : '64px',
+                height: isMobile() ? '48px' : '64px',
                 'border-radius': '12px',
                 background: props.currentThemeGradient || maxGradients.primary,
                 display: 'flex',
                 'align-items': 'center',
                 'justify-content': 'center',
                 'box-shadow': `0 8px 24px ${props.currentThemePrimary || '#FFFFFF'}30`,
+                'flex-shrink': 0,
               }}
             >
-              <IconCompass size={32} color="white" />
+              <IconCompass size={isMobile() ? 24 : 32} color="white" />
             </div>
             <h1
               style={{
                 'font-family': maximalist.fonts.heading,
-                'font-size': '48px',
+                'font-size': isMobile() ? '28px' : '48px',
                 'font-weight': '700',
                 margin: 0,
                 color: maximalist.colors.text,
@@ -171,7 +176,7 @@ export const DiscoverOverview: Component<DiscoverOverviewProps> = (props) => {
 
           <p
             style={{
-              'font-size': '20px',
+              'font-size': isMobile() ? '16px' : '20px',
               color: maximalist.colors.textMuted,
               'line-height': '1.6',
               'max-width': '600px',
@@ -186,18 +191,19 @@ export const DiscoverOverview: Component<DiscoverOverviewProps> = (props) => {
         {/* Right Column: Progress Indicator */}
         <div
           style={{
-            padding: '32px',
+            padding: isMobile() ? '20px' : '32px',
             background: 'rgba(255,255,255,0.03)',
             'border-radius': maximalist.radii.lg,
             border: `1px solid ${maximalist.colors.border}`,
-            'min-width': '280px',
+            'min-width': isMobile() ? 'auto' : '280px',
             'text-align': 'center',
+            order: isMobile() ? -1 : 0,
           }}
         >
           <h3
             style={{
               'font-family': maximalist.fonts.heading,
-              'font-size': '20px',
+              'font-size': isMobile() ? '18px' : '20px',
               'font-weight': '600',
               'margin-bottom': '12px',
               color: maximalist.colors.text,
@@ -251,8 +257,8 @@ export const DiscoverOverview: Component<DiscoverOverviewProps> = (props) => {
       <div
         style={{
           display: 'grid',
-          'grid-template-columns': 'repeat(auto-fit, minmax(380px, 1fr))',
-          gap: '32px',
+          'grid-template-columns': isMobile() ? '1fr' : 'repeat(auto-fit, minmax(340px, 1fr))',
+          gap: isMobile() ? '20px' : '32px',
         }}
       >
         {/* RIASEC Card */}
@@ -352,7 +358,7 @@ export const DiscoverOverview: Component<DiscoverOverviewProps> = (props) => {
           <h3
             style={{
               'font-family': maximalist.fonts.heading,
-              'font-size': '28px',
+              'font-size': isMobile() ? '22px' : '28px',
               'font-weight': '700',
               'margin-bottom': '12px',
               color: props.currentThemePrimary || '#8B5CF6',
@@ -378,7 +384,7 @@ export const DiscoverOverview: Component<DiscoverOverviewProps> = (props) => {
           <div
             style={{
               display: 'grid',
-              'grid-template-columns': 'repeat(3, 1fr)',
+              'grid-template-columns': isMobile() ? '1fr' : 'repeat(3, 1fr)',
               gap: '16px',
               'max-width': '500px',
               margin: '0 auto 24px',
