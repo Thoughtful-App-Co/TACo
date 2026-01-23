@@ -1,6 +1,7 @@
 /**
  * ProsperSidebar - Left navigation sidebar for Prosper
  * Collapsible to icon-only mode with tooltips
+ * Mobile: Slide-out hamburger menu overlay
  *
  * Copyright (c) 2025 Thoughtful App Co. and Erikk Shupp. All rights reserved.
  */
@@ -10,6 +11,8 @@ import { A } from '@solidjs/router';
 import { prosperTenure } from '../theme/prosper-tenure';
 import { liquidTenure, pipelineAnimations } from '../../pipeline/theme/liquid-tenure';
 import { Tooltip } from '../../pipeline/ui';
+import { useMobile } from '../../lib/use-mobile';
+import { MobileDrawer, MobileDrawerNavItem } from '../../lib/mobile-menu-context';
 
 export type ProsperSection = 'dashboard' | 'your-worth' | 'journal' | 'reviews' | 'export';
 
@@ -17,13 +20,6 @@ interface ProsperSidebarProps {
   activeSection: ProsperSection;
   onSectionChange: (section: ProsperSection) => void;
   currentTheme: () => Partial<typeof liquidTenure> & typeof liquidTenure;
-}
-
-interface NavItem {
-  id: ProsperSection;
-  label: string;
-  icon: Component<{ size?: number }>;
-  ariaLabel: string;
 }
 
 const DashboardIcon: Component<{ size?: number }> = (props) => (
@@ -139,7 +135,7 @@ const IconSidebarClose: Component<{ size?: number }> = (props) => (
   </svg>
 );
 
-const NAV_ITEMS: NavItem[] = [
+const NAV_ITEMS: MobileDrawerNavItem[] = [
   {
     id: 'dashboard',
     label: 'Dashboard',
@@ -194,6 +190,7 @@ function saveCollapsedState(collapsed: boolean) {
 export const ProsperSidebar: Component<ProsperSidebarProps> = (props) => {
   const theme = () => props.currentTheme();
   const [isCollapsed, setIsCollapsed] = createSignal(loadCollapsedState());
+  const isMobile = useMobile();
 
   createEffect(() => {
     saveCollapsedState(isCollapsed());
@@ -206,178 +203,201 @@ export const ProsperSidebar: Component<ProsperSidebarProps> = (props) => {
   const sidebarWidth = () => (isCollapsed() ? '60px' : '240px');
 
   return (
-    <aside
-      style={{
-        width: sidebarWidth(),
-        height: '100vh',
-        background: 'linear-gradient(180deg, rgba(15, 15, 18, 0.98), rgba(10, 10, 12, 0.95))',
-        'border-right': `1px solid ${theme().colors.border}`,
-        display: 'flex',
-        'flex-direction': 'column',
-        'flex-shrink': 0,
-        transition: `width ${pipelineAnimations.normal} cubic-bezier(0.4, 0, 0.2, 1)`,
-        'z-index': 100,
-        position: 'relative',
-      }}
-    >
-      {/* Header */}
-      <div
-        style={{
-          padding: isCollapsed() ? '16px 12px' : '16px 20px',
-          'border-bottom': `1px solid ${theme().colors.border}`,
-          display: 'flex',
-          'align-items': 'center',
-          'justify-content': isCollapsed() ? 'center' : 'space-between',
-          'min-height': '64px',
-          transition: `padding ${pipelineAnimations.normal}`,
-        }}
-      >
-        <Show when={!isCollapsed()}>
+    <>
+      {/* Mobile: Slide-out menu overlay */}
+      <Show when={isMobile()}>
+        <MobileDrawer
+          appName="Prosper"
+          navItems={NAV_ITEMS}
+          currentSection={props.activeSection}
+          onNavigate={(section) => props.onSectionChange(section as ProsperSection)}
+          basePath="/tenure/prosper"
+          theme={theme}
+          currentTenureApp="prosper"
+        />
+      </Show>
+
+      {/* Desktop/Tablet: Collapsible sidebar */}
+      <Show when={!isMobile()}>
+        <aside
+          style={{
+            width: sidebarWidth(),
+            height: '100vh',
+            background: 'linear-gradient(180deg, rgba(15, 15, 18, 0.98), rgba(10, 10, 12, 0.95))',
+            'border-right': `1px solid ${theme().colors.border}`,
+            display: 'flex',
+            'flex-direction': 'column',
+            'flex-shrink': 0,
+            transition: `width ${pipelineAnimations.normal} cubic-bezier(0.4, 0, 0.2, 1)`,
+            'z-index': 100,
+            position: 'relative',
+          }}
+        >
+          {/* Header */}
           <div
             style={{
-              'font-size': '18px',
-              'font-family': "'Playfair Display', Georgia, serif",
-              'font-weight': '700',
-              color: theme().colors.text,
-              'letter-spacing': '-0.02em',
-            }}
-          >
-            Prosper
-          </div>
-        </Show>
-
-        {/* Toggle Button */}
-        <Tooltip
-          content={isCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'}
-          position="right"
-          delay={200}
-        >
-          <button
-            onClick={toggleCollapse}
-            aria-label={isCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'}
-            style={{
+              padding: isCollapsed() ? '16px 12px' : '16px 20px',
+              'border-bottom': `1px solid ${theme().colors.border}`,
               display: 'flex',
               'align-items': 'center',
-              'justify-content': 'center',
-              width: '36px',
-              height: '36px',
-              padding: '8px',
-              background: 'transparent',
-              border: `1px solid ${theme().colors.border}`,
-              'border-radius': '8px',
-              color: theme().colors.textMuted,
-              cursor: 'pointer',
-              transition: `all ${pipelineAnimations.fast}`,
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-              e.currentTarget.style.borderColor = theme().colors.primary;
-              e.currentTarget.style.color = theme().colors.primary;
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'transparent';
-              e.currentTarget.style.borderColor = theme().colors.border;
-              e.currentTarget.style.color = theme().colors.textMuted;
+              'justify-content': isCollapsed() ? 'center' : 'space-between',
+              'min-height': '64px',
+              transition: `padding ${pipelineAnimations.normal}`,
             }}
           >
-            <Show when={isCollapsed()} fallback={<IconSidebarOpen size={18} />}>
-              <IconSidebarClose size={18} />
-            </Show>
-          </button>
-        </Tooltip>
-      </div>
-
-      {/* Navigation Items */}
-      <nav
-        style={{
-          flex: 1,
-          padding: '12px 8px',
-          display: 'flex',
-          'flex-direction': 'column',
-          gap: '4px',
-        }}
-        aria-label="Prosper navigation"
-      >
-        <For each={NAV_ITEMS}>
-          {(item) => {
-            const isActive = () => props.activeSection === item.id;
-
-            const navButton = (
-              <A
-                href={`/tenure/prosper/${item.id}`}
-                aria-label={item.ariaLabel}
-                aria-current={isActive() ? 'page' : undefined}
+            <Show when={!isCollapsed()}>
+              <div
                 style={{
-                  width: '100%',
-                  display: 'flex',
-                  'align-items': 'center',
-                  gap: '12px',
-                  padding: isCollapsed() ? '12px' : '12px 16px',
-                  background: isActive()
-                    ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.06))'
-                    : 'transparent',
-                  border: 'none',
-                  'border-radius': '10px',
-                  color: isActive() ? theme().colors.primary : theme().colors.textMuted,
-                  'font-size': '14px',
-                  'font-family': "'Space Grotesk', system-ui, sans-serif",
-                  'font-weight': isActive() ? '600' : '500',
-                  'text-align': 'left',
-                  'text-decoration': 'none',
-                  position: 'relative',
-                  overflow: 'visible',
-                  transition: `background ${pipelineAnimations.fast}, color ${pipelineAnimations.fast}, padding ${pipelineAnimations.fast}`,
-                  'justify-content': isCollapsed() ? 'center' : 'flex-start',
-                }}
-                onMouseEnter={(e) => {
-                  if (!isActive()) {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
-                    e.currentTarget.style.color = theme().colors.text;
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (!isActive()) {
-                    e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.color = theme().colors.textMuted;
-                  }
+                  'font-size': '18px',
+                  'font-family': "'Playfair Display', Georgia, serif",
+                  'font-weight': '700',
+                  color: theme().colors.text,
+                  'letter-spacing': '-0.02em',
                 }}
               >
-                {/* Active indicator */}
-                <Show when={isActive()}>
-                  <div
+                Prosper
+              </div>
+            </Show>
+
+            {/* Toggle Button */}
+            <Tooltip
+              content={isCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'}
+              position="right"
+              delay={200}
+            >
+              <button
+                onClick={toggleCollapse}
+                aria-label={isCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'}
+                style={{
+                  display: 'flex',
+                  'align-items': 'center',
+                  'justify-content': 'center',
+                  width: '36px',
+                  height: '36px',
+                  padding: '8px',
+                  background: 'transparent',
+                  border: `1px solid ${theme().colors.border}`,
+                  'border-radius': '8px',
+                  color: theme().colors.textMuted,
+                  cursor: 'pointer',
+                  transition: `all ${pipelineAnimations.fast}`,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                  e.currentTarget.style.borderColor = theme().colors.primary;
+                  e.currentTarget.style.color = theme().colors.primary;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.borderColor = theme().colors.border;
+                  e.currentTarget.style.color = theme().colors.textMuted;
+                }}
+              >
+                <Show when={isCollapsed()} fallback={<IconSidebarOpen size={18} />}>
+                  <IconSidebarClose size={18} />
+                </Show>
+              </button>
+            </Tooltip>
+          </div>
+
+          {/* Navigation Items */}
+          <nav
+            style={{
+              flex: 1,
+              padding: '12px 8px',
+              display: 'flex',
+              'flex-direction': 'column',
+              gap: '4px',
+            }}
+            aria-label="Prosper navigation"
+          >
+            <For each={NAV_ITEMS}>
+              {(item) => {
+                const isActive = () => props.activeSection === item.id;
+
+                const navButton = (
+                  <A
+                    href={`/tenure/prosper/${item.id}`}
+                    aria-label={item.ariaLabel}
+                    aria-current={isActive() ? 'page' : undefined}
                     style={{
-                      position: 'absolute',
-                      left: 0,
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      width: '3px',
-                      height: '20px',
-                      background: theme().colors.primary,
-                      'border-radius': '0 2px 2px 0',
-                      'box-shadow': `0 0 8px ${theme().colors.primary}50`,
+                      width: '100%',
+                      display: 'flex',
+                      'align-items': 'center',
+                      gap: '12px',
+                      padding: isCollapsed() ? '12px' : '12px 16px',
+                      background: isActive()
+                        ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.06))'
+                        : 'transparent',
+                      border: 'none',
+                      'border-radius': '10px',
+                      color: isActive() ? theme().colors.primary : theme().colors.textMuted,
+                      'font-size': '14px',
+                      'font-family': "'Space Grotesk', system-ui, sans-serif",
+                      'font-weight': isActive() ? '600' : '500',
+                      'text-align': 'left',
+                      'text-decoration': 'none',
+                      position: 'relative',
+                      overflow: 'visible',
+                      transition: `background ${pipelineAnimations.fast}, color ${pipelineAnimations.fast}, padding ${pipelineAnimations.fast}`,
+                      'justify-content': isCollapsed() ? 'center' : 'flex-start',
                     }}
-                  />
-                </Show>
+                    onMouseEnter={(e) => {
+                      if (!isActive()) {
+                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
+                        e.currentTarget.style.color = theme().colors.text;
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive()) {
+                        e.currentTarget.style.background = 'transparent';
+                        e.currentTarget.style.color = theme().colors.textMuted;
+                      }
+                    }}
+                  >
+                    {/* Active indicator */}
+                    <Show when={isActive()}>
+                      <div
+                        style={{
+                          position: 'absolute',
+                          left: 0,
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          width: '3px',
+                          height: '20px',
+                          background: theme().colors.primary,
+                          'border-radius': '0 2px 2px 0',
+                          'box-shadow': `0 0 8px ${theme().colors.primary}50`,
+                        }}
+                      />
+                    </Show>
 
-                <item.icon size={20} />
+                    <item.icon size={20} />
 
-                <Show when={!isCollapsed()}>
-                  <span style={{ flex: 1 }}>{item.label}</span>
-                </Show>
-              </A>
-            );
+                    <Show when={!isCollapsed()}>
+                      <span style={{ flex: 1 }}>{item.label}</span>
+                    </Show>
+                  </A>
+                );
 
-            // Always render navButton, don't wrap in Tooltip
-            // The tooltip will be disabled when expanded
-            return (
-              <Tooltip content={item.label} position="right" delay={200} disabled={!isCollapsed()}>
-                {navButton}
-              </Tooltip>
-            );
-          }}
-        </For>
-      </nav>
-    </aside>
+                // Always render navButton, don't wrap in Tooltip
+                // The tooltip will be disabled when expanded
+                return (
+                  <Tooltip
+                    content={item.label}
+                    position="right"
+                    delay={200}
+                    disabled={!isCollapsed()}
+                  >
+                    {navButton}
+                  </Tooltip>
+                );
+              }}
+            </For>
+          </nav>
+        </aside>
+      </Show>
+    </>
   );
 };
 

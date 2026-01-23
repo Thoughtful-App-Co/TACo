@@ -204,6 +204,36 @@ createEffect(() => {
   notifyTenureDataChanged();
 });
 
+// Listen for sync updates from other tabs/devices
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (event) => {
+    if (
+      event.key === 'tenure_sync_updated' ||
+      event.key === STORAGE_KEYS.salaryHistory ||
+      event.key === STORAGE_KEYS.checkIns ||
+      event.key === STORAGE_KEYS.accomplishments ||
+      event.key === STORAGE_KEYS.employmentState
+    ) {
+      logger.sync.info('Prosper sync data changed, reloading store');
+      reloadFromStorage();
+    }
+  });
+}
+
+function reloadFromStorage(): void {
+  const newState = loadInitialState();
+  setState({
+    salaryHistory: newState.salaryHistory,
+    checkIns: newState.checkIns,
+    accomplishments: newState.accomplishments,
+    employmentState: newState.employmentState,
+    reviewCycles: newState.reviewCycles,
+    selfReviews: newState.selfReviews,
+    externalFeedback: newState.externalFeedback,
+    accolades: newState.accolades,
+  });
+}
+
 // ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================

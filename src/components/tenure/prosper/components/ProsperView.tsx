@@ -10,6 +10,7 @@ import { prosperStore } from '../store';
 import { prosperTenure } from '../theme/prosper-tenure';
 import { liquidTenure } from '../../pipeline/theme/liquid-tenure';
 import { ProsperSidebar, type ProsperSection } from './ProsperSidebar';
+import { MobileMenuProvider } from '../../lib/mobile-menu-context';
 import { DashboardView } from './DashboardView';
 import { YourWorthView } from './YourWorthView';
 import { JournalView } from './JournalView';
@@ -69,60 +70,74 @@ export const ProsperView: Component<ProsperViewProps> = (props) => {
   };
 
   return (
-    <div
-      style={{
-        display: 'flex',
-        'min-height': '100vh',
-        background: theme().colors.background,
-        color: theme().colors.text,
-        'font-family': theme().fonts.body,
-      }}
-    >
-      {/* Left Sidebar Navigation */}
-      <ProsperSidebar
-        activeSection={activeSection()}
-        onSectionChange={(section) => navigate(`/tenure/prosper/${section}`)}
-        currentTheme={theme}
-      />
-
-      {/* Main Content Area */}
+    <MobileMenuProvider>
       <div
         style={{
-          flex: 1,
-          'min-width': 0, // Prevent flex overflow
-          overflow: 'auto',
+          display: 'flex',
+          'min-height': '100vh',
           background: theme().colors.background,
+          color: theme().colors.text,
+          'font-family': theme().fonts.body,
         }}
       >
-        {/* Dashboard Section */}
-        <Show when={activeSection() === 'dashboard'}>
-          <DashboardView
-            currentTheme={theme}
-            onNavigate={(section) => navigate(`/tenure/prosper/${section}`)}
-          />
-        </Show>
+        {/* Left Sidebar Navigation */}
+        <ProsperSidebar
+          activeSection={activeSection()}
+          onSectionChange={(section) => navigate(`/tenure/prosper/${section}`)}
+          currentTheme={theme}
+        />
 
-        {/* Your Worth Section */}
-        <Show when={activeSection() === 'your-worth'}>
-          <YourWorthView currentTheme={theme} />
-        </Show>
+        {/* Main Content Area */}
+        <div
+          style={{
+            flex: 1,
+            'min-width': 0, // Prevent flex overflow
+            overflow: 'auto',
+            background: theme().colors.background,
+          }}
+        >
+          {/* Dashboard Section */}
+          <Show when={activeSection() === 'dashboard'}>
+            <DashboardView
+              currentTheme={theme}
+              onNavigate={(section) => navigate(`/tenure/prosper/${section}`)}
+            />
+          </Show>
 
-        {/* Journal Section */}
-        <Show when={activeSection() === 'journal'}>
-          <JournalView currentTheme={theme} />
-        </Show>
+          {/* Your Worth Section */}
+          <Show when={activeSection() === 'your-worth'}>
+            <YourWorthView
+              currentTheme={theme}
+              onNavigate={(section) => navigate(`/tenure/prosper/${section}`)}
+            />
+          </Show>
 
-        {/* Reviews Section */}
-        <Show when={activeSection() === 'reviews'}>
-          <ReviewsView currentTheme={theme} />
-        </Show>
+          {/* Journal Section */}
+          <Show when={activeSection() === 'journal'}>
+            <JournalView
+              currentTheme={theme}
+              onNavigate={(section) => navigate(`/tenure/prosper/${section}`)}
+            />
+          </Show>
 
-        {/* Export Section */}
-        <Show when={activeSection() === 'export'}>
-          <ExportView currentTheme={theme} />
-        </Show>
+          {/* Reviews Section */}
+          <Show when={activeSection() === 'reviews'}>
+            <ReviewsView
+              currentTheme={theme}
+              onNavigate={(section) => navigate(`/tenure/prosper/${section}`)}
+            />
+          </Show>
+
+          {/* Export Section */}
+          <Show when={activeSection() === 'export'}>
+            <ExportView
+              currentTheme={theme}
+              onNavigate={(section) => navigate(`/tenure/prosper/${section}`)}
+            />
+          </Show>
+        </div>
       </div>
-    </div>
+    </MobileMenuProvider>
   );
 };
 

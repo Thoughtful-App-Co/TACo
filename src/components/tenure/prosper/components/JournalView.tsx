@@ -22,6 +22,9 @@ import {
   getQuarterDates,
 } from '../../../../schemas/tenure';
 import { NotePencilIcon } from 'solid-phosphor/bold';
+import { MobileLayout } from '../../lib/MobileLayout';
+import { PageHeader } from '../../lib/PageHeader';
+import { MobileDrawerNavItem } from '../../lib/mobile-menu-context';
 
 // ============================================================================
 // TYPES
@@ -29,7 +32,114 @@ import { NotePencilIcon } from 'solid-phosphor/bold';
 
 interface JournalViewProps {
   currentTheme: () => any;
+  onNavigate: (section: 'dashboard' | 'your-worth' | 'journal' | 'reviews' | 'export') => void;
 }
+
+// ==========================================================================
+// ICON COMPONENTS FOR NAV
+// ==========================================================================
+
+const IconHome: Component<{ size?: number; color?: string }> = (props) => (
+  <svg
+    width={props.size || 24}
+    height={props.size || 24}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={props.color || 'currentColor'}
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+    <polyline points="9 22 9 12 15 12 15 22" />
+  </svg>
+);
+
+const IconDollar: Component<{ size?: number; color?: string }> = (props) => (
+  <svg
+    width={props.size || 24}
+    height={props.size || 24}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={props.color || 'currentColor'}
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <line x1="12" y1="1" x2="12" y2="23" />
+    <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+  </svg>
+);
+
+const IconJournal: Component<{ size?: number; color?: string }> = (props) => (
+  <svg
+    width={props.size || 24}
+    height={props.size || 24}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={props.color || 'currentColor'}
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+    <line x1="8" y1="7" x2="16" y2="7" />
+    <line x1="8" y1="11" x2="14" y2="11" />
+  </svg>
+);
+
+const IconReview: Component<{ size?: number; color?: string }> = (props) => (
+  <svg
+    width={props.size || 24}
+    height={props.size || 24}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={props.color || 'currentColor'}
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+    <circle cx="9" cy="7" r="4" />
+    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+  </svg>
+);
+
+const IconExport: Component<{ size?: number; color?: string }> = (props) => (
+  <svg
+    width={props.size || 24}
+    height={props.size || 24}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={props.color || 'currentColor'}
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+    <polyline points="17 8 12 3 7 8" />
+    <line x1="12" y1="3" x2="12" y2="15" />
+  </svg>
+);
+
+// ==========================================================================
+// NAVIGATION CONSTANTS
+// ==========================================================================
+
+const PROSPER_NAV_ITEMS: MobileDrawerNavItem[] = [
+  { id: 'dashboard', label: 'Dashboard', icon: IconHome, ariaLabel: 'Dashboard' },
+  {
+    id: 'your-worth',
+    label: 'Your Worth',
+    icon: IconDollar,
+    ariaLabel: 'Your Worth - Compensation tracking',
+  },
+  { id: 'journal', label: 'Journal', icon: IconJournal, ariaLabel: 'Journal - Career log' },
+  { id: 'reviews', label: '360 Reviews', icon: IconReview, ariaLabel: '360 Reviews' },
+  { id: 'export', label: 'Export', icon: IconExport, ariaLabel: 'Export data' },
+];
 
 // ============================================================================
 // LOCAL MOOD COLOR HELPER
@@ -945,67 +1055,61 @@ export const JournalView: Component<JournalViewProps> = (props) => {
   });
 
   return (
-    <div style={{ padding: '32px' }}>
-      {/* Header */}
-      <div style={{ 'margin-bottom': '32px' }}>
-        <h1
+    <MobileLayout
+      title="Journal"
+      theme={props.currentTheme}
+      drawerProps={{
+        appName: 'Prosper',
+        navItems: PROSPER_NAV_ITEMS,
+        currentSection: 'journal',
+        onNavigate: (section: string) => {
+          props.onNavigate(
+            section as 'dashboard' | 'your-worth' | 'journal' | 'reviews' | 'export'
+          );
+        },
+        basePath: '/tenure/prosper',
+        currentTenureApp: 'prosper',
+      }}
+    >
+      <PageHeader
+        subtitle="Document your career achievements and growth"
+        theme={props.currentTheme}
+      />
+
+      {/* Action Buttons */}
+      <div style={{ display: 'flex', gap: '12px', 'flex-wrap': 'wrap', 'margin-bottom': '32px' }}>
+        <button
+          onClick={() => setShowCheckInWizard(true)}
+          disabled={hasCheckInForCurrentQuarter()}
           style={{
-            margin: '0 0 8px',
-            'font-size': '32px',
-            'font-family': "'Playfair Display', Georgia, serif",
-            'font-weight': '700',
-            color: theme().colors.text,
+            ...primaryButtonStyle(),
+            display: 'flex',
+            'align-items': 'center',
+            gap: '8px',
+            opacity: hasCheckInForCurrentQuarter() ? 0.5 : 1,
+            cursor: hasCheckInForCurrentQuarter() ? 'not-allowed' : 'pointer',
           }}
         >
-          Career Journal
-        </h1>
-        <p
+          <Show when={hasCheckInForCurrentQuarter()} fallback={<PlusIcon />}>
+            <CheckIcon />
+          </Show>
+          {hasCheckInForCurrentQuarter()
+            ? `${currentQuarter.quarter} Complete`
+            : `Start ${currentQuarter.quarter} Check-In`}
+        </button>
+
+        <button
+          onClick={() => setShowQuickLog(true)}
           style={{
-            margin: 0,
-            'font-size': '15px',
-            'font-family': "'Space Grotesk', system-ui, sans-serif",
-            color: theme().colors.textMuted,
-            'margin-bottom': '24px',
+            ...secondaryButtonStyle(),
+            display: 'flex',
+            'align-items': 'center',
+            gap: '8px',
           }}
         >
-          Track your quarterly progress and capture accomplishments as they happen
-        </p>
-
-        {/* Action Buttons */}
-        <div style={{ display: 'flex', gap: '12px', 'flex-wrap': 'wrap' }}>
-          <button
-            onClick={() => setShowCheckInWizard(true)}
-            disabled={hasCheckInForCurrentQuarter()}
-            style={{
-              ...primaryButtonStyle(),
-              display: 'flex',
-              'align-items': 'center',
-              gap: '8px',
-              opacity: hasCheckInForCurrentQuarter() ? 0.5 : 1,
-              cursor: hasCheckInForCurrentQuarter() ? 'not-allowed' : 'pointer',
-            }}
-          >
-            <Show when={hasCheckInForCurrentQuarter()} fallback={<PlusIcon />}>
-              <CheckIcon />
-            </Show>
-            {hasCheckInForCurrentQuarter()
-              ? `${currentQuarter.quarter} Complete`
-              : `Start ${currentQuarter.quarter} Check-In`}
-          </button>
-
-          <button
-            onClick={() => setShowQuickLog(true)}
-            style={{
-              ...secondaryButtonStyle(),
-              display: 'flex',
-              'align-items': 'center',
-              gap: '8px',
-            }}
-          >
-            <PlusIcon />
-            Quick Log Accomplishment
-          </button>
-        </div>
+          <PlusIcon />
+          Quick Log Accomplishment
+        </button>
       </div>
 
       {/* Modals */}
@@ -1090,6 +1194,6 @@ export const JournalView: Component<JournalViewProps> = (props) => {
         </h2>
         <CheckInTimeline theme={theme} />
       </div>
-    </div>
+    </MobileLayout>
   );
 };

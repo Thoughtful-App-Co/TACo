@@ -10,6 +10,9 @@ import { prepareStore } from '../../prepare/store';
 import { prosperTenure } from '../theme/prosper-tenure';
 import { FluidCard } from '../../ui';
 import { Tooltip, StatTooltipContent } from '../../pipeline/ui';
+import { MobileLayout } from '../../lib/MobileLayout';
+import { PageHeader } from '../../lib/PageHeader';
+import { MobileDrawerNavItem } from '../../lib/mobile-menu-context';
 import type { AccomplishmentType } from '../../../../schemas/tenure';
 
 interface DashboardViewProps {
@@ -216,6 +219,22 @@ const StatCard: Component<StatCardProps> = (props) => {
 // ICON COMPONENTS
 // ==========================================================================
 
+const IconHome: Component<{ size?: number; color?: string }> = (props) => (
+  <svg
+    width={props.size || 24}
+    height={props.size || 24}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={props.color || 'currentColor'}
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+    <polyline points="9 22 9 12 15 12 15 22" />
+  </svg>
+);
+
 const IconDollar: Component<{ size?: number; color?: string }> = (props) => (
   <svg
     width={props.size || 24}
@@ -333,6 +352,40 @@ const IconChevronRight: Component<{ size?: number; color?: string }> = (props) =
     <polyline points="9 18 15 12 9 6" />
   </svg>
 );
+
+const IconExport: Component<{ size?: number; color?: string }> = (props) => (
+  <svg
+    width={props.size || 24}
+    height={props.size || 24}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke={props.color || 'currentColor'}
+    stroke-width="2"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+    <polyline points="17 8 12 3 7 8" />
+    <line x1="12" y1="3" x2="12" y2="15" />
+  </svg>
+);
+
+// ==========================================================================
+// NAVIGATION CONSTANTS
+// ==========================================================================
+
+const PROSPER_NAV_ITEMS: MobileDrawerNavItem[] = [
+  { id: 'dashboard', label: 'Dashboard', icon: IconHome, ariaLabel: 'Dashboard' },
+  {
+    id: 'your-worth',
+    label: 'Your Worth',
+    icon: IconDollar,
+    ariaLabel: 'Your Worth - Compensation tracking',
+  },
+  { id: 'journal', label: 'Journal', icon: IconJournal, ariaLabel: 'Journal - Career log' },
+  { id: 'reviews', label: '360 Reviews', icon: IconReview, ariaLabel: '360 Reviews' },
+  { id: 'export', label: 'Export', icon: IconExport, ariaLabel: 'Export data' },
+];
 
 // ==========================================================================
 // MAIN COMPONENT
@@ -971,31 +1024,26 @@ export const DashboardView: Component<DashboardViewProps> = (props) => {
   // ==========================================================================
 
   return (
-    <div style={{ padding: '32px' }}>
-      {/* Header */}
-      <div style={{ 'margin-bottom': '32px' }}>
-        <h1
-          style={{
-            margin: '0 0 8px',
-            'font-size': '32px',
-            'font-family': "'Playfair Display', Georgia, serif",
-            'font-weight': '700',
-            color: theme().colors.text,
-          }}
-        >
-          Dashboard
-        </h1>
-        <p
-          style={{
-            margin: 0,
-            'font-size': '15px',
-            'font-family': "'Space Grotesk', system-ui, sans-serif",
-            color: theme().colors.textMuted,
-          }}
-        >
-          Overview of your career growth and compensation
-        </p>
-      </div>
+    <MobileLayout
+      title="Dashboard"
+      theme={props.currentTheme}
+      drawerProps={{
+        appName: 'Prosper',
+        navItems: PROSPER_NAV_ITEMS,
+        currentSection: 'dashboard',
+        onNavigate: (section: string) => {
+          props.onNavigate(
+            section as 'dashboard' | 'your-worth' | 'journal' | 'reviews' | 'export'
+          );
+        },
+        basePath: '/tenure/prosper',
+        currentTenureApp: 'prosper',
+      }}
+    >
+      <PageHeader
+        subtitle="Overview of your career growth and compensation"
+        theme={props.currentTheme}
+      />
 
       {/* Stats Grid */}
       <div
@@ -1541,7 +1589,7 @@ export const DashboardView: Component<DashboardViewProps> = (props) => {
           <IconChevronRight size={16} color={theme().colors.textMuted} />
         </button>
       </FluidCard>
-    </div>
+    </MobileLayout>
   );
 };
 
