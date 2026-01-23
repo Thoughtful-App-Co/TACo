@@ -648,8 +648,9 @@ export const SettingsPage: Component = () => {
         features: [
           'Resume Mutation',
           'Cover Letter Generator',
-          'Job Insights AI',
-          '10 AI credits/month',
+          'Job Posting Scraper',
+          'Job Insights & Analytics',
+          '20 AI credits/month',
         ],
         icon: 'tenure',
         color: tokens.colors.brand.coral,

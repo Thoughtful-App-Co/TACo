@@ -320,7 +320,7 @@ export const ExtrasSection: Component<ExtrasSectionProps> = (props) => {
                   'margin-top': '4px',
                 }}
               >
-                10 AI mutations/month • Job matching • Career analytics
+                20 AI credits/month • Job scraper • Insights & analytics
               </div>
             </div>
           </div>
