@@ -36,6 +36,10 @@ import {
 } from '../../../../schemas/pipeline.schema';
 import { exportAndDownload } from '../utils/csv-export';
 import { LaborMarketWidget } from './LaborMarketWidget';
+import { MobileLayout } from '../../lib/MobileLayout';
+import { PageHeader } from '../../lib/PageHeader';
+import { useNavigate } from '@solidjs/router';
+import { PROSPECT_NAV_ITEMS } from './prospect-navigation';
 
 interface DashboardViewProps {
   currentTheme: () => Partial<typeof liquidTenure> & typeof liquidTenure;
@@ -57,6 +61,7 @@ interface ActivityItem {
 export const DashboardView: Component<DashboardViewProps> = (props) => {
   const theme = () => props.currentTheme();
   const isMobile = useMobile();
+  const navigate = useNavigate();
   const applications = () => pipelineStore.state.applications;
   const duotoneColors = createMemo(() => getCurrentDuotone());
 
@@ -403,31 +408,69 @@ export const DashboardView: Component<DashboardViewProps> = (props) => {
   });
 
   return (
-    <div style={{ padding: '32px' }}>
-      {/* Header */}
-      <div style={{ 'margin-bottom': '32px' }}>
-        <h1
-          style={{
-            margin: '0 0 8px',
-            'font-size': '32px',
-            'font-family': "'Playfair Display', Georgia, serif",
-            'font-weight': '700',
-            color: theme().colors.text,
-          }}
-        >
-          Dashboard
-        </h1>
-        <p
-          style={{
-            margin: 0,
-            'font-size': '15px',
-            'font-family': "'Space Grotesk', system-ui, sans-serif",
-            color: theme().colors.textMuted,
-          }}
-        >
-          Overview of your job search progress
-        </p>
-      </div>
+    <MobileLayout
+      title="Dashboard"
+      theme={props.currentTheme}
+      drawerProps={{
+        appName: 'Prospect',
+        navItems: PROSPECT_NAV_ITEMS,
+        currentSection: 'dashboard',
+        onNavigate: (section: string) => navigate(`/tenure/prospect/${section}`),
+        basePath: '/tenure/prospect',
+        currentTenureApp: 'prospect',
+      }}
+    >
+      <PageHeader
+        title="Dashboard"
+        subtitle="Overview of your job search progress"
+        theme={props.currentTheme}
+        actions={
+          <>
+            <button
+              class="pipeline-btn"
+              onClick={props.onAddJob}
+              style={{
+                display: 'flex',
+                'align-items': 'center',
+                gap: '8px',
+                padding: '10px 16px',
+                background: `linear-gradient(135deg, ${theme().colors.primary}15, ${theme().colors.primary}05)`,
+                border: `1px solid ${theme().colors.primary}30`,
+                'border-radius': '10px',
+                color: theme().colors.text,
+                cursor: 'pointer',
+                'font-size': '14px',
+                'font-family': "'Space Grotesk', system-ui, sans-serif",
+                'font-weight': '500',
+              }}
+            >
+              <IconPlus size={16} />
+              Add Job
+            </button>
+            <button
+              class="pipeline-btn"
+              onClick={props.onImportCSV}
+              style={{
+                display: 'flex',
+                'align-items': 'center',
+                gap: '8px',
+                padding: '10px 16px',
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: `1px solid ${theme().colors.border}`,
+                'border-radius': '10px',
+                color: theme().colors.text,
+                cursor: 'pointer',
+                'font-size': '14px',
+                'font-family': "'Space Grotesk', system-ui, sans-serif",
+                'font-weight': '500',
+              }}
+            >
+              <IconUpload size={16} />
+              Import CSV
+            </button>
+          </>
+        }
+      />
 
       {/* Stats Grid */}
       <div
@@ -963,7 +1006,7 @@ export const DashboardView: Component<DashboardViewProps> = (props) => {
       <div style={{ 'margin-top': '24px' }}>
         <LaborMarketWidget currentTheme={props.currentTheme} />
       </div>
-    </div>
+    </MobileLayout>
   );
 };
 

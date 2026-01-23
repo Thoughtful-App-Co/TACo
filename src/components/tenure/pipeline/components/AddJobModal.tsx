@@ -19,6 +19,8 @@ import {
 } from '../ui/Icons';
 import { JobApplication, SalaryRange } from '../../../../schemas/pipeline.schema';
 import { formatNumberForInput, parseFormattedNumber, getCurrencySymbol } from '../utils';
+import { canUseMutation } from '../../../../lib/feature-gates';
+import { Paywall } from '../../../common/Paywall';
 
 interface AddJobModalProps {
   isOpen: boolean;
@@ -65,6 +67,7 @@ export const AddJobModal: Component<AddJobModalProps> = (props) => {
   const [jobUrl, setJobUrl] = createSignal('');
   const [urlError, setUrlError] = createSignal<string | null>(null);
   const [scrapedData, setScrapedData] = createSignal<ScrapedJobData | null>(null);
+  const [showPaywall, setShowPaywall] = createSignal(false);
 
   // Loading stage state for multi-step progress indicator
   type LoadingStage = 'fetching' | 'extracting' | 'analyzing' | 'preparing';
@@ -165,6 +168,13 @@ export const AddJobModal: Component<AddJobModalProps> = (props) => {
   };
 
   const handleFetchUrl = async () => {
+    // Check subscription access first
+    const access = canUseMutation();
+    if (!access.allowed) {
+      setShowPaywall(true);
+      return;
+    }
+
     const url = jobUrl().trim();
     if (!url) {
       setUrlError('Please enter a URL');
@@ -1101,6 +1111,14 @@ export const AddJobModal: Component<AddJobModalProps> = (props) => {
           </div>
         </div>
       </div>
+
+      {/* Paywall Modal */}
+      <Paywall
+        isOpen={showPaywall()}
+        onClose={() => setShowPaywall(false)}
+        feature="tenure_extras"
+        featureName="Job Posting Scraper"
+      />
     </Show>
   );
 };

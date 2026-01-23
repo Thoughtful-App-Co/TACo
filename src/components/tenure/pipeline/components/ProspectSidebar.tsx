@@ -8,9 +8,10 @@
 import { Component, createSignal, createEffect, Show, For } from 'solid-js';
 import { A } from '@solidjs/router';
 import { liquidTenure, pipelineAnimations } from '../theme/liquid-tenure';
-import { IconGrid, IconTrendingUp, IconSettings } from '../ui/Icons';
+import { IconTrendingUp } from '../ui/Icons';
 import { Tooltip } from '../ui';
 import { useMobile } from '../../lib/use-mobile';
+import { MobileDrawer, MobileDrawerNavItem } from '../../lib/mobile-menu-context';
 
 export type ProspectSection = 'dashboard' | 'pipeline' | 'insights' | 'settings';
 
@@ -18,19 +19,9 @@ interface ProspectSidebarProps {
   activeSection: ProspectSection;
   onSectionChange: (section: ProspectSection) => void;
   currentTheme: () => Partial<typeof liquidTenure> & typeof liquidTenure;
-  // Mobile menu props
-  isMobileMenuOpen?: boolean;
-  onMobileMenuClose?: () => void;
 }
 
-interface NavItem {
-  id: ProspectSection;
-  label: string;
-  icon: Component<{ size?: number; color?: string }>;
-  ariaLabel: string;
-}
-
-const NAV_ITEMS: NavItem[] = [
+const NAV_ITEMS: MobileDrawerNavItem[] = [
   {
     id: 'dashboard',
     label: 'Dashboard',
@@ -79,12 +70,6 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Insights',
     icon: IconTrendingUp,
     ariaLabel: 'Insights - Flow diagram and analytics',
-  },
-  {
-    id: 'settings',
-    label: 'Settings',
-    icon: IconSettings,
-    ariaLabel: 'Settings - Criteria and preferences',
   },
 ];
 
@@ -158,135 +143,157 @@ export const ProspectSidebar: Component<ProspectSidebarProps> = (props) => {
 
   const sidebarWidth = () => (isCollapsed() ? '60px' : '240px');
 
-  // Mobile: Render as slide-out menu overlay
-  if (isMobile()) {
-    return (
-      <Show when={props.isMobileMenuOpen}>
-        {/* Backdrop */}
-        <div
-          onClick={props.onMobileMenuClose}
-          style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            background: 'rgba(0, 0, 0, 0.6)',
-            'backdrop-filter': 'blur(4px)',
-            'z-index': 999,
-            animation: 'sidebar-fade-in 0.2s ease-out',
-          }}
+  return (
+    <>
+      {/* Mobile: Slide-out menu overlay */}
+      <Show when={isMobile()}>
+        <MobileDrawer
+          appName="Prospect"
+          navItems={NAV_ITEMS}
+          currentSection={props.activeSection}
+          onNavigate={(section) => props.onSectionChange(section as ProspectSection)}
+          basePath="/tenure/prospect"
+          theme={theme}
+          currentTenureApp="prospect"
         />
-        {/* Slide-out Menu */}
+      </Show>
+
+      {/* Desktop/Tablet: Collapsible sidebar */}
+      <Show when={!isMobile()}>
         <aside
           style={{
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            bottom: 0,
-            width: '280px',
+            width: sidebarWidth(),
+            height: '100vh',
             background: 'linear-gradient(180deg, rgba(15, 15, 18, 0.98), rgba(10, 10, 12, 0.95))',
             'border-right': `1px solid ${theme().colors.border}`,
             display: 'flex',
             'flex-direction': 'column',
-            'z-index': 1000,
-            animation: 'sidebar-slide-in 0.25s ease-out',
+            'flex-shrink': 0,
+            transition: `width ${pipelineAnimations.normal} cubic-bezier(0.4, 0, 0.2, 1)`,
+            'z-index': 100,
+            position: 'relative',
           }}
         >
-          {/* Header with Close Button */}
+          {/* Logo / Header */}
           <div
             style={{
-              padding: '16px 20px',
+              padding: isCollapsed() ? '16px 12px' : '16px 20px',
               'border-bottom': `1px solid ${theme().colors.border}`,
               display: 'flex',
               'align-items': 'center',
-              'justify-content': 'space-between',
+              'justify-content': isCollapsed() ? 'center' : 'space-between',
               'min-height': '64px',
+              transition: `padding ${pipelineAnimations.normal}`,
             }}
           >
-            <div
-              style={{
-                'font-size': '18px',
-                'font-family': "'Playfair Display', Georgia, serif",
-                'font-weight': '700',
-                color: theme().colors.text,
-                'letter-spacing': '-0.02em',
-              }}
-            >
-              Prospect
-            </div>
-            <button
-              onClick={props.onMobileMenuClose}
-              aria-label="Close menu"
-              style={{
-                display: 'flex',
-                'align-items': 'center',
-                'justify-content': 'center',
-                width: '44px',
-                height: '44px',
-                padding: '8px',
-                background: 'transparent',
-                border: `1px solid ${theme().colors.border}`,
-                'border-radius': '10px',
-                color: theme().colors.textMuted,
-                cursor: 'pointer',
-              }}
-            >
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
+            <Show when={!isCollapsed()}>
+              <div
+                style={{
+                  'font-size': '18px',
+                  'font-family': "'Playfair Display', Georgia, serif",
+                  'font-weight': '700',
+                  color: theme().colors.text,
+                  'letter-spacing': '-0.02em',
+                }}
               >
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
-              </svg>
-            </button>
+                Prospect
+              </div>
+            </Show>
+
+            {/* Toggle Button */}
+            <Tooltip
+              content={isCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'}
+              position="right"
+              delay={200}
+            >
+              <button
+                onClick={toggleCollapse}
+                aria-label={isCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'}
+                style={{
+                  display: 'flex',
+                  'align-items': 'center',
+                  'justify-content': 'center',
+                  width: '36px',
+                  height: '36px',
+                  padding: '8px',
+                  background: 'transparent',
+                  border: `1px solid ${theme().colors.border}`,
+                  'border-radius': '8px',
+                  color: theme().colors.textMuted,
+                  cursor: 'pointer',
+                  transition: `all ${pipelineAnimations.fast}`,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                  e.currentTarget.style.borderColor = theme().colors.primary;
+                  e.currentTarget.style.color = theme().colors.primary;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.borderColor = theme().colors.border;
+                  e.currentTarget.style.color = theme().colors.textMuted;
+                }}
+              >
+                <Show when={isCollapsed()} fallback={<IconSidebarOpen size={18} />}>
+                  <IconSidebarClose size={18} />
+                </Show>
+              </button>
+            </Tooltip>
           </div>
 
           {/* Navigation Items */}
           <nav
             style={{
               flex: 1,
-              padding: '16px 12px',
+              padding: '12px 8px',
               display: 'flex',
               'flex-direction': 'column',
-              gap: '8px',
+              gap: '4px',
             }}
             aria-label="Prospect navigation"
           >
             <For each={NAV_ITEMS}>
               {(item) => {
                 const isActive = () => props.activeSection === item.id;
-                return (
+
+                const navButton = (
                   <A
                     href={`/tenure/prospect/${item.id}`}
-                    onClick={props.onMobileMenuClose}
                     aria-label={item.ariaLabel}
                     aria-current={isActive() ? 'page' : undefined}
                     style={{
                       width: '100%',
                       display: 'flex',
                       'align-items': 'center',
-                      gap: '14px',
-                      padding: '14px 18px',
-                      'min-height': '52px',
+                      gap: '12px',
+                      padding: isCollapsed() ? '12px' : '12px 16px',
                       background: isActive()
                         ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.06))'
                         : 'transparent',
                       border: 'none',
-                      'border-radius': '12px',
+                      'border-radius': '10px',
                       color: isActive() ? theme().colors.primary : theme().colors.textMuted,
-                      'font-size': '15px',
+                      'font-size': '14px',
                       'font-family': "'Space Grotesk', system-ui, sans-serif",
                       'font-weight': isActive() ? '600' : '500',
                       'text-align': 'left',
                       'text-decoration': 'none',
                       position: 'relative',
+                      overflow: 'visible',
+                      transition: `background ${pipelineAnimations.fast}, color ${pipelineAnimations.fast}, padding ${pipelineAnimations.fast}`,
+                      'justify-content': isCollapsed() ? 'center' : 'flex-start',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isActive()) {
+                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
+                        e.currentTarget.style.color = theme().colors.text;
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive()) {
+                        e.currentTarget.style.background = 'transparent';
+                        e.currentTarget.style.color = theme().colors.textMuted;
+                      }
                     }}
                   >
                     {/* Active indicator */}
@@ -297,216 +304,40 @@ export const ProspectSidebar: Component<ProspectSidebarProps> = (props) => {
                           left: 0,
                           top: '50%',
                           transform: 'translateY(-50%)',
-                          width: '4px',
-                          height: '24px',
+                          width: '3px',
+                          height: '20px',
                           background: theme().colors.primary,
-                          'border-radius': '0 3px 3px 0',
+                          'border-radius': '0 2px 2px 0',
                           'box-shadow': `0 0 8px ${theme().colors.primary}50`,
                         }}
                       />
                     </Show>
-                    <item.icon size={22} />
-                    <span>{item.label}</span>
+
+                    <item.icon size={20} />
+
+                    <Show when={!isCollapsed()}>
+                      <span style={{ flex: 1 }}>{item.label}</span>
+                    </Show>
                   </A>
+                );
+
+                // Always render navButton, don't wrap in Tooltip
+                // The tooltip will be disabled when expanded
+                return (
+                  <Tooltip
+                    content={item.label}
+                    position="right"
+                    delay={200}
+                    disabled={!isCollapsed()}
+                  >
+                    {navButton}
+                  </Tooltip>
                 );
               }}
             </For>
           </nav>
         </aside>
-        <style>{`
-          @keyframes sidebar-fade-in {
-            from { opacity: 0; }
-            to { opacity: 1; }
-          }
-          @keyframes sidebar-slide-in {
-            from { transform: translateX(-100%); }
-            to { transform: translateX(0); }
-          }
-        `}</style>
       </Show>
-    );
-  }
-
-  // Desktop: Standard collapsible sidebar
-  return (
-    <>
-      <aside
-        style={{
-          width: sidebarWidth(),
-          height: '100vh',
-          background: 'linear-gradient(180deg, rgba(15, 15, 18, 0.98), rgba(10, 10, 12, 0.95))',
-          'border-right': `1px solid ${theme().colors.border}`,
-          display: 'flex',
-          'flex-direction': 'column',
-          'flex-shrink': 0,
-          transition: `width ${pipelineAnimations.normal} cubic-bezier(0.4, 0, 0.2, 1)`,
-          'z-index': 100,
-          position: 'relative',
-        }}
-      >
-        {/* Logo / Header */}
-        <div
-          style={{
-            padding: isCollapsed() ? '16px 12px' : '16px 20px',
-            'border-bottom': `1px solid ${theme().colors.border}`,
-            display: 'flex',
-            'align-items': 'center',
-            'justify-content': isCollapsed() ? 'center' : 'space-between',
-            'min-height': '64px',
-            transition: `padding ${pipelineAnimations.normal}`,
-          }}
-        >
-          <Show when={!isCollapsed()}>
-            <div
-              style={{
-                'font-size': '18px',
-                'font-family': "'Playfair Display', Georgia, serif",
-                'font-weight': '700',
-                color: theme().colors.text,
-                'letter-spacing': '-0.02em',
-              }}
-            >
-              Prospect
-            </div>
-          </Show>
-
-          {/* Toggle Button */}
-          <Tooltip
-            content={isCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'}
-            position="right"
-            delay={200}
-          >
-            <button
-              onClick={toggleCollapse}
-              aria-label={isCollapsed() ? 'Expand sidebar' : 'Collapse sidebar'}
-              style={{
-                display: 'flex',
-                'align-items': 'center',
-                'justify-content': 'center',
-                width: '36px',
-                height: '36px',
-                padding: '8px',
-                background: 'transparent',
-                border: `1px solid ${theme().colors.border}`,
-                'border-radius': '8px',
-                color: theme().colors.textMuted,
-                cursor: 'pointer',
-                transition: `all ${pipelineAnimations.fast}`,
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                e.currentTarget.style.borderColor = theme().colors.primary;
-                e.currentTarget.style.color = theme().colors.primary;
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = 'transparent';
-                e.currentTarget.style.borderColor = theme().colors.border;
-                e.currentTarget.style.color = theme().colors.textMuted;
-              }}
-            >
-              <Show when={isCollapsed()} fallback={<IconSidebarOpen size={18} />}>
-                <IconSidebarClose size={18} />
-              </Show>
-            </button>
-          </Tooltip>
-        </div>
-
-        {/* Navigation Items */}
-        <nav
-          style={{
-            flex: 1,
-            padding: '12px 8px',
-            display: 'flex',
-            'flex-direction': 'column',
-            gap: '4px',
-          }}
-          aria-label="Prospect navigation"
-        >
-          <For each={NAV_ITEMS}>
-            {(item) => {
-              const isActive = () => props.activeSection === item.id;
-
-              const navButton = (
-                <A
-                  href={`/tenure/prospect/${item.id}`}
-                  aria-label={item.ariaLabel}
-                  aria-current={isActive() ? 'page' : undefined}
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    'align-items': 'center',
-                    gap: '12px',
-                    padding: isCollapsed() ? '12px' : '12px 16px',
-                    background: isActive()
-                      ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.06))'
-                      : 'transparent',
-                    border: 'none',
-                    'border-radius': '10px',
-                    color: isActive() ? theme().colors.primary : theme().colors.textMuted,
-                    'font-size': '14px',
-                    'font-family': "'Space Grotesk', system-ui, sans-serif",
-                    'font-weight': isActive() ? '600' : '500',
-                    'text-align': 'left',
-                    'text-decoration': 'none',
-                    position: 'relative',
-                    overflow: 'visible',
-                    transition: `background ${pipelineAnimations.fast}, color ${pipelineAnimations.fast}, padding ${pipelineAnimations.fast}`,
-                    'justify-content': isCollapsed() ? 'center' : 'flex-start',
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!isActive()) {
-                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.04)';
-                      e.currentTarget.style.color = theme().colors.text;
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    if (!isActive()) {
-                      e.currentTarget.style.background = 'transparent';
-                      e.currentTarget.style.color = theme().colors.textMuted;
-                    }
-                  }}
-                >
-                  {/* Active indicator */}
-                  <Show when={isActive()}>
-                    <div
-                      style={{
-                        position: 'absolute',
-                        left: 0,
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        width: '3px',
-                        height: '20px',
-                        background: theme().colors.primary,
-                        'border-radius': '0 2px 2px 0',
-                        'box-shadow': `0 0 8px ${theme().colors.primary}50`,
-                      }}
-                    />
-                  </Show>
-
-                  <item.icon size={20} />
-
-                  <Show when={!isCollapsed()}>
-                    <span style={{ flex: 1 }}>{item.label}</span>
-                  </Show>
-                </A>
-              );
-
-              // Always render navButton, don't wrap in Tooltip
-              // The tooltip will be disabled when expanded
-              return (
-                <Tooltip
-                  content={item.label}
-                  position="right"
-                  delay={200}
-                  disabled={!isCollapsed()}
-                >
-                  {navButton}
-                </Tooltip>
-              );
-            }}
-          </For>
-        </nav>
-      </aside>
     </>
   );
 };

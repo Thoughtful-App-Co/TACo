@@ -177,6 +177,54 @@ createEffect(() => {
   notifyTenureDataChanged();
 });
 
+// Listen for sync updates from other tabs/devices
+// When sync pulls new data and writes to localStorage, reload the store
+if (typeof window !== 'undefined') {
+  window.addEventListener('storage', (event) => {
+    logger.sync.debug('Storage event received in pipeline store', {
+      key: event.key,
+      isRelevant:
+        event.key === 'tenure_sync_updated' ||
+        event.key === STORAGE_KEYS.applications ||
+        event.key === STORAGE_KEYS.profile ||
+        event.key === STORAGE_KEYS.settings,
+    });
+
+    // Handle both cross-tab storage events and our custom sync event
+    if (
+      event.key === 'tenure_sync_updated' ||
+      event.key === STORAGE_KEYS.applications ||
+      event.key === STORAGE_KEYS.profile ||
+      event.key === STORAGE_KEYS.settings
+    ) {
+      logger.sync.info('Sync data changed, reloading pipeline store from localStorage');
+      reloadFromStorage();
+    }
+  });
+
+  logger.sync.info('Pipeline store: storage event listener registered');
+}
+
+/**
+ * Reload store state from localStorage
+ * Called when sync pulls new data from another device
+ */
+function reloadFromStorage(): void {
+  logger.sync.info('Pipeline store: reloadFromStorage() called');
+  const newState = loadInitialState();
+  logger.sync.info('Pipeline store: loaded new state', {
+    applicationCount: newState.applications.length,
+    hasProfile: !!newState.profile,
+  });
+  setState({
+    applications: newState.applications,
+    profile: newState.profile,
+    settings: newState.settings,
+    featureFlags: newState.featureFlags,
+  });
+  logger.sync.info('Pipeline store: state updated');
+}
+
 // ============================================================================
 // STORE ACTIONS
 // ============================================================================

@@ -21,14 +21,20 @@ import {
   IconChevronRight,
   IconFilter,
   IconX,
+  IconSparkles,
 } from '../ui/Icons';
 import { FluidCard, AggregationAccordion } from '../ui';
 import { pipelineStore } from '../store';
+import { MobileLayout } from '../../lib/MobileLayout';
+import { PageHeader } from '../../lib/PageHeader';
+import { PROSPECT_NAV_ITEMS } from './prospect-navigation';
 import {
   JobApplication,
   ApplicationStatus,
   STATUS_LABELS,
 } from '../../../../schemas/pipeline.schema';
+import { canUseMutation } from '../../../../lib/feature-gates';
+import { Paywall } from '../../../common/Paywall';
 
 interface InsightsViewProps {
   currentTheme: () => Partial<typeof liquidTenure> & typeof liquidTenure;
@@ -41,6 +47,15 @@ export const InsightsView: Component<InsightsViewProps> = (props) => {
   const theme = () => props.currentTheme();
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Paywall state
+  const [showPaywall, setShowPaywall] = createSignal(false);
+
+  // Check subscription access
+  const hasAccess = createMemo(() => {
+    const access = canUseMutation();
+    return access.allowed;
+  });
 
   // Determine active tab from URL path
   const activeTab = createMemo((): InsightsTab => {
@@ -110,7 +125,25 @@ export const InsightsView: Component<InsightsViewProps> = (props) => {
   };
 
   return (
-    <div style={{ padding: '32px', 'max-width': '1400px' }}>
+    <MobileLayout
+      title="Insights"
+      theme={props.currentTheme}
+      maxWidth="1400px"
+      drawerProps={{
+        appName: 'Prospect',
+        navItems: PROSPECT_NAV_ITEMS,
+        currentSection: 'insights',
+        onNavigate: (section: string) => navigate(`/tenure/prospect/${section}`),
+        basePath: '/tenure/prospect',
+        currentTenureApp: 'prospect',
+      }}
+    >
+      <PageHeader
+        title="Insights"
+        subtitle="Analytics and trends for your job search"
+        theme={props.currentTheme}
+      />
+
       {/* Enhanced Tab Navigation */}
       <div
         role="tablist"
@@ -203,30 +236,284 @@ export const InsightsView: Component<InsightsViewProps> = (props) => {
       </div>
 
       {/* Tab Content with Animation */}
-      <div
-        style={{
-          animation: 'pipeline-fade-up 0.3s ease forwards',
-        }}
+      <Show
+        when={hasAccess()}
+        fallback={
+          <div
+            style={{
+              position: 'relative',
+              padding: '64px 24px',
+              'text-align': 'center',
+              background: 'linear-gradient(135deg, rgba(15, 15, 18, 0.6), rgba(10, 10, 12, 0.8))',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              'border-radius': '20px',
+              'backdrop-filter': 'blur(10px)',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Lock Icon Background */}
+            <div
+              style={{
+                position: 'absolute',
+                top: '20px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '80px',
+                height: '80px',
+                background: `radial-gradient(circle, ${theme().colors.primary}15 0%, transparent 70%)`,
+                'border-radius': '50%',
+                display: 'flex',
+                'align-items': 'center',
+                'justify-content': 'center',
+              }}
+            >
+              <svg
+                width="40"
+                height="40"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke={`${theme().colors.primary}99`}
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+            </div>
+
+            <div
+              style={{
+                'max-width': '560px',
+                margin: '80px auto 0',
+                position: 'relative',
+                'z-index': 1,
+              }}
+            >
+              {/* Premium Badge */}
+              <div
+                style={{
+                  display: 'inline-flex',
+                  'align-items': 'center',
+                  gap: '6px',
+                  padding: '6px 14px',
+                  background: `${theme().colors.primary}15`,
+                  border: `1px solid ${theme().colors.primary}30`,
+                  'border-radius': '20px',
+                  'margin-bottom': '20px',
+                  'font-size': '12px',
+                  'font-weight': '600',
+                  color: theme().colors.primary,
+                  'text-transform': 'uppercase',
+                  'letter-spacing': '0.5px',
+                }}
+              >
+                <IconSparkles size={14} color={theme().colors.primary} />
+                Tenure Extras
+              </div>
+
+              <h2
+                style={{
+                  margin: '0 0 16px',
+                  'font-size': '28px',
+                  'font-weight': '700',
+                  color: theme().colors.text,
+                  'font-family': theme().fonts.heading,
+                  'line-height': '1.2',
+                }}
+              >
+                Unlock Job Insights & Analytics
+              </h2>
+
+              <p
+                style={{
+                  margin: '0 0 32px',
+                  'font-size': '16px',
+                  color: 'rgba(255, 255, 255, 0.6)',
+                  'line-height': '1.6',
+                }}
+              >
+                Get powerful insights into your job search with pipeline flow visualization,
+                conversion analytics, and activity trends. Track your progress and optimize your
+                strategy.
+              </p>
+
+              {/* Feature List */}
+              <div
+                style={{
+                  display: 'grid',
+                  'grid-template-columns': 'repeat(auto-fit, minmax(200px, 1fr))',
+                  gap: '16px',
+                  'margin-bottom': '32px',
+                  'text-align': 'left',
+                }}
+              >
+                <div style={{ display: 'flex', gap: '12px', 'align-items': 'flex-start' }}>
+                  <div
+                    style={{
+                      'flex-shrink': 0,
+                      width: '24px',
+                      height: '24px',
+                      background: `${theme().colors.secondary}15`,
+                      'border-radius': '6px',
+                      display: 'flex',
+                      'align-items': 'center',
+                      'justify-content': 'center',
+                    }}
+                  >
+                    <IconPipeline size={14} color={theme().colors.secondary} />
+                  </div>
+                  <div>
+                    <div
+                      style={{
+                        'font-size': '14px',
+                        'font-weight': '600',
+                        color: theme().colors.text,
+                      }}
+                    >
+                      Pipeline Flow
+                    </div>
+                    <div style={{ 'font-size': '13px', color: theme().colors.textMuted }}>
+                      Sankey visualization
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px', 'align-items': 'flex-start' }}>
+                  <div
+                    style={{
+                      'flex-shrink': 0,
+                      width: '24px',
+                      height: '24px',
+                      background: `${theme().colors.secondary}15`,
+                      'border-radius': '6px',
+                      display: 'flex',
+                      'align-items': 'center',
+                      'justify-content': 'center',
+                    }}
+                  >
+                    <IconTrendingUp size={14} color={theme().colors.secondary} />
+                  </div>
+                  <div>
+                    <div
+                      style={{
+                        'font-size': '14px',
+                        'font-weight': '600',
+                        color: theme().colors.text,
+                      }}
+                    >
+                      Conversion Analytics
+                    </div>
+                    <div style={{ 'font-size': '13px', color: theme().colors.textMuted }}>
+                      Success metrics
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px', 'align-items': 'flex-start' }}>
+                  <div
+                    style={{
+                      'flex-shrink': 0,
+                      width: '24px',
+                      height: '24px',
+                      background: `${theme().colors.secondary}15`,
+                      'border-radius': '6px',
+                      display: 'flex',
+                      'align-items': 'center',
+                      'justify-content': 'center',
+                    }}
+                  >
+                    <IconClock size={14} color={theme().colors.secondary} />
+                  </div>
+                  <div>
+                    <div
+                      style={{
+                        'font-size': '14px',
+                        'font-weight': '600',
+                        color: theme().colors.text,
+                      }}
+                    >
+                      Activity Trends
+                    </div>
+                    <div style={{ 'font-size': '13px', color: theme().colors.textMuted }}>
+                      Timeline charts
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowPaywall(true)}
+                style={{
+                  padding: '16px 40px',
+                  'font-size': '16px',
+                  'font-weight': '600',
+                  color: 'white',
+                  background: `linear-gradient(135deg, ${theme().colors.primary} 0%, ${theme().colors.secondary} 100%)`,
+                  border: 'none',
+                  'border-radius': '12px',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                  'box-shadow': `0 4px 14px ${theme().colors.primary}40`,
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px) scale(1.02)';
+                  e.currentTarget.style.boxShadow = `0 8px 24px ${theme().colors.primary}50`;
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0) scale(1)';
+                  e.currentTarget.style.boxShadow = `0 4px 14px ${theme().colors.primary}40`;
+                }}
+              >
+                Upgrade to Tenure Extras – $5/mo
+              </button>
+
+              <div
+                style={{
+                  'margin-top': '16px',
+                  'font-size': '13px',
+                  color: 'rgba(255, 255, 255, 0.4)',
+                }}
+              >
+                Includes 20 AI credits, resume tools, and more
+              </div>
+            </div>
+          </div>
+        }
       >
-        <Show when={activeTab() === 'flow'}>
-          <div role="tabpanel" id="flow-panel" aria-labelledby="flow-tab">
-            <SankeyView currentTheme={theme} onSelectJob={props.onSelectJob} />
-          </div>
-        </Show>
+        <div
+          style={{
+            animation: 'pipeline-fade-up 0.3s ease forwards',
+          }}
+        >
+          <Show when={activeTab() === 'flow'}>
+            <div role="tabpanel" id="flow-panel" aria-labelledby="flow-tab">
+              <SankeyView currentTheme={theme} onSelectJob={props.onSelectJob} />
+            </div>
+          </Show>
 
-        <Show when={activeTab() === 'analytics'}>
-          <div role="tabpanel" id="analytics-panel" aria-labelledby="analytics-tab">
-            <AnalyticsTab theme={theme} />
-          </div>
-        </Show>
+          <Show when={activeTab() === 'analytics'}>
+            <div role="tabpanel" id="analytics-panel" aria-labelledby="analytics-tab">
+              <AnalyticsTab theme={theme} />
+            </div>
+          </Show>
 
-        <Show when={activeTab() === 'trends'}>
-          <div role="tabpanel" id="trends-panel" aria-labelledby="trends-tab">
-            <TrendsTab theme={theme} />
-          </div>
-        </Show>
-      </div>
-    </div>
+          <Show when={activeTab() === 'trends'}>
+            <div role="tabpanel" id="trends-panel" aria-labelledby="trends-tab">
+              <TrendsTab theme={theme} />
+            </div>
+          </Show>
+        </div>
+      </Show>
+
+      {/* Paywall Modal */}
+      <Paywall
+        isOpen={showPaywall()}
+        onClose={() => setShowPaywall(false)}
+        feature="tenure_extras"
+        featureName="Job Insights & Analytics"
+      />
+    </MobileLayout>
   );
 };
 
