@@ -48,6 +48,10 @@ import {
 } from './services/cover-letter.service';
 import { exportService, type ExportFormat } from './services/export.service';
 import { logger } from '../../../lib/logger';
+import { useMobile } from '../lib/use-mobile';
+import { MobileDrawerNavItem } from '../lib/mobile-menu-context';
+import { MobileLayout } from '../lib/MobileLayout';
+import { PageHeader } from '../lib/PageHeader';
 
 interface PrepareAppProps {
   currentTheme: () => {
@@ -77,8 +81,31 @@ interface PrepareAppProps {
 type ViewMode = 'builder' | 'wizard' | 'repository';
 type WizardMode = 'job-description' | 'job-title' | null;
 
+// Prepare section mobile nav items
+const PREPARE_NAV_ITEMS: MobileDrawerNavItem[] = [
+  {
+    id: 'builder',
+    label: 'Resume Builder',
+    icon: IconFileText,
+    ariaLabel: 'Resume Builder - Create and edit your master resume',
+  },
+  {
+    id: 'wizard',
+    label: 'Resume Wizard',
+    icon: IconSparkles,
+    ariaLabel: 'Resume Wizard - AI-powered resume tailoring',
+  },
+  {
+    id: 'repository',
+    label: 'Resume Repository',
+    icon: IconGrid,
+    ariaLabel: 'Resume Repository - Manage resume variants',
+  },
+];
+
 export const PrepareApp: Component<PrepareAppProps> = (props) => {
   const theme = () => props.currentTheme();
+  const isMobile = useMobile();
 
   const [viewMode, setViewMode] = createSignal<ViewMode>('builder');
   const [wizardMode, setWizardMode] = createSignal<WizardMode>(null);
@@ -522,16 +549,29 @@ export const PrepareApp: Component<PrepareAppProps> = (props) => {
   };
 
   return (
-    <div
-      style={{
-        padding: '32px',
-        'max-width': '1200px',
-        margin: '0 auto',
-        'min-height': 'calc(100vh - 200px)',
+    <MobileLayout
+      title="Prepare"
+      theme={theme}
+      drawerProps={{
+        appName: 'Prepare',
+        navItems: hasMasterResume()
+          ? PREPARE_NAV_ITEMS
+          : PREPARE_NAV_ITEMS.filter((item) => item.id === 'builder'),
+        currentSection: viewMode(),
+        onNavigate: (sectionId: string) => {
+          setViewMode(sectionId as ViewMode);
+          if (sectionId === 'wizard') {
+            setWizardMode(null);
+          }
+        },
+        basePath: '/tenure/prepare',
+        currentTenureApp: 'prepare',
       }}
+      maxWidth="1200px"
+      minHeight="calc(100vh - 200px)"
     >
-      {/* Tab Navigation */}
-      <Show when={hasMasterResume()}>
+      {/* Tab Navigation - Desktop only */}
+      <Show when={hasMasterResume() && !isMobile()}>
         <div
           style={{
             display: 'flex',
@@ -1236,7 +1276,7 @@ export const PrepareApp: Component<PrepareAppProps> = (props) => {
         onClose={closeSuccessModal}
         currentTheme={theme}
       />
-    </div>
+    </MobileLayout>
   );
 };
 

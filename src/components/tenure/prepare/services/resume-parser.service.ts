@@ -5,6 +5,7 @@
  */
 
 import { logger } from '../../../../lib/logger';
+import { authFetch } from '../../../../lib/auth';
 import type { ParsedResumeSections, ExtractedKeywords } from '../../../../schemas/prepare.schema';
 
 // ============================================================================
@@ -42,7 +43,7 @@ export async function parseResume(request: ParseResumeRequest): Promise<ParseRes
   });
 
   try {
-    const response = await fetch('/api/resume/parse', {
+    const response = await authFetch('/api/resume/parse', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -136,7 +137,7 @@ export async function extractTextFromFile(file: File): Promise<string> {
   const formData = new FormData();
   formData.append('file', file);
 
-  const response = await fetch('/api/resume/extract-text', {
+  const response = await authFetch('/api/resume/extract-text', {
     method: 'POST',
     body: formData,
   });

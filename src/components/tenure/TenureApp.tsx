@@ -23,12 +23,6 @@ import { useLocation, useNavigate } from '@solidjs/router';
 import { JobMatch } from '../../schemas/tenure.schema';
 import {
   XIcon,
-  SmileyAngryIcon,
-  SmileySadIcon,
-  SmileyMehIcon,
-  SmileyIcon,
-  HeartIcon,
-  WrenchIcon,
   BinocularsIcon,
   CompassToolIcon,
   HammerIcon,
@@ -36,7 +30,6 @@ import {
   FlameIcon,
 } from 'solid-phosphor/bold';
 import {
-  searchCareers,
   getInterestProfilerQuestions,
   getInterestProfilerResults,
   getInterestProfilerCareers,
@@ -47,40 +40,131 @@ import {
   OnetCareerDetails,
 } from '../../services/onet';
 import { formatSalary } from './pipeline/utils';
-import { maximalist, maxPalette, maxGradients, maxAurora } from '../../theme/maximalist';
+import { useMobile } from './lib/use-mobile';
+import { maximalist } from '../../theme/maximalist';
 import { PipelineView, pipelineStore, Sidebar, SidebarView } from './pipeline';
 import { PrepareApp } from './prepare';
-import { FeatureFlags, DEFAULT_FEATURE_FLAGS } from '../../schemas/pipeline.schema';
+
 import { TenureThemeProvider } from './TenureThemeProvider';
 import { ProsperView } from './prosper';
+import { DiscoverView, DiscoverSubTab, ARCHETYPES } from './discover';
 import {
-  DiscoverOverview,
-  DiscoverSubTabs,
-  DiscoverSubTab,
-  OceanAssessment,
-  OceanResults,
-  JungianAssessment,
-  JungianResults,
-} from './discover';
-import {
-  migrateLegacyRiasecData,
   isRiasecCompleted,
   isOceanCompleted,
   isJungianCompleted,
-  hasAnyAssessmentCompleted,
   areAllAssessmentsCompleted,
-  getRiasecAssessment,
-  getOceanAssessment,
-  updateRiasecAssessment,
 } from '../../stores/assessment-store';
-import { loadOceanProfile } from './services/ocean';
-import { loadJungianProfile } from './services/jungian';
+
 import { AppMenuTrigger } from '../common/AppMenuTrigger';
 import { ProfileBadges } from '../common/ProfileBadges';
 import { useAuth } from '../../lib/auth-context';
 import { IconTrophy } from './pipeline/ui/Icons';
+import { BottomNavBar, BottomNavItem } from './lib/BottomNavBar';
+
 import { getTenureSyncManager, destroyTenureSyncManager } from '../../lib/sync/tenure-sync';
 import { logger } from '../../lib/logger';
+
+// Bottom Nav Icons
+const IconCompass: Component<{ size?: number; color?: string; weight?: string }> = (props) => (
+  <svg
+    width={props.size || 24}
+    height={props.size || 24}
+    viewBox="0 0 256 256"
+    fill={props.weight === 'fill' ? props.color || 'currentColor' : 'none'}
+    stroke={props.weight === 'fill' ? 'none' : props.color || 'currentColor'}
+    stroke-width="16"
+  >
+    <circle
+      cx="128"
+      cy="128"
+      r="96"
+      fill="none"
+      stroke={props.color || 'currentColor'}
+      stroke-width="16"
+    />
+    <polygon points="144 88 168 168 88 144 64 64 144 88" fill={props.color || 'currentColor'} />
+  </svg>
+);
+
+const IconClipboard: Component<{ size?: number; color?: string; weight?: string }> = (props) => (
+  <svg
+    width={props.size || 24}
+    height={props.size || 24}
+    viewBox="0 0 256 256"
+    fill={props.weight === 'fill' ? props.color || 'currentColor' : 'none'}
+    stroke={props.color || 'currentColor'}
+    stroke-width="16"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <path
+      d="M160,40H96a8,8,0,0,0-8,8V64H48a8,8,0,0,0-8,8V216a8,8,0,0,0,8,8H208a8,8,0,0,0,8-8V72a8,8,0,0,0-8-8H168V48A8,8,0,0,0,160,40Z"
+      fill={props.weight === 'fill' ? props.color : 'none'}
+    />
+    <line x1="96" y1="152" x2="160" y2="152" />
+    <line x1="96" y1="184" x2="160" y2="184" />
+  </svg>
+);
+
+const IconKanban: Component<{ size?: number; color?: string; weight?: string }> = (props) => (
+  <svg
+    width={props.size || 24}
+    height={props.size || 24}
+    viewBox="0 0 256 256"
+    fill={props.weight === 'fill' ? props.color || 'currentColor' : 'none'}
+    stroke={props.color || 'currentColor'}
+    stroke-width="16"
+  >
+    <rect
+      x="32"
+      y="48"
+      width="56"
+      height="160"
+      rx="8"
+      fill={props.weight === 'fill' ? props.color : 'none'}
+    />
+    <rect
+      x="100"
+      y="48"
+      width="56"
+      height="112"
+      rx="8"
+      fill={props.weight === 'fill' ? props.color : 'none'}
+    />
+    <rect
+      x="168"
+      y="48"
+      width="56"
+      height="80"
+      rx="8"
+      fill={props.weight === 'fill' ? props.color : 'none'}
+    />
+  </svg>
+);
+
+const IconTrendUp: Component<{ size?: number; color?: string; weight?: string }> = (props) => (
+  <svg
+    width={props.size || 24}
+    height={props.size || 24}
+    viewBox="0 0 256 256"
+    fill="none"
+    stroke={props.color || 'currentColor'}
+    stroke-width="16"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  >
+    <polyline points="232 56 136 152 96 112 24 184" />
+    <polyline points="232 120 232 56 168 56" />
+  </svg>
+);
+
+// Bottom navigation items for mobile
+const TENURE_NAV_ITEMS: BottomNavItem[] = [
+  { id: 'Discover', label: 'Discover', icon: IconCompass, ariaLabel: 'Discover - Assessments' },
+  { id: 'Prepare', label: 'Prepare', icon: IconClipboard, ariaLabel: 'Prepare - Resume & skills' },
+  { id: 'Prospect', label: 'Prospect', icon: IconKanban, ariaLabel: 'Prospect - Job pipeline' },
+  { id: 'Prosper', label: 'Prosper', icon: IconTrendUp, ariaLabel: 'Prosper - Career growth' },
+];
 
 // Helper to get RGB string from hex
 const hexToRgb = (hex: string) => {
@@ -126,158 +210,6 @@ const [currentTheme, setCurrentTheme] = createSignal({
     lg: '0 16px 48px rgba(255, 255, 255, 0.2), 0 8px 16px rgba(255, 255, 255, 0.15)',
   },
 });
-
-const ARCHETYPES: Record<string, { title: string; description: string }> = {
-  // Pure Types (fallback if scores are very skewed)
-  realistic: {
-    title: 'The Maker',
-    description: 'You thrive when building, fixing, and working with your hands.',
-  },
-  investigative: {
-    title: 'The Thinker',
-    description: 'You analyze, research, and solve complex problems logically.',
-  },
-  artistic: {
-    title: 'The Creator',
-    description: 'You express yourself through innovative design and creative works.',
-  },
-  social: {
-    title: 'The Helper',
-    description: 'You empower others through teaching, healing, and guidance.',
-  },
-  enterprising: {
-    title: 'The Persuader',
-    description: 'You lead teams and sell ideas with energy and confidence.',
-  },
-  conventional: {
-    title: 'The Organizer',
-    description: 'You create order and efficiency through structured systems.',
-  },
-  // Hybrid Combinations (sorted alphabetically by key for lookup)
-  'investigative-realistic': {
-    title: 'The Engineer',
-    description:
-      'You combine practical skills with analytical depth to build functional solutions.',
-  },
-  'artistic-realistic': {
-    title: 'The Artisan',
-    description: 'You craft beautiful, tangible objects with skill and creative flair.',
-  },
-  'realistic-social': {
-    title: 'The Service Technician',
-    description: 'You use practical skills to directly help others in tangible ways.',
-  },
-  'enterprising-realistic': {
-    title: 'The Contractor',
-    description: 'You manage projects and lead teams in hands-on environments.',
-  },
-  'conventional-realistic': {
-    title: 'The Builder',
-    description: 'You execute precise, structured work with tangible materials.',
-  },
-  'artistic-investigative': {
-    title: 'The Architect',
-    description: 'You merge creative vision with rigorous logic to design complex systems.',
-  },
-  'investigative-social': {
-    title: 'The Diagnostician',
-    description: 'You analyze problems to provide deep care and understanding for people.',
-  },
-  'enterprising-investigative': {
-    title: 'The Strategist',
-    description: 'You use data and analysis to lead organizations toward success.',
-  },
-  'conventional-investigative': {
-    title: 'The Analyst',
-    description: 'You organize data and systems with scientific precision.',
-  },
-  'artistic-social': {
-    title: 'The Teacher',
-    description: 'You use creativity to inspire and educate others.',
-  },
-  'artistic-enterprising': {
-    title: 'The Innovator',
-    description: 'You turn creative ideas into marketable products and ventures.',
-  },
-  'artistic-conventional': {
-    title: 'The Editor',
-    description: 'You bring structure and polish to creative output.',
-  },
-  'enterprising-social': {
-    title: 'The Community Leader',
-    description: 'You bring people together to achieve shared goals through influence.',
-  },
-  'conventional-social': {
-    title: 'The Administrator',
-    description: 'You support people through efficient, well-managed systems.',
-  },
-  'conventional-enterprising': {
-    title: 'The Executive',
-    description: 'You manage business operations with structure and authority.',
-  },
-};
-
-const CartoonBadge: Component<{ fit: number }> = (props) => {
-  const fitLabel = createMemo(() => {
-    if (props.fit >= 80) return 'Best';
-    if (props.fit >= 60) return 'Great';
-    return 'Good';
-  });
-
-  const styles = createMemo(() => {
-    const label = fitLabel();
-    switch (label) {
-      case 'Best':
-        return {
-          bg: '#A6D608', // Acid green
-          color: '#000',
-          radius: '20px',
-          transform: 'rotate(-2deg)',
-          border: '2px solid #000',
-        };
-      case 'Great':
-        return {
-          bg: '#D62598', // Magenta
-          color: '#FFF',
-          radius: '12px',
-          transform: 'rotate(1deg)',
-          border: '2px solid #000',
-        };
-      default:
-        return {
-          bg: '#00A693', // Teal
-          color: '#FFF',
-          radius: '8px',
-          transform: 'none',
-          border: '2px solid #000',
-        };
-    }
-  });
-
-  return (
-    <div
-      style={{
-        background: styles().bg,
-        color: styles().color,
-        'border-radius': styles().radius,
-        border: styles().border,
-        padding: '4px 12px',
-        'font-family': maximalist.fonts.body,
-        'font-size': '15px',
-        'text-transform': 'uppercase',
-        transform: styles().transform,
-        'font-weight': 'bold',
-        'letter-spacing': '0.5px',
-        'box-shadow': '2px 2px 0px #000',
-        display: 'inline-block',
-        'min-width': fitLabel() === 'Best' ? '40px' : 'auto',
-        'text-align': 'center',
-      }}
-    >
-      {fitLabel()}
-    </div>
-  );
-};
 
 const JobDetailModal: Component<{ job: OnetCareerDetails; onClose: () => void }> = (props) => {
   return (
@@ -436,195 +368,6 @@ const JobDetailModal: Component<{ job: OnetCareerDetails; onClose: () => void }>
           </div>
         </Show>
       </div>
-    </div>
-  );
-};
-
-const RadarChart: Component<{ scores: RiasecScoreWithDetails }> = (props) => {
-  const [hoveredPoint, setHoveredPoint] = createSignal<{
-    x: number;
-    y: number;
-    label: string;
-    score: number;
-    color: string;
-  } | null>(null);
-
-  const dataPoints = createMemo(() => {
-    if (!props.scores) return [];
-    const order = [
-      'realistic',
-      'investigative',
-      'artistic',
-      'social',
-      'enterprising',
-      'conventional',
-    ];
-    const max = 40;
-    const center = 150;
-    const radius = 100;
-
-    return order.map((key, i) => {
-      const score = (props.scores as any)[key].score;
-      const angle = (Math.PI * 2 * i) / 6 - Math.PI / 2;
-      const dist = (score / max) * radius;
-      const x = center + Math.cos(angle) * dist;
-      const y = center + Math.sin(angle) * dist;
-      const color = (maximalist.riasec as any)[key];
-      return { x, y, score, label: key, color };
-    });
-  });
-
-  const polygonPoints = createMemo(() =>
-    dataPoints()
-      .map((p) => `${p.x},${p.y}`)
-      .join(' ')
-  );
-
-  const axes = [
-    { label: 'Realistic', color: maximalist.riasec!.realistic },
-    { label: 'Investigative', color: maximalist.riasec!.investigative },
-    { label: 'Artistic', color: maximalist.riasec!.artistic },
-    { label: 'Social', color: maximalist.riasec!.social },
-    { label: 'Enterprising', color: maximalist.riasec!.enterprising },
-    { label: 'Conventional', color: maximalist.riasec!.conventional },
-  ];
-
-  return (
-    <div style={{ position: 'relative', width: '300px', height: '300px', margin: '0 auto' }}>
-      <svg width="300" height="300" viewBox="0 0 300 300">
-        {/* Glow Filters */}
-        <defs>
-          <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="4" result="coloredBlur" />
-            <feMerge>
-              <feMergeNode in="coloredBlur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-
-        {/* Grid Background */}
-        <For each={[0.25, 0.5, 0.75, 1]}>
-          {(scale) => (
-            <polygon
-              points={Array.from({ length: 6 })
-                .map((_, i) => {
-                  const angle = (Math.PI * 2 * i) / 6 - Math.PI / 2;
-                  const r = 100 * scale;
-                  return `${150 + Math.cos(angle) * r},${150 + Math.sin(angle) * r}`;
-                })
-                .join(' ')}
-              fill="none"
-              stroke="rgba(255,255,255,0.3)"
-              stroke-width="1"
-            />
-          )}
-        </For>
-
-        {/* Axes Lines */}
-        {Array.from({ length: 6 }).map((_, i) => {
-          const angle = (Math.PI * 2 * i) / 6 - Math.PI / 2;
-          return (
-            <line
-              x1="150"
-              y1="150"
-              x2={150 + Math.cos(angle) * 100}
-              y2={150 + Math.sin(angle) * 100}
-              stroke="rgba(255,255,255,0.3)"
-              stroke-width="1"
-            />
-          );
-        })}
-
-        {/* Data Polygon */}
-        <polygon
-          points={polygonPoints()}
-          fill="rgba(255,255,255,0.25)"
-          stroke="rgba(255,255,255,0.9)"
-          stroke-width="3"
-          filter="url(#glow)"
-        />
-
-        {/* Interactive Points */}
-        <For each={dataPoints()}>
-          {(p) => (
-            <circle
-              cx={p.x}
-              cy={p.y}
-              r={6}
-              fill={p.color}
-              stroke={maximalist.colors.background}
-              stroke-width="2"
-              style={{ cursor: 'pointer', transition: 'all 0.2s' }}
-              onMouseEnter={() => setHoveredPoint(p)}
-              onMouseLeave={() => setHoveredPoint(null)}
-            />
-          )}
-        </For>
-
-        {/* Axis Labels */}
-        {axes.map((axis, i) => {
-          const angle = (Math.PI * 2 * i) / 6 - Math.PI / 2;
-          const x = 150 + Math.cos(angle) * 125;
-          const y = 150 + Math.sin(angle) * 125;
-          return (
-            <g>
-              <text
-                x={x}
-                y={y}
-                fill={axis.color}
-                stroke="rgba(0,0,0,0.6)"
-                stroke-width="3"
-                paint-order="stroke fill"
-                text-anchor="middle"
-                dominant-baseline="middle"
-                font-family={maximalist.fonts.heading}
-                font-size="15px"
-                font-weight="bold"
-                style={{ 'text-transform': 'uppercase', 'letter-spacing': '1px' }}
-              >
-                {axis.label[0]}
-              </text>
-            </g>
-          );
-        })}
-      </svg>
-
-      {/* Popover Tooltip */}
-      <Show when={hoveredPoint()}>
-        <div
-          style={{
-            position: 'absolute',
-            left: `${hoveredPoint()!.x}px`,
-            top: `${hoveredPoint()!.y - 40}px`,
-            transform: 'translateX(-50%)',
-            background: 'rgba(0,0,0,0.8)',
-            'backdrop-filter': 'blur(4px)',
-            border: `1px solid ${hoveredPoint()!.color}`,
-            padding: '8px 12px',
-            'border-radius': '8px',
-            color: 'white',
-            'font-size': '15px',
-            'z-index': 10,
-            'pointer-events': 'none',
-            'box-shadow': `0 0 10px ${hoveredPoint()!.color}40`,
-            'white-space': 'nowrap',
-          }}
-        >
-          <span
-            style={{
-              'font-weight': 'bold',
-              'text-transform': 'capitalize',
-              color: hoveredPoint()!.color,
-            }}
-          >
-            {hoveredPoint()!.label}
-          </span>
-          <span style={{ 'margin-left': '8px', 'font-weight': 'bold' }}>
-            {hoveredPoint()!.score}
-          </span>
-        </div>
-      </Show>
     </div>
   );
 };
@@ -947,6 +690,7 @@ export const TenureApp: Component = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const auth = useAuth();
+  const isMobile = useMobile();
 
   // Reactive accessor for current pathname
   const pathname = () => location.pathname;
@@ -1640,42 +1384,43 @@ export const TenureApp: Component = () => {
         </Show>
 
         <div style={{ position: 'relative', 'z-index': 1 }}>
-          {/* Header */}
-          <header
-            style={{
-              padding: '24px 32px 32px',
-              display: 'flex',
-              'justify-content': 'space-between',
-              'align-items': 'center',
-            }}
-          >
-            <div style={{ display: 'flex', 'align-items': 'center', gap: '16px' }}>
-              {/* Logo with dynamic colored border */}
-              <AppMenuTrigger>
-                <div
-                  style={{
-                    width: '56px',
-                    height: '56px',
-                    'border-radius': '16px',
-                    background: 'transparent',
-                    border: `2px solid ${currentTheme().colors.primary}`,
-                    display: 'flex',
-                    'align-items': 'center',
-                    'justify-content': 'center',
-                    'box-shadow': currentTheme().shadows.md,
-                  }}
-                >
+          {/* Header - hidden on mobile */}
+          <Show when={!isMobile()}>
+            <header
+              style={{
+                padding: '24px 32px 32px',
+                display: 'flex',
+                'justify-content': 'space-between',
+                'align-items': 'center',
+              }}
+            >
+              <div style={{ display: 'flex', 'align-items': 'center', gap: '16px' }}>
+                {/* Logo with dynamic colored border */}
+                <AppMenuTrigger>
                   <div
                     style={{
-                      height: '52px',
-                      width: '52px',
-                      'background-color': currentTheme().colors.primary,
-                      '-webkit-mask': 'url(/tenure/tenure_logo.png) center/contain no-repeat',
-                      mask: 'url(/tenure/tenure_logo.png) center/contain no-repeat',
+                      width: '56px',
+                      height: '56px',
+                      'border-radius': '16px',
+                      background: 'transparent',
+                      border: `2px solid ${currentTheme().colors.primary}`,
+                      display: 'flex',
+                      'align-items': 'center',
+                      'justify-content': 'center',
+                      'box-shadow': currentTheme().shadows.md,
                     }}
-                  />
+                  >
+                    <div
+                      style={{
+                        height: '52px',
+                        width: '52px',
+                        'background-color': currentTheme().colors.primary,
+                        '-webkit-mask': 'url(/tenure/tenure_logo.png) center/contain no-repeat',
+                        mask: 'url(/tenure/tenure_logo.png) center/contain no-repeat',
+                      }}
+                    />
 
-                  {/* OPTION 2: "T" Upward Arrow - T shape integrated with growth arrow
+                    {/* OPTION 2: "T" Upward Arrow - T shape integrated with growth arrow
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
                 <path
                   d="M4 7h16"
@@ -1710,7 +1455,7 @@ export const TenureApp: Component = () => {
               </svg>
               */}
 
-                  {/* OPTION 3: "T" Staircase - T with ascending steps on vertical stem
+                    {/* OPTION 3: "T" Staircase - T with ascending steps on vertical stem
               <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
                 <rect x="4" y="5" width="16" height="3" rx="1.5" fill={currentTheme().colors.primary} />
                 <path
@@ -1730,123 +1475,183 @@ export const TenureApp: Component = () => {
                 />
               </svg>
               */}
+                  </div>
+                </AppMenuTrigger>
+                <div>
+                  <h1
+                    style={{
+                      margin: 0,
+                      'font-family': maximalist.fonts.heading,
+                      'font-size': '32px',
+                      'font-weight': '700',
+                      'background-image': currentTheme().gradients.primary,
+                      '-webkit-background-clip': 'text',
+                      'background-clip': 'text',
+                      color: 'transparent',
+                      display: 'inline-block',
+                      '-webkit-text-fill-color': 'transparent',
+                    }}
+                  >
+                    Tenure
+                  </h1>
                 </div>
-              </AppMenuTrigger>
-              <div>
-                <h1
-                  style={{
-                    margin: 0,
-                    'font-family': maximalist.fonts.heading,
-                    'font-size': '32px',
-                    'font-weight': '700',
-                    'background-image': currentTheme().gradients.primary,
-                    '-webkit-background-clip': 'text',
-                    'background-clip': 'text',
-                    color: 'transparent',
-                    display: 'inline-block',
-                    '-webkit-text-fill-color': 'transparent',
-                  }}
-                >
-                  Tenure
-                </h1>
               </div>
-            </div>
 
-            {/* Tab Navigation in Header */}
-            <div
-              style={{
-                display: 'flex',
-                gap: '10px',
-                padding: '6px',
-                background: 'rgba(255, 255, 255, 0.03)',
-                'border-radius': '12px',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
-              }}
-            >
-              <For
-                each={(() => {
-                  const tabs: ('Discover' | 'Prepare' | 'Prospect' | 'Prosper' | 'Matches')[] = [];
-                  if (featureFlags().showDiscover) tabs.push('Discover');
-                  if (featureFlags().showPrepare) tabs.push('Prepare');
-                  if (featureFlags().showProspect) tabs.push('Prospect');
-                  if (featureFlags().showProsper) tabs.push('Prosper');
-                  if (featureFlags().showMatches) tabs.push('Matches');
-                  return tabs;
-                })()}
-              >
-                {(tab) => {
-                  const getIcon = () => {
-                    if (tab === 'Discover') return <BinocularsIcon width={18} height={18} />;
-                    if (tab === 'Prepare') return <CompassToolIcon width={18} height={18} />;
-                    if (tab === 'Prospect') return <HammerIcon width={18} height={18} />;
-                    if (tab === 'Prosper') return <FlowerLotusIcon width={18} height={18} />;
-                    if (tab === 'Matches') return <FlameIcon width={18} height={18} />;
-                    return null;
-                  };
-
-                  return (
-                    <button
-                      onClick={() => handleTabChange(tab)}
-                      style={{
-                        display: 'flex',
-                        'align-items': 'center',
-                        gap: '8px',
-                        padding: '12px 24px',
-                        background:
-                          activeTab() === tab ? currentTheme().gradients.primary : 'transparent',
-                        border: 'none',
-                        'border-radius': '9px',
-                        color:
-                          activeTab() === tab
-                            ? currentTheme().colors.textOnPrimary
-                            : maximalist.colors.textMuted,
-                        'font-size': '15px',
-                        'font-weight': '600',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                        outline: 'none',
-                        transform: 'scale(1)',
-                      }}
-                      onMouseEnter={(e) => {
-                        if (activeTab() !== tab) {
-                          e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
-                          e.currentTarget.style.transform = 'scale(1.02)';
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (activeTab() !== tab) {
-                          e.currentTarget.style.background = 'transparent';
-                          e.currentTarget.style.transform = 'scale(1)';
-                        }
-                      }}
-                    >
-                      {getIcon()}
-                      {tab}
-                    </button>
-                  );
+              {/* Tab Navigation in Header */}
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '10px',
+                  padding: '6px',
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  'border-radius': '12px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
                 }}
-              </For>
-            </div>
-
-            <div style={{ display: 'flex', 'align-items': 'center', gap: '12px' }}>
-              {/* Profile button with status badges */}
-              <ProfileBadges
-                isAuthenticated={auth.isAuthenticated()}
-                hasExtras={auth.hasAppExtras('tenure')}
-                isTacoClub={auth.isTacoClubMember()}
-                size={44}
               >
+                <For
+                  each={(() => {
+                    const tabs: ('Discover' | 'Prepare' | 'Prospect' | 'Prosper' | 'Matches')[] =
+                      [];
+                    if (featureFlags().showDiscover) tabs.push('Discover');
+                    if (featureFlags().showPrepare) tabs.push('Prepare');
+                    if (featureFlags().showProspect) tabs.push('Prospect');
+                    if (featureFlags().showProsper) tabs.push('Prosper');
+                    if (featureFlags().showMatches) tabs.push('Matches');
+                    return tabs;
+                  })()}
+                >
+                  {(tab) => {
+                    const getIcon = () => {
+                      if (tab === 'Discover') return <BinocularsIcon width={18} height={18} />;
+                      if (tab === 'Prepare') return <CompassToolIcon width={18} height={18} />;
+                      if (tab === 'Prospect') return <HammerIcon width={18} height={18} />;
+                      if (tab === 'Prosper') return <FlowerLotusIcon width={18} height={18} />;
+                      if (tab === 'Matches') return <FlameIcon width={18} height={18} />;
+                      return null;
+                    };
+
+                    return (
+                      <button
+                        onClick={() => handleTabChange(tab)}
+                        style={{
+                          display: 'flex',
+                          'align-items': 'center',
+                          gap: '8px',
+                          padding: '12px 24px',
+                          background:
+                            activeTab() === tab ? currentTheme().gradients.primary : 'transparent',
+                          border: 'none',
+                          'border-radius': '9px',
+                          color:
+                            activeTab() === tab
+                              ? currentTheme().colors.textOnPrimary
+                              : maximalist.colors.textMuted,
+                          'font-size': '15px',
+                          'font-weight': '600',
+                          cursor: 'pointer',
+                          transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                          outline: 'none',
+                          transform: 'scale(1)',
+                        }}
+                        onMouseEnter={(e) => {
+                          if (activeTab() !== tab) {
+                            e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)';
+                            e.currentTarget.style.transform = 'scale(1.02)';
+                          }
+                        }}
+                        onMouseLeave={(e) => {
+                          if (activeTab() !== tab) {
+                            e.currentTarget.style.background = 'transparent';
+                            e.currentTarget.style.transform = 'scale(1)';
+                          }
+                        }}
+                      >
+                        {getIcon()}
+                        {tab}
+                      </button>
+                    );
+                  }}
+                </For>
+              </div>
+
+              <div style={{ display: 'flex', 'align-items': 'center', gap: '12px' }}>
+                {/* Profile button with status badges */}
+                <ProfileBadges
+                  isAuthenticated={auth.isAuthenticated()}
+                  hasExtras={auth.hasAppExtras('tenure')}
+                  isTacoClub={auth.isTacoClubMember()}
+                  size={44}
+                >
+                  <button
+                    onClick={() => setSidebarView(sidebarView() === 'profile' ? null : 'profile')}
+                    class="header-icon-btn"
+                    style={{
+                      width: '44px',
+                      height: '44px',
+                      'border-radius': '12px',
+                      background:
+                        sidebarView() === 'profile' ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                      border:
+                        sidebarView() === 'profile'
+                          ? `1px solid ${currentTheme().colors.primary}`
+                          : `1px solid ${maximalist.colors.border}`,
+                      display: 'flex',
+                      'align-items': 'center',
+                      'justify-content': 'center',
+                      cursor: 'pointer',
+                      color:
+                        sidebarView() === 'profile'
+                          ? currentTheme().colors.primary
+                          : maximalist.colors.textMuted,
+                      transition: 'all 0.2s ease',
+                      position: 'relative',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (sidebarView() !== 'profile') {
+                        e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                        e.currentTarget.style.borderColor = currentTheme().colors.primary;
+                        e.currentTarget.style.color = currentTheme().colors.text;
+                        e.currentTarget.style.transform = 'scale(1.05)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (sidebarView() !== 'profile') {
+                        e.currentTarget.style.background = 'transparent';
+                        e.currentTarget.style.borderColor = maximalist.colors.border;
+                        e.currentTarget.style.color = maximalist.colors.textMuted;
+                        e.currentTarget.style.transform = 'scale(1)';
+                      }
+                    }}
+                    title="Profile"
+                  >
+                    <svg
+                      width="20"
+                      height="20"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    >
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                      <circle cx="12" cy="7" r="4" />
+                    </svg>
+                  </button>
+                </ProfileBadges>
+
+                {/* Settings button */}
                 <button
-                  onClick={() => setSidebarView(sidebarView() === 'profile' ? null : 'profile')}
+                  onClick={() => setSidebarView(sidebarView() === 'settings' ? null : 'settings')}
                   class="header-icon-btn"
                   style={{
                     width: '44px',
                     height: '44px',
                     'border-radius': '12px',
                     background:
-                      sidebarView() === 'profile' ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                      sidebarView() === 'settings' ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
                     border:
-                      sidebarView() === 'profile'
+                      sidebarView() === 'settings'
                         ? `1px solid ${currentTheme().colors.primary}`
                         : `1px solid ${maximalist.colors.border}`,
                     display: 'flex',
@@ -1854,14 +1659,13 @@ export const TenureApp: Component = () => {
                     'justify-content': 'center',
                     cursor: 'pointer',
                     color:
-                      sidebarView() === 'profile'
+                      sidebarView() === 'settings'
                         ? currentTheme().colors.primary
                         : maximalist.colors.textMuted,
                     transition: 'all 0.2s ease',
-                    position: 'relative',
                   }}
                   onMouseEnter={(e) => {
-                    if (sidebarView() !== 'profile') {
+                    if (sidebarView() !== 'settings') {
                       e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
                       e.currentTarget.style.borderColor = currentTheme().colors.primary;
                       e.currentTarget.style.color = currentTheme().colors.text;
@@ -1869,14 +1673,14 @@ export const TenureApp: Component = () => {
                     }
                   }}
                   onMouseLeave={(e) => {
-                    if (sidebarView() !== 'profile') {
+                    if (sidebarView() !== 'settings') {
                       e.currentTarget.style.background = 'transparent';
                       e.currentTarget.style.borderColor = maximalist.colors.border;
                       e.currentTarget.style.color = maximalist.colors.textMuted;
                       e.currentTarget.style.transform = 'scale(1)';
                     }
                   }}
-                  title="Profile"
+                  title="Settings"
                 >
                   <svg
                     width="20"
@@ -1888,70 +1692,13 @@ export const TenureApp: Component = () => {
                     stroke-linecap="round"
                     stroke-linejoin="round"
                   >
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                    <circle cx="12" cy="7" r="4" />
+                    <circle cx="12" cy="12" r="3" />
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
                   </svg>
                 </button>
-              </ProfileBadges>
-
-              {/* Settings button */}
-              <button
-                onClick={() => setSidebarView(sidebarView() === 'settings' ? null : 'settings')}
-                class="header-icon-btn"
-                style={{
-                  width: '44px',
-                  height: '44px',
-                  'border-radius': '12px',
-                  background:
-                    sidebarView() === 'settings' ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
-                  border:
-                    sidebarView() === 'settings'
-                      ? `1px solid ${currentTheme().colors.primary}`
-                      : `1px solid ${maximalist.colors.border}`,
-                  display: 'flex',
-                  'align-items': 'center',
-                  'justify-content': 'center',
-                  cursor: 'pointer',
-                  color:
-                    sidebarView() === 'settings'
-                      ? currentTheme().colors.primary
-                      : maximalist.colors.textMuted,
-                  transition: 'all 0.2s ease',
-                }}
-                onMouseEnter={(e) => {
-                  if (sidebarView() !== 'settings') {
-                    e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
-                    e.currentTarget.style.borderColor = currentTheme().colors.primary;
-                    e.currentTarget.style.color = currentTheme().colors.text;
-                    e.currentTarget.style.transform = 'scale(1.05)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (sidebarView() !== 'settings') {
-                    e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.borderColor = maximalist.colors.border;
-                    e.currentTarget.style.color = maximalist.colors.textMuted;
-                    e.currentTarget.style.transform = 'scale(1)';
-                  }
-                }}
-                title="Settings"
-              >
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                >
-                  <circle cx="12" cy="12" r="3" />
-                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-                </svg>
-              </button>
-            </div>
-          </header>
+              </div>
+            </header>
+          </Show>
 
           {/* Tab navigation - maximalist pills */}
           {/* Main content */}
@@ -2035,677 +1782,40 @@ export const TenureApp: Component = () => {
             </Show>
 
             <Show when={activeTab() === 'Discover'}>
-              <div style={{ 'padding-top': '24px' }}>
-                {/* Sub-tabs - Always visible */}
-                <DiscoverSubTabs
-                  activeTab={discoverSubTab()}
-                  onTabChange={handleDiscoverSubTabChange}
-                  showInterests={!!riasecScore()}
-                  showPersonality={!!riasecScore() || oceanCompleted()}
-                  showCognitiveStyle={jungianCompleted()}
-                  currentThemeGradient={currentTheme().gradients.primary}
-                />
-
-                {/* Overview Tab - Hub showing all assessments */}
-                <Show when={discoverSubTab() === 'overview'}>
-                  <DiscoverOverview
-                    onStartRiasec={handleStartRiasec}
-                    onStartOcean={handleStartOcean}
-                    onStartJungian={handleStartJungian}
-                    onViewRiasecResults={handleViewRiasecResults}
-                    onViewOceanResults={handleViewOceanResults}
-                    onViewJungianResults={handleViewJungianResults}
-                    currentThemeGradient={currentTheme().gradients.primary}
-                    currentThemePrimary={currentTheme().colors.primary}
-                    currentThemeTextOnPrimary={currentTheme().colors.textOnPrimary}
-                  />
-                </Show>
-
-                {/* RIASEC Assessment Tab */}
-                <Show when={discoverSubTab() === 'interests'}>
-                  <div
-                    style={{
-                      'max-width': '800px',
-                      margin: '0 auto',
-                      'padding-top': '24px',
-                    }}
-                  >
-                    <Show when={assessmentState() === 'intro'}>
-                      <div style={{ 'text-align': 'center' }}>
-                        <div
-                          style={{
-                            width: '120px',
-                            height: '120px',
-                            'border-radius': '50%',
-                            background: currentTheme().gradients.primary,
-                            margin: '0 auto 32px',
-                            display: 'flex',
-                            'align-items': 'center',
-                            'justify-content': 'center',
-                            'box-shadow': currentTheme().shadows.lg,
-                          }}
-                        >
-                          <svg width="48" height="48" viewBox="0 0 24 24" fill="white">
-                            <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-7 3c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm7 13H5v-.23c0-.62.28-1.2.76-1.58C7.47 15.82 9.64 15 12 15s4.53.82 6.24 2.19c.48.38.76.97.76 1.58V19z" />
-                          </svg>
-                        </div>
-
-                        <h2
-                          style={{
-                            margin: '0 0 16px 0',
-                            'font-family': maximalist.fonts.heading,
-                            'font-size': '32px',
-                            'font-weight': '700',
-                          }}
-                        >
-                          Discover Your Interests
-                        </h2>
-
-                        <p
-                          style={{
-                            margin: '0 0 32px 0',
-                            'font-size': '18px',
-                            color: maximalist.colors.textMuted,
-                            'line-height': '1.6',
-                          }}
-                        >
-                          Take the O*NET Interest Profiler to uncover your unique strengths profile.
-                          This 60-question assessment provides personalized insights into your work
-                          interests.
-                        </p>
-
-                        <button
-                          onClick={startAssessment}
-                          disabled={isLoading()}
-                          style={{
-                            padding: '18px 48px',
-                            background: currentTheme().gradients.primary,
-                            border: 'none',
-                            'border-radius': maximalist.radii.md,
-                            color: currentTheme().colors.textOnPrimary,
-                            'font-size': '18px',
-                            'font-weight': '700',
-                            cursor: isLoading() ? 'wait' : 'pointer',
-                            'box-shadow': currentTheme().shadows.md,
-                            display: 'inline-flex',
-                            'align-items': 'center',
-                            gap: '12px',
-                            opacity: isLoading() ? 0.7 : 1,
-                          }}
-                        >
-                          <Show when={!isLoading()} fallback="Loading...">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                              <path d="M8 5v14l11-7z" />
-                            </svg>
-                            Start Assessment
-                          </Show>
-                        </button>
-                      </div>
-                    </Show>
-
-                    <Show when={assessmentState() === 'questions' && questions().length > 0}>
-                      <div
-                        style={{
-                          background: maximalist.colors.surface,
-                          padding: '40px',
-                          'border-radius': maximalist.radii.lg,
-                          border: `2px solid ${maximalist.colors.border}`,
-                          'box-shadow': currentTheme().shadows.lg,
-                        }}
-                      >
-                        <div
-                          style={{
-                            'margin-bottom': '24px',
-                            display: 'flex',
-                            'justify-content': 'space-between',
-                            'align-items': 'center',
-                          }}
-                        >
-                          <span style={{ color: maximalist.colors.textMuted, 'font-size': '17px' }}>
-                            Question {currentQuestionIndex() + 1} of 60
-                          </span>
-                          <span style={{ color: maximalist.colors.accent, 'font-weight': '600' }}>
-                            {Math.round((currentQuestionIndex() / 60) * 100)}% Complete
-                          </span>
-                        </div>
-
-                        {/* Progress Bar */}
-                        <div
-                          style={{
-                            height: '6px',
-                            background: 'rgba(255,255,255,0.1)',
-                            'border-radius': '3px',
-                            'margin-bottom': '40px',
-                            overflow: 'hidden',
-                          }}
-                        >
-                          <div
-                            style={{
-                              height: '100%',
-                              width: `${(currentQuestionIndex() / 60) * 100}%`,
-                              background: currentTheme().gradients.primary,
-                              transition: 'width 0.3s ease',
-                            }}
-                          />
-                        </div>
-
-                        <h3
-                          style={{
-                            'font-family': maximalist.fonts.heading,
-                            'font-size': '28px',
-                            'margin-bottom': '48px',
-                            'text-align': 'center',
-                            'line-height': '1.4',
-                          }}
-                        >
-                          {questions()[currentQuestionIndex()].text}
-                        </h3>
-
-                        <div
-                          style={{
-                            display: 'grid',
-                            'grid-template-columns': 'repeat(5, 1fr)',
-                            gap: '12px',
-                            'margin-bottom': '24px',
-                          }}
-                        >
-                          <For
-                            each={[
-                              { val: 1, label: 'Strongly Dislike', color: '#EF4444' },
-                              { val: 2, label: 'Dislike', color: '#F87171' },
-                              { val: 3, label: 'Unsure', color: '#9CA3AF' },
-                              { val: 4, label: 'Like', color: '#34D399' },
-                              { val: 5, label: 'Strongly Like', color: '#10B981' },
-                            ]}
-                          >
-                            {(opt) => (
-                              <button
-                                onClick={() => handleAnswer(opt.val)}
-                                style={{
-                                  padding: '16px 8px',
-                                  background: 'rgba(255,255,255,0.05)',
-                                  border: `2px solid ${opt.color}`,
-                                  'border-radius': maximalist.radii.md,
-                                  color: 'white',
-                                  cursor: 'pointer',
-                                  transition: 'all 0.2s',
-                                  display: 'flex',
-                                  'flex-direction': 'column',
-                                  'align-items': 'center',
-                                  gap: '8px',
-                                }}
-                                onMouseEnter={(e) =>
-                                  (e.currentTarget.style.background = `${opt.color}20`)
-                                }
-                                onMouseLeave={(e) =>
-                                  (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')
-                                }
-                              >
-                                <span
-                                  style={{
-                                    'font-size': '24px',
-                                    'font-weight': 'bold',
-                                    color: opt.color,
-                                  }}
-                                >
-                                  <Show
-                                    when={opt.val === 1}
-                                    fallback={
-                                      opt.val === 2 ? (
-                                        <SmileySadIcon
-                                          width={24}
-                                          height={24}
-                                          style={{ color: '#F97316' }}
-                                        />
-                                      ) : opt.val === 3 ? (
-                                        <SmileyMehIcon
-                                          width={24}
-                                          height={24}
-                                          style={{ color: '#EAB308' }}
-                                        />
-                                      ) : opt.val === 4 ? (
-                                        <SmileyIcon
-                                          width={24}
-                                          height={24}
-                                          style={{ color: '#22C55E' }}
-                                        />
-                                      ) : (
-                                        <HeartIcon
-                                          width={24}
-                                          height={24}
-                                          style={{ color: '#10B981' }}
-                                        />
-                                      )
-                                    }
-                                  >
-                                    <SmileyAngryIcon
-                                      width={24}
-                                      height={24}
-                                      style={{ color: '#EF4444' }}
-                                    />
-                                  </Show>
-                                </span>
-                                <span style={{ 'font-size': '15px', 'text-align': 'center' }}>
-                                  {opt.label}
-                                </span>
-                              </button>
-                            )}
-                          </For>
-                        </div>
-                      </div>
-                    </Show>
-
-                    <Show when={assessmentState() === 'results' && riasecScore()}>
-                      <div
-                        style={{
-                          'max-width': '1000px',
-                          margin: '0 auto',
-                          'text-align': 'left',
-                        }}
-                      >
-                        {/* Archetype Hero Section - Two Column Layout */}
-                        <div
-                          class="archetype-hero-section"
-                          style={{
-                            background: currentTheme().gradients.primary,
-                            'border-radius': maximalist.radii.lg,
-                            padding: '40px',
-                            'margin-bottom': '40px',
-                            position: 'relative',
-                            overflow: 'hidden',
-                            'box-shadow': currentTheme().shadows.lg,
-                            border: `1px solid ${maximalist.colors.border}`,
-                          }}
-                        >
-                          <div
-                            class="archetype-hero-grid"
-                            style={{
-                              display: 'grid',
-                              'grid-template-columns': '300px 1fr',
-                              gap: '40px',
-                              'align-items': 'center',
-                            }}
-                          >
-                            {/* Left Column: Radar Chart */}
-                            <div class="radar-column" style={{ 'flex-shrink': 0 }}>
-                              <RadarChart scores={riasecScore()!} />
-                            </div>
-
-                            {/* Right Column: Archetype Info */}
-                            <div class="archetype-info-column" style={{ 'text-align': 'left' }}>
-                              <h2
-                                style={{
-                                  color: 'rgba(255, 255, 255, 0.8)',
-                                  'font-size': '15px',
-                                  'text-transform': 'uppercase',
-                                  'letter-spacing': '2px',
-                                  'margin-bottom': '8px',
-                                  'font-weight': '600',
-                                  display: 'flex',
-                                  'align-items': 'center',
-                                  gap: '12px',
-                                }}
-                              >
-                                <span>{hybridArchetype()!.types[0]}</span>
-                                <span style={{ opacity: 0.6 }}>+</span>
-                                <span>{hybridArchetype()!.types[1]}</span>
-                              </h2>
-
-                              <h1
-                                style={{
-                                  'font-family': maximalist.fonts.heading,
-                                  'font-size': '48px',
-                                  'margin-bottom': '16px',
-                                  'font-weight': '700',
-                                  color: 'rgba(255, 255, 255, 0.95)',
-                                  'line-height': '1.1',
-                                }}
-                              >
-                                {hybridArchetype()?.title}
-                              </h1>
-
-                              <p
-                                style={{
-                                  color: 'rgba(255, 255, 255, 0.85)',
-                                  'font-size': '18px',
-                                  'line-height': '1.6',
-                                  margin: 0,
-                                }}
-                              >
-                                {hybridArchetype()?.description}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Detailed Breakdown */}
-                        <h3
-                          style={{
-                            'font-family': maximalist.fonts.heading,
-                            'font-size': '32px',
-                            'margin-bottom': '24px',
-                            color: maximalist.colors.text,
-                          }}
-                        >
-                          Full Profile Breakdown
-                        </h3>
-
-                        <div
-                          style={{
-                            display: 'grid',
-                            'grid-template-columns': 'repeat(auto-fit, minmax(280px, 1fr))',
-                            gap: '24px',
-                            'margin-bottom': '48px',
-                          }}
-                        >
-                          <For each={sortedScores()}>
-                            {(item) => {
-                              const riasecColor = (maximalist.riasec as any)[item.key];
-                              return (
-                                <div
-                                  style={{
-                                    background: 'rgba(255,255,255,0.03)',
-                                    padding: '24px',
-                                    'border-radius': maximalist.radii.lg,
-                                    border: `1px solid ${riasecColor}40`,
-                                    position: 'relative',
-                                    overflow: 'hidden',
-                                    transition: 'transform 0.2s',
-                                  }}
-                                  onMouseEnter={(e) =>
-                                    (e.currentTarget.style.transform = 'scale(1.02)')
-                                  }
-                                  onMouseLeave={(e) =>
-                                    (e.currentTarget.style.transform = 'scale(1)')
-                                  }
-                                >
-                                  <div
-                                    style={{
-                                      display: 'flex',
-                                      'justify-content': 'space-between',
-                                      'align-items': 'center',
-                                      'margin-bottom': '16px',
-                                    }}
-                                  >
-                                    <h4
-                                      style={{
-                                        'font-size': '20px',
-                                        'font-weight': '700',
-                                        color: riasecColor,
-                                        margin: 0,
-                                        'font-family': maximalist.fonts.heading,
-                                        'text-transform': 'uppercase',
-                                        'letter-spacing': '1px',
-                                      }}
-                                    >
-                                      {item.title}
-                                    </h4>
-                                    <div
-                                      style={{
-                                        'font-size': '24px',
-                                        'font-weight': 'bold',
-                                        color: 'white',
-                                      }}
-                                    >
-                                      {item.score}
-                                    </div>
-                                  </div>
-
-                                  {/* Bar */}
-                                  <div
-                                    style={{
-                                      height: '4px',
-                                      background: 'rgba(255,255,255,0.1)',
-                                      'border-radius': '2px',
-                                      'margin-bottom': '16px',
-                                    }}
-                                  >
-                                    <div
-                                      style={{
-                                        width: `${(item.score / 40) * 100}%`,
-                                        height: '100%',
-                                        background: riasecColor,
-                                        'box-shadow': `0 0 10px ${riasecColor}`,
-                                      }}
-                                    />
-                                  </div>
-
-                                  <p
-                                    style={{
-                                      color: maximalist.colors.textMuted,
-                                      'font-size': '17px',
-                                      'line-height': '1.5',
-                                      margin: 0,
-                                    }}
-                                  >
-                                    {item.description}
-                                  </p>
-                                </div>
-                              );
-                            }}
-                          </For>
-                        </div>
-
-                        {/* Career Matches */}
-                        <h3
-                          style={{
-                            'font-family': maximalist.fonts.heading,
-                            'font-size': '32px',
-                            'margin-bottom': '24px',
-                            color: maximalist.colors.text,
-                          }}
-                        >
-                          Recommended Careers
-                        </h3>
-
-                        <div
-                          style={{
-                            display: 'grid',
-                            'grid-template-columns': 'repeat(auto-fill, minmax(300px, 1fr))',
-                            gap: '24px',
-                            'margin-bottom': '48px',
-                          }}
-                        >
-                          <Show
-                            when={!isLoading()}
-                            fallback={
-                              <div style={{ 'grid-column': '1/-1', 'text-align': 'center' }}>
-                                Loading recommendations...
-                              </div>
-                            }
-                          >
-                            <For each={careerMatches()}>
-                              {(career) => (
-                                <div
-                                  style={{
-                                    background: 'rgba(255,255,255,0.03)',
-                                    'border-radius': maximalist.radii.md,
-                                    padding: '24px',
-                                    border: `1px solid ${maximalist.colors.border}`,
-                                    transition: 'transform 0.2s',
-                                    cursor: 'pointer',
-                                  }}
-                                  onMouseEnter={(e) =>
-                                    (e.currentTarget.style.transform = 'translateY(-4px)')
-                                  }
-                                  onMouseLeave={(e) =>
-                                    (e.currentTarget.style.transform = 'translateY(0)')
-                                  }
-                                >
-                                  <div
-                                    style={{
-                                      display: 'flex',
-                                      'justify-content': 'space-between',
-                                      'align-items': 'flex-start',
-                                      'margin-bottom': '12px',
-                                    }}
-                                  >
-                                    <Show when={career.tags.bright_outlook}>
-                                      <span
-                                        style={{
-                                          background: `${maxPalette.teal}30`,
-                                          color: maxPalette.teal,
-                                          'font-size': '10px',
-                                          padding: '4px 8px',
-                                          'border-radius': '12px',
-                                          'font-weight': 'bold',
-                                          'text-transform': 'uppercase',
-                                        }}
-                                      >
-                                        Bright Outlook
-                                      </span>
-                                    </Show>
-                                    <CartoonBadge fit={career.fit} />
-                                  </div>
-
-                                  <h4
-                                    style={{
-                                      'font-size': '18px',
-                                      'font-weight': '600',
-                                      color: 'white',
-                                      'margin-bottom': '8px',
-                                    }}
-                                  >
-                                    {career.title}
-                                  </h4>
-
-                                  <div
-                                    style={{
-                                      color: maximalist.colors.textMuted,
-                                      'font-size': '15px',
-                                      'margin-bottom': '16px',
-                                    }}
-                                  >
-                                    Code: {career.code}
-                                  </div>
-
-                                  <button
-                                    onClick={() => handleJobClick(career.code)}
-                                    disabled={isJobLoading()}
-                                    style={{
-                                      width: '100%',
-                                      padding: '12px',
-                                      background: 'transparent',
-                                      border: `1px solid ${currentTheme().colors.primary}`,
-                                      color: currentTheme().colors.primary,
-                                      'border-radius': '8px',
-                                      cursor: isJobLoading() ? 'wait' : 'pointer',
-                                      'font-weight': '600',
-                                      transition: 'all 0.2s',
-                                      opacity: isJobLoading() ? 0.7 : 1,
-                                    }}
-                                    onMouseEnter={(e) => {
-                                      e.currentTarget.style.background =
-                                        currentTheme().colors.primary;
-                                      e.currentTarget.style.color =
-                                        currentTheme().colors.textOnPrimary;
-                                    }}
-                                    onMouseLeave={(e) => {
-                                      e.currentTarget.style.background = 'transparent';
-                                      e.currentTarget.style.color = currentTheme().colors.primary;
-                                    }}
-                                  >
-                                    {isJobLoading() ? 'Loading...' : 'Explore Role'}
-                                  </button>
-                                </div>
-                              )}
-                            </For>
-                          </Show>
-                        </div>
-
-                        {/* O*NET Attribution */}
-                        <div style={{ 'text-align': 'center', 'margin-top': '48px' }}>
-                          <button
-                            onClick={resetAssessment}
-                            style={{
-                              padding: '12px 24px',
-                              background: 'transparent',
-                              border: `1px solid ${currentTheme().colors.border}`,
-                              'border-radius': maximalist.radii.md,
-                              color: currentTheme().colors.textMuted,
-                              'font-size': '17px',
-                              cursor: 'pointer',
-                              transition: 'all 0.2s',
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.borderColor = currentTheme().colors.primary;
-                              e.currentTarget.style.color = currentTheme().colors.primary;
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.borderColor = currentTheme().colors.border;
-                              e.currentTarget.style.color = currentTheme().colors.textMuted;
-                            }}
-                          >
-                            Retake Assessment
-                          </button>
-                        </div>
-
-                        <footer
-                          style={{
-                            'margin-top': '64px',
-                            'padding-top': '24px',
-                            'border-top': `1px solid ${maximalist.colors.border}`,
-                            'text-align': 'center',
-                            color: maximalist.colors.textMuted,
-                            'font-size': '15px',
-                            'line-height': '1.5',
-                          }}
-                        >
-                          <p style={{ 'max-width': '600px', margin: '0 auto' }}>
-                            This site incorporates information from O*NET Web Services by the U.S.
-                            Department of Labor, Employment and Training Administration (USDOL/ETA).
-                            O*NET® is a trademark of USDOL/ETA.
-                          </p>
-                        </footer>
-                      </div>
-                    </Show>
-                  </div>
-                </Show>
-
-                {/* OCEAN Personality Tab */}
-                <Show when={discoverSubTab() === 'personality'}>
-                  <Show
-                    when={oceanAssessmentState() === 'results' && loadOceanProfile()}
-                    fallback={
-                      <OceanAssessment
-                        onComplete={handleOceanComplete}
-                        onCancel={handleOceanCancel}
-                        currentThemeGradient={currentTheme().gradients.primary}
-                        currentThemePrimary={currentTheme().colors.primary}
-                      />
-                    }
-                  >
-                    <OceanResults
-                      profile={loadOceanProfile()!}
-                      onRetake={handleRetakeOcean}
-                      currentThemeGradient={currentTheme().gradients.primary}
-                      currentThemePrimary={currentTheme().colors.primary}
-                    />
-                  </Show>
-                </Show>
-
-                {/* Jungian Cognitive Style Tab */}
-                <Show when={discoverSubTab() === 'cognitive-style'}>
-                  <Show
-                    when={jungianAssessmentState() === 'results' && loadJungianProfile()}
-                    fallback={
-                      <JungianAssessment
-                        onComplete={handleJungianComplete}
-                        onCancel={handleJungianCancel}
-                        currentThemeGradient={currentTheme().gradients.primary}
-                        currentThemePrimary={currentTheme().colors.primary}
-                      />
-                    }
-                  >
-                    <JungianResults
-                      profile={loadJungianProfile()!}
-                      onRetake={handleRetakeJungian}
-                      currentThemeGradient={currentTheme().gradients.primary}
-                      currentThemePrimary={currentTheme().colors.primary}
-                    />
-                  </Show>
-                </Show>
-              </div>
+              <DiscoverView
+                currentTheme={currentTheme}
+                assessmentState={assessmentState}
+                questions={questions}
+                currentQuestionIndex={currentQuestionIndex}
+                riasecScore={riasecScore}
+                careerMatches={careerMatches}
+                isLoading={isLoading}
+                isJobLoading={isJobLoading}
+                onStartAssessment={startAssessment}
+                onAnswer={handleAnswer}
+                onResetAssessment={resetAssessment}
+                onJobClick={handleJobClick}
+                discoverSubTab={discoverSubTab}
+                onDiscoverSubTabChange={handleDiscoverSubTabChange}
+                oceanAssessmentState={oceanAssessmentState}
+                oceanCompleted={oceanCompleted}
+                onStartOcean={handleStartOcean}
+                onOceanComplete={handleOceanComplete}
+                onOceanCancel={handleOceanCancel}
+                onRetakeOcean={handleRetakeOcean}
+                onViewOceanResults={handleViewOceanResults}
+                jungianAssessmentState={jungianAssessmentState}
+                jungianCompleted={jungianCompleted}
+                onStartJungian={handleStartJungian}
+                onJungianComplete={handleJungianComplete}
+                onJungianCancel={handleJungianCancel}
+                onRetakeJungian={handleRetakeJungian}
+                onViewJungianResults={handleViewJungianResults}
+                onStartRiasec={handleStartRiasec}
+                onViewRiasecResults={handleViewRiasecResults}
+                sortedScores={sortedScores}
+                hybridArchetype={hybridArchetype}
+              />
             </Show>
 
             {/* Prepare Tab - Resume Builder */}
@@ -2756,6 +1866,20 @@ export const TenureApp: Component = () => {
               />
             </Show>
           </main>
+
+          {/* Mobile Bottom Navigation */}
+          <BottomNavBar
+            items={TENURE_NAV_ITEMS}
+            activeId={activeTab()}
+            onSelect={(id) => handleTabChange(id as TabName)}
+            theme={() => ({
+              colors: {
+                primary: currentTheme().colors.primary,
+                text: currentTheme().colors.text,
+                textMuted: currentTheme().colors.textMuted,
+              },
+            })}
+          />
 
           <Show when={selectedJob()}>
             <JobDetailModal job={selectedJob()!} onClose={() => setSelectedJob(null)} />

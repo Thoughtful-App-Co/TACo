@@ -11,6 +11,8 @@ import { extractTextFromFile } from '../services/file-extractor.service';
 import { IconUpload, IconFileText, IconCheck, IconAlert, IconX } from '../../pipeline/ui/Icons';
 import { toastStore } from './toast-store';
 import { logger } from '../../../../lib/logger';
+import { canUseMutation } from '../../../../lib/feature-gates';
+import { Paywall } from '../../../common/Paywall';
 
 interface ResumeUploaderProps {
   onParseComplete?: () => void;
@@ -34,6 +36,7 @@ interface ResumeUploaderProps {
 
 const ACCEPTED_FILE_TYPES = ['.pdf', '.docx', '.txt'];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const RESUME_PARSER_PAYWALL_DISMISSED_KEY = 'taco_resume_parser_paywall_dismissed';
 
 export const ResumeUploader: Component<ResumeUploaderProps> = (props) => {
   const theme = () => props.currentTheme();
@@ -43,6 +46,8 @@ export const ResumeUploader: Component<ResumeUploaderProps> = (props) => {
   const [uploadError, setUploadError] = createSignal<string | null>(null);
   const [pastedText, setPastedText] = createSignal('');
   const [uploadMode, setUploadMode] = createSignal<'file' | 'text'>('file');
+  const [showPaywall, setShowPaywall] = createSignal(false);
+  const [dontRemindChecked, setDontRemindChecked] = createSignal(false);
 
   // Set toast primary color to match theme
   onMount(() => {
@@ -55,6 +60,47 @@ export const ResumeUploader: Component<ResumeUploaderProps> = (props) => {
   const uploadProgress = () => prepareStore.state.uploadProgress;
   const parseProgress = () => prepareStore.state.parseProgress;
   const storeError = () => prepareStore.state.error;
+
+  const savePaywallDismissed = (dismissed: boolean): void => {
+    try {
+      if (dismissed) {
+        localStorage.setItem(RESUME_PARSER_PAYWALL_DISMISSED_KEY, 'true');
+      } else {
+        localStorage.removeItem(RESUME_PARSER_PAYWALL_DISMISSED_KEY);
+      }
+    } catch {
+      // Ignore localStorage errors
+    }
+  };
+
+  const checkSubscriptionAccess = (): boolean => {
+    const access = canUseMutation();
+    logger.resume.debug('Subscription access check:', {
+      allowed: access.allowed,
+      reason: access.reason,
+      requiresAuth: access.requiresAuth,
+      requiresSubscription: access.requiresSubscription,
+    });
+
+    if (!access.allowed) {
+      // Always show paywall when user explicitly tries to use the feature
+      // The "don't remind me" only suppresses auto-prompts, not explicit actions
+      logger.resume.info('Showing paywall - no subscription access');
+      setShowPaywall(true);
+      logger.resume.debug('showPaywall signal set to:', showPaywall());
+      return false;
+    }
+    logger.resume.info('Subscription check passed');
+    return true;
+  };
+
+  const handlePaywallClose = () => {
+    if (dontRemindChecked()) {
+      savePaywallDismissed(true);
+    }
+    setShowPaywall(false);
+    setDontRemindChecked(false);
+  };
 
   const validateFile = (file: File): string | null => {
     // Check file type
@@ -104,6 +150,13 @@ export const ResumeUploader: Component<ResumeUploaderProps> = (props) => {
   };
 
   const handleFileSelect = async (file: File) => {
+    logger.resume.debug('handleFileSelect called with:', file.name);
+
+    if (!checkSubscriptionAccess()) {
+      logger.resume.warn('Subscription check failed, aborting file select');
+      return;
+    }
+
     setUploadError(null);
     prepareStore.setError(null);
 
@@ -167,6 +220,13 @@ export const ResumeUploader: Component<ResumeUploaderProps> = (props) => {
   };
 
   const handleTextParse = async () => {
+    logger.resume.debug('handleTextParse called');
+
+    if (!checkSubscriptionAccess()) {
+      logger.resume.warn('Subscription check failed, aborting text parse');
+      return;
+    }
+
     const text = pastedText().trim();
     if (!text) {
       setUploadError('Please paste your resume text');
@@ -716,6 +776,16 @@ export const ResumeUploader: Component<ResumeUploaderProps> = (props) => {
           </p>
         </div>
       </Show>
+
+      {/* Paywall Modal */}
+      <Paywall
+        isOpen={showPaywall()}
+        onClose={handlePaywallClose}
+        feature="tenure_extras"
+        featureName="AI Resume Parsing"
+        showDontRemind={true}
+        onDontRemindChange={setDontRemindChecked}
+      />
 
       <style>
         {`
