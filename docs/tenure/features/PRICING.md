@@ -15,14 +15,14 @@ TACo's pricing page implements transparent, user-friendly pricing with modular c
 
 ### Products & Tiers
 
-| Product             | Monthly  | Annual        | Details                               |
-| ------------------- | -------- | ------------- | ------------------------------------- |
-| **Sync (per app)**  | $2/mo    | $20/year      | Cloud backup + sync for one app       |
-| **Sync (all apps)** | $3.50/mo | $35/year      | Best value - all current/future apps  |
-| **Tempo Extras**    | $12/mo   | $120/year     | Unlimited AI task processing          |
-| **Tenure Extras**   | $5/mo    | $30/year      | 10 AI resume mutations/mo + analytics |
-| **Echoprax Extras** | $8/mo    | $80/year      | Unlimited AI workout generation       |
-| **Loco TACo Club**  | $25/mo   | $500 lifetime | Early adopter program (24 months)     |
+| Product             | Monthly  | Annual        | Details                                      |
+| ------------------- | -------- | ------------- | -------------------------------------------- |
+| **Sync (per app)**  | $2/mo    | $20/year      | Cloud backup + sync for one app              |
+| **Sync (all apps)** | $3.50/mo | $35/year      | Best value - all current/future apps         |
+| **Tempo Extras**    | $12/mo   | $120/year     | Unlimited AI task processing                 |
+| **Tenure Extras**   | $5/mo    | $30/year      | 20 AI credits/mo (10 operations) + analytics |
+| **Echoprax Extras** | $8/mo    | $80/year      | Unlimited AI workout generation              |
+| **Loco TACo Club**  | $25/mo   | $500 lifetime | Early adopter program (24 months)            |
 
 ### Pricing Philosophy
 
@@ -202,12 +202,12 @@ src/components/pricing/
 
 **Features:**
 
-- ✓ 10 AI resume mutations/month
+- ✓ 20 AI credits/month (10 operations, 2 credits each)
 - ✓ Job-specific tailoring
 - ✓ Role archetype transformations
 - ✓ ATS optimization
 - ✓ Career trends dashboard
-- ✓ Pay-as-you-go for additional mutations
+- ✓ Pay-as-you-go for additional credits
 
 ### Echoprax Extras
 

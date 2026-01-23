@@ -93,13 +93,13 @@ This document provides the master index for implementing premium features across
 
 ### Products
 
-| Product            | Price                   | Billing            | Notes                              |
-| ------------------ | ----------------------- | ------------------ | ---------------------------------- |
-| **All Apps Sync**  | $3.50/mo or $35/yr      | Recurring          | Best value                         |
-| **Per-App Sync**   | $2/mo or $20/yr         | Recurring          | Tempo, Tenure, or Nurture          |
-| **Tempo Extras**   | $12/mo or $120/yr       | Recurring          | Unlimited AI (soft cap 100/mo)     |
-| **Tenure Extras**  | $1/mo base              | Recurring + Usage  | 10 mutations/mo + $1 per 3 overage |
-| **Loco TACo Club** | $25/mo or $500 lifetime | Recurring/One-time | Early adopter program              |
+| Product            | Price                   | Billing            | Notes                                              |
+| ------------------ | ----------------------- | ------------------ | -------------------------------------------------- |
+| **All Apps Sync**  | $3.50/mo or $35/yr      | Recurring          | Best value                                         |
+| **Per-App Sync**   | $2/mo or $20/yr         | Recurring          | Tempo, Tenure, or Nurture                          |
+| **Tempo Extras**   | $12/mo or $120/yr       | Recurring          | Unlimited AI (soft cap 100/mo)                     |
+| **Tenure Extras**  | $5/mo or $30/yr         | Recurring          | 20 AI credits/mo (10 operations at 2 credits each) |
+| **Loco TACo Club** | $25/mo or $500 lifetime | Recurring/One-time | Early adopter program                              |
 
 ### Revenue Model
 

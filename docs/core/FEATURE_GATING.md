@@ -419,7 +419,7 @@ See Pattern 2 above for full example.
 
 ### Case 2: Usage Quotas (Metered Billing)
 
-For features with monthly limits (like Tenure's 10 mutations/month):
+For features with monthly limits (like Tenure's 20 AI credits/month for 10 operations):
 
 ```typescript
 import { canUseMutation } from '@/lib/feature-gates';

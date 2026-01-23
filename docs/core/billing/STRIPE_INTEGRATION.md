@@ -23,15 +23,19 @@
 
 ### Tenure Extras Pricing (Hybrid Model)
 
-**Base subscription:** $1/month
+**Base subscription:** $5/month (or $30/year)
 
-- Includes: 10 mutations/month
+- Includes: 20 AI credits/month (10 operations at 2 credits each)
+- Includes: Resume parsing, job/role-based mutations, cover letters
 - Includes: Trends Dashboard, Analytics, Notifications
 
-**Overage:** $1 per 3 additional mutations
+**Token Cost per Operation:**
 
-- Billed monthly based on usage
-- Metered billing via Stripe
+- Resume mutation (job-based): 2 credits
+- Resume mutation (role-based): 2 credits
+- Cover letter generation: 2 credits
+
+Note: The hybrid metered billing model has been simplified to a fixed monthly allocation with predictable limits.
 
 ---
 
