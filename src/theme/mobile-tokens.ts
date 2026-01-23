@@ -117,6 +117,98 @@ export const borders = {
 } as const;
 
 // ============================================================================
+// GLASSOMORPHIC DESIGN TOKENS
+// ============================================================================
+
+/**
+ * Glassomorphic Design Tokens
+ *
+ * Frosted glass appearance following Apple/Microsoft design patterns.
+ * Creates depth and modernity while maintaining readability.
+ *
+ * Reference: docs/context_engineering/design/glassomorphic.mdc
+ */
+export const glass = {
+  /** Background colors with transparency */
+  background: {
+    /** Light glass - rgba(255, 255, 255, 0.08) */
+    light: 'rgba(255, 255, 255, 0.08)',
+    /** Medium glass - rgba(255, 255, 255, 0.12) */
+    medium: 'rgba(255, 255, 255, 0.12)',
+    /** Heavy glass - rgba(255, 255, 255, 0.18) */
+    heavy: 'rgba(255, 255, 255, 0.18)',
+    /** Dark glass (for dark mode) - rgba(20, 20, 20, 0.65) */
+    dark: 'rgba(20, 20, 20, 0.65)',
+    /** Elevated glass - rgba(30, 30, 35, 0.85) */
+    elevated: 'rgba(30, 30, 35, 0.85)',
+  },
+
+  /** Border colors for glass elements */
+  border: {
+    /** Subtle border - rgba(255, 255, 255, 0.08) */
+    subtle: 'rgba(255, 255, 255, 0.08)',
+    /** Light border - rgba(255, 255, 255, 0.12) */
+    light: 'rgba(255, 255, 255, 0.12)',
+    /** Medium border - rgba(255, 255, 255, 0.18) */
+    medium: 'rgba(255, 255, 255, 0.18)',
+    /** Accent border with color */
+    accent: 'rgba(96, 165, 250, 0.3)',
+  },
+
+  /** Blur values for backdrop-filter */
+  blur: {
+    /** Light blur - 8px */
+    light: 'blur(8px)',
+    /** Medium blur - 12px */
+    medium: 'blur(12px)',
+    /** Heavy blur - 16px */
+    heavy: 'blur(16px)',
+    /** Intense blur - 24px */
+    intense: 'blur(24px)',
+  },
+
+  /** Shadow values for glass depth */
+  shadow: {
+    /** Subtle inset glow */
+    inset: 'inset 0 1px 1px rgba(255, 255, 255, 0.05)',
+    /** Soft outer shadow */
+    soft: '0 4px 16px rgba(0, 0, 0, 0.15)',
+    /** Elevated shadow */
+    elevated: '0 8px 32px rgba(0, 0, 0, 0.25)',
+    /** Glow effect */
+    glow: '0 0 20px rgba(96, 165, 250, 0.15)',
+  },
+
+  /** Pre-composed glass styles */
+  presets: {
+    /** Header glass style */
+    header: {
+      background: 'rgba(15, 15, 18, 0.75)',
+      backdropFilter: 'blur(16px) saturate(180%)',
+      border: '1px solid rgba(255, 255, 255, 0.08)',
+    },
+    /** Card glass style */
+    card: {
+      background: 'rgba(255, 255, 255, 0.05)',
+      backdropFilter: 'blur(12px)',
+      border: '1px solid rgba(255, 255, 255, 0.1)',
+    },
+    /** Button glass style */
+    button: {
+      background: 'rgba(255, 255, 255, 0.08)',
+      backdropFilter: 'blur(8px)',
+      border: '1px solid rgba(255, 255, 255, 0.12)',
+    },
+    /** Modal glass style */
+    modal: {
+      background: 'rgba(20, 20, 25, 0.9)',
+      backdropFilter: 'blur(24px) saturate(150%)',
+      border: '1px solid rgba(255, 255, 255, 0.1)',
+    },
+  },
+} as const;
+
+// ============================================================================
 // TYPOGRAPHY SCALE
 // ============================================================================
 
@@ -248,15 +340,25 @@ export const radii = {
 /**
  * Touch Target Sizes
  *
- * Following WCAG 2.1 AA guidelines (minimum 44x44px for touch targets).
+ * Following WCAG 2.1 AAA guidelines and Apple/Google HIG recommendations.
+ * Upgraded from 44px minimum to 48px for better accessibility.
+ *
+ * References:
+ * - Apple HIG: 44pt minimum, 48pt recommended
+ * - Material Design: 48dp minimum
+ * - WCAG 2.1 AAA: 44x44 CSS pixels minimum
  */
 export const touchTargets = {
-  /** 44px - Minimum accessible touch target (WCAG AA) */
-  minimum: '44px',
-  /** 48px - Comfortable touch target */
-  comfortable: '48px',
-  /** 56px - Large touch target (mobile header) */
+  /** 44px - Legacy minimum (WCAG AA) - use for tight spaces only */
+  legacy: '44px',
+  /** 48px - New minimum accessible touch target (recommended) */
+  minimum: '48px',
+  /** 52px - Comfortable touch target */
+  comfortable: '52px',
+  /** 56px - Large touch target (primary actions, mobile header) */
   large: '56px',
+  /** 64px - Extra large (FAB, prominent actions) */
+  xl: '64px',
 } as const;
 
 /**
@@ -267,8 +369,8 @@ export const mobileHeader = {
   height: '56px',
   /** 0 12px - Horizontal padding only */
   padding: '0 12px',
-  /** 44px - Button size (touch-friendly) */
-  buttonSize: '44px',
+  /** 48px - Button size (touch-friendly, upgraded from 44px) */
+  buttonSize: '48px',
   /** 10px - Button border radius */
   buttonRadius: radii.md,
   /** 100 - Z-index for sticky positioning */
@@ -295,6 +397,70 @@ export const mobileDrawer = {
   backdropColor: 'rgba(0, 0, 0, 0.6)',
   /** blur(4px) - Backdrop blur effect */
   backdropBlur: 'blur(4px)',
+} as const;
+
+// ============================================================================
+// SAFE AREA INSETS
+// ============================================================================
+
+/**
+ * Safe Area Insets
+ *
+ * CSS environment variables for handling device-specific safe areas:
+ * - iPhone notch/Dynamic Island
+ * - iPhone home indicator
+ * - Android gesture navigation bar
+ * - Android display cutouts
+ *
+ * Usage:
+ * ```tsx
+ * // In inline styles (needs fallback)
+ * paddingTop: `max(${mobileTokens.spacing.lg}, env(safe-area-inset-top))`
+ *
+ * // Better: use the pre-composed values
+ * paddingTop: mobileTokens.safeArea.top
+ * paddingBottom: mobileTokens.safeArea.bottom
+ * ```
+ *
+ * Note: These use CSS `env()` which requires the viewport meta tag:
+ * <meta name="viewport" content="..., viewport-fit=cover">
+ */
+export const safeArea = {
+  /** env(safe-area-inset-top, 0px) - Top safe area (notch, status bar) */
+  top: 'env(safe-area-inset-top, 0px)',
+  /** env(safe-area-inset-right, 0px) - Right safe area (landscape mode) */
+  right: 'env(safe-area-inset-right, 0px)',
+  /** env(safe-area-inset-bottom, 0px) - Bottom safe area (home indicator, gesture bar) */
+  bottom: 'env(safe-area-inset-bottom, 0px)',
+  /** env(safe-area-inset-left, 0px) - Left safe area (landscape mode) */
+  left: 'env(safe-area-inset-left, 0px)',
+
+  /**
+   * Pre-composed padding values that combine safe area with minimum spacing.
+   * These ensure content is never too close to edges even on devices without safe areas.
+   */
+  padding: {
+    /** max(16px, env(safe-area-inset-top)) - Top with minimum 16px */
+    top: 'max(16px, env(safe-area-inset-top, 0px))',
+    /** max(16px, env(safe-area-inset-right)) - Right with minimum 16px */
+    right: 'max(16px, env(safe-area-inset-right, 0px))',
+    /** max(16px, env(safe-area-inset-bottom)) - Bottom with minimum 16px */
+    bottom: 'max(16px, env(safe-area-inset-bottom, 0px))',
+    /** max(16px, env(safe-area-inset-left)) - Left with minimum 16px */
+    left: 'max(16px, env(safe-area-inset-left, 0px))',
+  },
+
+  /**
+   * Header-specific safe area that accounts for the header height.
+   * Use for content that sits below a fixed header.
+   */
+  headerOffset: 'calc(56px + env(safe-area-inset-top, 0px))',
+
+  /**
+   * Bottom nav specific safe area with minimum height for the nav bar.
+   * Use for content padding when bottom nav is present.
+   */
+  bottomNavOffset: 'calc(56px + env(safe-area-inset-bottom, 0px))',
 } as const;
 
 // ============================================================================
@@ -399,6 +565,7 @@ export const mobileTokens = {
   opacity,
   surfaces,
   borders,
+  glass,
   fonts,
   fontSize,
   fontWeight,
@@ -407,6 +574,7 @@ export const mobileTokens = {
   touchTargets,
   mobileHeader,
   mobileDrawer,
+  safeArea,
   zIndex,
   duration,
   easing,
